@@ -108,6 +108,7 @@ class NavBar {
 		this._addElement_divider(NavBar._CAT_UTILITIES);
 		this._addElement_li(NavBar._CAT_UTILITIES, "renderdemo.html", "Renderer Demo");
 		this._addElement_li(NavBar._CAT_UTILITIES, "makecards.html", "RPG Cards JSON Builder");
+		this._addElement_li(NavBar._CAT_UTILITIES, "charbuilder.html", "Character Builder");
 		this._addElement_li(NavBar._CAT_UTILITIES, "converter.html", "Text Converter");
 		this._addElement_divider(NavBar._CAT_UTILITIES);
 		this._addElement_li(NavBar._CAT_UTILITIES, "plutonium.html", "Plutonium (Foundry Module) Features");

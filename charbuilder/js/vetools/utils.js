@@ -2,7 +2,7 @@
 
 // in deployment, `IS_DEPLOYED = "<version number>";` should be set below.
 globalThis.IS_DEPLOYED = undefined;
-globalThis.VERSION_NUMBER = /* 5ETOOLS_VERSION__OPEN */"1.204.0"/* 5ETOOLS_VERSION__CLOSE */;
+globalThis.VERSION_NUMBER = /* 5ETOOLS_VERSION__OPEN */"1.197.4"/* 5ETOOLS_VERSION__CLOSE */;
 globalThis.DEPLOYED_IMG_ROOT = undefined;
 // for the roll20 script to set
 globalThis.IS_VTT = false;
@@ -300,8 +300,8 @@ globalThis.StrUtil = {
 	// Certain minor words should be left lowercase unless they are the first or last words in the string
 	TITLE_LOWER_WORDS: ["a", "an", "the", "and", "but", "or", "for", "nor", "as", "at", "by", "for", "from", "in", "into", "near", "of", "on", "onto", "to", "with", "over", "von"],
 	// Certain words such as initialisms or acronyms should be left uppercase
-	TITLE_UPPER_WORDS: ["Id", "Tv", "Dm", "Ok", "Npc", "Pc", "Tpk", "Wip", "Dc", "D&d"],
-	TITLE_UPPER_WORDS_PLURAL: ["Ids", "Tvs", "Dms", "Oks", "Npcs", "Pcs", "Tpks", "Wips", "Dcs", "D&d"], // (Manually pluralize, to avoid infinite loop)
+	TITLE_UPPER_WORDS: ["Id", "Tv", "Dm", "Ok", "Npc", "Pc", "Tpk", "Wip", "Dc"],
+	TITLE_UPPER_WORDS_PLURAL: ["Ids", "Tvs", "Dms", "Oks", "Npcs", "Pcs", "Tpks", "Wips", "Dcs"], // (Manually pluralize, to avoid infinite loop)
 
 	IRREGULAR_PLURAL_WORDS: {
 		"cactus": "cacti",
@@ -437,7 +437,7 @@ CleanUtil.STR_REPLACEMENTS = {
 	"–": "\\u2013",
 	"‑": "\\u2011",
 	"−": "\\u2212",
-	" ": "\\u00A0",
+	" ": "\\u00A0",
 	" ": "\\u2007",
 };
 CleanUtil.SHARED_REPLACEMENTS_REGEX = new RegExp(Object.keys(CleanUtil.SHARED_REPLACEMENTS).join("|"), "g");
@@ -540,16 +540,6 @@ globalThis.SourceUtil = class {
 		if (typeof BrewUtil2 !== "undefined" && BrewUtil2.hasSourceJson(source)) return SourceUtil.FILTER_GROUP_HOMEBREW;
 		if (SourceUtil.isPartneredSourceWotc(source)) return SourceUtil.FILTER_GROUP_PARTNERED;
 		return SourceUtil.FILTER_GROUP_STANDARD;
-	}
-
-	static getFilterGroupName (group) {
-		switch (group) {
-			case SourceUtil.FILTER_GROUP_NON_STANDARD: return "Other/Prerelease";
-			case SourceUtil.FILTER_GROUP_HOMEBREW: return "Homebrew";
-			case SourceUtil.FILTER_GROUP_PARTNERED: return "Partnered";
-			case SourceUtil.FILTER_GROUP_STANDARD: return null;
-			default: throw new Error(`Unhandled source filter group "${group}"`);
-		}
 	}
 
 	static getAdventureBookSourceHref (source, page) {
@@ -915,7 +905,7 @@ globalThis.JqueryUtil = {
 		if (JqueryUtil._WRP_TOAST == null) {
 			JqueryUtil._WRP_TOAST = e_({
 				tag: "div",
-				clazz: "toast__container no-events w-100 ve-overflow-y-hidden ve-flex-col",
+				clazz: "toast__container no-events w-100 overflow-y-hidden ve-flex-col",
 			});
 			document.body.appendChild(JqueryUtil._WRP_TOAST);
 		}
@@ -1293,12 +1283,12 @@ globalThis.ObjUtil = {
 	},
 };
 
-// TODO refactor specific utils out of this
-globalThis.MiscUtil = class {
-	static COLOR_HEALTHY = "#00bb20";
-	static COLOR_HURT = "#c5ca00";
-	static COLOR_BLOODIED = "#f7a100";
-	static COLOR_DEFEATED = "#cc0000";
+// TODO refactor other misc utils into this
+globalThis.MiscUtil = {
+	COLOR_HEALTHY: "#00bb20",
+	COLOR_HURT: "#c5ca00",
+	COLOR_BLOODIED: "#f7a100",
+	COLOR_DEFEATED: "#cc0000",
 
 	/**
 	 * @param obj
@@ -1306,12 +1296,12 @@ globalThis.MiscUtil = class {
 	 * @param isPreserveUndefinedValueKeys Otherwise, drops the keys of `undefined` values
 	 * (e.g. `{a: undefined}` -> `{}`).
 	 */
-	static copy (obj, {isSafe = false, isPreserveUndefinedValueKeys = false} = {}) {
+	copy (obj, {isSafe = false, isPreserveUndefinedValueKeys = false} = {}) {
 		if (isSafe && obj === undefined) return undefined; // Generally use "unsafe," as this helps identify bugs.
 		return JSON.parse(JSON.stringify(obj));
-	}
+	},
 
-	static copyFast (obj) {
+	copyFast (obj) {
 		if ((typeof obj !== "object") || obj == null) return obj;
 
 		if (obj instanceof Array) return obj.map(MiscUtil.copyFast);
@@ -1319,9 +1309,9 @@ globalThis.MiscUtil = class {
 		const cpy = {};
 		for (const k of Object.keys(obj)) cpy[k] = MiscUtil.copyFast(obj[k]);
 		return cpy;
-	}
+	},
 
-	static async pCopyTextToClipboard (text) {
+	async pCopyTextToClipboard (text) {
 		function doCompatibilityCopy () {
 			const $iptTemp = $(`<textarea class="clp__wrp-temp"></textarea>`)
 				.appendTo(document.body)
@@ -1339,26 +1329,26 @@ globalThis.MiscUtil = class {
 				} else doCompatibilityCopy();
 			} catch (e) { doCompatibilityCopy(); }
 		} else doCompatibilityCopy();
-	}
+	},
 
-	static checkProperty (object, ...path) {
+	checkProperty (object, ...path) {
 		for (let i = 0; i < path.length; ++i) {
 			object = object[path[i]];
 			if (object == null) return false;
 		}
 		return true;
-	}
+	},
 
-	static get (object, ...path) {
+	get (object, ...path) {
 		if (object == null) return null;
 		for (let i = 0; i < path.length; ++i) {
 			object = object[path[i]];
 			if (object == null) return object;
 		}
 		return object;
-	}
+	},
 
-	static set (object, ...pathAndVal) {
+	set (object, ...pathAndVal) {
 		if (object == null) return null;
 
 		const val = pathAndVal.pop();
@@ -1372,31 +1362,31 @@ globalThis.MiscUtil = class {
 		}
 
 		return val;
-	}
+	},
 
-	static getOrSet (object, ...pathAndVal) {
+	getOrSet (object, ...pathAndVal) {
 		if (pathAndVal.length < 2) return null;
 		const existing = MiscUtil.get(object, ...pathAndVal.slice(0, -1));
 		if (existing != null) return existing;
 		return MiscUtil.set(object, ...pathAndVal);
-	}
+	},
 
-	static getThenSetCopy (object1, object2, ...path) {
+	getThenSetCopy (object1, object2, ...path) {
 		const val = MiscUtil.get(object1, ...path);
 		return MiscUtil.set(object2, ...path, MiscUtil.copyFast(val, {isSafe: true}));
-	}
+	},
 
-	static delete (object, ...path) {
+	delete (object, ...path) {
 		if (object == null) return object;
 		for (let i = 0; i < path.length - 1; ++i) {
 			object = object[path[i]];
 			if (object == null) return object;
 		}
 		return delete object[path.last()];
-	}
+	},
 
 	/** Delete a prop from a nested object, then all now-empty objects backwards from that point. */
-	static deleteObjectPath (object, ...path) {
+	deleteObjectPath (object, ...path) {
 		const stack = [object];
 
 		if (object == null) return object;
@@ -1412,9 +1402,9 @@ globalThis.MiscUtil = class {
 		}
 
 		return out;
-	}
+	},
 
-	static merge (obj1, obj2) {
+	merge (obj1, obj2) {
 		obj2 = MiscUtil.copyFast(obj2);
 
 		Object.entries(obj2)
@@ -1438,21 +1428,21 @@ globalThis.MiscUtil = class {
 			});
 
 		return obj1;
-	}
+	},
 
 	/**
 	 * @deprecated
 	 */
-	static mix = (superclass) => new MiscUtil._MixinBuilder(superclass);
-	static _MixinBuilder = function (superclass) {
+	mix: (superclass) => new MiscUtil._MixinBuilder(superclass),
+	_MixinBuilder: function (superclass) {
 		this.superclass = superclass;
 
 		this.with = function (...mixins) {
 			return mixins.reduce((c, mixin) => mixin(c), this.superclass);
 		};
-	};
+	},
 
-	static clearSelection () {
+	clearSelection () {
 		if (document.getSelection) {
 			document.getSelection().removeAllRanges();
 			document.getSelection().addRange(document.createRange());
@@ -1466,9 +1456,9 @@ globalThis.MiscUtil = class {
 		} else if (document.selection) {
 			document.selection.empty();
 		}
-	}
+	},
 
-	static randomColor () {
+	randomColor () {
 		let r; let g; let b;
 		const h = RollerUtil.randomise(30, 0) / 30;
 		const i = ~~(h * 6);
@@ -1483,7 +1473,7 @@ globalThis.MiscUtil = class {
 			case 5: r = 1; g = 0; b = q; break;
 		}
 		return `#${`00${(~~(r * 255)).toString(16)}`.slice(-2)}${`00${(~~(g * 255)).toString(16)}`.slice(-2)}${`00${(~~(b * 255)).toString(16)}`.slice(-2)}`;
-	}
+	},
 
 	/**
 	 * @param hex Original hex color.
@@ -1492,7 +1482,7 @@ globalThis.MiscUtil = class {
 	 * @param [opts.dark] Color to return if a "dark" color would contrast best.
 	 * @param [opts.light] Color to return if a "light" color would contrast best.
 	 */
-	static invertColor (hex, opts) {
+	invertColor (hex, opts) {
 		opts = opts || {};
 
 		hex = hex.slice(1); // remove #
@@ -1508,18 +1498,18 @@ globalThis.MiscUtil = class {
 
 		r = (255 - r).toString(16); g = (255 - g).toString(16); b = (255 - b).toString(16);
 		return `#${[r, g, b].map(it => it.padStart(2, "0")).join("")}`;
-	}
+	},
 
-	static scrollPageTop () {
+	scrollPageTop () {
 		document.body.scrollTop = document.documentElement.scrollTop = 0;
-	}
+	},
 
-	static expEval (str) {
+	expEval (str) {
 		// eslint-disable-next-line no-new-func
 		return new Function(`return ${str.replace(/[^-()\d/*+.]/g, "")}`)();
-	}
+	},
 
-	static parseNumberRange (input, min = Number.MIN_SAFE_INTEGER, max = Number.MAX_SAFE_INTEGER) {
+	parseNumberRange (input, min = Number.MIN_SAFE_INTEGER, max = Number.MAX_SAFE_INTEGER) {
 		if (!input || !input.trim()) return null;
 
 		const errInvalid = input => { throw new Error(`Could not parse range input "${input}"`); };
@@ -1563,9 +1553,9 @@ globalThis.MiscUtil = class {
 		}
 
 		return out;
-	}
+	},
 
-	static findCommonPrefix (strArr, {isRespectWordBoundaries} = {}) {
+	findCommonPrefix (strArr, {isRespectWordBoundaries} = {}) {
 		if (isRespectWordBoundaries) {
 			return MiscUtil._findCommonPrefixSuffixWords({strArr});
 		}
@@ -1588,15 +1578,15 @@ globalThis.MiscUtil = class {
 			}
 		});
 		return prefix;
-	}
+	},
 
-	static findCommonSuffix (strArr, {isRespectWordBoundaries} = {}) {
+	findCommonSuffix (strArr, {isRespectWordBoundaries} = {}) {
 		if (!isRespectWordBoundaries) throw new Error(`Unimplemented!`);
 
 		return MiscUtil._findCommonPrefixSuffixWords({strArr, isSuffix: true});
-	}
+	},
 
-	static _findCommonPrefixSuffixWords ({strArr, isSuffix}) {
+	_findCommonPrefixSuffixWords ({strArr, isSuffix}) {
 		let prefixTks = null;
 		let lenMax = -1;
 
@@ -1633,18 +1623,18 @@ globalThis.MiscUtil = class {
 		return isSuffix
 			? ` ${prefixTks.join(" ")}`
 			: `${prefixTks.join(" ")} `;
-	}
+	},
 
 	/**
 	 * @param fgHexTarget Target/resultant color for the foreground item
 	 * @param fgOpacity Desired foreground transparency (0-1 inclusive)
 	 * @param bgHex Background color
 	 */
-	static calculateBlendedColor (fgHexTarget, fgOpacity, bgHex) {
+	calculateBlendedColor (fgHexTarget, fgOpacity, bgHex) {
 		const fgDcTarget = CryptUtil.hex2Dec(fgHexTarget);
 		const bgDc = CryptUtil.hex2Dec(bgHex);
 		return ((fgDcTarget - ((1 - fgOpacity) * bgDc)) / fgOpacity).toString(16);
-	}
+	},
 
 	/**
 	 * Borrowed from lodash.
@@ -1654,7 +1644,7 @@ globalThis.MiscUtil = class {
 	 * @param options Options object.
 	 * @return {Function} The debounced function.
 	 */
-	static debounce (func, wait, options) {
+	debounce (func, wait, options) {
 		let lastArgs; let lastThis; let maxWait; let result; let timerId; let lastCallTime; let lastInvokeTime = 0; let leading = false; let maxing = false; let trailing = true;
 
 		wait = Number(wait) || 0;
@@ -1739,10 +1729,10 @@ globalThis.MiscUtil = class {
 		debounced.cancel = cancel;
 		debounced.flush = flush;
 		return debounced;
-	}
+	},
 
 	// from lodash
-	static throttle (func, wait, options) {
+	throttle (func, wait, options) {
 		let leading = true; let trailing = true;
 
 		if (typeof options === "object") {
@@ -1751,13 +1741,13 @@ globalThis.MiscUtil = class {
 		}
 
 		return this.debounce(func, wait, {leading, maxWait: wait, trailing});
-	}
+	},
 
-	static pDelay (msecs, resolveAs) {
+	pDelay (msecs, resolveAs) {
 		return new Promise(resolve => setTimeout(() => resolve(resolveAs), msecs));
-	}
+	},
 
-	static GENERIC_WALKER_ENTRIES_KEY_BLOCKLIST = new Set(["caption", "type", "colLabels", "colLabelGroups", "name", "colStyles", "style", "shortName", "subclassShortName", "id", "path"]);
+	GENERIC_WALKER_ENTRIES_KEY_BLOCKLIST: new Set(["caption", "type", "colLabels", "colLabelGroups", "name", "colStyles", "style", "shortName", "subclassShortName", "id", "path"]),
 
 	/**
 	 * @param [opts]
@@ -1771,7 +1761,7 @@ globalThis.MiscUtil = class {
 	 * @param [opts.isNoModification] If the walker should not attempt to modify the data.
 	 * @param [opts.isBreakOnReturn] If the walker should fast-exist on any handler returning a value.
 	 */
-	static getWalker (opts) {
+	getWalker (opts) {
 		opts = opts || {};
 
 		if (opts.isBreakOnReturn && !opts.isNoModification) throw new Error(`"isBreakOnReturn" may only be used in "isNoModification" mode!`);
@@ -1893,9 +1883,9 @@ globalThis.MiscUtil = class {
 		};
 
 		return {walk: fn};
-	}
+	},
 
-	static _getWalker_applyHandlers ({opts, handlers, obj, lastKey, stack}) {
+	_getWalker_applyHandlers ({opts, handlers, obj, lastKey, stack}) {
 		handlers = handlers instanceof Array ? handlers : [handlers];
 		const didBreak = handlers.some(h => {
 			const out = h(obj, lastKey, stack);
@@ -1904,12 +1894,12 @@ globalThis.MiscUtil = class {
 		});
 		if (didBreak) return VeCt.SYM_WALKER_BREAK;
 		return obj;
-	}
+	},
 
-	static _getWalker_runHandlers ({handlers, obj, lastKey, stack}) {
+	_getWalker_runHandlers ({handlers, obj, lastKey, stack}) {
 		handlers = handlers instanceof Array ? handlers : [handlers];
 		handlers.forEach(h => h(obj, lastKey, stack));
-	}
+	},
 
 	/**
 	 * TODO refresh to match sync version
@@ -1923,7 +1913,7 @@ globalThis.MiscUtil = class {
 	 * @param [opts.isDepthFirst] If array/object recursion should occur before array/object primitive handling.
 	 * @param [opts.isNoModification] If the walker should not attempt to modify the data.
 	 */
-	static getAsyncWalker (opts) {
+	getAsyncWalker (opts) {
 		opts = opts || {};
 		const keyBlocklist = opts.keyBlocklist || new Set();
 
@@ -2040,42 +2030,35 @@ globalThis.MiscUtil = class {
 		};
 
 		return {pWalk: pFn};
-	}
+	},
 
-	static async _getAsyncWalker_pApplyHandlers ({opts, handlers, obj, lastKey, stack}) {
+	async _getAsyncWalker_pApplyHandlers ({opts, handlers, obj, lastKey, stack}) {
 		handlers = handlers instanceof Array ? handlers : [handlers];
 		await handlers.pSerialAwaitMap(async pH => {
 			const out = await pH(obj, lastKey, stack);
 			if (!opts.isNoModification) obj = out;
 		});
 		return obj;
-	}
+	},
 
-	static async _getAsyncWalker_pRunHandlers ({handlers, obj, lastKey, stack}) {
+	async _getAsyncWalker_pRunHandlers ({handlers, obj, lastKey, stack}) {
 		handlers = handlers instanceof Array ? handlers : [handlers];
 		await handlers.pSerialAwaitMap(pH => pH(obj, lastKey, stack));
-	}
+	},
 
-	static pDefer (fn) {
+	pDefer (fn) {
 		return (async () => fn())();
-	}
-
-	static isNearStrictlyEqual (a, b) {
-		if (a == null && b == null) return true;
-		if (a == null && b != null) return false;
-		if (a != null && b == null) return false;
-		return a === b;
-	}
+	},
 };
 
 // EVENT HANDLERS ======================================================================================================
-globalThis.EventUtil = class {
-	static _mouseX = 0;
-	static _mouseY = 0;
-	static _isUsingTouch = false;
-	static _isSetCssVars = false;
+globalThis.EventUtil = {
+	_mouseX: 0,
+	_mouseY: 0,
+	_isUsingTouch: false,
+	_isSetCssVars: false,
 
-	static init () {
+	init () {
 		document.addEventListener("mousemove", evt => {
 			EventUtil._mouseX = evt.clientX;
 			EventUtil._mouseY = evt.clientY;
@@ -2084,50 +2067,46 @@ globalThis.EventUtil = class {
 		document.addEventListener("touchstart", () => {
 			EventUtil._isUsingTouch = true;
 		});
-	}
+	},
 
-	static _eleDocRoot = null;
-	static _onMouseMove_setCssVars () {
+	_eleDocRoot: null,
+	_onMouseMove_setCssVars () {
 		if (!EventUtil._isSetCssVars) return;
 
 		EventUtil._eleDocRoot = EventUtil._eleDocRoot || document.querySelector(":root");
 
 		EventUtil._eleDocRoot.style.setProperty("--mouse-position-x", EventUtil._mouseX);
 		EventUtil._eleDocRoot.style.setProperty("--mouse-position-y", EventUtil._mouseY);
-	}
+	},
 
-	/* -------------------------------------------- */
+	getClientX (evt) { return evt.touches && evt.touches.length ? evt.touches[0].clientX : evt.clientX; },
+	getClientY (evt) { return evt.touches && evt.touches.length ? evt.touches[0].clientY : evt.clientY; },
 
-	static getClientX (evt) { return evt.touches && evt.touches.length ? evt.touches[0].clientX : evt.clientX; }
-	static getClientY (evt) { return evt.touches && evt.touches.length ? evt.touches[0].clientY : evt.clientY; }
-
-	static getOffsetY (evt) {
+	getOffsetY (evt) {
 		if (!evt.touches?.length) return evt.offsetY;
 
 		const bounds = evt.target.getBoundingClientRect();
 		return evt.targetTouches[0].clientY - bounds.y;
-	}
+	},
 
-	static getMousePos () {
+	getMousePos () {
 		return {x: EventUtil._mouseX, y: EventUtil._mouseY};
-	}
+	},
 
-	/* -------------------------------------------- */
+	isUsingTouch () { return !!EventUtil._isUsingTouch; },
 
-	static isUsingTouch () { return !!EventUtil._isUsingTouch; }
-
-	static isInInput (evt) {
+	isInInput (evt) {
 		return evt.target.nodeName === "INPUT" || evt.target.nodeName === "TEXTAREA"
 			|| evt.target.getAttribute("contenteditable") === "true";
-	}
+	},
 
-	static isCtrlMetaKey (evt) {
+	isCtrlMetaKey (evt) {
 		return evt.ctrlKey || evt.metaKey;
-	}
+	},
 
-	static noModifierKeys (evt) { return !evt.ctrlKey && !evt.altKey && !evt.metaKey; }
+	noModifierKeys (evt) { return !evt.ctrlKey && !evt.altKey && !evt.metaKey; },
 
-	static getKeyIgnoreCapsLock (evt) {
+	getKeyIgnoreCapsLock (evt) {
 		if (!evt.key) return null;
 		if (evt.key.length !== 1) return evt.key;
 		const isCaps = (evt.originalEvent || evt).getModifierState("CapsLock");
@@ -2137,29 +2116,7 @@ globalThis.EventUtil = class {
 		const isLowerCase = asciiCode >= 97 && asciiCode <= 122;
 		if (!isUpperCase && !isLowerCase) return evt.key;
 		return isUpperCase ? evt.key.toLowerCase() : evt.key.toUpperCase();
-	}
-
-	/* -------------------------------------------- */
-
-	// In order of preference/priority.
-	// Note: `"application/json"`, as e.g. Founrdy's TinyMCE blocks drops which are not plain text.
-	static _MIME_TYPES_DROP_JSON = ["application/json", "text/plain"];
-
-	static getDropJson (evt) {
-		let data;
-		for (const mimeType of EventUtil._MIME_TYPES_DROP_JSON) {
-			if (!evt.dataTransfer.types.includes(mimeType)) continue;
-
-			try {
-				const rawJson = evt.dataTransfer.getData(mimeType);
-				if (!rawJson) return;
-				data = JSON.parse(rawJson);
-			} catch (e) {
-				// Do nothing
-			}
-		}
-		return data;
-	}
+	},
 };
 
 if (typeof window !== "undefined") window.addEventListener("load", EventUtil.init);
@@ -2690,7 +2647,7 @@ globalThis.UrlUtil = {
 	categoryToPage (category) { return UrlUtil.CAT_TO_PAGE[category]; },
 	categoryToHoverPage (category) { return UrlUtil.CAT_TO_HOVER_PAGE[category] || UrlUtil.categoryToPage(category); },
 
-	pageToDisplayPage (page) { return UrlUtil.PG_TO_NAME[page] || (page || "").replace(/\.html$/, ""); },
+	pageToDisplayPage (page) { return UrlUtil.PG_TO_NAME[page] || page; },
 
 	getFilename (url) { return url.slice(url.lastIndexOf("/") + 1); },
 
@@ -2864,7 +2821,6 @@ UrlUtil.PG_DM_SCREEN = "dmscreen.html";
 UrlUtil.PG_CR_CALCULATOR = "crcalculator.html";
 UrlUtil.PG_ENCOUNTERGEN = "encountergen.html";
 UrlUtil.PG_LOOTGEN = "lootgen.html";
-UrlUtil.PG_CHAR_BUILDER = "charbuilder.html";
 UrlUtil.PG_TEXT_CONVERTER = "converter.html";
 UrlUtil.PG_CHANGELOG = "changelog.html";
 UrlUtil.PG_CHAR_CREATION_OPTIONS = "charcreationoptions.html";
@@ -3137,14 +3093,6 @@ UrlUtil.SUBLIST_PAGES = {
 	[UrlUtil.PG_DECKS]: true,
 };
 
-UrlUtil.FAUX_PAGES = {
-	[UrlUtil.PG_CLASS_SUBCLASS_FEATURES]: true,
-	[UrlUtil.PG_CREATURE_FEATURES]: true,
-	[UrlUtil.PG_VEHICLE_FEATURES]: true,
-	[UrlUtil.PG_OBJECT_FEATURES]: true,
-	[UrlUtil.PG_TRAP_FEATURES]: true,
-};
-
 UrlUtil.PAGE_TO_PROPS = {};
 UrlUtil.PAGE_TO_PROPS[UrlUtil.PG_SPELLS] = ["spell"];
 UrlUtil.PAGE_TO_PROPS[UrlUtil.PG_ITEMS] = ["item", "itemGroup", "itemType", "itemEntry", "itemProperty", "itemTypeAdditionalEntries", "itemMastery", "baseitem", "magicvariant"];
@@ -3156,7 +3104,7 @@ if (!IS_DEPLOYED && !IS_VTT && typeof window !== "undefined") {
 		if (EventUtil.noModifierKeys(e) && typeof d20 === "undefined") {
 			if (e.key === "#") {
 				const spl = window.location.href.split("/");
-				window.prompt("Copy to clipboard: Ctrl+C, Enter", `https://5etools-mirror-2.github.io/${spl[spl.length - 1]}`);
+				window.prompt("Copy to clipboard: Ctrl+C, Enter", `${Vetools._BASE_SITE_URL}/${spl[spl.length - 1]}`);
 			}
 		}
 	});
@@ -4095,8 +4043,7 @@ globalThis.DataUtil = {
 			if (it._copy) await DataUtil.generic._pMergeCopy(impl, page, entryList, it, options);
 
 			// Preload templates, if required
-			// TODO(Template) allow templates for other entity types
-			const templateData = entry._copy?._templates
+			const templateData = entry._copy?._trait
 				? (await DataUtil.loadJSON(`${Renderer.get().baseUrl}data/bestiary/template.json`))
 				: null;
 			return DataUtil.generic.copyApplier.getCopy(impl, MiscUtil.copyFast(it), entry, templateData, options);
@@ -4268,9 +4215,8 @@ globalThis.DataUtil = {
 						default: throw new Error(`${msgPtFailed} Unknown variable "${m[1]}"`);
 					}
 				});
-				// TODO(Future) add option to format as bonus
 				// eslint-disable-next-line no-eval
-				copyTo[prop][modInfo.prop] = eval(DataUtil.generic.variableResolver.getCleanMathExpression(toExec));
+				copyTo[prop][modInfo.prop] = eval(toExec);
 			}
 
 			static _doMod_scalarAddProp ({copyTo, copyFrom, modInfo, msgPtFailed, prop}) {
@@ -4619,49 +4565,25 @@ globalThis.DataUtil = {
 				if (copyMeta._mod) this._normaliseMods(copyMeta);
 
 				// fetch and apply any external template -- append them to existing copy mods where available
-				let templates = null;
-				let templateErrors = [];
-				if (copyMeta._templates?.length) {
-					templates = copyMeta._templates
-						.map(({name: templateName, source: templateSource}) => {
-							templateName = templateName.toLowerCase().trim();
-							templateSource = templateSource.toLowerCase().trim();
+				let template = null;
+				if (copyMeta._trait) {
+					template = templateData.monsterTemplate.find(t => t.name.toLowerCase() === copyMeta._trait.name.toLowerCase() && t.source.toLowerCase() === copyMeta._trait.source.toLowerCase());
+					if (!template) throw new Error(`${msgPtFailed} Could not find traits to apply with name "${copyMeta._trait.name}" and source "${copyMeta._trait.source}"`);
+					template = MiscUtil.copyFast(template);
 
-							// TODO(Template) allow templates for other entity types
-							const template = templateData.monsterTemplate
-								.find(({name, source}) => name.toLowerCase().trim() === templateName && source.toLowerCase().trim() === templateSource);
+					if (template.apply._mod) {
+						this._normaliseMods(template.apply);
 
-							if (!template) {
-								templateErrors.push(`Could not find traits to apply with name "${templateName}" and source "${templateSource}"`);
-								return null;
-							}
+						if (copyMeta._mod) {
+							Object.entries(template.apply._mod).forEach(([k, v]) => {
+								if (copyMeta._mod[k]) copyMeta._mod[k] = copyMeta._mod[k].concat(v);
+								else copyMeta._mod[k] = v;
+							});
+						} else copyMeta._mod = template.apply._mod;
+					}
 
-							return MiscUtil.copyFast(template);
-						})
-						.filter(Boolean);
-
-					templates
-						.forEach(template => {
-							if (!template.apply._mod) return;
-
-							this._normaliseMods(template.apply);
-
-							if (!copyMeta._mod) {
-								copyMeta._mod = template.apply._mod;
-								return;
-							}
-
-							Object.entries(template.apply._mod)
-								.forEach(([k, v]) => {
-									if (copyMeta._mod[k]) copyMeta._mod[k] = copyMeta._mod[k].concat(v);
-									else copyMeta._mod[k] = v;
-								});
-						});
-
-					delete copyMeta._templates;
+					delete copyMeta._trait;
 				}
-
-				if (templateErrors.length) throw new Error(`${msgPtFailed} ${templateErrors.join("; ")}`);
 
 				const copyToRootProps = new Set(Object.keys(copyTo));
 
@@ -4675,16 +4597,11 @@ globalThis.DataUtil = {
 					}
 				});
 
-				// apply any root template properties after doing base copy
-				if (templates?.length) {
-					templates
-						.forEach(template => {
-							if (!template.apply?._root) return;
-
-							Object.entries(template.apply._root)
-								.filter(([k, v]) => !copyToRootProps.has(k)) // avoid overwriting any real root properties
-								.forEach(([k, v]) => copyTo[k] = v);
-						});
+				// apply any root racial properties after doing base copy
+				if (template && template.apply._root) {
+					Object.entries(template.apply._root)
+						.filter(([k, v]) => !copyToRootProps.has(k)) // avoid overwriting any real root properties
+						.forEach(([k, v]) => copyTo[k] = v);
 				}
 
 				// apply mods
@@ -4710,197 +4627,72 @@ globalThis.DataUtil = {
 		},
 
 		variableResolver: class {
-			/** @abstract */
-			static _ResolverBase = class {
-				mode;
+			static _getSize ({ent}) { return ent.size?.[0] || Parser.SZ_MEDIUM; }
 
-				getResolved ({ent, msgPtFailed, detail}) {
-					this._doVerifyInput({ent, msgPtFailed, detail});
-					return this._getResolved({ent, detail});
-				}
-
-				_doVerifyInput ({msgPtFailed, detail}) { /* Implement as required */ }
-
-				/**
-				 * @abstract
-				 * @return {string}
-				 */
-				_getResolved ({ent, mode, detail}) { throw new Error("Unimplemented!"); }
-
-				getDisplayText ({msgPtFailed, detail}) {
-					this._doVerifyInput({msgPtFailed, detail});
-					return this._getDisplayText({detail});
-				}
-
-				/**
-				 * @abstract
-				 * @return {string}
-				 */
-				_getDisplayText ({detail}) { throw new Error("Unimplemented!"); }
-
-				/* -------------------------------------------- */
-
-				_getSize ({ent}) { return ent.size?.[0] || Parser.SZ_MEDIUM; }
-
-				_SIZE_TO_MULT = {
-					[Parser.SZ_LARGE]: 2,
-					[Parser.SZ_HUGE]: 3,
-					[Parser.SZ_GARGANTUAN]: 4,
-				};
-
-				_getSizeMult (size) { return this._SIZE_TO_MULT[size] ?? 1; }
+			static _SIZE_TO_MULT = {
+				[Parser.SZ_LARGE]: 2,
+				[Parser.SZ_HUGE]: 3,
+				[Parser.SZ_GARGANTUAN]: 4,
 			};
 
-			static _ResolverName = class extends this._ResolverBase {
-				mode = "name";
-				_getResolved ({ent, detail}) { return ent.name; }
-				_getDisplayText ({detail}) { return "(name)"; }
-			};
+			static _getSizeMult (size) { return this._SIZE_TO_MULT[size] ?? 1; }
 
-			static _ResolverShortName = class extends this._ResolverBase {
-				mode = "short_name";
-				_getResolved ({ent, detail}) { return Renderer.monster.getShortName(ent); }
-				_getDisplayText ({detail}) { return "(short name)"; }
-			};
+			static _getCleanMathExpression (str) { return str.replace(/[^-+/*0-9.,]+/g, ""); }
 
-			static _ResolverTitleShortName = class extends this._ResolverBase {
-				mode = "title_short_name";
-				_getResolved ({ent, detail}) { return Renderer.monster.getShortName(ent, {isTitleCase: true}); }
-				_getDisplayText ({detail}) { return "(short title name)"; }
-			};
-
-			/** @abstract */
-			static _ResolverAbilityScore = class extends this._ResolverBase {
-				_doVerifyInput ({msgPtFailed, detail}) {
-					if (!Parser.ABIL_ABVS.includes(detail)) throw new Error(`${msgPtFailed ? `${msgPtFailed} ` : ""} Unknown ability score "${detail}"`);
-				}
-			};
-
-			static _ResolverDc = class extends this._ResolverAbilityScore {
-				mode = "dc";
-				_getResolved ({ent, detail}) { return 8 + Parser.getAbilityModNumber(Number(ent[detail])) + Parser.crToPb(ent.cr); }
-				_getDisplayText ({detail}) { return `(${detail.toUpperCase()} DC)`; }
-			};
-
-			static _ResolverSpellDc = class extends this._ResolverDc {
-				mode = "spell_dc";
-				_getDisplayText ({detail}) { return `(${detail.toUpperCase()} spellcasting DC)`; }
-			};
-
-			static _ResolverToHit = class extends this._ResolverAbilityScore {
-				mode = "to_hit";
-
-				_getResolved ({ent, detail}) {
-					const total = Parser.crToPb(ent.cr) + Parser.getAbilityModNumber(Number(ent[detail]));
-					return total >= 0 ? `+${total}` : total;
-				}
-
-				_getDisplayText ({detail}) { return `(${detail.toUpperCase()} to-hit)`; }
-			};
-
-			static _ResolverDamageMod = class extends this._ResolverAbilityScore {
-				mode = "damage_mod";
-
-				_getResolved ({ent, detail}) {
-					const total = Parser.getAbilityModNumber(Number(ent[detail]));
-					return total === 0 ? "" : total > 0 ? ` + ${total}` : ` - ${Math.abs(total)}`;
-				}
-
-				_getDisplayText ({detail}) { return `(${detail.toUpperCase()} damage modifier)`; }
-			};
-
-			static _ResolverDamageAvg = class extends this._ResolverBase {
-				mode = "damage_avg";
-
-				_getResolved ({ent, detail}) {
-					const replaced = detail
-						.replace(/\b(?<abil>str|dex|con|int|wis|cha)\b/gi, (...m) => Parser.getAbilityModNumber(Number(ent[m.last().abil])))
-						.replace(/\bsize_mult\b/g, () => this._getSizeMult(this._getSize({ent})));
-
-					// eslint-disable-next-line no-eval
-					return Math.floor(eval(DataUtil.generic.variableResolver.getCleanMathExpression(replaced)));
-				}
-
-				_getDisplayText ({detail}) { return "(damage average)"; } // TODO(Future) more specific
-			};
-
-			static _ResolverSizeMult = class extends this._ResolverBase {
-				mode = "size_mult";
-
-				_getResolved ({ent, detail}) {
-					const mult = this._getSizeMult(this._getSize({ent}));
-
-					if (!detail) return mult;
-
-					// eslint-disable-next-line no-eval
-					return Math.floor(eval(`${mult} * ${DataUtil.generic.variableResolver.getCleanMathExpression(detail)}`));
-				}
-
-				_getDisplayText ({detail}) { return "(size multiplier)"; } // TODO(Future) more specific
-			};
-
-			static _RESOLVERS = [
-				new this._ResolverName(),
-				new this._ResolverShortName(),
-				new this._ResolverTitleShortName(),
-				new this._ResolverDc(),
-				new this._ResolverSpellDc(),
-				new this._ResolverToHit(),
-				new this._ResolverDamageMod(),
-				new this._ResolverDamageAvg(),
-				new this._ResolverSizeMult(),
-			];
-
-			static _MODE_LOOKUP = (() => {
-				return Object.fromEntries(
-					this._RESOLVERS.map(resolver => [resolver.mode, resolver]),
-				);
-			})();
-
-			static _WALKER = null;
 			static resolve ({obj, ent, msgPtFailed = null}) {
-				DataUtil.generic.variableResolver._WALKER ||= MiscUtil.getWalker();
+				return JSON.parse(
+					JSON.stringify(obj)
+						.replace(/<\$(?<variable>[^$]+)\$>/g, (...m) => {
+							const [mode, detail] = m.last().variable.split("__");
 
-				return DataUtil.generic.variableResolver._WALKER
-					.walk(
-						obj,
-						{
-							string: str => str.replace(/<\$(?<variable>[^$]+)\$>/g, (...m) => {
-								const [mode, detail] = m.last().variable.split("__");
+							switch (mode) {
+								case "name": return ent.name;
+								case "short_name":
+								case "title_short_name": {
+									return Renderer.monster.getShortName(ent, {isTitleCase: mode === "title_short_name"});
+								}
 
-								const resolver = this._MODE_LOOKUP[mode];
-								if (!resolver) return m[0];
+								case "dc":
+								case "spell_dc": {
+									if (!Parser.ABIL_ABVS.includes(detail)) throw new Error(`${msgPtFailed ? `${msgPtFailed} ` : ""} Unknown ability score "${detail}"`);
+									return 8 + Parser.getAbilityModNumber(Number(ent[detail])) + Parser.crToPb(ent.cr);
+								}
 
-								return resolver.getResolved({ent, msgPtFailed, detail});
-							}),
-						},
-					);
+								case "to_hit": {
+									if (!Parser.ABIL_ABVS.includes(detail)) throw new Error(`${msgPtFailed ? `${msgPtFailed} ` : ""} Unknown ability score "${detail}"`);
+									const total = Parser.crToPb(ent.cr) + Parser.getAbilityModNumber(Number(ent[detail]));
+									return total >= 0 ? `+${total}` : total;
+								}
+
+								case "damage_mod": {
+									if (!Parser.ABIL_ABVS.includes(detail)) throw new Error(`${msgPtFailed ? `${msgPtFailed} ` : ""} Unknown ability score "${detail}"`);
+									const total = Parser.getAbilityModNumber(Number(ent[detail]));
+									return total === 0 ? "" : total > 0 ? ` + ${total}` : ` - ${Math.abs(total)}`;
+								}
+
+								case "damage_avg": {
+									const replaced = detail
+										.replace(/\b(?<abil>str|dex|con|int|wis|cha)\b/gi, (...m) => Parser.getAbilityModNumber(Number(ent[m.last().abil])))
+										.replace(/\bsize_mult\b/g, () => this._getSizeMult(this._getSize({ent})));
+
+									// eslint-disable-next-line no-eval
+									return Math.floor(eval(this._getCleanMathExpression(replaced)));
+								}
+
+								case "size_mult": {
+									const mult = this._getSizeMult(this._getSize({ent}));
+
+									if (!detail) return mult;
+
+									// eslint-disable-next-line no-eval
+									return Math.floor(eval(`${mult} * ${this._getCleanMathExpression(detail)}`));
+								}
+
+								default: return m[0];
+							}
+						}),
+				);
 			}
-
-			static getHumanReadable ({obj, msgPtFailed}) {
-				DataUtil.generic.variableResolver._WALKER ||= MiscUtil.getWalker();
-
-				return DataUtil.generic.variableResolver._WALKER
-					.walk(
-						obj,
-						{
-							string: str => this.getHumanReadableString(str, {msgPtFailed}),
-						},
-					);
-			}
-
-			static getHumanReadableString (str, {msgPtFailed = null} = {}) {
-				return str.replace(/<\$(?<variable>[^$]+)\$>/g, (...m) => {
-					const [mode, detail] = m.last().variable.split("__");
-
-					const resolver = this._MODE_LOOKUP[mode];
-					if (!resolver) return m[0];
-
-					return resolver.getDisplayText({msgPtFailed, detail});
-				});
-			}
-
-			static getCleanMathExpression (str) { return str.replace(/[^-+/*0-9.,]+/g, ""); }
 		},
 
 		getVersions (parent, {impl = null, isExternalApplicationIdentityOnly = false} = {}) {
@@ -4908,7 +4700,7 @@ globalThis.DataUtil = {
 
 			return parent._versions
 				.map(ver => {
-					if (ver._abstract && ver._implementations?.length) return DataUtil.generic._getVersions_template({ver});
+					if (ver._template && ver._implementations?.length) return DataUtil.generic._getVersions_template({ver});
 					return DataUtil.generic._getVersions_basic({ver});
 				})
 				.flat()
@@ -4918,7 +4710,7 @@ globalThis.DataUtil = {
 		_getVersions_template ({ver}) {
 			return ver._implementations
 				.map(impl => {
-					let cpyTemplate = MiscUtil.copyFast(ver._abstract);
+					let cpyTemplate = MiscUtil.copyFast(ver._template);
 					const cpyImpl = MiscUtil.copyFast(impl);
 
 					DataUtil.generic._getVersions_mutExpandCopy({ent: cpyTemplate});
@@ -5683,11 +5475,6 @@ globalThis.DataUtil = {
 		static _FILENAME = "optionalfeatures.json";
 	},
 
-	optionalfeatureFluff: class extends _DataUtilPropConfigSingleSource {
-		static _PAGE = UrlUtil.PG_OPT_FEATURES;
-		static _FILENAME = "fluff-optionalfeatures.json";
-	},
-
 	class: class clazz extends _DataUtilPropConfigCustom {
 		static _PAGE = UrlUtil.PG_CLASSES;
 
@@ -5743,7 +5530,7 @@ globalThis.DataUtil = {
 		}
 
 		/**
-		 * @param uid
+		 * @param {string} uid
 		 * @param [opts]
 		 * @param [opts.isLower] If the returned values should be lowercase.
 		 */
@@ -6142,11 +5929,7 @@ globalThis.RollerUtil = {
 
 	getColRollType (colLabel) {
 		if (typeof colLabel !== "string") return false;
-
-		colLabel = colLabel.trim();
-		const mDice = /^{@dice (?<exp>[^}|]+)([^}]+)?}$/.exec(colLabel);
-
-		colLabel = mDice ? mDice.groups.exp : Renderer.stripTags(colLabel);
+		colLabel = Renderer.stripTags(colLabel);
 
 		if (Renderer.dice.lang.getTree3(colLabel)) return RollerUtil.ROLL_COL_STANDARD;
 
@@ -7250,7 +7033,7 @@ class BookModeViewBase {
 	}
 
 	async _pGetContentElementMetas () {
-		const $wrpContent = $(`<div class="bkmv__scroller smooth-scroll ve-overflow-y-auto print__overflow-visible ${this._isColumns ? "bkmv__wrp" : "ve-flex-col"} w-100 min-h-0"></div>`);
+		const $wrpContent = $(`<div class="bkmv__scroller smooth-scroll overflow-y-auto print__overflow-visible ${this._isColumns ? "bkmv__wrp" : "ve-flex-col"} w-100 min-h-0"></div>`);
 
 		const $wrpContentOuter = $$`<div class="h-100 print__h-initial w-100 min-h-0 ve-flex-col print__ve-block">${$wrpContent}</div>`;
 
@@ -7701,7 +7484,20 @@ if (!IS_VTT && typeof window !== "undefined") {
 	});
 
 	window.addEventListener("load", () => {
-		Renderer.dice.bindOnclickListener(document.body);
+		document.body.addEventListener("click", (evt) => {
+			const eleDice = evt.target.hasAttribute("data-packed-dice")
+				? evt.target
+				// Tolerate e.g. Bestiary wrapped proficiency dice rollers
+				: evt.target.parentElement?.hasAttribute("data-packed-dice")
+					? evt.target.parentElement
+					: null;
+
+			if (!eleDice) return;
+
+			evt.preventDefault();
+			evt.stopImmediatePropagation();
+			Renderer.dice.pRollerClickUseData(evt, eleDice).then(null);
+		});
 		Renderer.events.bindGeneric();
 	});
 
