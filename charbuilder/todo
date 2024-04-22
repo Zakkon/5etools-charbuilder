@@ -1,0 +1,31 @@
+BUGS:
+    - Going down in level and then up again will not re-render FOS components (seems fixed)
+    - FOS subcomponents are getting their states set even after spells are renderered, even though they should be before (shouldnt be a big issue)
+    - verify if url-linked spells on the sheet work for 3rd party homebrew (or your own homebrew)
+    - Background characteristic rolling doesnt work
+WEB:
+    - Add UI notifications
+    - Test custom urls for content (+ save/load/exportFvtt)
+    - Test custom uploaded files for content (+ save/load/exportFvtt)
+
+CSS:
+    - Tidy up as much as possible into a single .css file
+    - Rip some of the later css code from a .css file intended for use in foundry (i think it was style.css?)
+
+SERIALIZIATION:
+    - Make the cookies or character save file remember filter settings on each of the components?
+    - Save json from uploaded homebrew files to a cookie
+
+CHARSELECT:
+
+SHEET:
+    - Cantrip attacks (sort of solved with hoverable spell popups)
+    - Better attack parsing overall
+
+CLASS:
+    - Make subclass dropdown be locked until high enough level
+    - Make sure when class is removed, that the Feats menu understands that and doesnt allow feat choices from that class
+    - Make sure ASI choices are removed from classes that are marked as removed
+
+EXPORT:
+    - Include entities from uploaded homebrew files in export to FVTT

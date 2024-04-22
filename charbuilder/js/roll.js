@@ -25,5 +25,7 @@ class Roll{
         this.total = total;
         this.terms = terms;
     }
-    
+    toMessage({sound}){
+        //Do nothing atm
+    }
 }
