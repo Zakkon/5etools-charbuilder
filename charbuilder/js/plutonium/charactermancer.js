@@ -10169,6 +10169,9 @@ Charactermancer_StartingEquipment._EQUIPMENT_SETS = {
     weaponMelee: ["battleaxe|phb", "club|phb", "dagger|phb", "flail|phb", "glaive|phb", "greataxe|phb", "greatclub|phb", "greatsword|phb", "halberd|phb", "handaxe|phb", "javelin|phb", "lance|phb", "light hammer|phb", "longsword|phb", "mace|phb", "maul|phb", "morningstar|phb", "pike|phb", "quarterstaff|phb", "rapier|phb", "scimitar|phb", "shortsword|phb", "sickle|phb", "spear|phb", "staff|phb", "trident|phb", "war pick|phb", "warhammer|phb", "whip|phb", ],
     weaponRanged: ["blowgun|phb", "dart|phb", "hand crossbow|phb", "heavy crossbow|phb", "light crossbow|phb", "longbow|phb", "net|phb", "shortbow|phb", "sling|phb", ],
     focusSpellcasting: ["crystal|phb", "orb|phb", "rod|phb", "staff|phb", "wand|phb", ],
+    focusSpellcastingHoly: ["amulet|phb","emblem|phb","reliquary|phb","holy symbol|phb"],
+    focusSpellcastingDruidic: ["sprig of mistletoe|phb","totem|phb","wooden staff|phb","yew wand|phb", "druidic focus|phb"],
+    focusSpellcastingArcane: ["crystal|phb", "orb|phb", "rod|phb", "staff|phb", "wand|phb", "arcane focus|phb" ],
     setGaming: ["dice set|phb", "dragonchess set|phb", "playing card set|phb", "three-dragon ante set|phb", ],
     toolArtisan: ["alchemist's supplies|phb", "brewer's supplies|phb", "calligrapher's supplies|phb", "carpenter's tools|phb", "cartographer's tools|phb", "cobbler's tools|phb", "cook's utensils|phb", "glassblower's tools|phb", "jeweler's tools|phb", "leatherworker's tools|phb", "mason's tools|phb", "painter's supplies|phb", "potter's tools|phb", "smith's tools|phb", "tinker's tools|phb", "weaver's tools|phb", "woodcarver's tools|phb", ],
 };
