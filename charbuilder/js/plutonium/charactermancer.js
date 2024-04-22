@@ -7004,11 +7004,12 @@ class ActorCharactermancerRace extends ActorCharactermancerBaseComponent {
     }
     _test_getExistingRaceIndex(race){
         const raceNameLower = race.name.trim().toLowerCase();//(IntegrationBabele.getOriginalName(race) || '').trim().toLowerCase();
-        let outIxRace = null;
+        let outIxRace = -1;
         let outIxRaceVersion = null;
         topLoop: for (let ix = 0; ix < this._data.race.length; ++ix) {
             const ourDataRace = this._data.race[ix];
-            if (race.source === ourDataRace.source && race.hash === UrlUtil.URL_TO_HASH_BUILDER.race(ourDataRace) ||
+            const raceHash = UrlUtil.URL_TO_HASH_BUILDER.race(ourDataRace);
+            if (race.source === ourDataRace.source && race.hash === raceHash ||
                 this._pLoad_pDoHandleExistingRace_isMatch({race: ourDataRace, existingRaceClean: raceNameLower}))
             {
                 outIxRace = ix; break;
@@ -7033,7 +7034,7 @@ class ActorCharactermancerRace extends ActorCharactermancerBaseComponent {
         const data = actor.race;
         const raceInfo = data.race;
         const { ixRace: ixRace, ixRaceVersion: ixRaceVersion } = this._test_getExistingRaceIndex(raceInfo);
-        const isRacePresent = !!ixRace;
+        const isRacePresent = ixRace>=0;
         if(!isRacePresent){
             //throw error
             throw new Error("Could not match cached race to any race in data", data);

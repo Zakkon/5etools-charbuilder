@@ -790,7 +790,8 @@ class CharacterExportFvtt{
         }
         else {
             const match = this.matchToBrewSourceID(item, brewSourceIds);
-            if(!match){throw new Error(`Failed to get brew source for ${item.name}|${item.source}`);}
+            if(!match){ console.log(item, brewSourceIds);
+                throw new Error(`Failed to get brew source for ${item.name}|${item.source}`);}
             return {isOfficialContent:false, brewSource:match};
         }
     }
@@ -807,8 +808,8 @@ class CharacterExportFvtt{
         return this.getLoadedSources().filter(src => !src.isDefault);
     }
     /**
-     * @param {{source:string, name:string}} item
-     * @param {{name:string, url:string, abbreviations:string[]}} sourceId
+     * @param {{name:string, source:string}} item a class, subclass, race, item, feat, background, etc
+     * @param {{name:string, url:string, abbreviations:string[], isFile:boolean, isDefault:boolean}} sourceId
      * * @param {boolean} pendanticMode (default is true) in pedantic mode, we don't just check that abbreviations match, we do a deeper match
      * @returns {boolean}
      */
@@ -819,10 +820,21 @@ class CharacterExportFvtt{
         if(sourceId.isFile){return false;}
         if(sourceId.isDefault){return false;}
 
-        const itemAbbreviation = item.source.toLowerCase();
+        const itemAbbreviation = item.source? item.source.toLowerCase() : null; //Some homebrew content items does not have the 'source' property set. This is unfortunate
+        //However, there might still be abbreviations supplied
         const srcUsedAbbreviations = sourceId.abbreviations.map(a => a.toLowerCase());
         //Match abbreviations. If brewer made a typo on the abbreviation somewhere, this will fail
-        if(!srcUsedAbbreviations.includes(itemAbbreviation)){return false;}
+        if(!srcUsedAbbreviations.includes(itemAbbreviation)){
+
+            //Fallback: in some strange cases, the item's 'source' property may not actually use an abbreviation, instead it just uses the name of the homebrew source itself
+            //sourceId.name is usually: "authorName; sourceName", so it might be worth an attempt to split off the sourceName at the end there
+            const parts = sourceId.name.split("; ")
+            if(item.source != sourceId.name && item.source != sourceId.name && item.source != parts[parts.length-1].trim()){
+                console.log("Could not match "+item.name+"|"+item.source + " to " + sourceId.name);
+                return false;
+            }
+        }
+
         //Now that we know the abbreivations matched, we can return true, or if we want to be pedantic,
         //we can check to see that source names also match
         //(WARNING:) keep in mind, the user may have enabled more than 1 source that uses the same abbrevation!

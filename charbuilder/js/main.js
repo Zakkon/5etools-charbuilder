@@ -256,16 +256,17 @@ Renderer.spell.populateBrewLookup(await BrewUtil2.pGetBrewProcessed(), {isForce:
   static async changeSources(sourceInfo){
     //Cache which sources we chose, and let them process the source ids into ready data entries (classes, races, etc)
     const data = await SourceManager._loadSources(sourceInfo);
+    console.log("DATA", data);
     //Get a cookie explaining the existing character shown, and what page
     let state = CookieManager.getState();
     if(!state){
       //This really shouldn't happen, but it is good form to have a fallback anyway
-      state = {uid: CharacterBuilder.uid, page:"class"};
+      state = {uid: CharacterBuilder.uid, page:"class", viewMode:false};
     }
     //Tear down the existing window
     this._curWindow.teardown();
     //Create a new window
-    const window = new CharacterBuilder(data, state.uid, state.page);
+    const window = new CharacterBuilder(data, state.uid, state.page, state.viewMode);
     this._curWindow = window;
   }
   /**
@@ -297,7 +298,9 @@ Renderer.spell.populateBrewLookup(await BrewUtil2.pGetBrewProcessed(), {isForce:
       throw e;
     }
     //Assume something is wrong if no source id is in the array
-    if(ids.length < 1){return null;}
+    if(ids.length < 1){
+      console.error("Found no source IDs in the array");
+      return null;}
     //Get all sources. These contain more info than is in the minified version
     const allSources = await this._pGetSources();
 
@@ -310,7 +313,7 @@ Renderer.spell.populateBrewLookup(await BrewUtil2.pGetBrewProcessed(), {isForce:
       }
       return match;
     });
-
+    console.log({sourceIds: matchedSourceIds, uploadedFileMetas: metas, customUrls: customUrls});
     return {sourceIds: matchedSourceIds, uploadedFileMetas: metas, customUrls: customUrls}
   }
   static async _getDefaultSourceIds(){
@@ -660,6 +663,7 @@ class CharacterBuilder {
      * Create a cookie to remember which page and character the browser is viewing
      * @param {string} tabName
      * @param {string} charUid
+     * @param {boolean} viewMode
      * @returns {{uid:string, page:string}}
      */
     static createStateCookie(tabName, charUid, viewMode=false){
@@ -687,7 +691,7 @@ class CookieManager {
     return registry?.uids?.length || 0;
   }
   /**
-   * @returns {{uid:string, page:string}}
+   * @returns {{uid:string, page:string, viewMode:boolean}}
    */
   static getState(){
     const foundState = localStorage.getItem("lastState"); //may be null
@@ -696,7 +700,7 @@ class CookieManager {
   }
   /**
    * Saves the state where the user is (which page and which character), so refreshing the browser will put us back on the same page
-   * @param {{uid:string, page:string}} state
+   * @param {{uid:string, page:string, viewMode:boolean}} state
    */
   static setState(state){
     localStorage.setItem("lastState", JSON.stringify(state));
