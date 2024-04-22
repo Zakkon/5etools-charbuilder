@@ -4,6 +4,8 @@ BUGS:
     - verify if url-linked spells on the sheet work for 3rd party homebrew (or your own homebrew)
     - Make save/change sources button not appear in view mode
     - Removing sources in use (for example class) doesnt wipe the ui fields
+    - When adding a source, it is not added to filter. For example, Tamer class from Heliana's is not visible unless class filter is altered
+    - Same goes when saving, filter is turned off so loaded character doesnt display Tamer as the chosen class
 WEB:
     - Add UI notifications
     - Test custom urls for content (+ save/load/exportFvtt)

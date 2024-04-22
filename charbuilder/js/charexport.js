@@ -172,6 +172,12 @@ class CharacterExportFvtt{
         _meta.uploadedFileMetas = SourceManager.cachedUploadedFileMetas;
         _meta.customUrls = SourceManager.cachedUploadedCustomUrls;
 
+        //Filter settings (WIP)
+        const filterSettingsClass = builder.compClass.modalFilterClasses._pageFilter._filters.map(f => {
+            return {header:f.header, state:f.state};
+        });
+        console.log(filterSettingsClass);
+
         const output = {character: _char, _meta:_meta};
 
         console.log("Export Character", output);

@@ -199,6 +199,7 @@ class ActorCharactermancerClass extends ActorCharactermancerBaseComponent {
         //TEMPFIX, add a hook for when subclass is changed. This is so sheets can sense when we change subclass
         this._addHookBase(propIxSubclass, () => this._state.class_pulseChange = !this._state.class_pulseChange);
 
+        console.log("Current classes in data:", this._data.class);
         //Create a searchable select field for choosing a class
         const {
             $wrp: wrapper, //Wrapper DOM for the dropdown menu DOM object
@@ -210,7 +211,7 @@ class ActorCharactermancerClass extends ActorCharactermancerBaseComponent {
             isAllowNull: true,
             fnDisplay: clsIx => {
                 //Using a simple index, ask _data for the class
-            const cls = this.getClass_({'ix': clsIx });
+            const cls = this.getClass_({ix: clsIx });
             if (!cls) {
                 console.warn(...LGT, "Could not find class with index " + clsIx + " (" + this._data.class.length + " classes were available)");
                 return '(Unknown)';
@@ -234,6 +235,7 @@ class ActorCharactermancerClass extends ActorCharactermancerBaseComponent {
         const updateHiddenClasses = () => {
             const filterValues = this._modalFilterClasses.pageFilter.filterBox.getValues();
             const classes = this._data.class.map(cls => !this._modalFilterClasses.pageFilter.toDisplay(filterValues, cls));
+            console.log("Hidden classes", classes);
             fnUpdateHidden(classes, false);
         };
 
