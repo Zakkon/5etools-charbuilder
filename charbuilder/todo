@@ -4,7 +4,6 @@ BUGS:
     - verify if url-linked spells on the sheet work for 3rd party homebrew (or your own homebrew)
     - Make save/change sources button not appear in view mode
     - Removing sources in use (for example class) doesnt wipe the ui fields
-    - There are two ExcludeUtils, one in js/plutonium/utils.js, one in js/plutonium/vetools.js
 WEB:
     - Add UI notifications
     - Test custom urls for content (+ save/load/exportFvtt)
