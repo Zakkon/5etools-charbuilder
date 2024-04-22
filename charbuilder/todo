@@ -10,6 +10,8 @@ WEB:
     - Add UI notifications
     - Test custom urls for content (+ save/load/exportFvtt)
     - Test custom uploaded files for content (+ save/load/exportFvtt)
+    - Dark mode looks awful
+    - Make sure all used content(classes/races/backgrounds) are turned ON in the filter when a save file is loaded (should be on already, assuming user didnt turn them off in the filter afterwards)
 
 CSS:
     - Tidy up as much as possible into a single .css file

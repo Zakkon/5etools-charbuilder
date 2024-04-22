@@ -129,9 +129,8 @@ class ActorCharactermancerClass extends ActorCharactermancerBaseComponent {
       this._data = parentInfo.data; //data is an object containing information about all classes, subclasses, feats, etc
       this._parent = parentInfo.parent;
       this._tabClass = parentInfo.tabClass;
-      //TEMPFIX
-      this._modalFilterClasses = new ModalFilterClasses({//ModalFilterClassesFvtt({
-        'namespace': "ActorCharactermancer.classes", 'allData': this._data.class
+      this._modalFilterClasses = new ModalFilterClasses({
+        namespace: "ActorCharactermancer.classes", allData: this._data.class
       });
       this._metaHksClassStgSubclass = [];
       this._compsClassStartingProficiencies = [];
@@ -199,7 +198,6 @@ class ActorCharactermancerClass extends ActorCharactermancerBaseComponent {
         //TEMPFIX, add a hook for when subclass is changed. This is so sheets can sense when we change subclass
         this._addHookBase(propIxSubclass, () => this._state.class_pulseChange = !this._state.class_pulseChange);
 
-        console.log("Current classes in data:", this._data.class);
         //Create a searchable select field for choosing a class
         const {
             $wrp: wrapper, //Wrapper DOM for the dropdown menu DOM object
@@ -235,7 +233,6 @@ class ActorCharactermancerClass extends ActorCharactermancerBaseComponent {
         const updateHiddenClasses = () => {
             const filterValues = this._modalFilterClasses.pageFilter.filterBox.getValues();
             const classes = this._data.class.map(cls => !this._modalFilterClasses.pageFilter.toDisplay(filterValues, cls));
-            console.log("Hidden classes", classes);
             fnUpdateHidden(classes, false);
         };
 

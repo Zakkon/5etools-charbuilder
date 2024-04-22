@@ -51,7 +51,6 @@ class SourceManager {
     "item", 'baseitem', "magicvariant", "spell", "feat", "optionalfeature"];
   static _DATA_PROPS_EXPECTED = ['class', "subclass", 'classFeature', "subclassFeature",
     "race", "background", "item", "spell", "feat", 'optionalfeature'];
-  static cacheKey = "sourceIds";
   static _curWindow;
 
   /**
@@ -158,7 +157,9 @@ class SourceManager {
     const allContentMeta = await UtilDataSource.pGetAllContent({
     sources: sourceIds,
     uploadedFileMetas: uploadedFileMetas,
-    customUrls: customUrls,/*
+    customUrls: customUrls,
+    cacheKeys: [],
+    /*
     isBackground,
 
     page: this._page,
@@ -170,7 +171,9 @@ class SourceManager {
 
     isAutoSelectAll, */
     });
-
+    const cacheKeys = allContentMeta.cacheKeys;
+    //test
+    SourceManager.cacheKeys = cacheKeys;
     const out = getDeduped? allContentMeta.dedupedAllContentMerged : allContentMeta;
 
     //TEMPFIX
@@ -261,11 +264,13 @@ Renderer.spell.populateBrewLookup(await BrewUtil2.pGetBrewProcessed(), {isForce:
     let state = CookieManager.getState();
     if(!state){
       //This really shouldn't happen, but it is good form to have a fallback anyway
-      state = {uid: CharacterBuilder.uid, page:"class", viewMode:false};
+      state = {uid: CharacterBuilder.uid, page: "class", viewMode :false};
     }
     //Tear down the existing window
     this._curWindow.teardown();
-    //Create a new window
+    //Create a new window, open up the saved character using the uid
+    //If we didn't save the character yet, just provide a null id
+    if(!CookieManager.getCharacterExists(state.uid)){state.uid = null;}
     const window = new CharacterBuilder(data, state.uid, state.page, state.viewMode);
     this._curWindow = window;
   }
@@ -313,7 +318,6 @@ Renderer.spell.populateBrewLookup(await BrewUtil2.pGetBrewProcessed(), {isForce:
       }
       return match;
     });
-    console.log({sourceIds: matchedSourceIds, uploadedFileMetas: metas, customUrls: customUrls});
     return {sourceIds: matchedSourceIds, uploadedFileMetas: metas, customUrls: customUrls}
   }
   static async _getDefaultSourceIds(){
@@ -440,11 +444,48 @@ class CharacterBuilder {
       this.compFeat = new ActorCharactermancerFeat(this);
       this.compDescription = new ActorCharactermancerDescription(this);
       this.compSheet = new ActorCharactermancerSheet(this);
+          
+      this._pRenderTest(charInfo)
+      .then(
+        () =>  {
+          this.e_switchTab(page);
+        }
+      );
+    }
+
+    async _pRenderTest(charInfo){
+      const character = charInfo?.character;
+      const doLoad = !!character;
+
+      await this._pLoad();
+
+      //RENDER COMPONENTS
+      await this.compClass.render();
+      if(doLoad){this.compClass.setStateFromSaveFile(character);}
+
+      await this.compRace.render();
+      if(doLoad){this.compRace.setStateFromSaveFile(character);}
       
-      //Call this to let the components load some content before we start using them
-      this._pLoad()
-      .then(() => this._renderComponents({charInfo})) //Then render the components
-      .then(() => this.e_switchTab(page)); //Then switch to the tab we want to start off with
+      await this.compAbility.render();
+
+      await this.compBackground.render();
+
+      await this.compEquipment.pRenderStarting();
+      await this.compEquipment.pRenderShop();
+      if(doLoad){this.compEquipment.setStateFromSaveFile(character);}
+
+      await this.compSpell.pRender();
+      if(doLoad){this.compSpell.setStateFromSaveFile(character);}
+
+      await this.compDescription.render();
+
+      if(doLoad){this.compAbility.setStateFromSaveFile(character);}
+      if(doLoad){this.compBackground.setStateFromSaveFile(character);}
+
+      //APPLY FILTERS
+      if(doLoad){await this.loadCachedFilters(charInfo);}
+      return true;
+
     }
 
     _createTabs($wrp){
@@ -522,10 +563,25 @@ class CharacterBuilder {
         await this.compSpell.pLoad();
         await this.compFeat.pLoad();
     }
-    _renderComponents(opts){
+    async loadCachedFilters(charInfo){
+      if(charInfo == null){return;}
+      const filters = charInfo._meta.filters;
+      function applyCachedFilters(cachedFilters, modal) {
+        if(!cachedFilters){return;}
+        modal.pageFilter.filterBox.setFromValues(cachedFilters);
+      }
+      applyCachedFilters(filters.class, this.compClass.modalFilterClasses);
+      applyCachedFilters(filters.race, this.compRace.modalFilterRaces);
+      applyCachedFilters(filters.background, this.compBackground.modalFilterBackgrounds);
+      applyCachedFilters(filters.shop, this.compEquipment._compEquipmentShopGold._modalFilter);
+      applyCachedFilters(filters.spell, this.compSpell.modalFilterSpells);
+      applyCachedFilters(filters.feat, this.compFeat.modalFilterFeats);
+    }
+    async _renderComponents(opts){
         //this.compClass.render(); //Goes on for quite long, and will trigger hooks for many ms after
         const doLoad = SETTINGS.USE_EXISTING_WEB && !!this.actor;
 
+      
         this.compClass.render().then(() => {
 
           if(doLoad){ this.compClass.setStateFromSaveFile(this.actor); }
@@ -536,9 +592,23 @@ class CharacterBuilder {
 
           this.compBackground.render();
           
-
-          this.compEquipment.pRenderStarting().then(() => this.compEquipment.pRenderShop())
-            .then(() => {if(doLoad){this.compEquipment.setStateFromSaveFile(this.actor)}});
+          //compEquipment's modalfilters are only created in pRenderShop
+          this.compEquipment.pRenderStarting()
+          //.then(() => this.compEquipment.compEquipmentShopGold._modalFilter = new ModalFilterEquipment(this.compEquipment.compEquipmentShopGold))
+          //.then(() => this.compEquipment.compEquipmentShopGold._modalFilter.pageFilter.filterBox.setFromValues(
+            //opts.charInfo._meta.filters.shop))
+          .then(() => this.compEquipment.pRenderShop())
+            .then(() => {
+              const shop = this.compEquipment.compEquipmentShopGold;
+              if(doLoad){
+                console.log("Setting state to compequipment", shop._modalFilter.pageFilter.filterBox != null);
+                this.compEquipment.setStateFromSaveFile(this.actor);
+                if(opts?.charInfo._meta.filters){
+                  /* console.log("Setting filters to shop modal via then");
+                  this.compEquipment.compEquipmentShopGold._modalFilter.pageFilter.filterBox.setFromValues(
+                  opts.charInfo._meta.filters.shop); */
+                }
+              }});
           this.compSpell.pRender().then(() => {if(doLoad){this.compSpell.setStateFromSaveFile(this.actor);}});
           this.compFeat.render();
         
@@ -547,9 +617,15 @@ class CharacterBuilder {
 
           if(doLoad){this.compAbility.setStateFromSaveFile(this.actor);}
           if(doLoad){this.compBackground.setStateFromSaveFile(this.actor);}
+          console.log("Rendering complete");
+          //this.loadCachedFilters(null, opts.charInfo)
       }).then(()=> {
         this.compSheet.render({charInfo: opts?.charInfo});
       });
+
+      
+
+      console.log("RenderComponents complete");
     }
 
     _createHeader($wrp){

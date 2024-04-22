@@ -172,11 +172,16 @@ class CharacterExportFvtt{
         _meta.uploadedFileMetas = SourceManager.cachedUploadedFileMetas;
         _meta.customUrls = SourceManager.cachedUploadedCustomUrls;
 
-        //Filter settings (WIP)
-        const filterSettingsClass = builder.compClass.modalFilterClasses._pageFilter._filters.map(f => {
-            return {header:f.header, state:f.state};
-        });
-        console.log(filterSettingsClass);
+        //Filter settings
+        let filters = {};
+        filters.class = builder.compClass.modalFilterClasses._pageFilter._filterBox.getValues();
+        filters.race = builder.compRace.modalFilterRaces._pageFilter._filterBox.getValues();
+        filters.background = builder.compBackground.modalFilterBackgrounds._pageFilter._filterBox.getValues();
+        filters.shop = builder.compEquipment._compEquipmentShopGold._modalFilter._pageFilter._filterBox.getValues();
+        filters.spell = builder.compSpell.modalFilterSpells._pageFilter._filterBox.getValues();
+        filters.feat = builder.compFeat.modalFilterFeats._pageFilter._filterBox.getValues();
+        _meta.filters = filters;
+
 
         const output = {character: _char, _meta:_meta};
 
@@ -826,30 +831,16 @@ class CharacterExportFvtt{
         if(sourceId.isFile){return false;}
         if(sourceId.isDefault){return false;}
 
-        const itemAbbreviation = item.source? item.source.toLowerCase() : null; //Some homebrew content items does not have the 'source' property set. This is unfortunate
-        //However, there might still be abbreviations supplied
-        const srcUsedAbbreviations = sourceId.abbreviations.map(a => a.toLowerCase());
-        //Match abbreviations. If brewer made a typo on the abbreviation somewhere, this will fail
-        if(!srcUsedAbbreviations.includes(itemAbbreviation)){
-
-            //Fallback: in some strange cases, the item's 'source' property may not actually use an abbreviation, instead it just uses the name of the homebrew source itself
-            //sourceId.name is usually: "authorName; sourceName", so it might be worth an attempt to split off the sourceName at the end there
-            const parts = sourceId.name.split("; ")
-            if(item.source != sourceId.name && item.source != sourceId.name && item.source != parts[parts.length-1].trim()){
-                console.log("Could not match "+item.name+"|"+item.source + " to " + sourceId.name);
-                return false;
-            }
-        }
-
-        //Now that we know the abbreivations matched, we can return true, or if we want to be pedantic,
-        //we can check to see that source names also match
-        //(WARNING:) keep in mind, the user may have enabled more than 1 source that uses the same abbrevation!
-
-        const src = BrewUtil2.sourceJsonToSource(item.source);
-        const srcs = BrewUtil2.getSources();
-
-        //let brewMetas = BrewUtil2._getBrewMetas();
-        //first, 
+        //All items should have an abbreviation for the source in the 'source' property (for example, "PHB")
+        //const itemAbbreviation = item.source? item.source.toLowerCase() : null;
+        //Unfortunately, no source IDs contain this kind of information, so we cant match them this way
+        //But the source id *does* have an url
+        const srcUrl = sourceId.url;
+        //And the item should have an array with cached urls (hopefully just one) associated with it
+        const itemSrcUrls = item.sourceCacheKeys;
+        if(itemSrcUrls==null){console.log(item.name+" does not have sourceCacheKeys", item);}
+        const urlMatch = itemSrcUrls.includes(srcUrl);
+        if(!urlMatch){return false;}
 
         if(!pendanticMode){return true;}
 

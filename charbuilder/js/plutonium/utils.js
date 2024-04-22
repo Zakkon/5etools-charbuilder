@@ -475,6 +475,31 @@ UtilDataSource.DataSourceBase = class {
             uploadedFileMetas,
             customUrls
         });
+
+        //At the moment, none of the content has any real link that connects it to a source, like a url
+        //This means that if we have an item (say a race), we can't know for certain which source it came from
+        //Let's address this by including cacheKeys (which should be urls of sources) into the content itself
+        for(let content of meta.contents){ //
+            for (let prop in content) {
+                //Look for array properties in 'content' that are not named "_meta" or "$schema", but instead "race", "class" and so on
+                if (content.hasOwnProperty(prop) && Array.isArray(content[prop]) && prop !== "_meta" && prop !== "$schema") {
+                    //Make sure each race/class/item/background etc is given the cacheKeys
+                    for(let i = 0; i < content[prop].length; ++i){
+
+                        //Set the sourceCacheKeys
+                        content[prop][i].sourceCacheKeys = meta.cacheKeys;
+
+                        //Since subclasses are stored within classes, we need to check for subclasses and give them the sourceCacheKeys as well
+                        if(prop == "class" && content[prop][i].subclasses != null){
+                            for(let j = 0; j < content[prop][i].subclasses.length; ++j){
+                                content[prop][i].subclasses[j].sourceCacheKeys = meta.cacheKeys;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         allContent.push(...meta.contents);
         if (cacheKeys && this.isCacheable())
             cacheKeys.push(...meta.cacheKeys);
@@ -489,7 +514,6 @@ UtilDataSource.DataSourceUrl = class extends UtilDataSource.DataSourceBase {
      */
     constructor(name, url, opts) {
         opts = opts || {};
-
         super(name, {
             isWorldSelectable: !!url,
             ...opts
@@ -552,6 +576,7 @@ UtilDataSource.DataSourceUrl = class extends UtilDataSource.DataSourceBase {
             console.error(msg);
             throw e;
         }
+        
         return {
             cacheKeys: [this.url],
             contents: [data],
@@ -574,7 +599,6 @@ UtilDataSource.DataSourceUrl = class extends UtilDataSource.DataSourceBase {
 UtilDataSource.DataSourceFile = class extends UtilDataSource.DataSourceBase {
     constructor(name, opts) {
         opts = opts || {};
-
         super(name, {
             isWorldSelectable: false,
             ...opts
@@ -638,7 +662,6 @@ UtilDataSource.DataSourceSpecial = class extends UtilDataSource.DataSourceBase {
      */
     constructor(name, pGet, opts) {
         opts = opts || {};
-
         super(name, { isWorldSelectable: true, ...opts });
         this.special = { pGet };
         if (!opts.cacheKey) { throw new Error(`No cache key specified!`); }

@@ -62,6 +62,7 @@ class CharacterSelectScreen {
         });
         const btnDelete = $$`<button class="character-card-footer-links-button btn-dangerous">Delete</button>`;
         btnDelete.click(() => {
+            CookieManager.setState({uid:null, page:"select", viewMode:false});
             parent.deleteCharacter(charUid);
             this.close();
             this.render();

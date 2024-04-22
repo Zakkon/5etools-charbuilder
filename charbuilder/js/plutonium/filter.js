@@ -386,13 +386,7 @@ class FilterBox extends ProxyBase
         }));
     }
 
-    getValues({nxtStateOuter=null}={}) {
-        const outObj = {};
-        this._filters.forEach(f=>Object.assign(outObj, f.getValues({
-            nxtState: nxtStateOuter?.filters
-        })));
-        return outObj;
-    }
+    
 
     addEventListener(type, listener) {
         (this._$wrpFormTop ? this._$wrpFormTop[0] : this._$btnOpen[0]).addEventListener(type, listener);
@@ -772,6 +766,13 @@ class FilterBox extends ProxyBase
     setFromValues(values) {
         this._filters.forEach(it=>it.setFromValues(values));
         this.fireChangeEvent();
+    }
+    getValues({nxtStateOuter=null}={}) {
+        const outObj = {};
+        this._filters.forEach(f=>Object.assign(outObj, f.getValues({
+            nxtState: nxtStateOuter?.filters
+        })));
+        return outObj;
     }
 
     toDisplay(boxState, ...entryVals) {
