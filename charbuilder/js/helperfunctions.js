@@ -12,7 +12,11 @@ class HelperFunctions{
         }
         modalFilter.pageFilter.filterBox.setFromValues({Source: sources});
     }
-
+    static getClassFromData(myData, className, classSrc){
+        className = className.toLowerCase();
+        classSrc = classSrc.toLowerCase();
+        return myData.class.filter(cls => !!cls && cls.name.toLowerCase() == className && cls.source.toLowerCase() == classSrc);
+    }
     static getClassFeaturesFromClassInData(myData, cls){
         return myData.classFeature.filter(f => !!f && f.className == cls.name && f.classSource == cls.source);
     }

@@ -255,15 +255,15 @@ class ActorCharactermancerClass extends ActorCharactermancerBaseComponent {
         //Filter button and what happens when we click it
         const filterBtn = $("<button class=\"btn btn-xs btn-5et h-100 btr-0 bbr-0 pr-2\" title=\"Filter for Class and Subclass\"><span class=\"glyphicon glyphicon-filter\"></span> Filter</button>")
         .click(async () => {
-            const cls = this.getClass_({'propIxClass': propIxClass });
-            const subcls = this.getSubclass_({'cls': cls, 'propIxSubclass': propIxSubclass});
-            const classSelectDisabled = this._class_isClassSelectionDisabled({ 'ix': ix });
-            const subclassSelectDisabled = this._class_isSubclassSelectionDisabled({ 'ix': ix });
+            const cls = this.getClass_({propIxClass: propIxClass });
+            const subcls = this.getSubclass_({cls: cls, propIxSubclass: propIxSubclass});
+            const classSelectDisabled = this._class_isClassSelectionDisabled({ ix: ix });
+            const subclassSelectDisabled = this._class_isSubclassSelectionDisabled({ ix: ix });
             const userSelection = await this._modalFilterClasses.pGetUserSelection({
-            'selectedClass': cls,
-            'selectedSubclass': subcls,
-            'isClassDisabled': classSelectDisabled,
-            'isSubclassDisabled': subclassSelectDisabled
+                selectedClass: cls,
+                selectedSubclass: subcls,
+                isClassDisabled: classSelectDisabled,
+                isSubclassDisabled: subclassSelectDisabled
             });
             if (classSelectDisabled && subclassSelectDisabled) {
             return;
@@ -278,7 +278,7 @@ class ActorCharactermancerClass extends ActorCharactermancerBaseComponent {
 
             if (userSelection.subclass != null) {
                 const cls = this.getClass_({
-                    'propIxClass': propIxClass
+                    propIxClass: propIxClass
                 });
                 const subcls_index = cls.subclasses.findIndex(ix => ix.name === userSelection.subclass.name && ix.source === userSelection.subclass.source);
                 if (!~subcls_index) { throw new Error("Could not find selected subclass: " + JSON.stringify(userSelection.subclass)); }
@@ -304,22 +304,22 @@ class ActorCharactermancerClass extends ActorCharactermancerBaseComponent {
 
             //Render the dropdown for choosing a subclass
             this._class_renderClass_stgSelectSubclass({
-                '$stgSelectSubclass': holder_selectSubclass,
-                'cls': cls,
-                'ix': ix,
-                'propIxSubclass': propIxSubclass,
-                'idFilterBoxChangeSubclass': filter_evnt_valchange_subclass,
-                'doApplyFilterToSelSubclass': applySubclassFilter
+                $stgSelectSubclass: holder_selectSubclass,
+                cls: cls,
+                ix: ix,
+                propIxSubclass: propIxSubclass,
+                idFilterBoxChangeSubclass: filter_evnt_valchange_subclass,
+                doApplyFilterToSelSubclass: applySubclassFilter
             });
             this._class_renderClass_stgHpMode({
-            '$stgHpMode': holder_hpMode,
-            'ix': ix,
-            'cls': cls
+                $stgHpMode: holder_hpMode,
+                ix: ix,
+                cls: cls
             });
             this._class_renderClass_stgHpInfo({
-            '$stgHpInfo': holder_hpInfo,
-            'ix': ix,
-            'cls': cls
+                $stgHpInfo: holder_hpInfo,
+                ix: ix,
+                cls: cls
             });
             //Element that shows which proficiencies we always start with (usually weapons and armor)
             this._class_renderClass_stgStartingProficiencies({
@@ -330,32 +330,32 @@ class ActorCharactermancerClass extends ActorCharactermancerBaseComponent {
 
             //Now create the level select UI
             await this._class_renderClass_pStgLevelSelect({
-                '$stgLevelSelect': holder_levelSelect,
-                '$stgFeatureOptions': holder_featureOptions,
-                'ix': ix,
-                'cls': cls,
-                'sc': subcls,
-                'propIxSubclass': propIxSubclass,
-                'propCurLevel': propCurLevel,
-                'propTargetLevel': propTargetLevel,
-                'propCntAsi': propCntAsi,
-                'lockRenderFeatureOptionsSelects': lockRenderFeatureOptionsSelects,
-                'idFilterBoxChangeClassLevels': filter_evnt_valchange_class
+                $stgLevelSelect: holder_levelSelect,
+                $stgFeatureOptions: holder_featureOptions,
+                ix: ix,
+                cls: cls,
+                sc: subcls,
+                propIxSubclass: propIxSubclass,
+                propCurLevel: propCurLevel,
+                propTargetLevel: propTargetLevel,
+                propCntAsi: propCntAsi,
+                lockRenderFeatureOptionsSelects: lockRenderFeatureOptionsSelects,
+                idFilterBoxChangeClassLevels: filter_evnt_valchange_class
             });
             this._state.class_totalLevels = this.class_getTotalLevels();
 
             //Create the element that lets us choose skill proficiencies
-            this._class_renderClass_stgSkills({ '$stgSkills': holder_skills, 'ix': ix, 'propIxClass': propIxClass });
+            this._class_renderClass_stgSkills({ $stgSkills: holder_skills, ix: ix, propIxClass: propIxClass });
 
             //Create the element that lets us choose tool proficiencies
-            this._class_renderClass_stgTools({ '$stgTools': holder_tools, 'ix': ix, 'propIxClass': propIxClass })
+            this._class_renderClass_stgTools({ $stgTools: holder_tools, ix: ix, propIxClass: propIxClass })
 
             //Create the element that handles drawing info about our class
             await this._class_renderClass_pDispClass({
-                'ix': ix,
-                '$dispClass': holder_dispClass,
-                'cls': cls,
-                'sc': subcls
+                ix: ix,
+                $dispClass: holder_dispClass,
+                cls: cls,
+                sc: subcls
             });
             //Also clear the element that displays info about our subclass
             disp_subclass.empty();
@@ -749,6 +749,31 @@ class ActorCharactermancerClass extends ActorCharactermancerBaseComponent {
       return SETTINGS.LOCK_EXISTING_CHOICES && !!this._existingClassMetas[ix];
     }
     _class_isSubclassSelectionDisabled({ ix: ix }) {
+
+        //TODO: Make subclass selection be locked when class level is too low
+        /* if(SETTINGS.LOCK_SUBCLASS_LOWLVL){
+            const meta = this._existingClassMetas[ix];
+            if(meta){
+                const curLvl = meta.level; //Should perhaps be target level instead
+                //Figure out what level subclass choice turns on
+                //const fullClassData = 
+                const classes = HelperFunctions.getClassFromData(this._data, meta.item.name, meta.item.source);
+                console.log(curLvl);
+                const myClass = classes[0];
+                const classFeatures = myClass.classFeatures;
+                let firstGainSubclassFeatureLevel = 0;
+                for(let i = 0; i < classFeatures.length; ++i){
+                    const f = classFeatures[i];
+                    //Check if this feature gives a subclass feature, and end the loop
+                    if(f.gainSubclassFeature){firstGainSubclassFeatureLevel = f.level; i=Number.MAX_VALUE;}
+                }
+                //Assume that the first level we gain a subclass feature is the level where we pick a subclass
+                //If our current level is lower than this, we should lock the subclass selection
+
+            }
+            console.log("META", meta, this);
+        } */
+
         //TEMPFIX
       return SETTINGS.LOCK_EXISTING_CHOICES && this._existingClassMetas[ix]
       && (this._existingClassMetas[ix].ixSubclass != null || this._existingClassMetas[ix].isUnknownClass);
@@ -756,9 +781,9 @@ class ActorCharactermancerClass extends ActorCharactermancerBaseComponent {
     
     static _class_getLocks(ix) {
       return {
-        'lockChangeClass': 'class_' + ix + '_pHkChangeClass',
-        'lockChangeSubclass': "class_" + ix + '_pHkChangeSubclass',
-        'lockRenderFeatureOptionsSelects': 'class_' + ix + "_renderFeatureOptionsSelects"
+        lockChangeClass: 'class_' + ix + '_pHkChangeClass',
+        lockChangeSubclass: "class_" + ix + '_pHkChangeSubclass',
+        lockRenderFeatureOptionsSelects: 'class_' + ix + "_renderFeatureOptionsSelects"
       };
     }
     
@@ -775,25 +800,25 @@ class ActorCharactermancerClass extends ActorCharactermancerBaseComponent {
         //We will be looking att cls.subclasses to see which subclasses we have to choose from
         if (cls && cls.subclasses && cls.subclasses.length) {
             const uiSearchElement = ComponentUiUtil.$getSelSearchable(this, propIxSubclass, {
-            'values': cls.subclasses.map((a, b) => b),
-            'isAllowNull': true,
-            'fnDisplay': ix => {
-                const subcls = this.getSubclass_({'cls': cls, 'ix': ix });
+            values: cls.subclasses.map((a, b) => b),
+            isAllowNull: true,
+            fnDisplay: ix => {
+                const subcls = this.getSubclass_({cls: cls, ix: ix });
                 if (!subcls) {
                 console.warn(...LGT, "Could not find subclass with index " + ix + " (" + cls.subclasses.length + " subclasses were available for class " + cls.name + ')');
                 return '(Unknown)';
                 }
                 return subcls.name + " " + (subcls.source !== Parser.SRC_PHB ? '[' + Parser.sourceJsonToAbv(subcls.source) + ']' : '');
             },
-            'fnGetAdditionalStyleClasses': ix => {
+            fnGetAdditionalStyleClasses: ix => {
                 if (ix == null) { return null; }
-                const subcls = this.getSubclass_({'cls': cls, 'ix': ix });
+                const subcls = this.getSubclass_({cls: cls, ix: ix });
                 if (!subcls) { return; }
                 return subcls._versionBase_isVersion ? ['italic'] : null;
             },
-            'asMeta': true,
-            'isDisabled': this._class_isSubclassSelectionDisabled({'ix': ix}),
-            'displayNullAs': "Select a Subclass"
+            asMeta: true,
+            isDisabled: this._class_isSubclassSelectionDisabled({ix: ix}),
+            displayNullAs: "Select a Subclass"
             });
             uiSearchElement.$iptDisplay.addClass('bl-0');
             uiSearchElement.$iptSearch.addClass("bl-0");

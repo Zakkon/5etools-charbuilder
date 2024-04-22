@@ -134,6 +134,6 @@ class CharacterSelectScreen {
     openCharacter(uid, viewMode=false){
         console.log("Open character", uid);
         this.close();
-        SourceManager.defaultStart({actor:null, cookieUid:uid, page:"sheet"});
+        SourceManager.defaultStart({actor:null, cookieUid:uid, page:"sheet", viewMode:viewMode});
     }
 }

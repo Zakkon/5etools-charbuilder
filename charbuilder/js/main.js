@@ -14,11 +14,11 @@ window.addEventListener('load', function () {
       const charSelect = new CharacterSelectScreen();
       charSelect.render();
       //Write a new cookie saying we are at char select screen
-      CookieManager.setState(CharacterBuilder.createStateCookie("select", null));
+      CookieManager.setState(CharacterBuilder.createStateCookie("select", null, false));
     }
     else {
       //Tell sourcemanager to load sources to display the character who's uid was in the cookie, then switch to the right page
-      SourceManager.defaultStart({cookieUid: cookie.uid, page:cookie.page});
+      SourceManager.defaultStart({cookieUid: cookie.uid, page:cookie.page, viewMode:cookie.viewMode});
     }
   }));
 });
@@ -60,7 +60,7 @@ class SourceManager {
    * @param {string} cookieUid The uid which is attached to the character
    * @param {string} page The page the character builder will jump to upon launch
    */
-  static async defaultStart({ cookieUid, page }) {
+  static async defaultStart({ cookieUid, page, viewMode=false }) {
 
     //Try to load source ids from localstorage by referring to a character saved in localstorage under 'cookieUid'
     const attemptedLoad = await this._loadSourceIdsFromSave(cookieUid);
@@ -72,7 +72,7 @@ class SourceManager {
     const data = await SourceManager._loadSources({sourceIds: sourceIds, uploadedFileMetas: uploadedFileMetas, customUrls: customUrls});
 
     //Create the character builder UI, and try to navigate to the correct page, showing the correct character
-    const window = new CharacterBuilder(data, cookieUid, page);
+    const window = new CharacterBuilder(data, cookieUid, page, viewMode);
     this._curWindow = window;
   }
   
@@ -364,6 +364,7 @@ class SETTINGS{
     static GET_CASTERPROG_UP_TO_CURLEVEL = true;
     static GET_FEATOPTSEL_UP_TO_CURLEVEL = true;
     static SPECIFIED_ABILITY_SAVE = false;
+    static LOCK_SUBCLASS_LOWLVL = false;
 }
 class CharacterBuilder {
     tabButtonParent;
@@ -396,7 +397,7 @@ class CharacterBuilder {
     * @param {string} page
     * @returns {CharacterBuilder}
     */
-    constructor(data, existingUid, page){
+    constructor(data, existingUid, page, viewMode=false){
 
       ActorCharactermancerBaseComponent.class_clearDeleted();
       CharacterBuilder.currentUid = null; //Reset the publicly readable uid
@@ -408,6 +409,8 @@ class CharacterBuilder {
       //Create header
       this._createHeader(_root);
 
+      this.VIEW_MODE = viewMode;
+      if(this.VIEW_MODE){page = "sheet";} //If we are in view mode, set page to sheet, since we wont be editing the character anyway
       this._createTabs(_root); //Create the small tab buttons
       this._createPanels(_root); //Create the panels that hold components
       
@@ -449,17 +452,26 @@ class CharacterBuilder {
         const createRightSideBtn = (label) => {
           return $$`<button class="hugRight">${label}</button>`.appendTo(tabHolder);
         }
+        const createLabel = (label) => {
+          return $$`<label class="btn-sm">${label}</label>`.appendTo(tabHolder);
+        }
 
         //Create the tabs
-        createTabBtn("Class").click(()=>{ this.e_switchTab("class"); }).addClass("active"); //Set class button as active
-        createTabBtn("Race").click(()=>{ this.e_switchTab("race"); });
-        createTabBtn("Abilities").click(()=>{ this.e_switchTab("abilities"); });
-        createTabBtn("Background").click(()=>{ this.e_switchTab("background"); });
-        createTabBtn("Starting Equipment").click(()=>{ this.e_switchTab("startingEquipment"); });
-        createTabBtn("Equipment Shop").click(()=>{ this.e_switchTab("shop"); });
-        createTabBtn("Spells").click(()=>{ this.e_switchTab("spells"); });
-        createTabBtn("Feats").click(()=>{ this.e_switchTab("feats"); });
-        createTabBtn("Description").click(()=>{ this.e_switchTab("description"); });
+        if(!this.VIEW_MODE){ //If we are in VIEW MODE, do not show any tabs that contain character choices
+          createTabBtn("Class").click(()=>{ this.e_switchTab("class"); }).addClass("active"); //Set class button as active
+          createTabBtn("Race").click(()=>{ this.e_switchTab("race"); });
+          createTabBtn("Abilities").click(()=>{ this.e_switchTab("abilities"); });
+          createTabBtn("Background").click(()=>{ this.e_switchTab("background"); });
+          createTabBtn("Starting Equipment").click(()=>{ this.e_switchTab("startingEquipment"); });
+          createTabBtn("Equipment Shop").click(()=>{ this.e_switchTab("shop"); });
+          createTabBtn("Spells").click(()=>{ this.e_switchTab("spells"); });
+          createTabBtn("Feats").click(()=>{ this.e_switchTab("feats"); });
+          createTabBtn("Description").click(()=>{ this.e_switchTab("description"); });
+        }
+        else{
+          //Create a label that says we are in view mode?
+          createLabel("View Mode Active");
+        }
         createTabBtn("Sheet").click(()=>{ this.e_switchTab("sheet"); });
         
         if(!CharacterBuilder.useHeaderTitleAndReturnButton){
@@ -587,7 +599,7 @@ class CharacterBuilder {
         this._setActive(newActivePanel.$wrpTab, true);
 
         //Write to localstorage that we are on this tab now, so if browser refreshes, we go back to it
-        const cookie = CharacterBuilder.createStateCookie(tabName, CharacterBuilder.currentUid);
+        const cookie = CharacterBuilder.createStateCookie(tabName, CharacterBuilder.currentUid, this.VIEW_MODE);
         CookieManager.setState(cookie);
     }
     async e_changeSourcesDialog(){
@@ -630,7 +642,7 @@ class CharacterBuilder {
       const charSelect = new CharacterSelectScreen();
       charSelect.render();
 
-      const cookie = CharacterBuilder.createStateCookie("select", null);
+      const cookie = CharacterBuilder.createStateCookie("select", null, false);
       CookieManager.setState(cookie);
     }
 
@@ -650,10 +662,11 @@ class CharacterBuilder {
      * @param {string} charUid
      * @returns {{uid:string, page:string}}
      */
-    static createStateCookie(tabName, charUid){
+    static createStateCookie(tabName, charUid, viewMode=false){
       return {
         page: tabName,
-        uid: charUid
+        uid: charUid,
+        viewMode: viewMode
       };
     }
 }
