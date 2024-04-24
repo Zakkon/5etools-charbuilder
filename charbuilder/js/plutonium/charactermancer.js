@@ -608,9 +608,9 @@ class ActorCharactermancerClass extends ActorCharactermancerBaseComponent {
             return new ActorCharactermancerClass.ExistingClassMeta({
                 item: cls, //Class data object
                 ixClass: _clsIx, //index of this class
-                isUnknownClass: _clsIx<= 0,//!~_clsIx,
+                isUnknownClass: _clsIx < 0,//!~_clsIx,
                 ixSubclass: _scIx, //index of the subclass
-                isUnknownSubclass: _scIx == null || _scIx < 0,//_scIx == null && !~_scIx,
+                isUnknownSubclass: _scIx != null && _scIx < 0,//_scIx == null && !~_scIx,
                 level: classLevel, //level
                 isPrimary: isPrimaryClass, //is this the primary class?
                 //TEMPFIX 'spellSlotLevelSelection': cls?.flags?.[SharedConsts.MODULE_ID]?.['spellSlotLevelSelection']
@@ -685,7 +685,7 @@ class ActorCharactermancerClass extends ActorCharactermancerBaseComponent {
         if (cls.source && cls.hash) {
             const ix = this._data.class.findIndex(ourDataClass => cls.source === ourDataClass.source
                 && cls.hash === UrlUtil.URL_TO_HASH_BUILDER[UrlUtil.PG_CLASSES](ourDataClass));
-            if (~ix) { return ix; }
+            if (ix>=0) { return ix; }
         }
         //const _classNameLower = cls.name.toLowerCase().trim(); //(IntegrationBabele.getOriginalName(cls) || '').toLowerCase().trim();
 

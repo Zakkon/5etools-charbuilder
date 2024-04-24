@@ -53,7 +53,7 @@ class MixedProxyBase //extends Cls
 
     _doFireHooks(hookProp, prop, value, prevValue) {
         if (this.__hooks[hookProp] && this.__hooks[hookProp][prop]){
-            console.warn("Fire hook", hookProp, prop, value, prevValue, this.constructor.name);
+            //console.warn("Fire hook", hookProp, prop, value, prevValue, this.constructor.name);
             this.__hooks[hookProp][prop].forEach(hook=>hook(prop, value, prevValue));
         }
     }

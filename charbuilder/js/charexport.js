@@ -813,7 +813,7 @@ class CharacterExportFvtt{
      * abbreviations:string[] _isAutoDetectPrereleaseBrew:boolean, _isExistingPrereleaseBrew:boolean}[]}
      */
     static getLoadedSources(){
-        return SourceManager.cachedSourceIds;
+        return [...SourceManager.cachedSourceIds, ...SourceManager.cachedCustomUrls];
     }
     static getBrewSourceIds(){
         //Only return non-default sources for now
@@ -826,6 +826,8 @@ class CharacterExportFvtt{
      * @returns {boolean}
      */
     static doesMatchToBrewSource(item, sourceId, pendanticMode=false){
+
+        if((typeof sourceId) == "string"){sourceId = {url:sourceId};}
 
         //NEW STUFF
         //check if custom upload or default source, we do not handle those
