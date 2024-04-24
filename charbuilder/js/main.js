@@ -479,7 +479,6 @@ class CharacterBuilder {
 
       await this.compDescription.render();
 
-      
 
       if(doLoad){this.compBackground.setStateFromSaveFile(character);}
       if(doLoad){this.compRace.setStateFromSaveFile(character);}
@@ -488,6 +487,8 @@ class CharacterBuilder {
       if(doLoad){this.compEquipment.setStateFromSaveFile(character);}
       if(doLoad){await this.compClass.setStateFromSaveFile(character);}
 
+      
+      this.compSheet.render(charInfo);
 
       return true;
 
