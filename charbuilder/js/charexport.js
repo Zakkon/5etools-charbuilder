@@ -170,7 +170,8 @@ class CharacterExportFvtt{
         //This does of course include bloat, but it's more accurate than what we have going right now
         _meta.sourceIds = SourceManager.cachedSourceIds.map(id => SourceManager.minifySourceId(id));
         _meta.uploadedFileMetas = SourceManager.cachedUploadedFileMetas;
-        _meta.customUrls = SourceManager.cachedUploadedCustomUrls;
+        console.log("CUSTOM URLS", SourceManager.cachedCustomUrls);
+        _meta.customUrls = SourceManager.cachedCustomUrls;
 
         //Filter settings
         let filters = {};

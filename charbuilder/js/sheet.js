@@ -58,7 +58,7 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
         this._tabSheet = parentInfo.tabSheet;
   
     }
-    render({charInfo}){
+    render(charInfo){
       ActorCharactermancerSheet.characterName = null;
       if(!!charInfo?.character?.about?.name?.length){ActorCharactermancerSheet.characterName = charInfo.character.about.name;}
       const tabSheet = this._tabSheet?.$wrpTab;

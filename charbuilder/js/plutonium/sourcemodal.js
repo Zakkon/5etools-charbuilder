@@ -5,7 +5,7 @@ class PageFilterSourcesRaw extends AppSourceSelectorAppFilter {
 }
 class AppSourceSelectorMulti extends ModalFilter {
     /**
-     * @param {{title:string, sourcesToDisplay:any[], savedSelectionKey:string, filterNamespace:string, isRadio:boolean}} opts
+     * @param {{title:string, sourcesToDisplay:any[], preEnabledSources:[], preEnabledCustomUrls:[], savedSelectionKey:string, filterNamespace:string, isRadio:boolean}} opts
      * @returns {any}
      */
     constructor(opts) {
@@ -35,6 +35,23 @@ class AppSourceSelectorMulti extends ModalFilter {
             urlMetas: [],
             specialMetas: [],
         });
+
+        //Add custom urls to the metas
+        let customUrlMetas = [];
+        if(opts.preEnabledCustomUrls){
+            for(let url of opts.preEnabledCustomUrls){
+                let nxt = {
+                    id: CryptUtil.uid(),
+                    data: {
+                        displayName: "Custom Url",
+                        isCustom: true,
+                        url: url,
+                    },
+                };
+                customUrlMetas.push(nxt);
+            }
+        }
+        this._comp._state.urlMetas = [...this._comp._state.urlMetas, ...customUrlMetas, ];
 
         this._isDedupable = !!opts.isDedupable;
         this._page = opts.page;
@@ -141,7 +158,8 @@ class AppSourceSelectorMulti extends ModalFilter {
                     }
                     );
 
-                    const $btnDelete = $(`<button class="btn btn-5et btn-xs btn-danger" title="Delete"><span class="glyphicon glyphicon-trash"></span></button>`).click(()=>this._comp._state.uploadedFileMetas = this._comp._state.uploadedFileMetas.filter(it=>it !== uploadFileMeta));
+                    const $btnDelete = $(`<button class="btn btn-5et btn-xs btn-danger" title="Delete"><span class="glyphicon glyphicon-trash"></span></button>`)
+                    .click(()=>this._comp._state.uploadedFileMetas = this._comp._state.uploadedFileMetas.filter(it=>it !== uploadFileMeta));
 
                     const $wrpRow = $$`<div class="ve-flex-v-center my-1 w-100">
 						${$btnUpload}${$dispName}${$btnDelete}
@@ -165,6 +183,7 @@ class AppSourceSelectorMulti extends ModalFilter {
 
     _$getStageUrl() {
         const $btnAddUrl = $(`<button class="btn btn-5et btn-default btn-xs">Add Custom</button>`).click(()=>{
+            //Create ui input field for typing custom url into
             const nxt = {
                 id: CryptUtil.uid(),
                 data: {
@@ -174,8 +193,10 @@ class AppSourceSelectorMulti extends ModalFilter {
                 },
             };
 
+            //Add it to the metas of _comp (who will auto render them later)
             this._comp._state.urlMetas = [...this._comp._state.urlMetas, nxt, ];
 
+            //Get the url field just so we can focus it
             const renderedCollection = this._comp._getRenderedCollection({
                 prop: "urlMetas"
             });
@@ -230,7 +251,8 @@ class AppSourceSelectorMulti extends ModalFilter {
                     this._comp._addHookBase("displayName", hkDisplayNameUrl);
                     hkDisplayNameUrl();
 
-                    const $btnDelete = !comp._state.isCustom ? null : $(`<button class="btn btn-5et btn-xs btn-danger ml-2" title="Delete"><span class="glyphicon glyphicon-trash"></span></button>`).click(()=>this._comp._state.urlMetas = this._comp._state.urlMetas.filter(it=>it !== urlMeta));
+                    const $btnDelete = !comp._state.isCustom ? null : $(`<button class="btn btn-5et btn-xs btn-danger ml-2" title="Delete"><span class="glyphicon glyphicon-trash"></span></button>`)
+                    .click(()=>this._comp._state.urlMetas = this._comp._state.urlMetas.filter(it=>it !== urlMeta));
 
                     const $wrpRow = $$`<div class="ve-flex-v-center my-1 w-100">
 						${$iptUrl}${$btnDelete}

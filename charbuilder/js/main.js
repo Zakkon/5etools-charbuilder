@@ -294,7 +294,7 @@ Renderer.spell.populateBrewLookup(await BrewUtil2.pGetBrewProcessed(), {isForce:
       if(!info?.result?._meta?.sourceIds?.length){return null;}
       ids = info?.result._meta?.sourceIds;
       metas = info?.result._meta?.uploadedFileMetas || [];
-      metas = info?.result._meta?.customUrls || [];
+      customUrls = info?.result._meta?.customUrls || [];
     }
     catch(e){
       console.error("Failed to parse saved source ids!");
@@ -691,13 +691,15 @@ class CharacterBuilder {
       const allSources = await SourceManager._pGetSources();
       //Get the names of the sources we already have set as enabled
       const preEnabledSources = SourceManager.cachedSourceIds;
+      const customUrls = SourceManager.cachedCustomUrls;
       //Open up the source selector window and wait for a reply
       const sourceSelector = new ActorCharactermancerSourceSelector({
         title: "Select Sources",
         filterNamespace: 'ActorCharactermancerSourceSelector_filter',
         savedSelectionKey: "ActorCharactermancerSourceSelector_savedSelection",
         sourcesToDisplay: allSources,
-        preEnabledSources: preEnabledSources
+        preEnabledSources: preEnabledSources,
+        preEnabledCustomUrls: customUrls,
       });
       const result = await sourceSelector.pWaitForUserInput();
       //If user just tried to simply exit the dialog without confirming any choices, an empty array should be returned
