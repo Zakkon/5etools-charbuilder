@@ -84,13 +84,13 @@ class SourceManager {
   static async _loadSources(sourceInfo){
     //Process and post-process the data
     //Get entities such as classes, races, backgrounds using the source ids
-    const content = await SourceManager._getOutputEntities(sourceInfo.sourceIds, sourceInfo.uploadedFileMetas, sourceInfo.customUrls, true);
+    const {content, cacheKeys} = await SourceManager._getOutputEntities(sourceInfo.sourceIds, sourceInfo.uploadedFileMetas, sourceInfo.customUrls, true);
     //Then perform some post processing
     const postProcessedData = SourceManager._postProcessAllSelectedData(content);
     const mergedData = postProcessedData;
     //Make sure that the data always has an array for classes, races, feats, etc, even if none were provided by the sources
     SourceManager._DATA_PROPS_EXPECTED.forEach(propExpected => mergedData[propExpected] = mergedData[propExpected] || []);
-    SourceManager._setUsedSourceIds(sourceInfo);
+    SourceManager._setUsedSourceIds(sourceInfo, cacheKeys);
 
     return mergedData;
   }
@@ -172,8 +172,6 @@ class SourceManager {
     isAutoSelectAll, */
     });
     const cacheKeys = allContentMeta.cacheKeys;
-    //test
-    SourceManager.cacheKeys = cacheKeys;
     const out = getDeduped? allContentMeta.dedupedAllContentMerged : allContentMeta;
 
     //TEMPFIX
@@ -182,7 +180,7 @@ Renderer.spell.populateBrewLookup(await BrewUtil2.pGetBrewProcessed(), {isForce:
 
 (out.spell || []).forEach(sp => { Renderer.spell.uninitBrewSources(sp); Renderer.spell.initBrewSources(sp); }); */
 
-    return out;
+    return {content: out, cacheKeys:cacheKeys};
   }
 
   /**
@@ -277,10 +275,11 @@ Renderer.spell.populateBrewLookup(await BrewUtil2.pGetBrewProcessed(), {isForce:
   /**
    * @param {{sourceIds:any[], uploadedFileMetas:any[], customUrls:any[]}} opts
    */
-  static async _setUsedSourceIds(opts){
+  static async _setUsedSourceIds(opts, cacheKeys){
     SourceManager.cachedSourceIds = opts.sourceIds;
     SourceManager.cachedUploadedFileMetas = opts.uploadedFileMetas;
     SourceManager.cachedCustomUrls = opts.customUrls;
+    SourceManager.cacheKeys = cacheKeys;
   }
   /**
    * @param {string} cookieUid 
@@ -457,33 +456,39 @@ class CharacterBuilder {
       const character = charInfo?.character;
       const doLoad = !!character;
 
+      
+
       await this._pLoad();
+
+      
+      //APPLY FILTERS
+      if(doLoad){await this.loadCachedFilters(charInfo);} //Seems to reset FOS components (like expertise choices)
 
       //RENDER COMPONENTS
       await this.compClass.render();
-      if(doLoad){this.compClass.setStateFromSaveFile(character);}
 
       await this.compRace.render();
-      if(doLoad){this.compRace.setStateFromSaveFile(character);}
-      
       await this.compAbility.render();
 
       await this.compBackground.render();
 
       await this.compEquipment.pRenderStarting();
       await this.compEquipment.pRenderShop();
-      if(doLoad){this.compEquipment.setStateFromSaveFile(character);}
 
       await this.compSpell.pRender();
-      if(doLoad){this.compSpell.setStateFromSaveFile(character);}
 
       await this.compDescription.render();
 
-      if(doLoad){this.compAbility.setStateFromSaveFile(character);}
-      if(doLoad){this.compBackground.setStateFromSaveFile(character);}
+      
 
-      //APPLY FILTERS
-      if(doLoad){await this.loadCachedFilters(charInfo);}
+      if(doLoad){this.compBackground.setStateFromSaveFile(character);}
+      if(doLoad){this.compRace.setStateFromSaveFile(character);}
+      if(doLoad){this.compAbility.setStateFromSaveFile(character);}
+      if(doLoad){this.compSpell.setStateFromSaveFile(character);}
+      if(doLoad){this.compEquipment.setStateFromSaveFile(character);}
+      if(doLoad){await this.compClass.setStateFromSaveFile(character);}
+
+
       return true;
 
     }
@@ -571,11 +576,11 @@ class CharacterBuilder {
         modal.pageFilter.filterBox.setFromValues(cachedFilters);
       }
       applyCachedFilters(filters.class, this.compClass.modalFilterClasses);
-      applyCachedFilters(filters.race, this.compRace.modalFilterRaces);
+      /* applyCachedFilters(filters.race, this.compRace.modalFilterRaces);
       applyCachedFilters(filters.background, this.compBackground.modalFilterBackgrounds);
       applyCachedFilters(filters.shop, this.compEquipment._compEquipmentShopGold._modalFilter);
       applyCachedFilters(filters.spell, this.compSpell.modalFilterSpells);
-      applyCachedFilters(filters.feat, this.compFeat.modalFilterFeats);
+      applyCachedFilters(filters.feat, this.compFeat.modalFilterFeats); */
     }
     async _renderComponents(opts){
         //this.compClass.render(); //Goes on for quite long, and will trigger hooks for many ms after

@@ -1404,6 +1404,13 @@ class ActorCharactermancerClass extends ActorCharactermancerBaseComponent {
      * @returns {any}
      */
     async _loadFeatureOptionsSelectFromState(classIx, saveData){
+
+        async function waitForHook2(myComp, fosData){
+            myComp.__state["ixsChosen"] = fosData.state["ixsChosen"]; //Set the state without firing the hook
+            //Then manually call the render hook instead
+            await myComp._render_pHkIxsChosen({$stgSubChoiceData: myComp.$stgSubChoiceData});
+        }
+
         for(let fosData of saveData){ //Go through the feature opt sel data
 
             const myComp = this.compsClassFeatureOptionsSelect[classIx][fosData.compIx];
@@ -1419,42 +1426,67 @@ class ActorCharactermancerClass extends ActorCharactermancerBaseComponent {
                 if(propName == "ixsChosen"){continue;} //We do not want to fire the ixsChosen hook yet
                 myComp._state[propName] = propValue;
             }
-            const waitForHook = async () => {
+            /* const waitForHook = async () => {
                 myComp.__state["ixsChosen"] = fosData.state["ixsChosen"]; //Set the state without firing the hook
                 //Then manually call the render hook instead
                 await myComp._render_pHkIxsChosen({$stgSubChoiceData: myComp.$stgSubChoiceData});
-            };
-            waitForHook().then(()=>{
-                console.log("Applying state to FOS subcomponents");
+            }; */
+            await waitForHook2(myComp, fosData);
+            const debugOptionSetNames = []; for(let optSet of myComp._optionsSet){debugOptionSetNames.push(optSet.hash);}
+            console.log(`Applying state to FOS subcomponents for class ${classIx} level ${myComp.level}. `, debugOptionSetNames);
 
-                //Then give state to subcomponents
-                //A problem here might be that our parents havent created the subcomponents yet
-                for(let subData of fosData.subCompDatas){
-                    //Grab the subcomponent that we want to paste the state onto
-                    const subComp = this._getFeatureOptionsSelectComponent(classIx, subData.parentCompIx, subData.subCompProp, subData.subCompIx);
-                    if(subComp==null){
-                        console.error("Failed to load data to FOS subcomponent", myComp, subData);
-                    }
-                    //Paste the state onto the subcomponent
-                    const subState = subData.state;
-                    for(let propName of Object.keys(subState)){
-                        let propValue = subState[propName];
-                        subComp._state[propName] = propValue;
-                    }
+            //Then give state to subcomponents
+            //A problem here might be that our parents havent created the subcomponents yet
+            for(let subData of fosData.subCompDatas){
+                //Grab the subcomponent that we want to paste the state onto
+                const subComp = await this._getFeatureOptionsSelectComponent(classIx, subData.parentCompIx, subData.subCompProp, subData.subCompIx);
+                if(subComp==null){
+                    console.error("Failed to load data to FOS subcomponent("+Object.getPrototypeOf(myComp).constructor.name+")", "Component:", myComp, "SubData:", subData);
                 }
-            });
-
-            
-
-            
+                
+                //Paste the state onto the subcomponent
+                const subState = subData.state;
+                console.log(subState);
+                for(let propName of Object.keys(subState)){
+                    let propValue = subState[propName];
+                    subComp._state[propName] = propValue;
+                }
+                console.log(subComp._state);
+            }
         }
     }
-    _getFeatureOptionsSelectComponent(classIx, parentCompIx, subCompName, subCompIx){
+    async _getFeatureOptionsSelectComponent(classIx, parentCompIx, subCompName, subCompIx){
+
+        function getVar(classIx, parentCompIx, subCompName, subCompIx){
+            return this._compsClassFeatureOptionsSelect[classIx][parentCompIx][subCompName][subCompIx];
+        }
+        async function createTimeout(classIx, parentCompIx, subCompName, subCompIx, ms) {
+            return new Promise(resolve => {
+              setTimeout(() => {
+                // Create the object after 5 seconds
+                var newObj = () => getVar(classIx, parentCompIx, subCompName, subCompIx);
+                resolve(newObj);
+              }, ms); // 5 seconds timeout
+            });
+        }
+          
+        async function checkAndCreateTimeout(obj, classIx, parentCompIx, subCompName, subCompIx, ms) {
+            if (obj === undefined) {
+                return await createTimeout(classIx, parentCompIx, subCompName, subCompIx, ms);
+            }
+            else { return obj; }
+        }
+
         if(!this._compsClassFeatureOptionsSelect[classIx]?.length){
             console.error("FeatureOptionsSelect components have not been created for class " + classIx + " yet!");
         }
         try{
-            return this._compsClassFeatureOptionsSelect[classIx][parentCompIx][subCompName][subCompIx];
+            let c = this._compsClassFeatureOptionsSelect[classIx][parentCompIx][subCompName][subCompIx];
+            //In some rare and unfortunate cases, the FOS subcomponent that we are looking for may not be initialized yet
+            //A way to deal with this is to just wait for it to become initialized, and try getting it again
+            c = await checkAndCreateTimeout(c, classIx, parentCompIx, subCompName, subCompIx, 100);
+            //Hopefully the object should not be undefined at this point anymore
+            return c;
         }
         catch(e){
             console.error(classIx, parentCompIx, subCompName, subCompIx, this._compsClassFeatureOptionsSelect.length);
