@@ -475,7 +475,7 @@ class CharacterBuilder {
       await this.compEquipment.pRenderShop();
 
       await this.compSpell.pRender();
-
+      this.compFeat.render();
       await this.compDescription.render();
 
 
