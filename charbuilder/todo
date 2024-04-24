@@ -6,6 +6,7 @@ BUGS:
     - Removing sources in use (for example class) doesnt wipe the ui fields
     - When adding a source, it is not added to filter. For example, Tamer class from Heliana's is not visible unless class filter is altered
     - Same goes when saving, filter is turned off so loaded character doesnt display Tamer as the chosen class
+    - Removing source that a (saved characers) subclass (but not class) depends upon creates FOS loading errors. Temporarily fixed by just wiping entire class instead
 WEB:
     - Add UI notifications
     - Test custom urls for content (+ save/load/exportFvtt)
@@ -34,3 +35,7 @@ CLASS:
 
 EXPORT:
     - Include entities from uploaded homebrew files in export to FVTT
+
+TOCHECK:
+    - Removing homebrew content for a subclass that is in sue
+    - Removing homebrew content for a class feature that is in use (Warlock pacts)

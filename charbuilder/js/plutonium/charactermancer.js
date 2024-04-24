@@ -298,8 +298,9 @@ class ActorCharactermancerClass extends ActorCharactermancerBaseComponent {
                 this._proxyAssignSimple("state", toObj);
             }
             //First time this function is called, we will probably not get anything out of getClass since we haven't set anything to _state yet
-            const cls = this.getClass_({'propIxClass': propIxClass});
-            const subcls = this.getSubclass_({ 'cls': cls, 'propIxSubclass': propIxSubclass });
+            const cls = this.getClass_({propIxClass: propIxClass});
+
+            const subcls = this.getSubclass_({ cls: cls, propIxSubclass: propIxSubclass });
 
             //Render the dropdown for choosing a subclass
             this._class_renderClass_stgSelectSubclass({
@@ -577,7 +578,6 @@ class ActorCharactermancerClass extends ActorCharactermancerBaseComponent {
         }
     }
     /**
-     * Description
      * @param {{name:string, source:string, hash:string, isPrimary:boolean, subclass:{name:string, source:string, hash:string}}[]} classes
      * @returns {any}
      */
@@ -586,17 +586,17 @@ class ActorCharactermancerClass extends ActorCharactermancerBaseComponent {
         if(!classes){return;}
         //Collect metas
         this._existingClassMetas = classes.map(cls => {
-            const _clsIx = this._test_getExistingClassIndex(cls);
-            let _scIx = this.test_getExistingSubclassIndex(_clsIx, cls.subclass);
+            const _clsIx = this.getExistingClassIndex(cls);
+            const _scIx = this.getExistingSubclassIndex(_clsIx, cls.subclass);
             const isPrimaryClass = cls.isPrimary || false;
 
-            const failMatchCls = ~_clsIx ? null : "Could not find class \"" + cls.name + "\" (\"" 
+            const failMatchCls = _clsIx>=0 ? null : "Could not find class \"" + cls.name + "\" (\"" 
                 + UtilDocumentSource.getDocumentSourceDisplayString(cls) + "\") in loaded data. " + Charactermancer_Util.STR_WARN_SOURCE_SELECTION;
             if (failMatchCls) {
                 //ui.notifications.warn(failMatchCls);
                 console.warn(...LGT, failMatchCls, "Strict source matching is: " + Config.get("import", "isStrictMatching") + '.');
             }
-            const failMatchSc = ~_scIx ? null : "Could not find subclass \"" + cls.subclass.name + "\" in loaded data. " + Charactermancer_Util.STR_WARN_SOURCE_SELECTION;
+            const failMatchSc = _scIx>=0 ? null : "Could not find subclass \"" + cls.subclass.name + "\" in loaded data. " + Charactermancer_Util.STR_WARN_SOURCE_SELECTION;
             if (failMatchSc) {
                 //ui.notifications.warn(failMatchSc);
                 console.warn(...LGT, failMatchSc, "Strict source matching is: " + Config.get("import", "isStrictMatching") + '.');
@@ -608,14 +608,47 @@ class ActorCharactermancerClass extends ActorCharactermancerBaseComponent {
             return new ActorCharactermancerClass.ExistingClassMeta({
                 item: cls, //Class data object
                 ixClass: _clsIx, //index of this class
-                isUnknownClass: !~_clsIx,
+                isUnknownClass: _clsIx<= 0,//!~_clsIx,
                 ixSubclass: _scIx, //index of the subclass
-                isUnknownSubclass: _scIx == null && !~_scIx,
+                isUnknownSubclass: _scIx == null || _scIx < 0,//_scIx == null && !~_scIx,
                 level: classLevel, //level
                 isPrimary: isPrimaryClass, //is this the primary class?
                 //TEMPFIX 'spellSlotLevelSelection': cls?.flags?.[SharedConsts.MODULE_ID]?.['spellSlotLevelSelection']
             });
         });
+
+        const VERIFY_CLASS_SANITY = true;
+        if(VERIFY_CLASS_SANITY){
+             //Do a pass to remove any unknown classes
+            for(let i = 0; i < this._existingClassMetas.length; ++i){
+                const meta = this._existingClassMetas[i];
+                if(meta.isUnknownClass){
+                    //Wipe this from the class list
+                    this._existingClassMetas.splice(i);
+                    continue;
+                }
+                else if(meta.isUnknownSubclass){
+                    //Reset the subclass index
+                    //meta.ixSubclass = null;
+                    //To avoid a lot of work, we're just going to wipe the entire class instead
+                    //It's theoretically possible to just wipe the subclass, but it requres a lot of bugfixing
+                    this._existingClassMetas.splice(i);
+                    continue;
+                }
+            }
+            //Let's verify that we still have a primary class
+            let hasPrimaryClass = false;
+            for(let i = 0; i < this._existingClassMetas.length; ++i){
+                if(this._existingClassMetas[i].isPrimary){hasPrimaryClass = true;}
+            }
+            if(!hasPrimaryClass && this._existingClassMetas.length > 0){
+                //Some class *has* to be the primary class
+                console.warn("No primary class found, setting class 0("+this._existingClassMetas[0].item.name+" lvl "+this._existingClassMetas[0].level+") to primary");
+                this._existingClassMetas[0].isPrimary = 0;
+            }
+        }
+       
+
 
         if (!this._existingClassMetas.length) { return; }
       
@@ -644,13 +677,17 @@ class ActorCharactermancerClass extends ActorCharactermancerBaseComponent {
     async pLoadLate(){
         
     }
-    _test_getExistingClassIndex(cls){
+    /**
+     * @param {any} cls
+     * @returns {number} Returns index of class. Returns -1 on failure
+     */
+    getExistingClassIndex(cls){
         if (cls.source && cls.hash) {
             const ix = this._data.class.findIndex(ourDataClass => cls.source === ourDataClass.source
                 && cls.hash === UrlUtil.URL_TO_HASH_BUILDER[UrlUtil.PG_CLASSES](ourDataClass));
             if (~ix) { return ix; }
         }
-        const _classNameLower = cls.name.toLowerCase().trim(); //(IntegrationBabele.getOriginalName(cls) || '').toLowerCase().trim();
+        //const _classNameLower = cls.name.toLowerCase().trim(); //(IntegrationBabele.getOriginalName(cls) || '').toLowerCase().trim();
 
         //FALLBACK 1
         /* const clsIndex = this._data.class.findIndex(ourDataClass => {
@@ -662,7 +699,7 @@ class ActorCharactermancerClass extends ActorCharactermancerBaseComponent {
 
         return this._data.class.findIndex(c => c.name.toLowerCase().trim() === cls.name.toLowerCase().trim());
 
-        return false;
+        //return false;
 
         //FALLBACK 2
         /* const filteredName = /^(.*?)\(.*\)$/.exec(_classNameLower);
@@ -673,7 +710,12 @@ class ActorCharactermancerClass extends ActorCharactermancerBaseComponent {
             (UtilDocumentSource.getDocumentSource(cls).source || '').toLowerCase() === Parser.sourceJsonToAbv(_cls.source).toLowerCase());
         }); */
     }
-    test_getExistingSubclassIndex(classIx, subclass) {
+     /**
+     * @param {number} classIx
+     * @param {any} subclass
+     * @returns {number} Returns index of subclass. Returns -1 on failure
+     */
+    getExistingSubclassIndex(classIx, subclass) {
         if (!subclass || !~classIx) { return null; }
         const ourDataClass = this._data.class[classIx]; //Grab our class from data
         if (subclass.source && subclass.hash) {
@@ -1451,19 +1493,19 @@ class ActorCharactermancerClass extends ActorCharactermancerBaseComponent {
         function getVar(classIx, parentCompIx, subCompName, subCompIx){
             return this._compsClassFeatureOptionsSelect[classIx][parentCompIx][subCompName][subCompIx];
         }
-        async function createTimeout(classIx, parentCompIx, subCompName, subCompIx, ms) {
+        async function createTimeout(fos, classIx, parentCompIx, subCompName, subCompIx, ms) {
             return new Promise(resolve => {
               setTimeout(() => {
                 // Create the object after 5 seconds
-                var newObj = () => getVar(classIx, parentCompIx, subCompName, subCompIx);
+                var newObj = fos[classIx][parentCompIx][subCompName][subCompIx];
                 resolve(newObj);
               }, ms); // 5 seconds timeout
             });
         }
           
-        async function checkAndCreateTimeout(obj, classIx, parentCompIx, subCompName, subCompIx, ms) {
+        async function checkAndCreateTimeout(obj, fos, classIx, parentCompIx, subCompName, subCompIx, ms) {
             if (obj === undefined) {
-                return await createTimeout(classIx, parentCompIx, subCompName, subCompIx, ms);
+                return await createTimeout(fos, classIx, parentCompIx, subCompName, subCompIx, ms);
             }
             else { return obj; }
         }
@@ -1475,7 +1517,7 @@ class ActorCharactermancerClass extends ActorCharactermancerBaseComponent {
             let c = this._compsClassFeatureOptionsSelect[classIx][parentCompIx][subCompName][subCompIx];
             //In some rare and unfortunate cases, the FOS subcomponent that we are looking for may not be initialized yet
             //A way to deal with this is to just wait for it to become initialized, and try getting it again
-            c = await checkAndCreateTimeout(c, classIx, parentCompIx, subCompName, subCompIx, 100);
+            c = await checkAndCreateTimeout(c, this._compsClassFeatureOptionsSelect, classIx, parentCompIx, subCompName, subCompIx, 100);
             //Hopefully the object should not be undefined at this point anymore
             return c;
         }
@@ -19346,6 +19388,7 @@ class Charactermancer_FeatureOptionsSelect extends BaseComponent {
         if (this._isSkipCharactermancerHandled){return false;}
 
         for (const loaded of optionsSet) {
+            if(loaded === undefined){continue;} //TEMPFIX, remove this
             const {entity} = loaded;
 
             let proficiencies = entity?.[prop] || entity?.entryData?.[prop];

@@ -4509,6 +4509,94 @@ ComponentUiUtil.RangeSlider._W_LABEL_PX = 24;
 ComponentUiUtil.RangeSlider._MAX_PIPS = 40;
 //#endregion
 
+//#region DocumentSourceInfo
+class _DocumentSourceInfo {
+    constructor({source, isExact=false}) {
+        this.source = source;
+        this.isExact = isExact;
+    }
+}
+//#endregion
+//#region UtilDocumentSource
+class UtilDocumentSource {
+    static _SOURCE_PAGE_PREFIX = " pg. ";
+
+    static getSourceObjectFromEntity(ent) {
+        return {
+            custom: "",
+            book: ent.source ? Parser.sourceJsonToAbv(ent.source) : "",
+            page: ent.page != null ? `${ent.page}` : "",
+            license: ent.src ? "CC-BY-4.0" : "",
+        };
+    }
+
+    static _getSourceObjectFromDocument(doc) {
+        if (!doc)
+            return null;
+
+        let sourceObj = doc.system?.source || doc.system?.details?.source || doc.source;
+
+        if (sourceObj instanceof Array)
+            sourceObj = sourceObj[0];
+
+        return sourceObj;
+    }
+
+    static _SOURCE_PAGE_PREFIX_RE = new RegExp(`${this._SOURCE_PAGE_PREFIX}\\d+`);
+
+    static getDocumentSource(doc) {
+        if (doc.flags?.[SharedConsts.MODULE_ID]?.source) {
+            return new _DocumentSourceInfo({
+                source: doc.flags?.[SharedConsts.MODULE_ID]?.source,
+                isExact: true,
+            });
+        }
+
+        const sourceObj = this._getSourceObjectFromDocument(doc);
+        return this._getDocumentSourceFromSourceObject({
+            sourceObj
+        });
+    }
+
+    static _getDocumentSourceFromSourceObject({sourceObj}) {
+        if (!sourceObj)
+            return new _DocumentSourceInfo({
+                source: null
+            });
+
+        if (sourceObj.book && sourceObj.book.trim()) {
+            return new _DocumentSourceInfo({
+                source: sourceObj.book.trim()
+            });
+        }
+
+        const source = (sourceObj.custom || "").split(this._SOURCE_PAGE_PREFIX_RE)[0].trim();
+        return new _DocumentSourceInfo({
+            source
+        });
+    }
+
+    static getDocumentSourceDisplayString(doc) {
+        const docSourceInfo = this.getDocumentSource(doc);
+        if (docSourceInfo.source == null)
+            return "Unknown Source";
+        return docSourceInfo.source;
+    }
+
+    static getDocumentSourceIdentifierString({doc, entity}) {
+        if (doc && entity)
+            throw new Error(`Only one of "doc" or "entity" should be provided!`);
+
+        const sourceObj = entity ? this.getSourceObjectFromEntity(entity) : this._getSourceObjectFromDocument(doc);
+        if (!sourceObj)
+            return "unknown source";
+
+        return this._getDocumentSourceFromSourceObject({
+            sourceObj
+        }).source.toLowerCase().trim();
+    }
+}
+//#endregion
 //#region UtilGameSettings
 class UtilGameSettings {
     static prePreInit() {
@@ -10480,6 +10568,18 @@ class DataConverterClass extends DataConverter {
         return out;
     }
 }
+DataConverterClass.STUB_CLASS = {
+    name: "Unknown Class",
+    source: Parser.SRC_PHB,
+    classFeatures: [],
+    _isStub: true,
+};
+DataConverterClass.STUB_SUBCLASS = {
+    name: "Unknown Subclass",
+    source: Parser.SRC_PHB,
+    subclassFeatures: [],
+    _isStub: true,
+};
 
 class DataConverterFeature extends DataConverter {
     static async _pGetGenericDescription(ent, configGroup, {fluff=null}={}) {

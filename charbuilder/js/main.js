@@ -257,7 +257,6 @@ Renderer.spell.populateBrewLookup(await BrewUtil2.pGetBrewProcessed(), {isForce:
   static async changeSources(sourceInfo){
     //Cache which sources we chose, and let them process the source ids into ready data entries (classes, races, etc)
     const data = await SourceManager._loadSources(sourceInfo);
-    console.log("DATA", data);
     //Get a cookie explaining the existing character shown, and what page
     let state = CookieManager.getState();
     if(!state){
