@@ -1426,14 +1426,7 @@ class ActorCharactermancerClass extends ActorCharactermancerBaseComponent {
                 if(propName == "ixsChosen"){continue;} //We do not want to fire the ixsChosen hook yet
                 myComp._state[propName] = propValue;
             }
-            /* const waitForHook = async () => {
-                myComp.__state["ixsChosen"] = fosData.state["ixsChosen"]; //Set the state without firing the hook
-                //Then manually call the render hook instead
-                await myComp._render_pHkIxsChosen({$stgSubChoiceData: myComp.$stgSubChoiceData});
-            }; */
             await waitForHook2(myComp, fosData);
-            const debugOptionSetNames = []; for(let optSet of myComp._optionsSet){debugOptionSetNames.push(optSet.hash);}
-            console.log(`Applying state to FOS subcomponents for class ${classIx} level ${myComp.level}. `, debugOptionSetNames);
 
             //Then give state to subcomponents
             //A problem here might be that our parents havent created the subcomponents yet
@@ -1446,12 +1439,10 @@ class ActorCharactermancerClass extends ActorCharactermancerBaseComponent {
                 
                 //Paste the state onto the subcomponent
                 const subState = subData.state;
-                console.log(subState);
                 for(let propName of Object.keys(subState)){
                     let propValue = subState[propName];
                     subComp._state[propName] = propValue;
                 }
-                console.log(subComp._state);
             }
         }
     }
