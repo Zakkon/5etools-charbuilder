@@ -498,8 +498,10 @@ class CharacterBuilder {
         const createTabBtn = (label) => {
             return $$`<button class="btn btn-default ui-tab__btn-tab-head btn-sm">${label}</button>`.appendTo(tabHolder);
         }
-        const createRightSideBtn = (label) => {
-          return $$`<button class="hugRight btn btn-default btn-sm pb-0">${label}</button>`.appendTo(tabHolder);
+        const createRightSideBtn = (label, icon="") => {
+          let spanIcon = icon != null && icon.length > 0?
+            $$`<span class="glyphicon ${icon}"></span>` : null;
+          return $$`<button class="hugRight btn btn-default btn-sm pb-0">${spanIcon}${label}</button>`.appendTo(tabHolder);
         }
         const createLabel = (label) => {
           return $$`<label class="btn-sm">${label}</label>`.appendTo(tabHolder);
@@ -524,7 +526,7 @@ class CharacterBuilder {
         createTabBtn("Sheet").click(()=>{ this.e_switchTab("sheet"); });
         
         if(!CharacterBuilder.useHeaderTitleAndReturnButton){
-          createRightSideBtn("Return To Select").addClass("btn-danger").click(() => {
+          createRightSideBtn(" Return To Select", "glyphicon-log-out").addClass("btn-danger").click(() => {
             this._returnToCharSelect();
           });
         }
@@ -534,7 +536,7 @@ class CharacterBuilder {
             const json = await CharacterExportFvtt.exportCharacterFvtt(this);
           });
         }
-        createRightSideBtn("Configure Sources").click(async()=>{
+        createRightSideBtn(" Configure Sources", "glyphicon-cog").click(async()=>{
           await this.e_changeSourcesDialog();
         });
         createRightSideBtn("Save").click(()=>{
