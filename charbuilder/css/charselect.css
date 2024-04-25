@@ -169,3 +169,9 @@
 .character-card-footer-links-button.btn-dangerous{
     color: rgb(237, 108, 2);
 }
+.night-mode .character-card-background-image{
+    background-color: #eee0;
+}
+.night-mode .character-card{
+    border: 1px solid rgb(70, 70, 70);
+}

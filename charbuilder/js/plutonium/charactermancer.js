@@ -429,7 +429,7 @@ class ActorCharactermancerClass extends ActorCharactermancerBaseComponent {
         let primaryBtn = null;
         let removeClassBtn = null;
         if (!this._existingClassMetas.length || !SETTINGS.LOCK_EXISTING_CHOICES) {
-            primaryBtn = $("<button class=\"btn btn-5et btn-xs mr-2\"></button>").click(() => this._state.class_ixPrimaryClass = ix);
+            primaryBtn = $("<button class=\"btn btn-default btn-5et btn-xs mr-2\"></button>").click(() => this._state.class_ixPrimaryClass = ix);
             const primaryBtnHook = () => {
                 primaryBtn.text(this._state.class_ixPrimaryClass === ix ? "Primary Class" : "Make Primary")
                 .title(this._state.class_ixPrimaryClass === ix ? "This is your primary class, i.e. the one you chose at level 1 for the purposes of proficiencies/etc." 
@@ -439,7 +439,7 @@ class ActorCharactermancerClass extends ActorCharactermancerBaseComponent {
             this._addHookBase("class_ixPrimaryClass", primaryBtnHook);
             primaryBtnHook();
 
-           removeClassBtn = $("<button class=\"btn btn-5et btn-xs mr-2\"></button>").click(() => {console.log("Remove class " + ix);
+           removeClassBtn = $("<button class=\"btn btn-default btn-5et btn-xs mr-2\"></button>").click(() => {console.log("Remove class " + ix);
 
                 this.wipeClassState(ix);
                 //Honestly, we might just have to re-render all the class components

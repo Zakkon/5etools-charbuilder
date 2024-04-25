@@ -775,6 +775,9 @@
     width: 10px;
     height: 10px;
   }
+  form.charsheet .list-section label.label {
+    color: black;
+  }
 
 .night-mode form.charsheet .combat,
 .night-mode form.charsheet .scoreBubble label,

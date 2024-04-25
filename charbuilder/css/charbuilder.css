@@ -343,6 +343,10 @@ input.form-control, textarea.form-control {
 select.chooseAlignment{
     background: #d3d1c5;
 }
+.lblDanger {
+    color: rgb(237, 108, 2);
+    font-weight: bold;
+}
 
 
 .night-mode .stripe-even:nth-child(even) {

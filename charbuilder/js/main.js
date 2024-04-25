@@ -521,7 +521,7 @@ class CharacterBuilder {
         }
         else{
           //Create a label that says we are in view mode?
-          createLabel("View Mode Active");
+          createLabel("View Mode Active").addClass("lblDanger");
         }
         createTabBtn("Sheet").click(()=>{ this.e_switchTab("sheet"); });
         
@@ -536,12 +536,15 @@ class CharacterBuilder {
             const json = await CharacterExportFvtt.exportCharacterFvtt(this);
           });
         }
-        createRightSideBtn(" Configure Sources", "glyphicon-cog").click(async()=>{
-          await this.e_changeSourcesDialog();
-        });
-        createRightSideBtn("Save").click(()=>{
-          CharacterExportFvtt.exportCharacter(this);
-        });
+        if(!this.VIEW_MODE){
+          createRightSideBtn(" Configure Sources", "glyphicon-cog").click(async()=>{
+            await this.e_changeSourcesDialog();
+          });
+          createRightSideBtn("Save").click(()=>{
+            CharacterExportFvtt.exportCharacter(this);
+          });
+        }
+        
         
 
         this.tabButtonParent = tabHolder;

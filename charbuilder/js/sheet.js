@@ -138,9 +138,7 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
           </div>
           <div class="saves list-section box">
             ${$sectionSaves}
-            <div class="label">
-              Saving Throws
-            </div>
+            <label class="upperCase">Saving Throws</label>
           </div>
           <div class="skills list-section box">
             ${$sectionSkills}
