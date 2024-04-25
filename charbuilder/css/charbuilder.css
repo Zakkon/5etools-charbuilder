@@ -340,3 +340,24 @@ input.form-control, textarea.form-control {
     line-height: 14px !important;
     border: 2px outset rgb(227,227,227) !important;
 }
+
+
+.night-mode .stripe-even:nth-child(even) {
+    background:rgba(170,170,170,.1333333333) !important
+  }
+  .night-mode .stripe-odd:nth-child(odd) {
+    background:rgba(170,170,170,.1333333333) !important
+  }
+  .night-mode .stripe-odd-table>tbody>tr:nth-child(odd),
+.night-mode .stripe-even-table>tbody>tr:nth-child(even) {
+  background-color:rgba(170,170,170,.1333333333) !important
+}
+  .night-mode .input-group-addon,
+.night-mode .form-control {
+  background:#222 !important;
+  color:#bbb !important;
+  border-color:#555 !important;
+}
+.night-mode .manc__list-row-button{
+    border: 2px outset rgb(87, 87, 87) !important;
+}

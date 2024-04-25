@@ -159,7 +159,7 @@ class ActorCharactermancerClass extends ActorCharactermancerBaseComponent {
         this._addHookBase("class_ixPrimaryClass", () => this._state.class_pulseChange = !this._state.class_pulseChange);
   
         //ADD CLASS BUTTON
-        const addClassBtn = $(`<button class="btn btn-5et btn-sm">Add Another Class</button>`)
+        const addClassBtn = $(`<button class="btn btn-default btn-5et btn-sm">Add Another Class</button>`)
         .click(() => {
           this._class_renderClass(classChoiceElement, sidebarElement, ++this._state.class_ixMax);
         });
@@ -252,7 +252,7 @@ class ActorCharactermancerClass extends ActorCharactermancerBaseComponent {
             updateHiddenClasses();
         }
         //Filter button and what happens when we click it
-        const filterBtn = $("<button class=\"btn btn-xs btn-5et h-100 btr-0 bbr-0 pr-2\" title=\"Filter for Class and Subclass\"><span class=\"glyphicon glyphicon-filter\"></span> Filter</button>")
+        const filterBtn = $("<button class=\"btn btn-xs btn-default btn-5et h-100 btr-0 bbr-0 pr-2\" title=\"Filter for Class and Subclass\"><span class=\"glyphicon glyphicon-filter\"></span> Filter</button>")
         .click(async () => {
             const cls = this.getClass_({propIxClass: propIxClass });
             const subcls = this.getSubclass_({cls: cls, propIxSubclass: propIxSubclass});
@@ -3076,9 +3076,9 @@ class Charactermancer_Class_LevelSelect extends BaseComponent {
 
         $$`<div class="ve-flex-col min-h-0">
 			<div class="ve-flex-v-stretch input-group mb-1 no-shrink">
-				<label class="btn btn-5et col-1 px-1 ve-flex-vh-center">${$cbAll}</label>
-				<button class="btn-5et col-1-5">Level</button>
-				<button class="btn-5et col-9-5">Features</button>
+				<label class="btn btn-default btn-5et col-1 px-1 ve-flex-vh-center">${$cbAll}</label>
+				<button class="btn-5et btn-default col-1-5">Level</button>
+				<button class="btn-5et btn-default col-9-5">Features</button>
 			</div>
 
 			${$wrpList}
@@ -8176,7 +8176,7 @@ class Charactermancer_Background_Features extends BaseComponent {
         }, );
         this._addHookBase("mode", ()=>this._state.pulseFeatures = !this._state.pulseFeatures);
 
-        const $btnAddManual = $(`<button class="btn btn-xs btn-5et ml-1"><span class="glyphicon glyphicon-plus"></span> Add Feature</button>`).click(()=>{
+        const $btnAddManual = $(`<button class="btn btn-default btn-xs btn-5et ml-1"><span class="glyphicon glyphicon-plus"></span> Add Feature</button>`).click(()=>{
             const nxt = this._getDefaultState_manualEntryMeta();
             this._state.manualEntryMetas = [...this._state.manualEntryMetas, nxt];
         });
@@ -9907,9 +9907,9 @@ Charactermancer_StartingEquipment.ComponentGold = class extends Charactermancer_
 
         this._modalFilter.pPopulateWrapper($wrpItemList, {
             isBuildUi: true,
-            $btnOpen: $(`<button class="btn-5et veapp__btn-filter" name="btn-filter">Filter</button>`),
-            $btnToggleSummaryHidden: $(`<button class="btn btn-5et" title="Toggle Filter Summary Display" name="btn-toggle-summary"><span class="glyphicon glyphicon-resize-small"></span></button>`),
-            $btnReset: $(`<button class="btn-5et veapp__btn-list-reset" name="btn-reset">Reset</button>`),
+            $btnOpen: $(`<button class="btn-5et btn-default veapp__btn-filter" name="btn-filter">Filter</button>`),
+            $btnToggleSummaryHidden: $(`<button class="btn btn-default btn-5et" title="Toggle Filter Summary Display" name="btn-toggle-summary"><span class="glyphicon glyphicon-resize-small"></span></button>`),
+            $btnReset: $(`<button class="btn-5et btn-default veapp__btn-list-reset" name="btn-reset">Reset</button>`),
         }, ).then(meta=>{
             const {list, $btnSendAllToRight} = meta;
             //A button for adding ALL items to the cart of bought items
@@ -10618,10 +10618,10 @@ class ActorCharactermancerSpell extends ActorCharactermancerBaseComponent {
     }
     
     async _spell_pRenderFilterBox(leftContent) {
-      const btnFilter = $("<button class=\"btn-5et veapp__btn-filter\">Filter</button>");
-      const btnFilterSummary = $("<button class=\"btn btn-5et\" title=\"Toggle Filter Summary Display\"><span class=\"glyphicon glyphicon-resize-small\"></span></button>");
+      const btnFilter = $("<button class=\"btn-default btn-5et veapp__btn-filter\">Filter</button>");
+      const btnFilterSummary = $("<button class=\"btn btn-default btn-5et\" title=\"Toggle Filter Summary Display\"><span class=\"glyphicon glyphicon-resize-small\"></span></button>");
       const inputFind = $("<input type=\"search\" class=\"search w-100 form-control h-initial\" placeholder=\"Find spell...\">");
-      const btnReset = $("<button class=\"btn-5et veapp__btn-list-reset\">Reset</button>").click(() => inputFind.val('').keyup());
+      const btnReset = $("<button class=\"btn-5et btn-default veapp__btn-list-reset\">Reset</button>").click(() => inputFind.val('').keyup());
       const view = $("<div class=\"fltr__mini-view btn-group\"></div>");
       const btnSaveCopy = $("<button class=\"btn btn-default btn-xs mr-1\" title=\"Save a copy of the current filters, to use when filtering spell lists during import of &quot;prepared spell&quot; casters. For example, if you want your Cleric's spell list to include only PHB spells, you would filter (using the interface above) for PHB spells, then click this button. Note that all the spells that you have selected as learned or that you have selected as prepared will be imported regardless.\">Set Prepared Spell Filter</button>").click(() => {
         this._filterValuesSpellsCache = this._pageFilterSpells.filterBox.getValues();
@@ -13212,14 +13212,14 @@ class Charactermancer_Spell_Level extends BaseComponent {
         };
 
         const $wrpBtnsSort = $(`<div class="ve-flex-v-stretch input-group no-shrink">
-			<button class="btn-5et btn-xxs col-3-2 pr-1 sort" data-sort="name">Name</button>
-			<button class="btn-5et btn-xxs col-1-2 px-1 sort" data-sort="time">Time</button>
-			<button class="btn-5et btn-xxs col-1-2 px-1 sort" data-sort="school">School</button>
-			<button class="btn-5et btn-xxs col-0-5 px-1 sort" data-sort="concentration" title="Concentration">C.</button>
-			<button class="btn-5et btn-xxs col-0-5 px-1 sort" data-sort="ritual" title="Ritual">R.</button>
-			<button class="btn-5et btn-xxs col-2-6 px-1 sort" data-sort="range">Range</button>
-			<button class="btn-5et btn-xxs col-1-2 px-1 sort" data-sort="source">Source</button>
-			<button class="btn-5et btn-xxs col-1-6 pl-1" disabled>&nbsp;</button>
+			<button class="btn-default btn-5et btn-xxs col-3-2 pr-1 sort" data-sort="name">Name</button>
+			<button class="btn-default btn-5et btn-xxs col-1-2 px-1 sort" data-sort="time">Time</button>
+			<button class="btn-default btn-5et btn-xxs col-1-2 px-1 sort" data-sort="school">School</button>
+			<button class="btn-default btn-5et btn-xxs col-0-5 px-1 sort" data-sort="concentration" title="Concentration">C.</button>
+			<button class="btn-default btn-5et btn-xxs col-0-5 px-1 sort" data-sort="ritual" title="Ritual">R.</button>
+			<button class="btn-default btn-5et btn-xxs col-2-6 px-1 sort" data-sort="range">Range</button>
+			<button class="btn-default btn-5et btn-xxs col-1-2 px-1 sort" data-sort="source">Source</button>
+			<button class="btn-default btn-5et btn-xxs col-1-6 pl-1" disabled>&nbsp;</button>
 		</div>`);
 
         this._list = new List({
@@ -13396,7 +13396,7 @@ class Charactermancer_Spell_Level extends BaseComponent {
 
 			<div class="ve-flex-vh-center col-1-6 pr-0">
 				<button
-					class="btn manc__list-row-button ${this._spellLevel === 0 ? "manc-sp__btn-learn-cantrip" : "manc-sp__btn-learn-spell"} ${this._state[ixLearned] || existingSpellMeta?.isLearned || this._state[ixAlwaysKnownSpell] ? "active" : ""}"
+					class="btn btn-default manc__list-row-button ${this._spellLevel === 0 ? "manc-sp__btn-learn-cantrip" : "manc-sp__btn-learn-spell"} ${this._state[ixLearned] || existingSpellMeta?.isLearned || this._state[ixAlwaysKnownSpell] ? "active" : ""}"
 					name="${this._spellLevel === 0 ? "btn-learn-cantrip" : "btn-learn-spell"}"
 					${isLearnDisabled ? `disabled` : ""}
 					${existingSpellMeta ? `data-plut-is-existing-spell="true"` : ""}
@@ -15015,13 +15015,13 @@ class ActorCharactermancerDescription extends ActorCharactermancerBaseComponent 
             return val;
         }
 
-        const $inputName = $$`<input type="text"></input>`;
+        const $inputName = $$`<input class="form-control" type="text"></input>`;
         $inputName.val(getVal("description_name"));
         $inputName.change(() => {
             this._state["description_name"] = $inputName.val();
         });
 
-        const $inputAlignment = $$`<select></select>`;
+        const $inputAlignment = $$`<select class="form-control"></select>`;
         $$`<option value=""></option>`.appendTo($inputAlignment);
         for(let i = 0; i < ActorCharactermancerDescription.ALIGNMENTS.length; ++i){
             const n = ActorCharactermancerDescription.ALIGNMENTS[i];
@@ -15033,32 +15033,32 @@ class ActorCharactermancerDescription extends ActorCharactermancerBaseComponent 
         });
         
 
-        const $inputHair = $$`<input type="text"></input>`;
+        const $inputHair = $$`<input class="form-control" type="text"></input>`;
         $inputHair.val(getVal("description_hair"));
         $inputHair.change(() => {
             this._state["description_hair"] = $inputHair.val();
         });
-        const $inputSkin = $$`<input type="text"></input>`;
+        const $inputSkin = $$`<input class="form-control" type="text"></input>`;
         $inputSkin.val(getVal("description_skin"));
         $inputSkin.change(() => {
             this._state["description_skin"] = $inputSkin.val();
         });
-        const $inputEyes = $$`<input type="text"></input>`;
+        const $inputEyes = $$`<input class="form-control" type="text"></input>`;
         $inputEyes.val(getVal("description_eyes"));
         $inputEyes.change(() => {
             this._state["description_eyes"] = $inputEyes.val();
         });
-        const $inputWeight = $$`<input type="text"></input>`;
+        const $inputWeight = $$`<input class="form-control" type="text"></input>`;
         $inputWeight.val(getVal("description_weight"));
         $inputWeight.change(() => {
             this._state["description_weight"] = $inputWeight.val();
         });
-        const $inputHeight = $$`<input type="text"></input>`;
+        const $inputHeight = $$`<input class="form-control" type="text"></input>`;
         $inputHeight.val(getVal("description_height"));
         $inputHeight.change(() => {
             this._state["description_height"] = $inputHeight.val();
         });
-        const $inputFaith = $$`<input type="text"></input>`;
+        const $inputFaith = $$`<input class="form-control" type="text"></input>`;
         $inputFaith.val(getVal("description_faith"));
         $inputFaith.change(() => {
             this._state["description_faith"] = $inputFaith.val();
@@ -15356,7 +15356,7 @@ class Charactermancer_Util {
         if(SETTINGS.FILTERS){modalFilter.pageFilter.filterBox.on(FilterBox.EVNT_VALCHANGE, doApplyFilterToSel, );
         doApplyFilterToSel();}
 
-        const $btnFilter = $(`<button class="btn btn-xs btn-5et br-0 pr-2" title="Filter for a ${title}"><span class="glyphicon glyphicon-filter"></span> Filter</button>`).click(async()=>{
+        const $btnFilter = $(`<button class="btn btn-xs btn-default btn-5et br-0 pr-2" title="Filter for a ${title}"><span class="glyphicon glyphicon-filter"></span> Filter</button>`).click(async()=>{
             const selecteds = await modalFilter.pGetUserSelection();
             if (selecteds == null || !selecteds.length)
                 return;

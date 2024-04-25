@@ -776,3 +776,22 @@
     height: 10px;
   }
 
+.night-mode form.charsheet .combat,
+.night-mode form.charsheet .scoreBubble label,
+.night-mode form.charsheet .scoreBubbleWide label,
+.night-mode form.charsheet .scores,
+.night-mode form.charsheet .scores li,
+.night-mode form.charsheet .scores .score label,
+.night-mode form.charsheet .scores .modifier label{
+  background-color: #eee0 !important;
+}
+
+.night-mode form.charsheet .charname{
+  background-color: #eee0 !important
+}
+.night-mode form.charsheet .charname .lblResultName,
+.night-mode form.charsheet .misc .lblResult {
+  background: #222 !important;
+  color: #bbb !important;
+  border-color: #555 !important;
+}
