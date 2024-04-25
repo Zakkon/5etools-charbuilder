@@ -15021,7 +15021,7 @@ class ActorCharactermancerDescription extends ActorCharactermancerBaseComponent 
             this._state["description_name"] = $inputName.val();
         });
 
-        const $inputAlignment = $$`<select class="form-control"></select>`;
+        const $inputAlignment = $$`<select class="form-control chooseAlignment"></select>`;
         $$`<option value=""></option>`.appendTo($inputAlignment);
         for(let i = 0; i < ActorCharactermancerDescription.ALIGNMENTS.length; ++i){
             const n = ActorCharactermancerDescription.ALIGNMENTS[i];

@@ -340,6 +340,9 @@ input.form-control, textarea.form-control {
     line-height: 14px !important;
     border: 2px outset rgb(227,227,227) !important;
 }
+select.chooseAlignment{
+    background: #d3d1c5;
+}
 
 
 .night-mode .stripe-even:nth-child(even) {
