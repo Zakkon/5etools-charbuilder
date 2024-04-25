@@ -84,6 +84,7 @@ input.form-control, textarea.form-control {
     padding-top: 0.25rem !important;
     padding-bottom: 0.25rem !important;
 }
+.pb-0{padding-bottom: 0px !important;}
 .ve-flex-v-center {
     display: flex !important;
     align-items: center !important;

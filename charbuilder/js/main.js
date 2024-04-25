@@ -499,7 +499,7 @@ class CharacterBuilder {
             return $$`<button class="btn btn-default ui-tab__btn-tab-head btn-sm">${label}</button>`.appendTo(tabHolder);
         }
         const createRightSideBtn = (label) => {
-          return $$`<button class="hugRight">${label}</button>`.appendTo(tabHolder);
+          return $$`<button class="hugRight btn btn-default btn-sm pb-0">${label}</button>`.appendTo(tabHolder);
         }
         const createLabel = (label) => {
           return $$`<label class="btn-sm">${label}</label>`.appendTo(tabHolder);
@@ -524,7 +524,7 @@ class CharacterBuilder {
         createTabBtn("Sheet").click(()=>{ this.e_switchTab("sheet"); });
         
         if(!CharacterBuilder.useHeaderTitleAndReturnButton){
-          createRightSideBtn("Return To Select").click(() => {
+          createRightSideBtn("Return To Select").addClass("btn-danger").click(() => {
             this._returnToCharSelect();
           });
         }
