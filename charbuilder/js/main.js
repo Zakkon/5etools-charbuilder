@@ -569,7 +569,7 @@ class CharacterBuilder {
         await this.compFeat.pLoad();
     }
     async loadCachedFilters(charInfo){
-      if(charInfo == null){return;}
+      if(charInfo?._meta?.filters == null){return;}
       const filters = charInfo._meta.filters;
       function applyCachedFilters(cachedFilters, modal) {
         if(!cachedFilters){return;}
