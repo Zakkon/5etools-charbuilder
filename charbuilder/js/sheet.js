@@ -738,8 +738,9 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
           const spellsListStr = (spells) => {
             let spellsStr = "";
             for(let i = 0; i < spells.length; ++i){
-              let uid = spells[i].name.toLowerCase() + "|" + spells[i].source.toLowerCase();
-              //spellsStr += spells[i].name;
+              //"name|source|displayText"
+              let uid = spells[i].name.toLowerCase() + "|" + spells[i].source.toLowerCase()
+                + "|" + spells[i].name;
               spellsStr += Renderer.get().render(`{@spell ${uid}}`);
                 if(i+1 < spells.length){spellsStr += ", ";}
             }
