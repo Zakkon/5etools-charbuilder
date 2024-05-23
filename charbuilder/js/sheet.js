@@ -253,6 +253,7 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
               //Try to get features from class
               let classFeaturesText = "";
 
+              const hotlinkFeatures = true;
               const tryPrintClassFeature = (feature, text, cls, bannedFeatureNames=[], bannedLoadedsNames=[]) => {
                 if(feature.level > d.targetLevel){return text;}
                 let drawParentFeature = true;
@@ -261,14 +262,8 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
                   drawParentFeature = false;
                   if(bannedLoadedsNames.includes(l.entity.name)){continue;}
                   if(l.entity.level > d.targetLevel){continue;} //Must not be from a higher level than we are
-                  //"name|className|classSource|level|source|displayText"
-                  let uid = l.entity.name.toLowerCase() + "|"
-                    + cls.name.toLowerCase() + "|"
-                    + cls.source.toLowerCase() + "|"
-                    + l.entity.level.toString().toLowerCase() + "|"
-                    + l.entity.source.toLowerCase() + "|"
-                    + l.entity.name;
-                  text += `${text.length > 0? ", " : ""}` + Renderer.get().render(`{@classFeature ${uid}}`);
+                  text += `${text.length > 0? ", " : ""}`;
+                  text += hotlinkFeatures? ActorCharactermancerSheet.hotlink_classFeature(l, cls) : l.entity.name;
                 }
                 if(!drawParentFeature || bannedFeatureNames.includes(feature.name)){return text;}
                 text += `${text.length > 0? ", " : ""}${feature.name}`;
@@ -282,16 +277,8 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
                   drawParentFeature = false;
                   if(bannedLoadedsNames.includes(l.entity.name)){continue;}
                   if(l.entity.level > d.targetLevel){continue;} //Must not be from a higher level than we are
-                  //"name|className|classSource|subclassShortName|subclassSource|level|source|displayText"
-                  let uid = l.entity.name.toLowerCase() + "|"
-                    + cls.name.toLowerCase() + "|"
-                    + cls.source.toLowerCase() + "|"
-                    + subcls.name.toLowerCase() + "|"
-                    + subcls.source.toLowerCase() + "|"
-                    + l.entity.level.toString().toLowerCase() + "|"
-                    + l.entity.source.toLowerCase() + "|"
-                    + l.entity.name;
-                  text += `${text.length > 0? ", " : ""}` + Renderer.get().render(`{@subclassFeature ${uid}}`);
+                  text += `${text.length > 0? ", " : ""}`;
+                  text += hotlinkFeatures? ActorCharactermancerSheet.hotlink_subclassFeature(l, cls, subcls) : l.entity.name;
                 }
                 if(!drawParentFeature || bannedFeatureNames.includes(feature.name)){return text;}
                 text += `${text.length > 0? ", " : ""}${feature.name}`;
@@ -733,16 +720,15 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
           $divSpells.empty();
           $divSpells.append($divSpellAttackMod);
           $divSpells.append($divSpellDC);
+
+          const hotlinkSpells = true;
           
           //Create hotlinks to spells, which lets us render a hoverbox when mouse is over them
           const spellsListStr = (spells) => {
             let spellsStr = "";
             for(let i = 0; i < spells.length; ++i){
-              //"name|source|displayText"
-              let uid = spells[i].name.toLowerCase() + "|" + spells[i].source.toLowerCase()
-                + "|" + spells[i].name;
-              spellsStr += Renderer.get().render(`{@spell ${uid}}`);
-                if(i+1 < spells.length){spellsStr += ", ";}
+              if(spellsStr.length > 0 ){spellsStr += ", ";}
+              spellsStr += hotlinkSpells? ActorCharactermancerSheet.hotlink_spell(spells[i]) : spells[i].name;
             }
             return spellsStr;
           };
@@ -839,17 +825,22 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
           let coinWeight = (currency.gold + currency.silver + currency.copper) * (1/50); //50 coins weigh 1 lbs
           let weightLbs = 0;
 
+          const hotlinkItemNames = true;
+
+
           this._getOurItems().then(result => {
             $divEquipment.empty();
             $divCarry.empty();
             let outStr = "";
             for(let it of result.startingItems){
-              outStr += (outStr.length>0? ", " : "") + (it.quantity>1? it.quantity+"x " : "") + it.item.name;
-              if(!it.item.weight){continue;}
+              outStr += (outStr.length>0? ", " : "") + (it.quantity>1? it.quantity+"x " : "");
+              outStr += hotlinkItemNames? ActorCharactermancerSheet.hotlink_item(it) : it.item.name;
+              if(!it.item.weight){continue;} 
               weightLbs += (it.item.weight * it.quantity);
             }
             for(let it of result.boughtItems){
-              outStr += (outStr.length>0? ", " : "") + (it.quantity>1? it.quantity+"x " : "") + it.item.name;
+              outStr += (outStr.length>0? ", " : "") + (it.quantity>1? it.quantity+"x " : "");
+              outStr += hotlinkItemNames? ActorCharactermancerSheet.hotlink_item(it) : it.item.name;
               if(!it.item.weight){continue;}
               weightLbs += (it.item.weight * it.quantity);
             }
@@ -1593,5 +1584,68 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
         } */
       }
       return total;
+    }
+    static hotlink_item(item){
+      let output = "";
+      try{
+        //"name|source|displayText"
+        let uid = item.item.name.toLowerCase() + "|"
+          + item.item.source.toLowerCase() + "|"
+          + item.item.name;
+        output = Renderer.get().render(`{@item ${uid}}`);
+      }
+      catch(e){
+        output = item.item.name;
+      }
+      return output;
+    }
+    static hotlink_classFeature(feature, cls,){
+      let output = "";
+      try{
+        //"name|className|classSource|level|source|displayText"
+        let uid = feature.entity.name.toLowerCase() + "|" 
+        + cls.name.toLowerCase() + "|"
+        + cls.source.toLowerCase() + "|"
+        + feature.entity.level.toString().toLowerCase() + "|"
+        + feature.entity.source.toLowerCase() + "|"
+        + feature.entity.name;
+        output = Renderer.get().render(`{@classFeature ${uid}}`);
+      }
+      catch(e){
+        output = feature.entity.name;
+      }
+      return output;
+    }
+    static hotlink_subclassFeature(feature, cls, subcls){
+      let output = "";
+      try{
+        //"name|className|classSource|subclassShortName|subclassSource|level|source|displayText"
+        let uid = feature.entity.name.toLowerCase() + "|"
+        + cls.name.toLowerCase() + "|"
+        + cls.source.toLowerCase() + "|"
+        + subcls.name.toLowerCase() + "|"
+        + subcls.source.toLowerCase() + "|"
+        + feature.entity.level.toString().toLowerCase() + "|"
+        + feature.entity.source.toLowerCase() + "|"
+        + feature.entity.name;
+        output = Renderer.get().render(`{@subclassFeature ${uid}}`);
+      }
+      catch(e){
+        output = feature.entity.name;
+      }
+      return output;
+    }
+    static hotlink_spell(spell){
+      let output = "";
+      try{
+        //"name|source|displayText"
+        let uid = spell.name.toLowerCase() + "|" + spell.source.toLowerCase()
+          + "|" + spell.name;
+        output = Renderer.get().render(`{@spell ${uid}}`);
+      }
+      catch(e){
+        output = item.item.name;
+      }
+      return output;
     }
 }
