@@ -253,7 +253,7 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
               //Try to get features from class
               let classFeaturesText = "";
 
-              const tryPrintFeature = (feature, text, bannedFeatureNames=[], bannedLoadedsNames=[]) => {
+              const tryPrintClassFeature = (feature, text, cls, bannedFeatureNames=[], bannedLoadedsNames=[]) => {
                 if(feature.level > d.targetLevel){return text;}
                 let drawParentFeature = true;
                 for(let l of feature.loadeds){
@@ -261,7 +261,37 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
                   drawParentFeature = false;
                   if(bannedLoadedsNames.includes(l.entity.name)){continue;}
                   if(l.entity.level > d.targetLevel){continue;} //Must not be from a higher level than we are
-                  text += `${text.length > 0? ", " : ""}${l.entity.name}`;
+                  //"name|className|classSource|level|source|displayText"
+                  let uid = l.entity.name.toLowerCase() + "|"
+                    + cls.name.toLowerCase() + "|"
+                    + cls.source.toLowerCase() + "|"
+                    + l.entity.level.toString().toLowerCase() + "|"
+                    + l.entity.source.toLowerCase() + "|"
+                    + l.entity.name;
+                  text += `${text.length > 0? ", " : ""}` + Renderer.get().render(`{@classFeature ${uid}}`);
+                }
+                if(!drawParentFeature || bannedFeatureNames.includes(feature.name)){return text;}
+                text += `${text.length > 0? ", " : ""}${feature.name}`;
+                return text;
+              }
+              const tryPrintSubclassFeature = (feature, text, cls, subcls, bannedFeatureNames=[], bannedLoadedsNames=[])=> {
+                if(feature.level > d.targetLevel){return text;} //Just return the text if the level is too low
+                let drawParentFeature = true;
+                for(let l of feature.loadeds){
+                  if(l.type=="optionalfeature" && !l.isRequiredOption){continue;}
+                  drawParentFeature = false;
+                  if(bannedLoadedsNames.includes(l.entity.name)){continue;}
+                  if(l.entity.level > d.targetLevel){continue;} //Must not be from a higher level than we are
+                  //"name|className|classSource|subclassShortName|subclassSource|level|source|displayText"
+                  let uid = l.entity.name.toLowerCase() + "|"
+                    + cls.name.toLowerCase() + "|"
+                    + cls.source.toLowerCase() + "|"
+                    + subcls.name.toLowerCase() + "|"
+                    + subcls.source.toLowerCase() + "|"
+                    + l.entity.level.toString().toLowerCase() + "|"
+                    + l.entity.source.toLowerCase() + "|"
+                    + l.entity.name;
+                  text += `${text.length > 0? ", " : ""}` + Renderer.get().render(`{@subclassFeature ${uid}}`);
                 }
                 if(!drawParentFeature || bannedFeatureNames.includes(feature.name)){return text;}
                 text += `${text.length > 0? ", " : ""}${feature.name}`;
@@ -269,7 +299,7 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
               }
               
               for(let f of d.cls.classFeatures){
-                classFeaturesText = tryPrintFeature(f, classFeaturesText);
+                classFeaturesText = tryPrintClassFeature(f, classFeaturesText, d.cls);
               }
               if(classFeaturesText.length > 0){
                 $$`<div><b>${d.cls.name} Class Features:</b></div>`.appendTo($divClassFeatures);
@@ -281,7 +311,7 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
                 for(let f of d.sc.subclassFeatures){
                   //Do not print subclass features named after the subclass (normally the first feature)
                   
-                  subclassFeaturesText = tryPrintFeature(f, subclassFeaturesText, [d.sc.name], [d.sc.name]);
+                  subclassFeaturesText = tryPrintSubclassFeature(f, subclassFeaturesText, d.cls, d.sc, [d.sc.name], [d.sc.name]);
                 }
                 if(subclassFeaturesText.length > 0){
                   $$`<div><b>${d.sc.name} Subclass Features:</b></div>`.appendTo($divSubclassFeatures);
@@ -704,6 +734,7 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
           $divSpells.append($divSpellAttackMod);
           $divSpells.append($divSpellDC);
           
+          //Create hotlinks to spells, which lets us render a hoverbox when mouse is over them
           const spellsListStr = (spells) => {
             let spellsStr = "";
             for(let i = 0; i < spells.length; ++i){
