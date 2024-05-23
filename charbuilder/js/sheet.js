@@ -341,7 +341,10 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
 
           //Lets also do some info for the personalities, ideals, bonds and flaws
           if(!curBackground){return;}
-          $$`<div><b>${curBackground.name} Background:</b></div>`.appendTo($divBackgroundFeatures);
+          const hotlinkBackground = false;
+          $$`<div><b>${
+            hotlinkBackground? ActorCharactermancerSheet.hotlink_background(curBackground) : 
+            curBackground.name} Background:</b></div>`.appendTo($divBackgroundFeatures);
           //Get feature from background
           let foundFeature = "";
           for(let i = 0; i < curBackground.entries.length && foundFeature.length < 1; ++i){
@@ -584,14 +587,17 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
       //#region Tools
       const hkTools = () => {
           $spanToolsProf.text("");
+          const hotlinkToolProfs = true;
           //We now need to get the names of all tool proficiencies
           const proficientTools = this._grabToolProficiencies();
           let outStr = "";
           for(let toolName of Object.keys(proficientTools)){
               outStr += outStr.length>0? ", " : "";
-              outStr += toolName;
+              outStr += hotlinkToolProfs?
+              //Here we are assuming that this tool proficiency is from the PHB. if it isnt, link wont work
+              ActorCharactermancerSheet.hotlink_item({item:{name:toolName, source:"phb"}}) : toolName;
           }
-          $spanToolsProf.text(outStr);
+          $spanToolsProf.html(outStr);
       }
       //We need a hook here to understand when proficiencies are lost/gained, and when we level up
       //We can listen to feature source tracker for a pulse regarding skill proficiencies
@@ -599,8 +605,9 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
       this._parent.compClass.addHookBase("class_totalLevels", hkTools);
       hkTools();
       //#endregion
-      //#region Weapons
+      //#region Weapons & Armor
       const hkWeaponsArmor = () => {
+        const hotlinkArmorWeaponProfs = false;
           $spanWeaponProf.text("");
           $spanArmorProf.text("");
           let outStrWep = "";
@@ -609,15 +616,19 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
           const weapons = this._grabWeaponProficiencies();
           for(let name of Object.keys(weapons)){
               outStrWep += outStrWep.length>0? ", " : "";
-              outStrWep += name;
+              outStrWep += hotlinkArmorWeaponProfs?
+              //Here we are assuming that this weapon proficiency is from the PHB. if it isnt, link wont work
+              ActorCharactermancerSheet.hotlink_item({item:{name:name, source:"phb"}}) : name;
           }
           const armors = this._grabArmorProficiencies();
           for(let name of Object.keys(armors)){
               outStrArm += outStrArm.length>0? ", " : "";
-              outStrArm += name;
+              outStrArm += hotlinkArmorWeaponProfs?
+              //Here we are assuming that this armor proficiency is from the PHB. if it isnt, link wont work
+              ActorCharactermancerSheet.hotlink_item({item:{name:name, source:"phb"}}) : name;
           }
-          $spanWeaponProf.text(outStrWep);
-          $spanArmorProf.text(outStrArm);
+          $spanWeaponProf.html(outStrWep);
+          $spanArmorProf.html(outStrArm);
       }
       //We need a hook here to understand when proficiencies are lost/gained, and when we level up
       //We can listen to feature source tracker for a pulse regarding skill proficiencies
@@ -1642,6 +1653,33 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
         let uid = spell.name.toLowerCase() + "|" + spell.source.toLowerCase()
           + "|" + spell.name;
         output = Renderer.get().render(`{@spell ${uid}}`);
+      }
+      catch(e){
+        output = item.item.name;
+      }
+      return output;
+    }
+    static hotlink_proficiency(prof){
+      let output = "";
+      try{
+        //"name|source|displayText"
+        let uid = spell.name.toLowerCase() + "|" + spell.source.toLowerCase()
+          + "|" + spell.name;
+        output = Renderer.get().render(`{@spell ${uid}}`);
+      }
+      catch(e){
+        output = item.item.name;
+      }
+      return output;
+    }
+    static hotlink_background(background){
+      let output = "";
+      try{
+        //"name|source|displayText"
+        let uid = background.name.toLowerCase() + "|"
+          + background.source.toLowerCase() + "|"
+          + background.name;
+        output = Renderer.get().render(`{@background ${uid}}`);
       }
       catch(e){
         output = item.item.name;
