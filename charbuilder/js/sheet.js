@@ -511,10 +511,12 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
               levelTotal += targetLevel;
 
               if(!hitDiceInfo[data.cls.hd.faces]){
-                hitDiceInfo[data.cls.hd.faces] = data.cls.hd.number;
+                //Set diceNum
+                hitDiceInfo[data.cls.hd.faces] = targetLevel; //data.cls.hd.number;
               }
               else{
-                hitDiceInfo[data.cls.hd.faces] += data.cls.hd.number;
+                //Add to diceNum
+                hitDiceInfo[data.cls.hd.faces] += targetLevel; //data.cls.hd.number;
               }
           }
 
@@ -522,8 +524,9 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
 
           $lblMaxHP.text(hpTotal);
           $lblHitDice.empty();
-          for(let diceSize of Object.keys(hitDiceInfo)){
-            let str = hitDiceInfo[diceSize]+"d"+diceSize;
+          for(let diceSize of Object.keys(hitDiceInfo)) {
+            let diceNum = hitDiceInfo[diceSize];
+            let str = diceNum+"d"+diceSize;
             $$`<div>${str}</div>`.appendTo($lblHitDice);
           }
 

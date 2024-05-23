@@ -476,6 +476,7 @@ class CharacterBuilder {
 
       await this.compSpell.pRender();
       this.compFeat.render();
+      if(doLoad){this.compDescription.setStateFromSaveFile(character);}
       await this.compDescription.render();
 
 
