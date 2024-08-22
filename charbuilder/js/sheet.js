@@ -243,6 +243,11 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
           $divSubclassFeatures.empty();
           $lblProfBonus.text("+2"); //Default, even for lvl 0 characters
           let classData = ActorCharactermancerSheet.getClassData(this._parent.compClass);
+          const tracker = this._parent.featureSourceTracker_;
+          const enabledOptionalFeatures = tracker.getStatesForKey("features", {
+          });
+          const hotlinkFeatures = true;
+          console.log("ENABLED", enabledOptionalFeatures);
           //If there are no classes selected, just print none and return
           let textOut = "";
           if(!classData?.length){ $lblClass.html(textOut); return; }
@@ -253,30 +258,48 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
               //Try to get features from class
               let classFeaturesText = "";
 
-              const hotlinkFeatures = true;
+              const isOptFeatureEnabled = (loadeds, text) => {
+                //Test, we need to see which (if any) option was checked in character creation
+                let match = false;
+                for(let i = 0; i < enabledOptionalFeatures.length && !match; ++i){
+                  for(let j = 0; j < enabledOptionalFeatures[i].length && !match; ++j){
+                    match = enabledOptionalFeatures[i][j].hash == loadeds.hash;
+                  }
+                }
+                if(match){
+                  text += `${text.length > 0? ", " : ""}`;
+                  text += hotlinkFeatures? ActorCharactermancerSheet.hotlink_optionalFeature(loadeds) : loadeds.entity.name;
+                }
+                return text;
+              }
+
               const tryPrintClassFeature = (feature, text, cls, bannedFeatureNames=[], bannedLoadedsNames=[]) => {
                 if(feature.level > d.targetLevel){return text;}
-                let drawParentFeature = true;
-                for(let l of feature.loadeds){
-                  if(l.type=="optionalfeature" && !l.isRequiredOption){continue;}
-                  drawParentFeature = false;
+                let drawParentFeature = false;
+                for(let l of feature.loadeds) {
                   if(bannedLoadedsNames.includes(l.entity.name)){continue;}
                   if(l.entity.level > d.targetLevel){continue;} //Must not be from a higher level than we are
+                  if(l.type=="optionalfeature" && !l.isRequiredOption){
+                    text = isOptFeatureEnabled(l, text); continue;
+                  }
                   text += `${text.length > 0? ", " : ""}`;
                   text += hotlinkFeatures? ActorCharactermancerSheet.hotlink_classFeature(l, cls) : l.entity.name;
                 }
+                //Check that the feature name isnt banned
                 if(!drawParentFeature || bannedFeatureNames.includes(feature.name)){return text;}
-                text += `${text.length > 0? ", " : ""}${feature.name}`;
+                text += `${text.length > 0? ", " : ""}${feature.name}`; console.log("just wrote " + feature.name + " for some reason", feature);
                 return text;
               }
               const tryPrintSubclassFeature = (feature, text, cls, subcls, bannedFeatureNames=[], bannedLoadedsNames=[])=> {
                 if(feature.level > d.targetLevel){return text;} //Just return the text if the level is too low
-                let drawParentFeature = true;
+                let drawParentFeature = false;
                 for(let l of feature.loadeds){
-                  if(l.type=="optionalfeature" && !l.isRequiredOption){continue;}
-                  drawParentFeature = false;
                   if(bannedLoadedsNames.includes(l.entity.name)){continue;}
                   if(l.entity.level > d.targetLevel){continue;} //Must not be from a higher level than we are
+                  if(l.type=="optionalfeature" && !l.isRequiredOption){
+                    text = isOptFeatureEnabled(l, text); continue;
+                  }
+                  drawParentFeature = false;
                   text += `${text.length > 0? ", " : ""}`;
                   text += hotlinkFeatures? ActorCharactermancerSheet.hotlink_subclassFeature(l, cls, subcls) : l.entity.name;
                 }
@@ -297,7 +320,6 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
                 let subclassFeaturesText = "";
                 for(let f of d.sc.subclassFeatures){
                   //Do not print subclass features named after the subclass (normally the first feature)
-                  
                   subclassFeaturesText = tryPrintSubclassFeature(f, subclassFeaturesText, d.cls, d.sc, [d.sc.name], [d.sc.name]);
                 }
                 if(subclassFeaturesText.length > 0){
@@ -1613,7 +1635,7 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
       }
       return output;
     }
-    static hotlink_classFeature(feature, cls,){
+    static hotlink_classFeature(feature, cls){
       let output = "";
       try{
         //"name|className|classSource|level|source|displayText"
@@ -1627,6 +1649,7 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
       }
       catch(e){
         output = feature.entity.name;
+        console.log("Failed to create a hotlink for class feature", feature, cls);
       }
       return output;
     }
@@ -1646,6 +1669,22 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
       }
       catch(e){
         output = feature.entity.name;
+        console.log("Failed to create a hotlink for subclass feature", feature, cls, subcls);
+      }
+      return output;
+    }
+    static hotlink_optionalFeature(feature){
+      let output = "";
+      try{
+        //"name|source|displayText"
+        let uid = feature.entity.name.toLowerCase() + "|" 
+        + feature.entity.source.toLowerCase() + "|"
+        + feature.entity._displayName;
+        output = Renderer.get().render(`{@optfeature ${uid}}`);
+      }
+      catch(e){
+        output = feature.entity.name;
+        console.log("Failed to create a hotlink for optional feature", feature);
       }
       return output;
     }
