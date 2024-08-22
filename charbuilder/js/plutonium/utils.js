@@ -113,10 +113,10 @@ class UtilDataSource {
     static _IGNORED_KEYS = new Set(["_meta", "$schema", ]);
 
     static async pGetAllContent({sources, uploadedFileMetas, customUrls, isBackground=false, userData, cacheKeys=null,
-        page, isDedupable=false, fnGetDedupedData=null, fnGetBlocklistFilteredData=null, isAutoSelectAll=false, }, ) {
+        page, isDedupable=false, fnGetDedupedData=null, fnGetBlocklistFilteredData=null, isAutoSelectAll=false, skipTooManySourcesWarning=false}, ) {
         const allContent = [];
 
-        if (isAutoSelectAll && this.isTooManySources({ cntSources: sources.length })) {
+        if (isAutoSelectAll && !skipTooManySourcesWarning && this.isTooManySources({ cntSources: sources.length })) {
             const ptHelp = `This may take a (very) long time! If this seems like too much, ${game.user.isGM ? "your GM" : "you"} may have to adjust ${game.user.isGM ? "your" : "the"} "Data Sources" Config options/${game.user.isGM ? "your" : "the"} "World Data Source Selector" list to limit the number of sources selected by default.`;
 
             console.warn(...LGT, `${sources.length} source${sources.length === 1 ? "" : "s"} are being loaded! ${ptHelp}`);
@@ -130,7 +130,7 @@ class UtilDataSource {
             })))
                 return null;
         }
-
+        
         const pLoad = sources.pMap(async source=>{
             await source.pLoadAndAddToAllContent({ uploadedFileMetas, customUrls, allContent, cacheKeys });
         });

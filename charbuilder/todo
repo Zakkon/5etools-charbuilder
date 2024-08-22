@@ -2,7 +2,6 @@ BUGS:
     - Going down in level and then up again will not re-render FOS components (seems fixed)
     - FOS subcomponents are getting their states set even after spells are renderered, even though they should be before (shouldnt be a big issue)
     - verify if url-linked spells on the sheet work for 3rd party homebrew (or your own homebrew)
-    - Make save/change sources button not appear in view mode
     - Removing sources in use (for example class) doesnt wipe the ui fields
     - When adding a source, it is not added to filter. For example, Tamer class from Heliana's is not visible unless class filter is altered
     - Same goes when saving, filter is turned off so loaded character doesnt display Tamer as the chosen class
@@ -11,7 +10,6 @@ WEB:
     - Add UI notifications
     - Test custom urls for content (+ save/load/exportFvtt)
     - Test custom uploaded files for content (+ save/load/exportFvtt)
-    - Dark mode looks awful
     - Make sure all used content(classes/races/backgrounds) are turned ON in the filter when a save file is loaded (should be on already, assuming user didnt turn them off in the filter afterwards)
 
 CSS:
@@ -39,3 +37,7 @@ EXPORT:
 TOCHECK:
     - Removing homebrew content for a subclass that is in sue
     - Removing homebrew content for a class feature that is in use (Warlock pacts)
+
+IDEAS:
+- When adding a new source, maybe the filters should auto-turn on for that source?
+- Disallow removing sources that are in use, OR include a settings bool that instead just wipes the character when removing a source that is in use

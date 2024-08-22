@@ -122,7 +122,8 @@ class CharacterExportFvtt{
         //#endregion
 
         //#region SPELLS
-        const spellSources = await CharacterExportFvtt.getAllSpellSources(builder.compSpell);
+        const deletedClasses = CharacterExportFvtt.getDeletedClassIds(builder.compClass);
+        const spellSources = await CharacterExportFvtt.getAllSpellSources(builder.compSpell, deletedClasses);
         //Loop through each source for spells
         for(let srcIx = 0; srcIx < spellSources.length; ++srcIx){
             let spellSource = spellSources[srcIx];
@@ -680,7 +681,7 @@ class CharacterExportFvtt{
      * @param {ActorCharactermancerSpell} compSpell
      * @returns {{className:string, classSource:string, spellsByLvl:Charactermancer_Spell_SpellMeta[][]}[]}
      */
-    static getAllSpellSources(compSpell){
+    static getAllSpellSources(compSpell, deletedClasses){
         const filterValues = compSpell.filterValuesSpellsCache || compSpell.filterBoxSpells.getValues();
         let spellsBySource = [];
         let forms = [];
@@ -690,14 +691,32 @@ class CharacterExportFvtt{
             if(!comp){continue;}
             let className = comp._className;
             let classSource = comp._classSource;
+            let classIx = j;
+            //If previous classes were deleted, we are going to shift our classIx down to compensate
+            classIx = this.downgradeClassIx_deletedClassCompensation(classIx, deletedClasses);
             forms.push(compSpell.compsSpellSpells[j].pGetFormData(filterValues));
             let spellsByLvl = compSpell.compsSpellSpells[j]._test_getKnownSpells().map(arr => arr.map(
                 spell => {return {name: spell.spell.name, source:spell.spell.source,
                     isLearned:spell.isLearned, isPrepared:spell.isPrepared, spell:spell.spell};}
             ));
-            spellsBySource.push({className: className, classSource:classSource, ix:j, spellsByLvl: spellsByLvl});
+            spellsBySource.push({className: className, classSource:classSource, ix:classIx, spellsByLvl: spellsByLvl});
         }
         return spellsBySource;
+    }
+    static getDeletedClassIds(compClass){
+        let ar = [];
+        for(let i = 0; i <= compClass._state.class_ixMax; ++i){
+            if(ActorCharactermancerBaseComponent.class_isDeleted(i)){ar.push(i);}
+        }
+        return ar;
+    }
+    static downgradeClassIx_deletedClassCompensation(classIx, deletedClasses){
+        let mod = 0;
+        for(let i = 0; i < deletedClasses.length; ++i){
+            if(i < classIx){mod++;}
+        }
+        classIx -= mod;
+        return classIx;
     }
     /**
      * Get background save data

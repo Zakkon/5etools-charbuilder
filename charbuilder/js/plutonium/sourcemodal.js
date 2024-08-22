@@ -703,6 +703,7 @@ class AppSourceSelectorMulti extends ModalFilter {
                 return ui.notifications.warn(`No sources to be loaded! Please finish entering source details first.`);
             } */
 
+            if(!sources || sources.length < 1){ console.log("No sources selected."); return;}
 
             //We don't want to return entities, we just want to return metadata about sources
             const out = {sourceIds: sources, uploadedFileMetas: this.uploadedFileMetas, customUrls: this.getCustomUrls()};

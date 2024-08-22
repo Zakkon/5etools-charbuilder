@@ -443,7 +443,7 @@ class ActorCharactermancerClass extends ActorCharactermancerBaseComponent {
 
                 this.wipeClassState(ix);
                 //Honestly, we might just have to re-render all the class components
-                //If we delete class of index 1, that means class of inded 2 should become 1, and that breaks so many hooks
+                //If we delete class of index 1, that means class of index 2 should become 1, and that breaks so many hooks
                 //A better approach could just be to mark index 1 as unused. When the character is serialized, THEN we rearrange indices
                 classChoicePanelsWrapper.remove();
             });
@@ -1634,7 +1634,6 @@ class ActorCharactermancerClass extends ActorCharactermancerBaseComponent {
                     }
                     //Then we can go in and completely reset the _state, wiping hooks
                     comp._setState(comp._getDefaultState());
-
                     //Needs to be called last
                     this._parent.featureSourceTracker_.unregister(comp);
                 }
@@ -1659,6 +1658,7 @@ class ActorCharactermancerClass extends ActorCharactermancerBaseComponent {
         this.state.class_pulseChange = !this.state.class_pulseChange;
 
         //List all classes
+        console.log("Still active classes:");
         for(let i = 0; i <= this._state.class_ixMax; ++i){
             if(ActorCharactermancerBaseComponent.class_isDeleted(i)){continue;}
             const clsInfo = ActorCharactermancerBaseComponent.class_getProps(i);
@@ -10312,14 +10312,15 @@ class ActorCharactermancerSpell extends ActorCharactermancerBaseComponent {
          * @param {{spellsBySource:{className: string, classSource: string, spellsByLvl: Charactermancer_Spell_SpellMeta[][]}} actor
         */
     setStateFromSaveFile(actor){
-        const data = actor.spellsBySource;
-
-
-
+        const data = actor.spellsBySource; //This needs to be updated whenever a class is removed from the character
+        
         for(let j = 0; j < data.length; ++j){
                 //Assume this is for a class, and it is going to _compsSpellSpells
                 //const ix = this._getIxOfSpell(src.spellsByLvl[0][0].spell);
-                const classIx = data[j].ix; //Not 100% sure about this one
+
+                //WARNING: Not 100% sure about this one
+                console.log(actor);
+                const classIx = data[j].ix;
 
                 for(let lvlIx = 0; lvlIx < data[j].spellsByLvl.length; ++lvlIx){
                     for(let sp of  data[j].spellsByLvl[lvlIx]){

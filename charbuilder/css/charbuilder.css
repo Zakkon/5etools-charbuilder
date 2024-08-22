@@ -348,7 +348,16 @@ select.chooseAlignment{
     font-weight: bold;
 }
 
+/* NIGHTMODE ------- */
 
+/* TABLE NIGHTMODE */
+.night-mode .cls-tbl {
+    background: #222;
+    color: #bbb;
+}
+.cls-tbl > tbody > tr > th {
+    color: #bbb !important;
+}
 .night-mode .stripe-even:nth-child(even) {
     background:rgba(170,170,170,.1333333333) !important
   }
@@ -367,4 +376,10 @@ select.chooseAlignment{
 }
 .night-mode .manc__list-row-button{
     border: 2px outset rgb(87, 87, 87) !important;
+}
+.night-mode .cls-tbl__stripe-odd:nth-child(2n+1) {
+    background: rgba(136,136,136,.0941176471) !important;
+}
+.night-mode .cls-tbl__stripe-odd:nth-child(2n) {
+    background: none !important;
 }

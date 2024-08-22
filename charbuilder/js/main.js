@@ -69,7 +69,6 @@ class SourceManager {
 
     //Cache which sources we chose, and let them process the source ids into ready data entries (classes, races, etc)
     const data = await SourceManager._loadSources({sourceIds: sourceIds, uploadedFileMetas: uploadedFileMetas, customUrls: customUrls});
-
     //Create the character builder UI, and try to navigate to the correct page, showing the correct character
     const window = new CharacterBuilder(data, cookieUid, page, viewMode);
     this._curWindow = window;
@@ -708,10 +707,9 @@ class CharacterBuilder {
         preEnabledCustomUrls: customUrls,
       });
       const result = await sourceSelector.pWaitForUserInput();
+      console.log(result);
       //If user just tried to simply exit the dialog without confirming any choices, an empty array should be returned
       //Since the dialog won't let the user confirm without choosing at least one source, this is a good way to tell if user aborted
-      if(!result || result.length < 1){return;}
-
       //Then tell SourceManager that we have these new sourceIds, and let them take it from here
       SourceManager.changeSources(result);
     }
