@@ -4282,7 +4282,7 @@ class StatGenUi extends BaseComponent {
         this._addHookBase("rolled_rolls", hkRolled);
         hkRolled();
 
-        return $$`<div class="ve-flex-col mb-3 mr-auto">
+        return $$`<div class="ve-flex-col mb-3 mr-auto px-3">
 			<div class="ve-flex mb-2">
 				<div class="ve-flex-col ve-flex-h-center mr-3">
 					<label class="ve-flex-v-center"><div class="mr-2 no-shrink w-100p">Formula:</div>${this._$rollIptFormula}</label>
@@ -4309,7 +4309,7 @@ class StatGenUi extends BaseComponent {
         }
         );
 
-        return $$`<div class="ve-flex-col mb-3 mr-auto">
+        return $$`<div class="ve-flex-col mb-3 mr-auto px-3">
 			<div class="mb-2">Assign these numbers to your abilities as desired:</div>
 			<div class="bold mb-2">${StatGenUi._STANDARD_ARRAY.join(", ")}</div>
 			<div class="ve-flex">${$btnRandom}</div>
@@ -4317,7 +4317,7 @@ class StatGenUi extends BaseComponent {
     }
 
     _render_$getStgManualHeader() {
-        return $$`<div class="ve-flex-col mb-3 mr-auto">
+        return $$`<div class="ve-flex-col mb-3 mr-auto px-3">
 			<div>Enter your desired ability scores in the &quot;Base&quot; column below.</div>
 		</div>`;
     }
