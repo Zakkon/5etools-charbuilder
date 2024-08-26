@@ -13405,7 +13405,7 @@ class Charactermancer_Spell_Level extends BaseComponent {
 				>Learn</button>
 
 				${this._spellLevel !== 0 ? `<button
-					class="btn manc__list-row-button manc-sp__btn-prepare ${this._state[ixPrepared] || this._state[ixAlwaysPrepared] || existingSpellMeta?.isPrepared || existingSpellMeta?.isAlwaysPrepared ? "active" : ""}"
+					class="btn-default btn manc__list-row-button manc-sp__btn-prepare ${this._state[ixPrepared] || this._state[ixAlwaysPrepared] || existingSpellMeta?.isPrepared || existingSpellMeta?.isAlwaysPrepared ? "active" : ""}"
 					name="btn-prepare"
 					title="${isPrepareDisabledExistingSpell ? `(Previously Added Spell)` : `Prepare`}"
 					${isPrepareDisabled ? `disabled` : ""}
@@ -13435,6 +13435,7 @@ class Charactermancer_Spell_Level extends BaseComponent {
             btn.addEventListener("click", evt=>{
                 evt.stopPropagation();
                 evt.preventDefault();
+                document.activeElement.blur();
 
                 const isActive = btn.classList.contains("active");
 
