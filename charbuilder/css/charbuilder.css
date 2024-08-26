@@ -344,10 +344,9 @@ input.form-control, textarea.form-control {
     background-color: rgb(0, 87, 4);
     color: white !important;
 }
-div:has(> div > .manc-sp__btn-learn-cantrip.active) {
-    background-color: rgb(188, 215, 193)
-}
-div:has(> div > .manc-sp__btn-prepare.active) {
+
+div:has(> div > .manc-sp__btn-learn-spell.active), div:has(> div > .manc-sp__btn-prepare.active),
+div:has(> div > .manc-sp__btn-learn-cantrip.active)  {
     background-color: rgb(188, 215, 193)
 }
 select.chooseAlignment{
@@ -387,12 +386,12 @@ select.chooseAlignment{
 .night-mode .manc__list-row-button{
     border: 2px outset rgb(87, 87, 87) !important;
 }
-.night-mode div:has(> div > .manc-sp__btn-learn-cantrip.active) {
-    background-color: rgb(51, 70, 55)
-}
-.night-mode div:has(> div > .manc-sp__btn-prepare.active) {
+.night-mode div:has(> div > .manc-sp__btn-learn-cantrip.active),
+.night-mode div:has(> div > .manc-sp__btn-prepare.active),
+.night-mode div:has(> div > .manc-sp__btn-learn-spell.active) {
     background-color: rgb(51, 70, 55);
 }
+
 .night-mode .manc__list-row-button.active{
     background-color: rgb(0, 87, 4);
     color: white !important;
