@@ -450,8 +450,8 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
           ul.append(createAbilityScoreElement("Strength", totals.values.str));
           ul.append(createAbilityScoreElement("Dexterity", totals.values.dex));
           ul.append(createAbilityScoreElement("Constitution", totals.values.con));
-          ul.append(createAbilityScoreElement("Wisdom", totals.values.wis,));
           ul.append(createAbilityScoreElement("Intelligence", totals.values.int));
+          ul.append(createAbilityScoreElement("Wisdom", totals.values.wis,));
           ul.append(createAbilityScoreElement("Charisma", totals.values.cha));
           ul.appendTo($sectionAttributeScores);
 
@@ -577,7 +577,8 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
           //We now need to get the names of all skill proficiencies
           const proficientSkills = this._grabSkillProficiencies();
           const allSkillNames = Parser.SKILL_TO_ATB_ABV;
-          for(let skillName of Object.keys(allSkillNames)){
+          //sort them alphabetically
+          for(let skillName of Object.keys(allSkillNames).sort()){
               //Get the modifier for the ability score
               let score = this._getAbilityModifier(Parser.SKILL_TO_ATB_ABV[skillName]);
               //Get proficiency / expertise if we are proficient in the skill
