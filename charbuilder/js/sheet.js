@@ -773,8 +773,9 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
           
           
           const spellsKnownByLvl = ActorCharactermancerSheet.getAllSpellsKnown(this._parent.compSpell);
+          const additionalSpells = ActorCharactermancerSheet.getAdditionalRaceSpells(this._parent.compRace);
           //List cantrips known (these never change)
-          $$`<div class="mb10"><b>Cantrips Known: </b><i>${spellsListStr(spellsKnownByLvl[0])}</i></div>`.appendTo($divSpells);
+          $$`<div class="mb10"><b>Cantrips Known: </b><i>${spellsListStr(spellsKnownByLvl[0].concat(additionalSpells[0]))}</i></div>`.appendTo($divSpells);
           //Add a bit of a spacing here
 
           $$`<div><b>Prepared Spells:</b></div>`.appendTo($divSpells);
@@ -1589,7 +1590,47 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
             }
         }
 
+
         return spellsBylevel;
+    }
+    static getAdditionalRaceSpells(compRace){
+      let curRace = compRace.getRace_();
+      if(curRace == null || !curRace.additionalSpells){return;}
+      //console.log(curRace.additionalSpells);
+      let spellsBylevel = [[],[],[],[],[],[],[],[],[],[]];
+
+      function toUpper(str) {
+        return str
+            .toLowerCase()
+            .split(' ')
+            .map(function(word) {
+                //console.log("First capital letter: "+word[0]);
+                //console.log("remain letters: "+ word.substr(1));
+                return word[0].toUpperCase() + word.substr(1);
+            })
+            .join(' ');
+         }
+
+      for(let src of curRace.additionalSpells){
+        let ability = src.ability;
+        let innate = src.innate;
+        let known = src.known? src.known : new Array(0);
+        for(let levelGained of Object.keys(known)){
+          for(let s of known[levelGained]){
+            let name = s;
+            let lvlGained = Number.parseInt(levelGained);
+            let spellLevel = 0;
+            if(s.toLowerCase().endsWith("#c")){ //If is cantrip
+              spellLevel = 0;
+              let source = null;
+              name = toUpper(s.substr(0, s.length-2));
+              let obj = {name:name, source: source==null? "PHB" : source};
+              spellsBylevel[spellLevel].push(obj);
+            }
+          }
+        }
+      }
+      return spellsBylevel;
     }
     static getSpellSlotsAtLvl(spellLevel, compClass){
       
