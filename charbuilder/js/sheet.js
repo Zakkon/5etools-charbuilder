@@ -1589,7 +1589,6 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
         //TODO: unarmored defense?
         let foundACItems = await tryGetACIncreasingItems();
        
-
         const naturalAC = 10 + dexModifier; //unarmored defense here?
         let candidate = {ac:naturalAC, name:"Natural Armor"};
 
@@ -1678,7 +1677,12 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
     }
     static getAdditionalRaceSpells(compRace, compClass, compSpell){
       let curRace = compRace.getRace_();
-      if(curRace == null || !curRace.additionalSpells){return;}
+
+      let spellsByLevel_innate = [[],[],[],[],[],[],[],[],[],[]];
+      let spellsByLevel_known = [[],[],[],[],[],[],[],[],[],[]];
+      let abilityUsed = "wis";
+
+      if(curRace == null || !curRace.additionalSpells){return {innate:spellsByLevel_innate, known:spellsByLevel_known, ability:abilityUsed};}
 
       let combinedCharacterLevel = 1; //assume at least level 1
       let classData = ActorCharactermancerSheet.getClassData(compClass);
@@ -1699,9 +1703,7 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
             .join(' ');
       }
 
-      let spellsByLevel_innate = [[],[],[],[],[],[],[],[],[],[]];
-      let spellsByLevel_known = [[],[],[],[],[],[],[],[],[],[]];
-      let abilityUsed = "wis";
+      
 
       function serializeCantrip(spellName, rechargeMode, charges, spellsByLvl, compSpell){
         let spellLevel = 0;
