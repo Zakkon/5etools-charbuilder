@@ -772,11 +772,13 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
 
           const printCantripAttack = (sp) => {
             console.log(sp);
+            if(!sp.damageInflict){return;}
             const isMeleeSpell = false; //sp.spellAttack.includes("M");
             const isRangedSpell = (!!sp.spellAttack && sp.spellAttack.includes("R")) || sp.range.distance != null;
             const isRangedSaveSpell = !!sp.range.distance && (!!sp.savingThrow);
             //const isMeleeAndThrown = isMeleeWeapon && sp.item.property?.includes("T");
-            if(!isMeleeSpell && !isRangedSpell){console.error("spell attack type not recognized:", sp, sp.spellAttack);}
+            console.log()
+            if(!isMeleeSpell && !isRangedSpell && !isRangedSaveSpell){return;}
 
             if(isMeleeSpell){
               const result = calcMeleeAttack(sp, strMod, dexMod, weaponProfs);
