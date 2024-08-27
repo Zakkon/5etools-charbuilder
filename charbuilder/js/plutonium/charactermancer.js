@@ -13752,7 +13752,7 @@ class Charactermancer_Spell_Level extends BaseComponent {
      * Returns all spells chosen to be learned at this level. Does not handle level 0 (cantrips)
      * @returns {{ix:number, spell:any}[]}
      */
-    getSpellsKnown(includeCantrips = false) {
+    getSpellsKnown(includeCantrips = false, includeLearned = true, includePrepared = true, includeAlwaysPrepared=true, includeAlwaysKnown=true) {
         //TEMPFIX, quite lazy
         if ((!this._isWithinLevelRange() || this._spellLevel === 0) && !includeCantrips) {return [];}
 
@@ -13766,9 +13766,13 @@ class Charactermancer_Spell_Level extends BaseComponent {
             if (!this._parent.isAvailableClassSpell_(sp) && !this._parent.isAvailableSubclassSpell_(sp)
             && !this._parent.isAvailableExpandedSpell_(sp)){continue;}
 
-            const {ixLearned} = this.constructor._getProps(i);
+            const {ixLearned, ixPrepared, ixAlwaysPrepared, ixAlwaysKnownSpell} = this.constructor._getProps(i);
 
-            if (!this._state[ixLearned]){continue;}
+            let isLearned = includeLearned && this._state[ixLearned];
+            let isPrepared = includePrepared && this._state[ixPrepared];
+            let isAlwaysPrepared = includeAlwaysPrepared && this._state[ixAlwaysPrepared];
+            let isAlwaysKnown = includeAlwaysKnown && this._state[ixAlwaysKnownSpell];
+            if (!isLearned && !isPrepared && !isAlwaysPrepared && !isAlwaysKnown){continue;}
 
             out.push({ ix: i, spell: this._spellDatas[i]});
         }
