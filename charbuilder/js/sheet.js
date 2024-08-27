@@ -1541,17 +1541,67 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
             }
         }
 
+        const tryGetACIncreasingItems = async () => {
+          let foundShield = false;
+          let shieldAC = 0;
+          const tryUseItem = (it) => {
+            //Try to check if this is a shield
+            console.log(it);
+            if(it.name == "Shield" && it.source == "PHB"){
+              foundShield = true;
+              shieldAC = it.ac;
+              console.log("found shield");
+            }
+            else if (it.ac != null && it.ac > 0){
+              let type = it.type.toLowerCase();
+              //If light armor, medium armor, or heavy armor, continue
+              if(type == "la" || type == "ma" || type == "ha"){}
+              else{console.error("found ac item that isnt a shield, what do we do with this?", it);}
+            }
+          }
+          //Go through bought items
+          const itemKeys = compEquipShop.__state.itemPurchases;
+          const itemDatas = compEquipShop.__state.itemDatas.item;
+          for(let item of itemKeys){
+              //cant be trusted to not be null
+              const foundItem = ActorCharactermancerEquipment.findItemByUID(item.data.uid, itemDatas);
+              if(!foundItem){continue;}
+              //if(foundItem.armor == true){tryUseArmor(foundItem);}
+              tryUseItem(it);
+          }
+  
+          //We also need to go through starting items
+          const rolledForGold = !!this._parent.compEquipment._compEquipmentCurrency._state.cpRolled;
+          if(!rolledForGold)
+          {
+              //If we rolled for gold, it means we dont get any default starting equipment
+              const compEquipDefault = this._parent.compEquipment._compEquipmentStartingDefault;
+              const form = await compEquipDefault.pGetFormData();
+              const items = form.data.equipmentItemEntries;
+              for(let it of items){
+                tryUseItem(it.item);
+              }
+          }
+          return {shield: foundShield? shieldAC : 0};
+      }
+
         await tryGetArmors();
         //TODO: unarmored defense?
-        //TODO: shield?
+        let foundACItems = await tryGetACIncreasingItems();
+       
 
         const naturalAC = 10 + dexModifier; //unarmored defense here?
+        let candidate = {ac:naturalAC, name:"Natural Armor"};
+
         if(bestArmorAC > naturalAC){
-            return {ac:bestArmorAC, name:bestArmor.name};
+            candidate = {ac:bestArmorAC, name:bestArmor.name};
         }
-        else{
-            return {ac:naturalAC, name:"Natural Armor"};
+        if(foundACItems.shield > 0){
+          //Add shield bonus
+          candidate.ac += foundACItems.shield;
+          candidate.name += ", Shield";
         }
+        return candidate;
     }
 
     /**
