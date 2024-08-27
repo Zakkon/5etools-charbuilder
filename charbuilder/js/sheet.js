@@ -769,13 +769,34 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
             }
             return spellsStr;
           };
+          const spellsListStr_Innate = (spells) => {
+            let spellsStr = "";
+            console.log("STUFF", spells);
+            for(let i = 0; i < spells.length; ++i){
+              if(spellsStr.length > 0 ){spellsStr += ", ";}
+              let obj = spells[i];
+              let spell = obj.spell;
+              if(obj.rechargeMode == "daily"){
+                let charges = obj.charges;
+                spellsStr += "("+charges + "/day)"; 
+              }
+              spellsStr += hotlinkSpells? ActorCharactermancerSheet.hotlink_spell(spell) : spell.name;
+            }
+            return spellsStr;
+          };
 
           
           
           const spellsKnownByLvl = ActorCharactermancerSheet.getAllSpellsKnown(this._parent.compSpell);
-          const additionalSpells = ActorCharactermancerSheet.getAdditionalRaceSpells(this._parent.compRace);
+          const additionalSpells = ActorCharactermancerSheet.getAdditionalRaceSpells(this._parent.compRace, this._parent.compClass, this._parent.compSpell);
+
+          //Add additional cantrips to cantrips list
+          for(let sp of additionalSpells.known[0]){
+            spellsKnownByLvl[0].push(sp.spell);
+          }
+
           //List cantrips known (these never change)
-          $$`<div class="mb10"><b>Cantrips Known: </b><i>${spellsListStr(spellsKnownByLvl[0].concat(additionalSpells[0]))}</i></div>`.appendTo($divSpells);
+          $$`<div class="mb10"><b>Cantrips Known: </b><i>${spellsListStr(spellsKnownByLvl[0])}</i></div>`.appendTo($divSpells);
           //Add a bit of a spacing here
 
           $$`<div><b>Prepared Spells:</b></div>`.appendTo($divSpells);
@@ -798,6 +819,18 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
               }
               const slots = ActorCharactermancerSheet.getSpellSlotsAtLvl(lvl, this._parent.compClass);
               $$`<div class="mb10">${str} (${slots} slots): <i>${spellsListStr(knownSpellsAtLvl)}</i></div>`.appendTo($divSpells);
+          }
+
+          let numInnateSpells = 0;
+          for(let i = 1; i < additionalSpells.innate.length; ++i){ numInnateSpells += additionalSpells.innate[i].length;}
+          console.log("innate spells", numInnateSpells);
+          if(numInnateSpells > 0){
+            $$`<div><b>Innate Spells:</b></div>`.appendTo($divSpells);
+          for(let lvl = 1; lvl < additionalSpells.innate.length; ++lvl){
+              const knownSpellsAtLvl = additionalSpells.innate[lvl] || null;
+              if(!knownSpellsAtLvl || !knownSpellsAtLvl.length){continue;}
+              $$`<div><i>${spellsListStr_Innate(knownSpellsAtLvl)}</i></div>`.appendTo($divSpells);
+          }
           }
 
           hkCalcAttacks(); //Calculate attacks as well, since it displays cantrip attacks
@@ -1593,11 +1626,16 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
 
         return spellsBylevel;
     }
-    static getAdditionalRaceSpells(compRace){
+    static getAdditionalRaceSpells(compRace, compClass, compSpell){
       let curRace = compRace.getRace_();
       if(curRace == null || !curRace.additionalSpells){return;}
-      //console.log(curRace.additionalSpells);
-      let spellsBylevel = [[],[],[],[],[],[],[],[],[],[]];
+
+      let combinedCharacterLevel = 1; //assume at least level 1
+      let classData = ActorCharactermancerSheet.getClassData(compClass);
+      for(let d of classData){
+        let classLevel = d.targetLevel; //this is base 1, so value 1 = level 1
+        combinedCharacterLevel += classLevel;
+      }
 
       function toUpper(str) {
         return str
@@ -1609,28 +1647,87 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
                 return word[0].toUpperCase() + word.substr(1);
             })
             .join(' ');
-         }
+      }
+
+      let spellsByLevel_innate = [[],[],[],[],[],[],[],[],[],[]];
+      let spellsByLevel_known = [[],[],[],[],[],[],[],[],[],[]];
+      let abilityUsed = "wis";
+
+      function serializeCantrip(spellName, rechargeMode, charges, spellsByLvl, compSpell){
+        let spellLevel = 0;
+        let source = null;
+        let name = toUpper(spellName.substr(0, spellName.length-2));
+        const fallbackSource = "PHB";
+        let obj = {name:name, source: source==null? fallbackSource : source};
+
+        let matchedItem = ActorCharactermancerSpell.findSpellByUID(obj.name+"|"+obj.source, compSpell._data.spell);
+        if(matchedItem==null){throw error();}
+        spellsByLvl[spellLevel].push({spell:matchedItem, rechargeMode:rechargeMode, charges:charges});
+      }
+      function serializeSpell(spellName, rechargeMode, charges, spellsByLvl, compSpell){
+        let spellLevel = 0;
+        let source = null;
+        let name = toUpper(spellName);
+        const fallbackSource = "PHB";
+        let obj = {name:name, source: source==null? fallbackSource : source};
+
+        let matchedItem = ActorCharactermancerSpell.findSpellByUID(obj.name+"|"+obj.source, compSpell._data.spell);
+        spellLevel = matchedItem.level;
+        if(matchedItem==null){throw error();}
+        spellsByLvl[spellLevel].push({spell:matchedItem, rechargeMode:rechargeMode, charges:charges});
+      }
 
       for(let src of curRace.additionalSpells){
         let ability = src.ability;
-        let innate = src.innate;
+        abilityUsed = ability;
+
+        //Innate spells (always prepared)
+        let innate = src.innate? src.innate : new Array(0);
+        for(let levelGained of Object.keys(innate)){
+            //Make sure we are high enough level first
+          if(Number.parseInt(levelGained) > combinedCharacterLevel){continue;}
+
+          let gained = innate[levelGained];
+          //Check for daily recharge spells
+          let dailyRecharge = gained.daily;
+          
+          if(dailyRecharge != null){
+            for(let numDailyUses of Object.keys(dailyRecharge)){
+              let int_numDailyUses = Number.parseInt(numDailyUses);
+              let nameArray = dailyRecharge[numDailyUses];
+              for(let s of nameArray){
+                if(s.toLowerCase().endsWith("#c")){ //If is cantrip
+                  console.error("why is there a cantrip in daily spells with limited uses? this does not make sense");
+                  continue;
+                }
+                else{
+                  //This is a leveled spell (assume so)
+                  //We cannot get the level of the spell right from here, we'd need to 
+                  serializeSpell(s, "daily", int_numDailyUses, spellsByLevel_innate, compSpell);
+                }
+              }
+            }
+          }
+          //Check for other types?
+        }
+
+        //Known spells (not always prepared)
         let known = src.known? src.known : new Array(0);
         for(let levelGained of Object.keys(known)){
           for(let s of known[levelGained]){
             let name = s;
-            let lvlGained = Number.parseInt(levelGained);
+            let lvlRequired = Number.parseInt(levelGained);
+            if(lvlRequired > combinedCharacterLevel){continue;}
             let spellLevel = 0;
             if(s.toLowerCase().endsWith("#c")){ //If is cantrip
-              spellLevel = 0;
-              let source = null;
-              name = toUpper(s.substr(0, s.length-2));
-              let obj = {name:name, source: source==null? "PHB" : source};
-              spellsBylevel[spellLevel].push(obj);
+              serializeCantrip(s, "none", 0, spellsByLevel_known, compSpell);
             }
           }
         }
       }
-      return spellsBylevel;
+
+
+      return {innate:spellsByLevel_innate, known:spellsByLevel_known, ability:abilityUsed};
     }
     static getSpellSlotsAtLvl(spellLevel, compClass){
       

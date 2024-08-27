@@ -791,6 +791,39 @@ class CharacterExportFvtt{
         return matchedSources;
     }
     /**
+     * @param {{name:string, source:string}} entity a subclass, race, class etc
+     * @param {string} type "subclass", "class", "race", etc
+     * @returns {{filename:string, url:string, isLocal:string, checksum:string}[]}
+     */
+    static async _test_MatchEntityToSourceGet(entity, type){
+        const returnOnFirstMatch = false;
+        //Let's get all enabled sources first (one of them might Be 'Upload File')
+        const enabledSources = CharacterExportFvtt.getBrewSourceIds();
+        const brew = await BrewUtil2.pGetBrew();
+        let matchedSources = [];
+        for(let source of brew){
+            //Even an uploaded file can appear here
+            //source.head.filename
+            //source.head.url (might be that uploaded files have this as null)
+
+            const content = source.body[type]; //type array. subclass, class, race, etc
+            console.log("content", content);
+            if(!content){continue;}
+            let matchedEntity = false; //This loop will close once a match is made
+            for(let ci = 0; !matchedEntity && ci < content.length; ++ci){
+                //Let's do a simple match: just 'name' and 'source'
+                matchedEntity = (content[ci].name.toLowerCase() == entity.name.toLowerCase()
+                && content[ci].source.toLowerCase() == entity.source.toLowerCase());
+            }
+            if(matchedEntity){
+                let obj = {source:source.head, content:content};
+                if(returnOnFirstMatch){return [obj];}
+                matchedSources.push(obj);
+            }
+        }
+        return matchedSources;
+    }
+    /**
      * @param {{filename:string}} source
      * @returns {boolean}
      */

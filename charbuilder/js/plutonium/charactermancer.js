@@ -11262,6 +11262,21 @@ class ActorCharactermancerSpell extends ActorCharactermancerBaseComponent {
         'spells_isIncludeUaEtcSpellLists': false
       };
     }
+
+    static findSpellByUID(spellUid, spellDatas){
+        const matches = spellDatas.filter(sp => {
+            //Create a uid from the spell
+            const uid = `${sp.name}|${sp.source}`.toLowerCase();//UrlUtil.URL_TO_HASH_BUILDER[UrlUtil.PG_ITEMS]({ name:n, source:src });
+            //then try to match it
+            return spellUid.toLowerCase() == uid;
+        });
+        if(matches.length > 1){throw new Error("Not supposed to return more than one result", spellUid);}
+        else if(matches.length < 1){
+            console.error("Could not find a match to spell", spellUid, "among our loaded spells. Did you forget to load a source?");
+        }
+        return matches[0];
+    }
+    
 }
 class Charactermancer_Spell_Util {
     /**
