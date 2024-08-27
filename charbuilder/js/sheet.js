@@ -690,6 +690,7 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
           const strMod = this._getAbilityModifier("str");
           const dexMod = this._getAbilityModifier("dex");
           const profBonus = this._getProfBonus();
+          const levelTotal = this._getTotalLevel();
           const calcMeleeAttack = (it, strMod, dexMod, weaponProfs) => {
             const isProficient = !!weaponProfs[it.item.weaponCategory.toLowerCase()];
             const attr = (it.item.property?.includes("F") && dexMod > strMod)? dexMod : strMod; //If weapon is finesse and our dex is better, use dex
@@ -704,6 +705,30 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
             const dmg = it.item.dmg1 + (attr>=0? "+" : "") + attr.toString();
             return {toHit:(toHit>=0? "+" : "")+toHit.toString(), dmg:dmg, dmgType:it.item.dmgType};
           }
+          const calcRangedSpellAttack = (spell, atkMod) => {
+            const attr = atkMod; //For now, always assume all ranged weapons use dex
+            const toHit = attr + profBonus;
+            let dmg1 = 0;
+            let dmgType = spell.damageInflict[0];
+            if(spell.miscTags.includes("SCL")){
+              //scaling damage
+              let keys = Object.keys(spell.scalingLevelDice.scaling);
+              let formula = spell.scalingLevelDice.scaling[keys[0]];
+              dmgType = spell.scalingLevelDice.label; //usually says "fire damage" instead of "fire"
+              if(dmgType.endsWith(" damage")){dmgType = dmgType.substr(0, dmgType.length-" damage".length);}
+              let highestLvl = -1;
+              for(let key of keys){
+                let lvlReq = Number.parseInt(key);
+                //Check that we are high level enough, and check that we are progressively looking at higher and higher scales
+                if(levelTotal >= lvlReq && lvlReq > highestLvl){formula = spell.scalingLevelDice.scaling[key]; highestLvl = lvlReq;}
+              }
+              dmg1 = formula;
+            }
+            console.log(dmg1);
+            const dmg = //spell.item.dmg1 + 
+            dmg1 + (attr>=0? "+" : "") + attr.toString();
+            return {toHit:(toHit>=0? "+" : "")+toHit.toString(), dmg:dmg, dmgType:dmgType};//spell.item.dmgType};
+          }
           const printWeaponAttack = (it) => {
             const isMeleeWeapon = it.item._typeListText.includes("melee weapon");
             const isRangedWeapon = it.item._typeListText.includes("ranged weapon");
@@ -713,17 +738,17 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
             if(isMeleeWeapon){
               const result = calcMeleeAttack(it, strMod, dexMod, weaponProfs);
               let str = `<i>Melee Weapon Attack</i>, ${result.toHit} to hit, ${result.dmg} ${Parser.dmgTypeToFull(result.dmgType)}.`;
-              $$`<div><b>${it.item.name}.</b> ${str}</div>`.appendTo($attacksTextArea);
+              $$`<div meleeWeaponAtk><b>${it.item.name}.</b> ${str}</div>`.appendTo($attacksTextArea);
             }
             else if(isRangedWeapon){
               const result = calcRangedAttack(it, strMod, dexMod, weaponProfs);
               let str = `<i>Ranged Weapon Attack</i>, Range ${it.item.range} ft, ${result.toHit} to hit, ${result.dmg} ${Parser.dmgTypeToFull(result.dmgType)}.`;
-              $$`<div><b>${it.item.name}.</b> ${str}</div>`.appendTo($attacksTextArea);
+              $$`<div rangedWeaponAtk><b>${it.item.name}.</b> ${str}</div>`.appendTo($attacksTextArea);
             }
             if(isMeleeAndThrown && !isRangedWeapon){
               const result = calcRangedAttack(it, strMod, dexMod, weaponProfs);
               let str = `<i>Ranged Weapon Attack</i>, Range ${it.item.range} ft, ${result.toHit} to hit, ${result.dmg} ${Parser.dmgTypeToFull(result.dmgType)}.`;
-              $$`<div><b>${it.item.name} (Thrown).</b> ${str}</div>`.appendTo($attacksTextArea);
+              $$`<div meleeWeaponThrownAtk><b>${it.item.name} (Thrown).</b> ${str}</div>`.appendTo($attacksTextArea);
             }
           }
 
@@ -737,9 +762,48 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
             
           }
           
-        //TODO: cantrip attacks
-        //Get cantrips
-        //const cantrips = ActorCharactermancerSheet.getAllSpellsKnown(this._parent.compSpell)[0];
+          //TODO: cantrip attacks
+          //Get cantrips
+          const spellAttackMod = this._getAbilityModifier("cha");
+          const cantrips = ActorCharactermancerSheet.getAllSpellsKnown(this._parent.compSpell)[0];
+          const additionalCantrips = ActorCharactermancerSheet.getAdditionalRaceSpells(this._parent.compRace, this._parent.compClass, this._parent.compSpell).known[0];
+          for(let sp of additionalCantrips){cantrips.push(sp.spell);}
+
+
+          const printCantripAttack = (sp) => {
+            console.log(sp);
+            const isMeleeSpell = false; //sp.spellAttack.includes("M");
+            const isRangedSpell = (!!sp.spellAttack && sp.spellAttack.includes("R")) || sp.range.distance != null;
+            const isRangedSaveSpell = !!sp.range.distance && (!!sp.savingThrow);
+            //const isMeleeAndThrown = isMeleeWeapon && sp.item.property?.includes("T");
+            if(!isMeleeSpell && !isRangedSpell){console.error("spell attack type not recognized:", sp, sp.spellAttack);}
+
+            if(isMeleeSpell){
+              const result = calcMeleeAttack(sp, strMod, dexMod, weaponProfs);
+              let str = `<i>Melee Weapon Attack</i>, ${result.toHit} to hit, ${result.dmg} ${Parser.dmgTypeToFull(result.dmgType)}.`;
+              $$`<div meleeSpellAttack><b>${sp.name}.</b> ${str}</div>`.appendTo($attacksTextArea);
+            }
+            else if(isRangedSaveSpell){
+              const result = calcRangedSpellAttack(sp, spellAttackMod);
+              let str = `<i>Ranged Spell Attack</i>, Range ${sp.range.distance.amount} ft, ${result.dmg} ${Parser.dmgTypeToFull(result.dmgType)}.`;
+              $$`<div rangedSpellAttack><b>${sp.name}.</b> ${str}</div>`.appendTo($attacksTextArea);
+            }
+            else if(isRangedSpell){
+              const result = calcRangedSpellAttack(sp, spellAttackMod);
+              let str = `<i>Ranged Spell Attack</i>, Range ${sp.range.distance.amount} ft, ${result.toHit} to hit, ${result.dmg} ${Parser.dmgTypeToFull(result.dmgType)}.`;
+              $$`<div rangedSpellAttack><b>${sp.name}.</b> ${str}</div>`.appendTo($attacksTextArea);
+            }
+            
+           /*  if(isMeleeAndThrown && !isRangedSpell){
+              const result = calcRangedAttack(sp, strMod, dexMod, weaponProfs);
+              let str = `<i>Ranged Weapon Attack</i>, Range ${sp.item.range} ft, ${result.toHit} to hit, ${result.dmg} ${Parser.dmgTypeToFull(result.dmgType)}.`;
+              $$`<div meleeWeaponThrownAtk><b>${sp.item.name} (Thrown).</b> ${str}</div>`.appendTo($attacksTextArea);
+            } */
+          }
+
+          for(let c of cantrips){
+            printCantripAttack(c);
+          }
         });
       }
       this._parent.compEquipment._compEquipmentShopGold._addHookBase("itemPurchases", hkCalcAttacks);
@@ -1475,17 +1539,20 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
      * Get the proficiency bonus of our character (depends on character level)
      * @returns {number}
      */
-    _getProfBonus(){
-        const classList = ActorCharactermancerSheet.getClassData(this._parent.compClass);
-        let levelTotal = 0;
-        for(let ix = 0; ix < classList.length; ++ix){
-            const data = classList[ix];
-            if(!data.cls){continue;}
-            const targetLevel = data.targetLevel || 1;
-            levelTotal += targetLevel;
-        }
+    _getTotalLevel(){
+      const classList = ActorCharactermancerSheet.getClassData(this._parent.compClass);
+      let levelTotal = 0;
+      for(let ix = 0; ix < classList.length; ++ix){
+          const data = classList[ix];
+          if(!data.cls){continue;}
+          const targetLevel = data.targetLevel || 1;
+          levelTotal += targetLevel;
+      }
 
-        return Parser.levelToPb(levelTotal);
+      return levelTotal;
+  }
+    _getProfBonus(){
+        return Parser.levelToPb(this._getTotalLevel());
     }
     _getAbilityModifier(abl_abbreviation, total=null){
         if(total == null){

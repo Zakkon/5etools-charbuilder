@@ -28,7 +28,6 @@ textarea {
   padding: 10px;
   resize: none;
   overflow: hidden;
-  height: 15em;
 }
 
 input[type=checkbox] {
