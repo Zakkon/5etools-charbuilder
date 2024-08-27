@@ -1575,6 +1575,7 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
     async _calcArmorClass(){
         const dexModifier = this._getAbilityModifier("dex");
         const conModifier = this._getAbilityModifier("con");
+        const wisModifier = this._getAbilityModifier("wis");
         //Try to get items from bought items (we will do starting items later)
         const compEquipShop = this._parent.compEquipment._compEquipmentShopGold;
 
@@ -1660,6 +1661,8 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
         const tryGetUnarmoredDefense = async() => {
           let data = ActorCharactermancerSheet.getClassData(this._parent.compClass);
 
+          let bestMod = -99;
+          let bestUD = null;
           //TODO: Also go through subclasses
           for(let classObj of data){
             if(classObj.isDeleted){continue;}
@@ -1669,23 +1672,34 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
                 //if(bannedLoadedsNames.includes(l.entity.name)){continue;}
                 if(l.entity.level > classObj.targetLevel){continue;} //Must not be from a higher level than we are
                 if(l.entity.name.toLowerCase() == "unarmored defense" && l.entity.source.toLowerCase() == "phb"){
-                  return true;
+                  console.log(l.entity);
+                  let desc = l.entity.entries[0];
+                  if(desc.toLowerCase().includes("constitution modifier")){
+                    const con = conModifier;
+                    if(con > bestMod){bestMod = con; bestUD = {mod:con, className:className};}
+                  }
+                  else if(desc.toLowerCase().includes("wisdom modifier")){
+                    const con = wisModifier;
+                    if(con > bestMod){bestMod = con; bestUD = {mod:con, className:className};}
+                  }
                 }
               }
             }
             
           }
 
-          return false;
+          return bestUD;
         }
 
         await tryGetArmors();
-        //TODO: unarmored defense?
+        //TODO: ring of protection
+        //TODO: whatever the monk has that gives them AC. unarmored defense?
         let foundACItems = await tryGetACIncreasingItems();
-        let hasUnarmoredDefense = await tryGetUnarmoredDefense();
+        const unarmoredDefense = await tryGetUnarmoredDefense(); //PROBLEM: barbarian UD uses CON, monk UD uses WIS
+        const hasUnarmoredDefense = unarmoredDefense != null;
        
         let naturalAC = 10 + dexModifier; //unarmored defense here?
-        if(hasUnarmoredDefense){naturalAC += conModifier;}
+        if(hasUnarmoredDefense){naturalAC += unarmoredDefense.mod;}
         let candidate = {ac:naturalAC, name:"Natural Armor"};
         if(hasUnarmoredDefense){candidate.name += ", Unarmored Defense";}
 
