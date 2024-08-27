@@ -1061,7 +1061,8 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
         }
 
         for(let customFeat of featInfo.customFeats){
-          featsText += (featsText.length>0? ", " : "") + customFeat.feat.name;
+          let text = ActorCharactermancerSheet.hotlink_feat(customFeat.feat);
+          featsText += (featsText.length>0? ", " : "") + text;
           // + ` (${bk.name})`;
         }
         if(featsText.length<1){return;}
@@ -2036,6 +2037,22 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
       }
       catch(e){
         output = item.item.name;
+      }
+      return output;
+    }
+    static hotlink_feat(feat){
+      let output = "";
+      try{
+        //"name|source|displayText"
+        let uid = feat.name.toLowerCase() + "|" 
+        + feat.source.toLowerCase() + "|"
+        + feat.name;
+        output = Renderer.get().render(`{@feat ${uid}}`);
+        //output = Renderer.get().render(`{@feat ${feat.name.toLowerCase()}|${feat.source}}`) : `(Choose a feat)`);
+      }
+      catch(e){
+        output = feat.name;
+        console.log("Failed to create a hotlink for feat", feat);
       }
       return output;
     }
