@@ -763,6 +763,10 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
           }
           
           //TODO: cantrip attacks
+          const printCantripAttacks = false;
+          if(!printCantripAttacks){
+            return;
+          }
           //Get cantrips
           const spellAttackMod = this._getAbilityModifier("cha");
           const cantrips = ActorCharactermancerSheet.getAllSpellsKnown(this._parent.compSpell)[0];
