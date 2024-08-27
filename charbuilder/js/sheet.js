@@ -943,7 +943,7 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
       this._parent.compClass.addHookBase("class_totalLevels", hkSpellDC);
       //#endregion
 
-      //#region Equipment
+      //#region Equipment (and AC)
       const hkEquipment = () => {
 
         const strScore = this._getAbilityScore("str");
@@ -1024,6 +1024,14 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
       this._parent.compAbility.compStatgen.addHookBase("common_export_str", hkEquipment);
       this._parent.compAbility.compStatgen.addHookBase("common_export_dex", hkEquipment);
       this._parent.compAbility.compStatgen.addHookBase("common_export_cha", hkEquipment);
+      this._parent.compAbility.compStatgen.addHookBase("common_export_wis", hkEquipment);
+      this._parent.compAbility.compStatgen.addHookBase("common_export_con", hkEquipment);
+
+      //Add hooks here so AC calculation can run again when class changes (which might add unarmored defense)
+      this._parent.compClass.addHookBase("class_ixPrimaryClass", hkEquipment);
+      this._parent.compClass.addHookBase("class_ixMax", hkEquipment); 
+      this._parent.compClass.addHookBase("class_totalLevels", hkEquipment);
+      this._parent.compClass.addHookBase("class_pulseChange", hkEquipment); //This also senses when subclass is changed
       hkEquipment();
       //#endregion
 
@@ -1666,26 +1674,27 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
           //TODO: Also go through subclasses
           for(let classObj of data){
             if(classObj.isDeleted){continue;}
+            //Sometimes target level may be null, probably due to some async issues
+            let level = classObj.targetLevel? classObj.targetLevel : 1; //fallback to 1, since both monk and barb get their UD at that level anyway
+
             let className = classObj.cls.name;
             for(let feature of classObj.cls.classFeatures){
               for(let l of feature.loadeds) {
                 //if(bannedLoadedsNames.includes(l.entity.name)){continue;}
-                if(l.entity.level > classObj.targetLevel){continue;} //Must not be from a higher level than we are
+                if(l.entity.level > level){continue;} //Must not be from a higher level than we are
                 if(l.entity.name.toLowerCase() == "unarmored defense" && l.entity.source.toLowerCase() == "phb"){
-                  console.log(l.entity);
                   let desc = l.entity.entries[0];
                   if(desc.toLowerCase().includes("constitution modifier")){
-                    const con = conModifier;
-                    if(con > bestMod){bestMod = con; bestUD = {mod:con, className:className};}
+                    let mod = conModifier;
+                    if(mod > bestMod){bestMod = mod; bestUD = {mod:mod, className:className};}
                   }
                   else if(desc.toLowerCase().includes("wisdom modifier")){
-                    const con = wisModifier;
-                    if(con > bestMod){bestMod = con; bestUD = {mod:con, className:className};}
+                    let mod = wisModifier;
+                    if(mod > bestMod){bestMod = mod; bestUD = {mod:mod, className:className};}
                   }
                 }
               }
             }
-            
           }
 
           return bestUD;
