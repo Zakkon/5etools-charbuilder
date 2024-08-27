@@ -1501,6 +1501,7 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
 
     async _calcArmorClass(){
         const dexModifier = this._getAbilityModifier("dex");
+        const conModifier = this._getAbilityModifier("con");
         //Try to get items from bought items (we will do starting items later)
         const compEquipShop = this._parent.compEquipment._compEquipmentShopGold;
 
@@ -1546,11 +1547,9 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
           let shieldAC = 0;
           const tryUseItem = (it) => {
             //Try to check if this is a shield
-            console.log(it);
             if(it.name == "Shield" && it.source == "PHB"){
               foundShield = true;
               shieldAC = it.ac;
-              console.log("found shield");
             }
             else if (it.ac != null && it.ac > 0){
               let type = it.type.toLowerCase();
@@ -1583,14 +1582,39 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
               }
           }
           return {shield: foundShield? shieldAC : 0};
-      }
+        }
+
+        const tryGetUnarmoredDefense = async() => {
+          let data = ActorCharactermancerSheet.getClassData(this._parent.compClass);
+
+          //TODO: Also go through subclasses
+          for(let classObj of data){
+            if(classObj.isDeleted){continue;}
+            let className = classObj.cls.name;
+            for(let feature of classObj.cls.classFeatures){
+              for(let l of feature.loadeds) {
+                //if(bannedLoadedsNames.includes(l.entity.name)){continue;}
+                if(l.entity.level > classObj.targetLevel){continue;} //Must not be from a higher level than we are
+                if(l.entity.name.toLowerCase() == "unarmored defense" && l.entity.source.toLowerCase() == "phb"){
+                  return true;
+                }
+              }
+            }
+            
+          }
+
+          return false;
+        }
 
         await tryGetArmors();
         //TODO: unarmored defense?
         let foundACItems = await tryGetACIncreasingItems();
+        let hasUnarmoredDefense = await tryGetUnarmoredDefense();
        
-        const naturalAC = 10 + dexModifier; //unarmored defense here?
+        let naturalAC = 10 + dexModifier; //unarmored defense here?
+        if(hasUnarmoredDefense){naturalAC += conModifier;}
         let candidate = {ac:naturalAC, name:"Natural Armor"};
+        if(hasUnarmoredDefense){candidate.name += ", Unarmored Defense";}
 
         if(bestArmorAC > naturalAC){
             candidate = {ac:bestArmorAC, name:bestArmor.name};
