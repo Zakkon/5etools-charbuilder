@@ -858,11 +858,11 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
           
           
           const spellsKnownByLvl = ActorCharactermancerSheet.getAllSpellsKnown(this._parent.compSpell);
-          const additionalSpells = ActorCharactermancerSheet.getAdditionalRaceSpells(this._parent.compRace, this._parent.compClass, this._parent.compSpell);
-          const featSpells = ActorCharactermancerSheet.getAdditionalFeatSpells(this._getFeats());
+          const raceSpells = ActorCharactermancerSheet.getAdditionalRaceSpells(this._parent.compRace, this._parent.compClass, this._parent.compSpell);
+          const featSpells = ActorCharactermancerSheet.getAdditionalFeatSpells(this._getFeats(), this._parent.compSpell);
 
           //Add additional cantrips to cantrips list
-          for(let sp of additionalSpells.known[0]){
+          for(let sp of raceSpells.known[0]){
             spellsKnownByLvl[0].push(sp.spell);
           }
 
@@ -892,16 +892,30 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
               $$`<div class="mb10">${str} (${slots} slots): <i>${spellsListStr(knownSpellsAtLvl)}</i></div>`.appendTo($divSpells);
           }
 
-          let numInnateSpells = 0;
-          for(let i = 1; i < additionalSpells.innate.length; ++i){ numInnateSpells += additionalSpells.innate[i].length;}
-          console.log("innate spells", numInnateSpells);
-          if(numInnateSpells > 0){
-            $$`<div><b>Innate Spells:</b></div>`.appendTo($divSpells);
-          for(let lvl = 1; lvl < additionalSpells.innate.length; ++lvl){
-              const knownSpellsAtLvl = additionalSpells.innate[lvl] || null;
-              if(!knownSpellsAtLvl || !knownSpellsAtLvl.length){continue;}
-              $$`<div><i>${spellsListStr_Innate(knownSpellsAtLvl)}</i></div>`.appendTo($divSpells);
+          const addInnateSpells = (innateLists) => {
+            //Merge the arrays to a single array
+            let numInnateSpells = 0; //Also keep a count of the total number of spells
+            let mergedArray = [[],[],[],[],[],[],[],[],[],[]];
+            for(let l of innateLists){
+              for(let lvl = 1; lvl < l.length; ++lvl){
+                numInnateSpells += l[lvl].length;
+                mergedArray[lvl] = mergedArray[lvl].concat(l[lvl]);
+              }
+            }
+            return {count:numInnateSpells, byLevel:mergedArray};
+
+            
           }
+
+          let merged = addInnateSpells([raceSpells.innate, featSpells.innate]);
+          console.log(merged);
+          if(merged.count > 0){
+            $$`<div><b>Innate Spells:</b></div>`.appendTo($divSpells);
+            for(let lvl = 1; lvl < merged.byLevel.length; ++lvl){
+                const knownSpellsAtLvl = merged.byLevel[lvl] || null;
+                if(!knownSpellsAtLvl || !knownSpellsAtLvl.length){continue;}
+                $$`<div><i>${spellsListStr_Innate(knownSpellsAtLvl)}</i></div>`.appendTo($divSpells);
+            }
           }
 
           hkCalcAttacks(); //Calculate attacks as well, since it displays cantrip attacks
@@ -1813,24 +1827,14 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
         combinedCharacterLevel += classLevel;
       }
 
-      function toUpper(str) {
-        return str
-            .toLowerCase()
-            .split(' ')
-            .map(function(word) {
-                //console.log("First capital letter: "+word[0]);
-                //console.log("remain letters: "+ word.substr(1));
-                return word[0].toUpperCase() + word.substr(1);
-            })
-            .join(' ');
-      }
+      
 
       
 
       function serializeCantrip(spellName, rechargeMode, charges, spellsByLvl, compSpell){
         let spellLevel = 0;
         let source = null;
-        let name = toUpper(spellName.substr(0, spellName.length-2));
+        let name = (spellName.substr(0, spellName.length-2)).toTitleCase();
         const fallbackSource = "PHB";
         let obj = {name:name, source: source==null? fallbackSource : source};
 
@@ -1841,7 +1845,7 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
       function serializeSpell(spellName, rechargeMode, charges, spellsByLvl, compSpell){
         let spellLevel = 0;
         let source = null;
-        let name = toUpper(spellName);
+        let name = spellName.toTitleCase();
         const fallbackSource = "PHB";
         let obj = {name:name, source: source==null? fallbackSource : source};
 
@@ -1903,7 +1907,7 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
 
       return {innate:spellsByLevel_innate, known:spellsByLevel_known, ability:abilityUsed};
     }
-    static getAdditionalFeatSpells(feats){
+    static getAdditionalFeatSpells(feats, compSpell){
       console.log(feats);
 
       let spellsByLevel_innate = [[],[],[],[],[],[],[],[],[],[]];
@@ -1913,7 +1917,7 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
       function serializeSpell(spellName, rechargeMode, charges, spellsByLvl, compSpell){
         let spellLevel = 0;
         let source = null;
-        let name = toUpper(spellName);
+        let name = spellName.toTitleCase();
         const fallbackSource = "PHB";
         let obj = {name:name, source: source==null? fallbackSource : source};
 
@@ -1936,12 +1940,15 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
               for(let innateSubKey of Object.keys(o.innate[innateKey])){
                 if(innateSubKey == "daily"){
                   for(let dailyKey of Object.keys(o.innate[innateKey][innateSubKey])){
+                    let amountPerDay = dailyKey;
+                    if(amountPerDay.endsWith("e")){amountPerDay = amountPerDay.substring(0, amountPerDay.length-1);}
+                    let int_amountPerDay = Number.parseInt(amountPerDay);
                     let arr = o.innate[innateKey][innateSubKey][dailyKey];
                     for(let e of arr){
                       if((typeof e) == "string"){
                         console.log("found spell ", e);
                         //Assume we just found the name of the spell, we need to convert it into a full spell object
-                        serializeSpell(e, "daily", int_numDailyUses, spellsByLevel_innate, compSpell);
+                        serializeSpell(e, "daily", int_amountPerDay, spellsByLevel_innate, compSpell);
                       }
                     }
                   }
@@ -1951,6 +1958,8 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
           }
         }
       }
+
+      return {innate:spellsByLevel_innate}
       
     }
     static getSpellSlotsAtLvl(spellLevel, compClass){
