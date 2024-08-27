@@ -2356,8 +2356,7 @@ class Charactermancer_AdditionalSpellsSelect extends BaseComponent {
             const setNxt = new Set(nxt);
             if (!CollectionUtil.setEq(setCurr, setNxt))
                 this._state[propState] = nxt;
-        }
-        ;
+        };
         this._addHookBase("ixSet", hk);
         this._addHookBase("curLevel", hk);
         this._addHookBase("targetLevel", hk);
@@ -2393,7 +2392,8 @@ class Charactermancer_AdditionalSpellsSelect extends BaseComponent {
         const isInnatePreparedList = this._isAnyInnatePrepared(ix);
         const isExpandedList = this._isAnyExpanded(ix);
 
-        const sortedSpells = Object.values(additionalSpellsFlatBlock.spells).sort((a,b)=>SortUtil.ascSort(a.requiredLevel || 0, b.requiredLevel || 0) || SortUtil.ascSort(a.requiredCasterLevel || 0, b.requiredCasterLevel || 0));
+        const sortedSpells = Object.values(additionalSpellsFlatBlock.spells).sort((a,b)=>SortUtil.ascSort(a.requiredLevel || 0,
+            b.requiredLevel || 0) || SortUtil.ascSort(a.requiredCasterLevel || 0, b.requiredCasterLevel || 0));
 
         const $wrpInnatePreparedHeaders = isInnatePreparedList ? $(`<div class="ve-flex-v-center py-1">
 			<div class="col-3 ve-text-center">Level</div>
@@ -2412,6 +2412,7 @@ class Charactermancer_AdditionalSpellsSelect extends BaseComponent {
             isExpandedMatch: true
         }) : null;
 
+
         const $wrpNoneAvailableInnatePrepared = isInnatePreparedList ? $(`<div class="ve-small ve-flex-v-center my-1 w-100 italic ve-muted">No spells at this level</div>`) : null;
         const $wrpNoneAvailableExpanded = isExpandedList ? $(`<div class="ve-small ve-flex-v-center my-1 w-100 italic ve-muted">No spells at this level</div>`) : null;
 
@@ -2427,8 +2428,7 @@ class Charactermancer_AdditionalSpellsSelect extends BaseComponent {
                 $wrpExpandedHeaders.toggleVe(isExpandedAvailable);
             if ($wrpNoneAvailableExpanded)
                 $wrpNoneAvailableExpanded.toggleVe(!isExpandedAvailable);
-        }
-        ;
+        };
         this._addHookBase("spellLevelLow", hkSpellsAvailable);
         this._addHookBase("spellLevelHigh", hkSpellsAvailable);
         this._addHookBase("isAnyCantrips", hkSpellsAvailable);
@@ -2471,8 +2471,9 @@ class Charactermancer_AdditionalSpellsSelect extends BaseComponent {
 
         if (this._additionalSpellsFlat.length !== 1) {
             const hkIsActive = ()=>{
-                $btnSelect.toggleClass("active", this._state.ixSet === ix);
-                $stg.toggleVe(this._state.ixSet === ix);
+                console.log("hkisactive disabled");
+               /*  $btnSelect.toggleClass("active", this._state.ixSet === ix);
+                $stg.toggleVe(this._state.ixSet === ix); */
             }
             ;
             this._addHookBase("ixSet", hkIsActive);
@@ -2723,17 +2724,22 @@ class Charactermancer_AdditionalSpellsSelect extends BaseComponent {
                     if (!isVisible || !isAnyExpanded)
                         return doShowInitialPts();
                     doShowExpandedPts();
-                }
-                ;
+                };
                 this._addHookBase("spellLevelLow", hkLevel);
                 this._addHookBase("spellLevelHigh", hkLevel);
                 this._addHookBase("isAnyCantrips", hkLevel);
                 hkLevel();
             } else if (isRequiredLevel) {
                 const hkLevel = ()=>{
-                    const isVisible = isAnyExpanded ? this._isRequiredLevelInRangeUpper(requiredLevel) : this._isRequiredLevelInRange(requiredLevel);
+                    //TODO: Fix this bug properly
+                    //TEMP: setting isAnyExpanded to true for the meanwhile, since it makes us not care about what curLevel is (curLevel is often incorrectly set after load)
+                    let isExpanded = isAnyExpanded;
+                    isExpanded = true;
+
+                    const isVisible = /* isAnyExpanded */ isExpanded? this._isRequiredLevelInRangeUpper(requiredLevel) : this._isRequiredLevelInRange(requiredLevel);
+                    //const isVisible = isAnyExpanded
                     $row.toggleVe(isVisible);
-                    if (!isVisible && !isAnyExpanded)
+                    if (!isVisible && !isExpanded)
                         return doShowInitialPts();
                     doShowExpandedPts();
                 }
@@ -2760,14 +2766,17 @@ class Charactermancer_AdditionalSpellsSelect extends BaseComponent {
     }
 
     _isRequiredLevelInRange(requiredLevel) {
+        //The spell's required level has to be between curLevel and targetLevel (or equal to targetLevel)
         return this._isRequiredLevelInRangeLower(requiredLevel) && this._isRequiredLevelInRangeUpper(requiredLevel);
     }
 
     _isRequiredLevelInRangeLower(requiredLevel) {
+        //The spell's required level has to be above the curlevel (not to  be mixed up with targetLevel)
         return requiredLevel > (this._state.curLevel ?? Number.MAX_SAFE_INTEGER);
     }
 
     _isRequiredLevelInRangeUpper(requiredLevel) {
+        //The spell's required level has to be below or equal the targetLevel (not to  be mixed up with curlevel)
         return requiredLevel <= (this._state.targetLevel ?? Number.MIN_SAFE_INTEGER);
     }
 
@@ -2815,7 +2824,9 @@ class Charactermancer_AdditionalSpellsSelect extends BaseComponent {
             if (flat.requiredCasterLevel != null)
                 return this._isRequiredCasterLevelInRange(flat.requiredCasterLevel);
             else if (flat.requiredLevel != null)
-                return this._isRequiredLevelInRange(flat.requiredLevel);
+                {
+                    return this._isRequiredLevelInRange(flat.requiredLevel);
+                }
             return true;
         }
         );

@@ -25,7 +25,9 @@ CHARSELECT:
 SHEET:
     - Cantrip attacks (sort of solved with hoverable spell popups)
     - Better attack parsing overall
-
+FEAT:
+    - Make spell choices in feats like Fey Touched be save/loaded
+    - Also make the choice appear in Sheet view
 CLASS:
     - Make subclass dropdown be locked until high enough level
     - Make sure when class is removed, that the Feats menu understands that and doesnt allow feat choices from that class

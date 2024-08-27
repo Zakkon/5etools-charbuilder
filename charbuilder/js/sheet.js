@@ -859,6 +859,7 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
           
           const spellsKnownByLvl = ActorCharactermancerSheet.getAllSpellsKnown(this._parent.compSpell);
           const additionalSpells = ActorCharactermancerSheet.getAdditionalRaceSpells(this._parent.compRace, this._parent.compClass, this._parent.compSpell);
+          const featSpells = ActorCharactermancerSheet.getAdditionalFeatSpells(this._getFeats());
 
           //Add additional cantrips to cantrips list
           for(let sp of additionalSpells.known[0]){
@@ -1588,7 +1589,7 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
         //Try to get items from bought items (we will do starting items later)
         const compEquipShop = this._parent.compEquipment._compEquipmentShopGold;
 
-        let bestArmorAC = Number.MIN_VALUE;
+        let bestArmorAC = Number.NEGATIVE_INFINITY;
         let bestArmor = null;
 
         const tryUseArmor = (item) => {
@@ -1901,6 +1902,56 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
 
 
       return {innate:spellsByLevel_innate, known:spellsByLevel_known, ability:abilityUsed};
+    }
+    static getAdditionalFeatSpells(feats){
+      console.log(feats);
+
+      let spellsByLevel_innate = [[],[],[],[],[],[],[],[],[],[]];
+      let spellsByLevel_known = [[],[],[],[],[],[],[],[],[],[]];
+      let abilityUsed = "wis";
+
+      function serializeSpell(spellName, rechargeMode, charges, spellsByLvl, compSpell){
+        let spellLevel = 0;
+        let source = null;
+        let name = toUpper(spellName);
+        const fallbackSource = "PHB";
+        let obj = {name:name, source: source==null? fallbackSource : source};
+
+        let matchedItem = ActorCharactermancerSpell.findSpellByUID(obj.name+"|"+obj.source, compSpell._data.spell);
+        spellLevel = matchedItem.level;
+        if(matchedItem==null){throw error();}
+        spellsByLvl[spellLevel].push({spell:matchedItem, rechargeMode:rechargeMode, charges:charges});
+      }
+
+      //Go through custom feats
+      for(let customFeat of feats.customFeats){
+        let feat = customFeat.feat; //This contains info about the feat, but no info regarding what choices we made for it
+        //For the example feat "Fey Touched", we get misty step and another spell of our choice, and one use of either of them per day
+        //We should be able to grab misty step straight from the feat info here
+        if(!!feat.additionalSpells)
+        {
+          for(let o of feat.additionalSpells){
+            //Check innate
+            for(let innateKey of Object.keys(o.innate)){
+              for(let innateSubKey of Object.keys(o.innate[innateKey])){
+                if(innateSubKey == "daily"){
+                  for(let dailyKey of Object.keys(o.innate[innateKey][innateSubKey])){
+                    let arr = o.innate[innateKey][innateSubKey][dailyKey];
+                    for(let e of arr){
+                      if((typeof e) == "string"){
+                        console.log("found spell ", e);
+                        //Assume we just found the name of the spell, we need to convert it into a full spell object
+                        serializeSpell(e, "daily", int_numDailyUses, spellsByLevel_innate, compSpell);
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+      
     }
     static getSpellSlotsAtLvl(spellLevel, compClass){
       
