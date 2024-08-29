@@ -392,7 +392,7 @@ class CharacterBuilder {
     tabs;
     _featureSourceTracker;
     static useHeaderTitleAndReturnButton = false;
-    static enableFVTTExport = false;
+    static enableSaveToFile = true;
     
     /**
     * @param {{class:{}[], background:{}[], classFeature:{}[], race:{}[], monster:{}[], item:{}[]
@@ -531,16 +531,16 @@ class CharacterBuilder {
           });
         }
         
-        if(CharacterBuilder.enableFVTTExport){
-          createRightSideBtn("Export to FVTT").click(async ()=>{
-            const json = await CharacterExportFvtt.exportCharacterFvtt(this);
+        if(CharacterBuilder.enableSaveToFile){
+          createRightSideBtn("Save to File", "glyphicon-download").click(async ()=>{
+            this.downloadCharacterCookieData();
           });
         }
         if(!this.VIEW_MODE){
           createRightSideBtn(" Configure Sources", "glyphicon-cog").click(async()=>{
             await this.e_changeSourcesDialog();
           });
-          createRightSideBtn("Save").click(()=>{
+          createRightSideBtn("Save", "glyphicon-floppy-disk").click(()=>{
             CharacterExportFvtt.exportCharacter(this);
           });
         }
@@ -760,6 +760,36 @@ class CharacterBuilder {
         viewMode: viewMode
       };
     }
+
+    /** Downloads the cookie data from localstorage and saves it to a .txt file. Note that this save file is only readable by this website, not any FVTT or human. */
+    downloadCharacterCookieData(){
+      try{
+        let curState = CookieManager.getState();
+        let text = JSON.stringify(CookieManager.getCharacterInfo(curState.uid));
+        let filename = "export";
+        //Figure out a fitting filename
+        let charName = this.compDescription.__state["description_name"];
+        filename = "export_" + (charName != null && charName.length > 0? charName+"_": "") +CookieManager.getState().uid;
+        //Download this as a text file
+        this.downloadTxtFile(filename+".txt", text);
+      }
+      catch(e){
+        alert("Failed to download character safe file: " + e.message);
+      }
+      
+    }
+    downloadTxtFile(filename, text) {
+      var element = document.createElement('a');
+      element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+      element.setAttribute('download', filename);
+  
+      element.style.display = 'none';
+      document.body.appendChild(element);
+  
+      element.click();
+  
+      document.body.removeChild(element);
+  }
 }
 /**A wrapper for a div that contains components. Only used by CharacterBuilder */
 class CharacterBuilderPanel {
@@ -807,7 +837,7 @@ class CookieManager {
   static getCharacterInfo(uid){
     const str = localStorage.getItem(`"char_"${uid}`);
     if(!str){
-      console.error("Failed to load character with uid ", uid);
+      console.error("Failed to load character with uid ", uid, " Is browser localStorage corrupted?");
       return null;
     }
     const character = JSON.parse(str);
@@ -840,6 +870,7 @@ class CookieManager {
   static saveNewCharacter(character){
     const uid = this.createUid();
     this.saveCharacterInfo(character, uid);
+    return uid;
   }
   /**
    * @param {string} uid

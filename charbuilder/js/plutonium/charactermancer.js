@@ -14178,6 +14178,10 @@ class ActorCharactermancerFeat extends ActorCharactermancerBaseComponent {
         feat_pulseChange: false
       };
     }
+
+    _getFeats() {
+        console.log("getfeats", this);
+      }
 }
 ActorCharactermancerFeat._NAMESPACES_STATGEN = new Set(['ability', "race", "background", "custom"]);
 

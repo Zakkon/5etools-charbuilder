@@ -147,7 +147,11 @@ class CharacterExportFvtt{
         _char.spellsBySource = spellSources;
         //#endregion
 
-        //Feats
+        //#region FEATS
+        //const feats =
+        await CharacterExportFvtt.getFeats(builder.compFeat);
+        //#endregion
+
 
         //optional feature stuff?
 
@@ -756,6 +760,9 @@ class CharacterExportFvtt{
         out = Object.fromEntries(Object.entries(out).filter(([_, v]) => v != null));
 
         return out;
+    }
+    static getFeats(compFeat){
+        compFeat._getFeats();
     }
     //#endregion
 
