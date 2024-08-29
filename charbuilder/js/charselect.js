@@ -18,10 +18,16 @@ class CharacterSelectScreen {
             this.createNewCharacter();
         });
 
+        const btnImport = $$`<button>Import From File</button>`;
+        btnImport.click(() => {
+           this.askUserForImportedFile();
+        });
+
         const header = $$`
         <div class="character-screen-header">
             <h1>My Characters</h1>
             ${btnNew}
+            ${btnImport}
         </div>`;
 
         header.appendTo(content);
@@ -44,7 +50,7 @@ class CharacterSelectScreen {
             const result = infos[ix];
             if(!result){continue;}
             const card = this.createCharacterElement(this, result.uid);
-            card.appendTo(list);
+            if(card){card.appendTo(list);}
         }
     }
 
@@ -70,6 +76,7 @@ class CharacterSelectScreen {
 
         //Get the character data
         const charData = CookieManager.getCharacterInfo(charUid).result.character;
+        if(!charData){console.error("charData for uid " + charUid + " is null"); return;}
         let classString = "";
         let totalLevels = 0;
         for(let ix = 0; ix < charData?.classes?.length || 0; ++ix){
@@ -136,5 +143,46 @@ class CharacterSelectScreen {
         console.log("Open character", uid);
         this.close();
         SourceManager.defaultStart({actor:null, cookieUid:uid, page:"sheet", viewMode:viewMode});
+    }
+
+    async askUserForImportedFile(){
+
+        let input = document.createElement('input');
+        input.type = 'file';
+        input.multiple = false;
+        input.accept = ".txt";
+        input.onchange = _ => {
+        // you can use this method to get file and perform respective operations
+            //let files = Array.from(input.files);
+            //Delete input?
+            //document.body.removeChild(input); //doesnt work
+            if(input.files.length > 0){ this.tryParseImportedfile(input.files[0]); }
+        };
+        input.click();
+    }
+    tryParseImportedfile(file){
+        if(!file){}
+        try {
+            var reader = new FileReader();
+            reader.readAsText(file, "UTF-8");
+            reader.onload = (evt) => {
+                //document.getElementById("fileContents").innerHTML = evt.target.result;
+                const resultText = evt.target.result;
+                let character = JSON.parse(resultText).result;
+                const newUid = CookieManager.saveNewCharacter(character);
+                const openCharacterRightAway = true;
+                if(openCharacterRightAway){this.openCharacter(newUid, false); return;}
+                //Refresh page
+                this.close();
+                this.render();
+            }
+            reader.onerror = (evt) => {
+                //document.getElementById("fileContents").innerHTML = "error reading file";
+                console.error("Error parsing imported save file", file);
+            }
+        }
+        catch(e){
+            alert(e.message);
+        }
     }
 }
