@@ -150,6 +150,9 @@ class CharacterExportFvtt{
         //#region FEATS
         //const feats =
         await CharacterExportFvtt.getFeats(builder.compFeat);
+        //Check featureOptionSelects available from race
+        CharacterExportFvtt.getChosenSpellsFromFeats(builder.compFeat);
+        
         //#endregion
 
 
@@ -763,6 +766,86 @@ class CharacterExportFvtt{
     }
     static getFeats(compFeat){
         compFeat._getFeats();
+    }
+    static getChosenSpellsFromFeats(compFeat){
+
+        //Return an array, each entry containing a key pointing to the choiceObj, and an array containing the choiceComponents
+        const getChoiceComponents = (compAdditionalFeatMetas) => {
+            let chooseObj = compAdditionalFeatMetas._compsFeatFeatureOptionsSelect.choose;
+            //chooseObj:
+            //- 0: {
+            //-- Array[
+            let toReturn = [];
+            for(let choiceKey of Object.keys(chooseObj)){
+                let subArray = chooseObj[choiceKey];
+                toReturn.push({key:choiceKey, components:subArray});
+            }
+            return toReturn;
+        }
+        const getSpellChoices = (choiceComp) => {
+            let toReturn = {_subCompsAdditionalSpells:[]};
+            for(let subComp of choiceComp._subCompsAdditionalSpells){
+                console.log(subComp);
+                for(let a of subComp._additionalSpellsFlat){
+                    for(let key of Object.keys(a.spells)){
+                        let spObj = a.spells[key];
+                        console.log(spObj);
+                        if(spObj.type == "choose"){
+                            let spellUid = subComp.__state[spObj.key];
+                            console.log(spellUid);
+                            toReturn._subCompsAdditionalSpells.push({data:spObj, value:spellUid});
+                        }
+                    }
+                }
+            }
+            return toReturn;
+        }
+        const setSpellChoice = (choiceComponent, key, value) => {
+
+        }
+
+        const getSpellChoicesFromFeats = (compAdditionalFeatMetas) =>{
+            let chooseObjs = getChoiceComponents(compAdditionalFeatMetas);
+            let returnObj = [];
+            for(let i = 0; i < chooseObjs.length; ++i){
+                let outAr = [];
+                for(let choiceComp of chooseObjs[i].components){
+                    let val = getSpellChoices(choiceComp);
+                    outAr.push(val);
+                }
+                returnObj.push(outAr);
+            }
+            return returnObj;
+        }
+
+        const fromRace = () => {
+            return getSpellChoicesFromFeats(compFeat._compAdditionalFeatsMetas.race.comp);
+        }
+
+        let val = fromRace();
+        console.log(val);
+
+        let chooseObj = compFeat._compAdditionalFeatsMetas.race.comp._compsFeatFeatureOptionsSelect.choose;
+        for(let key of Object.keys(val)){
+            for(let choiceComp of chooseObj[key]){
+
+                for(let subComp of choiceComp._subCompsAdditionalSpells){
+                    console.log(subComp);
+                    for(let a of subComp._additionalSpellsFlat){
+                        for(let key of Object.keys(a.spells)){
+                            let spObj = a.spells[key];
+                            console.log(spObj);
+                            if(spObj.type == "choose"){
+                                let spellUid = subComp.__state[spObj.key];
+                                console.log(spellUid);
+                                toReturn._subCompsAdditionalSpells.push({data:spObj, value:spellUid});
+                            }
+                        }
+                    }
+                }
+                returnObj[choiceKey].push(toReturn);
+            }
+        }
     }
     //#endregion
 
