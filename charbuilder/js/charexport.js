@@ -149,9 +149,9 @@ class CharacterExportFvtt{
 
         //#region FEATS
         //const feats =
-        await CharacterExportFvtt.getFeats(builder.compFeat);
+        //await CharacterExportFvtt.getFeats(builder.compFeat);
         //Check featureOptionSelects available from race
-        CharacterExportFvtt.getChosenSpellsFromFeats(builder.compFeat);
+        _char.featSpells = CharacterExportFvtt.getChosenSpellsFromFeats(builder.compFeat);
         
         //#endregion
 
@@ -769,83 +769,52 @@ class CharacterExportFvtt{
     }
     static getChosenSpellsFromFeats(compFeat){
 
-        //Return an array, each entry containing a key pointing to the choiceObj, and an array containing the choiceComponents
-        const getChoiceComponents = (compAdditionalFeatMetas) => {
-            let chooseObj = compAdditionalFeatMetas._compsFeatFeatureOptionsSelect.choose;
-            //chooseObj:
-            //- 0: {
-            //-- Array[
-            let toReturn = [];
-            for(let choiceKey of Object.keys(chooseObj)){
-                let subArray = chooseObj[choiceKey];
-                toReturn.push({key:choiceKey, components:subArray});
-            }
-            return toReturn;
-        }
+        
         const getSpellChoices = (choiceComp) => {
-            let toReturn = {_subCompsAdditionalSpells:[]};
-            for(let subComp of choiceComp._subCompsAdditionalSpells){
-                console.log(subComp);
-                for(let a of subComp._additionalSpellsFlat){
+            let toReturn = [];
+            for(let i = 0; i < choiceComp._subCompsAdditionalSpells.length; ++i){
+                let subComp = choiceComp._subCompsAdditionalSpells[i];
+                for(let j = 0; j < subComp._additionalSpellsFlat.length; j++){
+                    let a = subComp._additionalSpellsFlat[j];
                     for(let key of Object.keys(a.spells)){
                         let spObj = a.spells[key];
-                        console.log(spObj);
                         if(spObj.type == "choose"){
                             let spellUid = subComp.__state[spObj.key];
-                            console.log(spellUid);
-                            toReturn._subCompsAdditionalSpells.push({data:spObj, value:spellUid});
+                            toReturn.push({additionalSpellIx: i, additionalSpellsFlatIx: j, key:spObj.key, value:spellUid});
                         }
                     }
                 }
             }
             return toReturn;
         }
-        const setSpellChoice = (choiceComponent, key, value) => {
-
-        }
 
         const getSpellChoicesFromFeats = (compAdditionalFeatMetas) =>{
-            let chooseObjs = getChoiceComponents(compAdditionalFeatMetas);
+            let chooseObjs = ActorCharactermancerFeat.getChoiceComponents(compAdditionalFeatMetas);
             let returnObj = [];
-            for(let i = 0; i < chooseObjs.length; ++i){
+            for(let h = 0; h < chooseObjs.length; ++h){
                 let outAr = [];
-                for(let choiceComp of chooseObjs[i].components){
+                for(let i = 0; i < chooseObjs[h].components.length; ++i){
+                    let choiceComp = chooseObjs[h].components[i];
                     let val = getSpellChoices(choiceComp);
-                    outAr.push(val);
+                    for(let j = 0; j < val.length; ++j){val[j].choiceComponentIx = i; outAr.push(val[j]);}
                 }
-                returnObj.push(outAr);
+                for(let j = 0; j < outAr.length; ++j){outAr[j].choiceSetKey = chooseObjs[h].key; returnObj.push(outAr[j]);}
             }
             return returnObj;
         }
 
+        /**
+         * 
+         * @returns {{from:string}[]}
+         */
         const fromRace = () => {
-            return getSpellChoicesFromFeats(compFeat._compAdditionalFeatsMetas.race.comp);
+            let ar = getSpellChoicesFromFeats(compFeat._compAdditionalFeatsMetas.race.comp);
+            for(let i = 0; i < ar.length; ++i){ar[i].from = "race";}
+            return ar;
         }
 
         let val = fromRace();
-        console.log(val);
-
-        let chooseObj = compFeat._compAdditionalFeatsMetas.race.comp._compsFeatFeatureOptionsSelect.choose;
-        for(let key of Object.keys(val)){
-            for(let choiceComp of chooseObj[key]){
-
-                for(let subComp of choiceComp._subCompsAdditionalSpells){
-                    console.log(subComp);
-                    for(let a of subComp._additionalSpellsFlat){
-                        for(let key of Object.keys(a.spells)){
-                            let spObj = a.spells[key];
-                            console.log(spObj);
-                            if(spObj.type == "choose"){
-                                let spellUid = subComp.__state[spObj.key];
-                                console.log(spellUid);
-                                toReturn._subCompsAdditionalSpells.push({data:spObj, value:spellUid});
-                            }
-                        }
-                    }
-                }
-                returnObj[choiceKey].push(toReturn);
-            }
-        }
+        return val;
     }
     //#endregion
 

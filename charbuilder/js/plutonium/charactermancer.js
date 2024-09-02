@@ -14179,6 +14179,71 @@ class ActorCharactermancerFeat extends ActorCharactermancerBaseComponent {
       };
     }
 
+    //Return an array, each entry containing a key pointing to the choiceObj, and an array containing the choiceComponents
+    static getChoiceComponents(compAdditionalFeatMetas) {
+        let chooseObj = compAdditionalFeatMetas._compsFeatFeatureOptionsSelect.choose;
+        //chooseObj:
+        //- 0: {
+        //-- Array[
+        let toReturn = [];
+        for(let choiceKey of Object.keys(chooseObj)){
+            let subArray = chooseObj[choiceKey];
+            toReturn.push({key:choiceKey, components:subArray});
+        }
+        return toReturn;
+    }
+    static async wait(seconds){
+        return new Promise(resolve => {
+            setTimeout(() => resolve(), 1000 * seconds); 
+          });
+    }
+    //Return an array, each entry containing a key pointing to the choiceObj, and an array containing the choiceComponents
+    static async getChoiceComponentsAsync(compAdditionalFeatMetas) {
+        let chooseObj = compAdditionalFeatMetas._compsFeatFeatureOptionsSelect.choose;
+        if(chooseObj == null){
+            //wait for a sec while the UI loads
+            //TODO: improve this
+            await ActorCharactermancerFeat.wait(0.05);
+            chooseObj = compAdditionalFeatMetas._compsFeatFeatureOptionsSelect.choose;
+        }
+        //console.log(chooseObj);
+        //chooseObj:
+        //- 0: {
+        //-- Array[
+        let toReturn = [];
+        for(let choiceKey of Object.keys(chooseObj)){
+            let subArray = chooseObj[choiceKey];
+            toReturn.push({key:choiceKey, components:subArray});
+        }
+        return toReturn;
+    }
+    
+    async setSpellChoice(input) {
+        let comp = null;
+        if(input.from == "race"){
+            comp = this._compAdditionalFeatsMetas.race.comp;
+        }
+        if(comp == null){console.error("no spell source defined?", input.from);}
+        let components = await ActorCharactermancerFeat.getChoiceComponentsAsync(comp);
+        for(let entry of components){
+            if(entry.key != input.choiceSetKey){continue;}
+            let subComp = entry.components[input.choiceComponentIx];
+            let addSpellComp = subComp._subCompsAdditionalSpells[input.additionalSpellIx];
+            //let flatComp = addSpellComp._additionalSpellsFlat[input.additionalSpellsFlatIx];
+            addSpellComp._state[input.key] = input.value;
+            //console.log("Set " + input.key + " to " + input.value);
+        }
+    }
+
+    async setStateFromSaveFile(actor){
+        const data = actor.featSpells;
+        if(data==null){return;}
+        
+        for(let j = 0; j < data.length; ++j){
+            await this.setSpellChoice(data[j]);
+        }
+    }
+    
     _getFeats() {
         console.log("getfeats", this);
       }

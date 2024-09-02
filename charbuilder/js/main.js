@@ -474,7 +474,7 @@ class CharacterBuilder {
       await this.compEquipment.pRenderShop();
 
       await this.compSpell.pRender();
-      this.compFeat.render();
+      await this.compFeat.render();
       if(doLoad){this.compDescription.setStateFromSaveFile(character);}
       await this.compDescription.render();
 
@@ -485,6 +485,9 @@ class CharacterBuilder {
       if(doLoad){this.compSpell.setStateFromSaveFile(character);}
       if(doLoad){this.compEquipment.setStateFromSaveFile(character);}
       if(doLoad){await this.compClass.setStateFromSaveFile(character);}
+
+      
+      if(doLoad){this.compFeat.setStateFromSaveFile(character);}
 
       
       this.compSheet.render(charInfo);
