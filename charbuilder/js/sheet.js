@@ -859,8 +859,7 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
           
           const spellsKnownByLvl = ActorCharactermancerSheet.getAllSpellsKnown(this._parent.compSpell);
           const raceSpells = ActorCharactermancerSheet.getAdditionalRaceSpells(this._parent.compRace, this._parent.compClass, this._parent.compSpell);
-          const featSpells = ActorCharactermancerSheet.getAdditionalFeatSpells(this._getFeats(), this._parent.compSpell);
-
+          
           //Add additional cantrips to cantrips list
           for(let sp of raceSpells.known[0]){
             spellsKnownByLvl[0].push(sp.spell);
@@ -907,7 +906,8 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
             
           }
 
-          let merged = addInnateSpells([raceSpells.innate, featSpells.innate]);
+          let merged = addInnateSpells([raceSpells.innate//, featSpells.innate
+          ]);
           console.log(merged);
           if(merged.count > 0){
             $$`<div><b>Innate Spells:</b></div>`.appendTo($divSpells);
@@ -917,6 +917,15 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
                 $$`<div><i>${spellsListStr_Innate(knownSpellsAtLvl)}</i></div>`.appendTo($divSpells);
             }
           }
+
+          //Draw spells from feats
+          const featSpellsPromise = ActorCharactermancerSheet.getAdditionalFeatSpells(this._getFeats(), this._parent.compSpell, this._parent.compFeat);
+          featSpellsPromise.then((result) => {
+
+            console.log("feat spells", result);
+          });
+
+
 
           hkCalcAttacks(); //Calculate attacks as well, since it displays cantrip attacks
       };
@@ -1083,6 +1092,8 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
         if(featsText.length<1){return;}
         $$`<div><b>Feats:</b></div>`.appendTo($divFeatFeatures);
         $$`<div>${featsText}</div>`.appendTo($divFeatFeatures);
+
+        hkSpells(); //re-render spells, since some of them come from feats
       }
       this._parent.compClass.addHookBase("class_ixPrimaryClass", hkFeats);
       this._parent.compClass.addHookBase("class_ixMax", hkFeats); 
@@ -1907,14 +1918,17 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
 
       return {innate:spellsByLevel_innate, known:spellsByLevel_known, ability:abilityUsed};
     }
-    static getAdditionalFeatSpells(feats, compSpell){
-      console.log(feats);
+    static async getAdditionalFeatSpells(feats, compSpell, compFeat){
+      console.log("getadditionalfeatspells feats", feats);
+      console.log("compFeat", compFeat);
 
       let spellsByLevel_innate = [[],[],[],[],[],[],[],[],[],[]];
       let spellsByLevel_known = [[],[],[],[],[],[],[],[],[],[]];
       let abilityUsed = "wis";
+      let spellsByFeat = {custom:{}, race:{}};
 
-      function serializeSpell(spellName, rechargeMode, charges, spellsByLvl, compSpell){
+
+      function serializeSpell(spellName, rechargeMode, charges, spellsByLvl, compSpell, meta){
         let spellLevel = 0;
         let source = null;
         let name = spellName.toTitleCase();
@@ -1924,8 +1938,38 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
         let matchedItem = ActorCharactermancerSpell.findSpellByUID(obj.name+"|"+obj.source, compSpell._data.spell);
         spellLevel = matchedItem.level;
         if(matchedItem==null){throw error();}
-        spellsByLvl[spellLevel].push({spell:matchedItem, rechargeMode:rechargeMode, charges:charges});
+        spellsByLvl[spellLevel].push({spell:matchedItem, rechargeMode:rechargeMode, charges:charges, meta:meta});
       }
+
+      //ChoiceSetKey should be an int number, fromType a string
+      function getFeatSpellSource(spellUid, choiceSetKey, fromType){
+        fromType = fromType.toLowerCase(); //sanity
+        if(fromType == "custom"){
+          let comp = compFeat._compAdditionalFeatsMetas.custom.comp;
+
+          
+
+          let prop = "feat_"+choiceSetKey.toString()+"_choose_ixFeat";
+          let featIx = comp.__state[prop];
+
+          return {spellUid: spellUid.toLowerCase(), featIx: featIx, fromType:fromType, key: choiceSetKey};
+        }
+        return null;
+      }
+      
+      function addFeatSpell(featFrom, featUid, choiceSetKey, spellUid){
+        const key = featUid.toLowerCase() + "__" + choiceSetKey.toString();
+        if(!spellsByFeat[featFrom][key]){spellsByFeat[featFrom][key] = [];}
+        spellsByFeat[featFrom][key].push(spellUid.toLowerCase());
+      }
+
+
+      let compCustom = ActorCharactermancerFeat.getCompAdditionalFeatMetas(compFeat, "custom");
+      let components = await ActorCharactermancerFeat.getChoiceComponentsAsync(compCustom);
+
+
+
+      return spellsByLevel_innate;
 
       //Go through custom feats
       for(let customFeat of feats.customFeats){
@@ -1948,7 +1992,9 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
                       if((typeof e) == "string"){
                         console.log("found spell ", e);
                         //Assume we just found the name of the spell, we need to convert it into a full spell object
-                        serializeSpell(e, "daily", int_amountPerDay, spellsByLevel_innate, compSpell);
+                        serializeSpell(e, "daily", int_amountPerDay, spellsByLevel_innate, compSpell, {sourceFeat:feat.name + "|" + feat.source});
+                        console.log("keys", o, innateKey, innateSubKey, amountPerDay, int_amountPerDay);
+                        //addFeatSpell("custom", feat.name + "|" + feat.source, )
                       }
                     }
                   }
@@ -1959,7 +2005,32 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
         }
       }
 
-      return {innate:spellsByLevel_innate}
+      
+
+      //This gets spells we had to manually choose after picking a feat
+      const featSpells = compFeat._actor.featSpells;
+      for(let o of featSpells){
+        //console.log("o", o);
+        let choiceSetKey = Number.parseInt(o.choiceSetKey);
+        let choiceSetFrom = o.from;
+
+        let info = getFeatSpellSource(o.value, choiceSetKey, choiceSetFrom);
+        if(info == null){continue;}
+        let feat = compFeat._data.feat[info.featIx];
+        if(feat == null){continue;}
+        let featUid = feat.name + "|" + feat.source;
+        addFeatSpell(choiceSetFrom, featUid, choiceSetKey, info.spellUid);
+        //let spellName = o.value.substring(0, o.value.indexOf("|"));
+        //serializeSpell(spellName, "daily", 1, spellsByLevel_innate, compSpell, null);
+      }
+
+
+      
+      console.log("SPELLS BY FEATS", spellsByFeat);
+
+
+
+      return spellsByLevel_innate; //{innate:spellsByLevel_innate}
       
     }
     static getSpellSlotsAtLvl(spellLevel, compClass){

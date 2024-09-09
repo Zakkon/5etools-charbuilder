@@ -2405,6 +2405,8 @@ class Charactermancer_AdditionalSpellsSelect extends BaseComponent {
 			<div class="col-9">Spells</div>
 		</div>`) : null;
 
+        console.log("sorted spells", sortedSpells);
+
         const $rowsInnatePrepared = isInnatePreparedList ? this._render_$getRows(ix, sortedSpells, {
             isExpandedMatch: false
         }) : null;
@@ -2582,6 +2584,7 @@ class Charactermancer_AdditionalSpellsSelect extends BaseComponent {
 
                     const selected = selecteds[0];
 
+                    //Save the spell uid to our state, and fire a pulsechoose
                     this._state[flat.key] = DataUtil.proxy.getUid("spell", {
                         name: selected.name,
                         source: selected.values.sourceJson
@@ -14186,6 +14189,7 @@ class ActorCharactermancerFeat extends ActorCharactermancerBaseComponent {
         //- 0: {
         //-- Array[
         let toReturn = [];
+        if(chooseObj == null){ console.error("chooseObj was null"); return toReturn;}
         for(let choiceKey of Object.keys(chooseObj)){
             let subArray = chooseObj[choiceKey];
             toReturn.push({key:choiceKey, components:subArray});
@@ -14196,6 +14200,15 @@ class ActorCharactermancerFeat extends ActorCharactermancerBaseComponent {
         return new Promise(resolve => {
             setTimeout(() => resolve(), 1000 * seconds); 
           });
+    }
+    static getCompAdditionalFeatMetas(compFeat, fromType){
+        if(fromType == "race"){
+            return compFeat._compAdditionalFeatsMetas?.race?.comp;
+        }
+        if(fromType == "custom"){
+            return compFeat._compAdditionalFeatsMetas?.custom?.comp;
+        }
+        return null;
     }
     //Return an array, each entry containing a key pointing to the choiceObj, and an array containing the choiceComponents
     static async getChoiceComponentsAsync(compAdditionalFeatMetas) {
@@ -14219,11 +14232,9 @@ class ActorCharactermancerFeat extends ActorCharactermancerBaseComponent {
     }
     
     async setSpellChoice(input) {
-        let comp = null;
-        if(input.from == "race"){
-            comp = this._compAdditionalFeatsMetas.race.comp;
-        }
-        if(comp == null){console.error("no spell source defined?", input.from);}
+        let comp = ActorCharactermancerFeat.getCompAdditionalFeatMetas(this, input.from);
+        
+        if(comp == null){console.error("no spell source defined?", input.from); return;}
         let components = await ActorCharactermancerFeat.getChoiceComponentsAsync(comp);
         for(let entry of components){
             if(entry.key != input.choiceSetKey){continue;}

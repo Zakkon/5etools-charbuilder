@@ -789,8 +789,10 @@ class CharacterExportFvtt{
         }
 
         const getSpellChoicesFromFeats = (compAdditionalFeatMetas) =>{
-            let chooseObjs = ActorCharactermancerFeat.getChoiceComponents(compAdditionalFeatMetas);
+            console.log(compAdditionalFeatMetas);
             let returnObj = [];
+            if(compAdditionalFeatMetas==null){return returnObj;}
+            let chooseObjs = ActorCharactermancerFeat.getChoiceComponents(compAdditionalFeatMetas);
             for(let h = 0; h < chooseObjs.length; ++h){
                 let outAr = [];
                 for(let i = 0; i < chooseObjs[h].components.length; ++i){
@@ -808,12 +810,24 @@ class CharacterExportFvtt{
          * @returns {{from:string}[]}
          */
         const fromRace = () => {
-            let ar = getSpellChoicesFromFeats(compFeat._compAdditionalFeatsMetas.race.comp);
+            let ar = getSpellChoicesFromFeats(compFeat._compAdditionalFeatsMetas?.race?.comp);
             for(let i = 0; i < ar.length; ++i){ar[i].from = "race";}
             return ar;
         }
+        /**
+         * 
+         * @returns {{from:string}[]}
+         */
+        const fromCustom = () => {
+            let ar = getSpellChoicesFromFeats(compFeat._compAdditionalFeatsMetas?.custom?.comp);
+            for(let i = 0; i < ar.length; ++i){ar[i].from = "custom";}
+            return ar;
+        }
 
+        console.log("compFeat", compFeat);
         let val = fromRace();
+        val = val.concat(fromCustom());
+        console.log(val);
         return val;
     }
     //#endregion
