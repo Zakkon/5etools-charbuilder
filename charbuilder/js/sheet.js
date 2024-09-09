@@ -839,16 +839,15 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
             }
             return spellsStr;
           };
-          const spellsListStr_Innate = (spells) => {
+          const spellsListStr_Innate = (spells, showUses=true) => {
             let spellsStr = "";
-            console.log("STUFF", spells);
             for(let i = 0; i < spells.length; ++i){
               if(spellsStr.length > 0 ){spellsStr += ", ";}
               let obj = spells[i];
               let spell = obj.spell;
               if(obj.rechargeMode == "daily"){
                 let charges = obj.charges;
-                spellsStr += "("+charges + "/day)"; 
+                spellsStr += showUses? "("+charges + "/day)" : ""; 
               }
               spellsStr += hotlinkSpells? ActorCharactermancerSheet.hotlink_spell(spell) : spell.name;
             }
@@ -919,10 +918,39 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
           }
 
           //Draw spells from feats
-          const featSpellsPromise = ActorCharactermancerSheet.getAdditionalFeatSpells(this._getFeats(), this._parent.compSpell, this._parent.compFeat);
+          /* const featSpellsPromise = ActorCharactermancerSheet.getAdditionalFeatSpells(this._getFeats(), this._parent.compSpell, this._parent.compFeat);
           featSpellsPromise.then((result) => {
 
             console.log("feat spells", result);
+          }); */
+
+          function capitalizeFirstLetterOfEachWord(str){
+            return str
+            .toLowerCase()
+            .split(' ')
+            .map(function(word) {
+                return word[0].toUpperCase() + word.substr(1);
+            })
+            .join(' ');
+          }
+
+          let spells = this._parent.compFeat.getAllSpellsFromFeats();
+          spells.then((result) => {
+            console.log(result);
+            $$`<div><b>Spells From Feats:</b></div>`.appendTo($divSpells);
+            for(let feat of result){
+              let arr = [];
+              for(let spell of feat.spells){
+                //Get spell from data so we can get the proper name and source of the spell
+                //TEMPFIX
+                let spellName = capitalizeFirstLetterOfEachWord(spell.spell.substring(0, spell.spell.indexOf("|")));
+                let spellSource = spell.spell.substring(spell.spell.indexOf("|")+1, spell.spell.length).toUpperCase();
+                //spellName = spellName.charAt(0).toUpperCase() + spellName.slice(1); //Make first letter capital (camelcase doesnt do this for some reason)
+                arr.push({spell:{name: spellName, source:spellSource}});
+              }
+              let featToHotlink = { name: feat.featName, source: feat.featSource};
+              $$`<div>${ActorCharactermancerSheet.hotlink_feat(featToHotlink)}: <i>${spellsListStr_Innate(arr, false)}</i></div>`.appendTo($divSpells);
+            }
           });
 
 
@@ -1967,8 +1995,6 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
       let compCustom = ActorCharactermancerFeat.getCompAdditionalFeatMetas(compFeat, "custom");
       let components = await ActorCharactermancerFeat.getChoiceComponentsAsync(compCustom);
 
-
-
       return spellsByLevel_innate;
 
       //Go through custom feats
@@ -2140,7 +2166,7 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
         output = Renderer.get().render(`{@spell ${uid}}`);
       }
       catch(e){
-        output = item.item.name;
+        output = spell.name;
       }
       return output;
     }
