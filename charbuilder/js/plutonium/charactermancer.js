@@ -14271,7 +14271,6 @@ class ActorCharactermancerFeat extends ActorCharactermancerBaseComponent {
 
         const result = await this.feat_pGetAdditionalFeatFormData();
         //console.log("result", result);
-        let raceFeats = result.race;
 
         /**
          * Return all spells that we get from feats
@@ -14287,12 +14286,10 @@ class ActorCharactermancerFeat extends ActorCharactermancerBaseComponent {
                     returnData.isChoice = false;
                     if(!sp.includes("|")){
                         //sp is not an uid
-                        //sp = sp + "|" + "phb"; //TEMPFIX
                         sp = DataUtil.proxy.getUid("spell", {
                             name: sp,
                             source: "phb"
                         });
-                        console.log("SP", sp);
                     }
                     returnData.spell = sp; //Uid
                 }
@@ -14348,53 +14345,50 @@ class ActorCharactermancerFeat extends ActorCharactermancerBaseComponent {
             //Do a search
             //let flatSpells = compAdditionalSpell._additionalSpellsFlat[featIndex].spells;
             //let target = flatSpells[testKeyChoiceSpell];
-            console.log("cooomp", Object.keys(compAdditionalSpell.__state));
+            //console.log("cooomp", Object.keys(compAdditionalSpell.__state));
             console.log("target", compAdditionalSpell.__state[testKeyChoiceSpell]);
             return compAdditionalSpell.__state[testKeyChoiceSpell];
         }
-
-        let featsOut = [];
-        //Get chosen spells that derive from that feat
-        //When it comes to no-choice spells, that is fairly easy, we can just look into the feat itself to know what we are granted
-        for(let i = 0; i < raceFeats.data.length; ++i){
-            let feat = raceFeats.data[i];
-            console.log(feat.hash, feat);
-            //Look for additional spells granted by the feat
-            let spellsOut = [];
-            for(let as of feat.feat.additionalSpells){
-                let ability = as.ability; //"inherit"
-                let spellsGained = searchInnateKnown(as);
-                console.log("spells gained from feat " + feat.feat.name, spellsGained);
-                for(let sp of spellsGained){
-                    if(sp.isChoice){
-                        //we can ask the UI if they know if a spell is set for this choice already
-                        let arer = ActorCharactermancerFeat.getCompAdditionalFeatMetas(this, "race");
-                        let choose = arer._compsFeatFeatureOptionsSelect.choose;
-                        let choice = choose[0][0]; //test
-                        let spellUid = getAdditionalSpellData(choice._subCompsAdditionalSpells[0]);
-                        sp.spell = spellUid; //uid
+        function searchFeatsForSpells(feats, type, compFeat){
+            let featsOut = [];
+            //Get chosen spells that derive from that feat
+            //When it comes to no-choice spells, that is fairly easy, we can just look into the feat itself to know what we are granted
+            for(let i = 0; i < feats.data.length; ++i){
+                let feat = feats.data[i];
+                console.log(feat.hash, feat);
+                //Look for additional spells granted by the feat
+                let spellsOut = [];
+                for(let as of feat.feat.additionalSpells){
+                    let ability = as.ability; //"inherit"
+                    console.log("AS", as);
+                    let spellsGained = searchInnateKnown(as);
+                    console.log("spells gained from feat " + feat.feat.name, type, i, spellsGained);
+                    for(let sp of spellsGained){
+                        if(sp.isChoice){
+                            //we can ask the UI if they know if a spell is set for this choice already
+                            let compRaceMetas = ActorCharactermancerFeat.getCompAdditionalFeatMetas(compFeat, type);
+                            let choose = compRaceMetas._compsFeatFeatureOptionsSelect.choose;
+                            console.log("CHOOSE", choose);
+                            let choice = choose[i][0]; //test
+                            let spellUid = getAdditionalSpellData(choice._subCompsAdditionalSpells[0]);
+                            sp.spell = spellUid; //uid
+                            //Trying my best to not hardcode keys here
+                            let additionalSpellsUIKey = `${sp.knownInnate}__${"_"}__${sp.regularity}__${sp.uses}__${i}__${0}`;
+                            sp.uiKey = additionalSpellsUIKey;
+                        }
                     }
+                    spellsOut = spellsOut.concat(spellsGained);
                 }
-                spellsOut = spellsOut.concat(spellsGained);
+                featsOut.push({featName:feat.feat.name, featSource:feat.feat.source, featIx:feat.ixFeat, spells:spellsOut});
             }
-            featsOut.push({featName:feat.feat.name, featSource:feat.feat.source, featIx:feat.ixFeat, spells:spellsOut});
+            return featsOut;
         }
-        return featsOut;
-
-        //But when it comes to choice spells, we need to refer to the UI
 
         
-
-        /* let choiceComponents = ActorCharactermancerFeat.getChoiceComponentsAsync(ActorCharactermancerFeat.getCompAdditionalFeatMetas(this, "race"));
-        choiceComponents.then((result2) => {
-            //for(let choiceArray of Object.values(result2))
-            for(let pair of result2){
-                for(let comp of pair.components){
-
-                    console.log("choice component", comp);
-                }
-            }
-        }); */
+        let output = [];
+        output = output.concat(searchFeatsForSpells(result.race, "race", this));
+        output = output.concat(searchFeatsForSpells(result.custom, "custom", this));
+        return output;
     }
 }
 ActorCharactermancerFeat._NAMESPACES_STATGEN = new Set(['ability', "race", "background", "custom"]);

@@ -917,13 +917,6 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
             }
           }
 
-          //Draw spells from feats
-          /* const featSpellsPromise = ActorCharactermancerSheet.getAdditionalFeatSpells(this._getFeats(), this._parent.compSpell, this._parent.compFeat);
-          featSpellsPromise.then((result) => {
-
-            console.log("feat spells", result);
-          }); */
-
           function capitalizeFirstLetterOfEachWord(str){
             return str
             .toLowerCase()
