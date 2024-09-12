@@ -10488,6 +10488,7 @@ class ActorCharactermancerSpell extends ActorCharactermancerBaseComponent {
         this._parent.compClass.addHookBase(propIxSubclass, hook_onChangeSubclass);
         this._parent.compClass.addHookBase(propTargetLevel, hook_onChangeLevel);
         this._parent.compClass.addHookBase("class_pulseChange", onHookPulse);
+        this._parent.compRace.addHookBase("race_ixRace", onHookPulse);
         this._parent.compAbility.addHookAbilityScores(hook_onChangeAbilityScores);
         //Fire the onChangeClass hook straight away, to build the UI
         hook_onChangeClass();
@@ -14411,6 +14412,7 @@ class ActorCharactermancerFeat extends ActorCharactermancerBaseComponent {
         }
         function searchFeatsForSpells(feats, type, compFeat){
             let featsOut = [];
+            if(feats == null){console.warn("feats is null, cannot return spells learned from feats"); return featsOut;}
             //Get chosen spells that derive from that feat
             //When it comes to no-choice spells, that is fairly easy, we can just look into the feat itself to know what we are granted
             for(let i = 0; i < feats.data.length; ++i){
