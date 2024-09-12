@@ -588,7 +588,7 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
               const icon = $$`<i class="${iconClass} ptb2"></i>`;
               
               $$`<li>
-              <label for="Acrobatics">${skillName} <span class="skill">(${Parser.SKILL_TO_ATB_ABV[skillName]})</span></label>
+              <label for="Acrobatics">${skillName.capitalizeEachWord()} <span class="skill">(${Parser.SKILL_TO_ATB_ABV[skillName].capitalizeEachWord()})</span></label>
               <label class="modifier">${score>=0?"+"+score : score}</label>${icon}
               </li>`.appendTo($sectionSkills);
 
@@ -853,8 +853,6 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
             }
             return spellsStr;
           };
-
-          
           
           const spellsKnownByLvl = ActorCharactermancerSheet.getAllSpellsKnown(this._parent.compSpell);
           const raceSpells = ActorCharactermancerSheet.getAdditionalRaceSpells(this._parent.compRace, this._parent.compClass, this._parent.compSpell);
@@ -907,7 +905,6 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
 
           let merged = addInnateSpells([raceSpells.innate//, featSpells.innate
           ]);
-          console.log(merged);
           if(merged.count > 0){
             $$`<div><b>Innate Spells:</b></div>`.appendTo($divSpells);
             for(let lvl = 1; lvl < merged.byLevel.length; ++lvl){
@@ -917,27 +914,17 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
             }
           }
 
-          function capitalizeFirstLetterOfEachWord(str){
-            return str
-            .toLowerCase()
-            .split(' ')
-            .map(function(word) {
-                return word[0].toUpperCase() + word.substr(1);
-            })
-            .join(' ');
-          }
-
           let spells = this._parent.compFeat.getAllSpellsFromFeats();
           spells.then((result) => {
-            console.log(result);
             $$`<div><b>Spells From Feats:</b></div>`.appendTo($divSpells);
             for(let feat of result){
               let arr = [];
-              for(let spell of feat.spells){
+              for(let spellObj of feat.spells){
                 //Get spell from data so we can get the proper name and source of the spell
                 //TEMPFIX
-                let spellName = capitalizeFirstLetterOfEachWord(spell.spell.substring(0, spell.spell.indexOf("|")));
-                let spellSource = spell.spell.substring(spell.spell.indexOf("|")+1, spell.spell.length).toUpperCase();
+                if(spellObj.spell == null){continue;}
+                let spellName = spellObj.spell.substring(0, spellObj.spell.indexOf("|")).capitalizeEachWord();
+                let spellSource = spellObj.spell.substring(spellObj.spell.indexOf("|")+1, spellObj.spell.length).toUpperCase();
                 //spellName = spellName.charAt(0).toUpperCase() + spellName.slice(1); //Make first letter capital (camelcase doesnt do this for some reason)
                 arr.push({spell:{name: spellName, source:spellSource}});
               }
@@ -945,8 +932,6 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
               $$`<div>${ActorCharactermancerSheet.hotlink_feat(featToHotlink)}: <i>${spellsListStr_Innate(arr, false)}</i></div>`.appendTo($divSpells);
             }
           });
-
-
 
           hkCalcAttacks(); //Calculate attacks as well, since it displays cantrip attacks
       };

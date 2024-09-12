@@ -774,13 +774,14 @@ class CharacterExportFvtt{
             let toReturn = [];
             for(let i = 0; i < choiceComp._subCompsAdditionalSpells.length; ++i){
                 let subComp = choiceComp._subCompsAdditionalSpells[i];
+                let subCompState = subComp.__state.ixSet;
                 for(let j = 0; j < subComp._additionalSpellsFlat.length; j++){
                     let a = subComp._additionalSpellsFlat[j];
                     for(let key of Object.keys(a.spells)){
                         let spObj = a.spells[key];
                         if(spObj.type == "choose"){
                             let spellUid = subComp.__state[spObj.key];
-                            toReturn.push({additionalSpellIx: i, additionalSpellsFlatIx: j, key:spObj.key, value:spellUid});
+                            toReturn.push({additionalSpellIx: i, additionalSpellsFlatIx: j, key:spObj.key, value:spellUid, ixSet:subCompState});
                         }
                     }
                 }
@@ -788,12 +789,13 @@ class CharacterExportFvtt{
             return toReturn;
         }
 
-        const getSpellChoicesFromFeats = (compAdditionalFeatMetas) =>{
+        const getSpellChoicesFromFeats = (compAdditionalFeatMetas, type) =>{
             console.log(compAdditionalFeatMetas);
             let returnObj = [];
             if(compAdditionalFeatMetas==null){return returnObj;}
-            let chooseObjs = ActorCharactermancerFeat.getChoiceComponents(compAdditionalFeatMetas);
+            let chooseObjs = ActorCharactermancerFeat.getChoiceComponents(compAdditionalFeatMetas, type);
             for(let h = 0; h < chooseObjs.length; ++h){
+                console.log("CHOICEOBJ", chooseObjs[h]);
                 let outAr = [];
                 for(let i = 0; i < chooseObjs[h].components.length; ++i){
                     let choiceComp = chooseObjs[h].components[i];
@@ -810,7 +812,7 @@ class CharacterExportFvtt{
          * @returns {{from:string}[]}
          */
         const fromRace = () => {
-            let ar = getSpellChoicesFromFeats(compFeat._compAdditionalFeatsMetas?.race?.comp);
+            let ar = getSpellChoicesFromFeats(compFeat._compAdditionalFeatsMetas?.race?.comp, "race");
             for(let i = 0; i < ar.length; ++i){ar[i].from = "race";}
             return ar;
         }
@@ -819,7 +821,7 @@ class CharacterExportFvtt{
          * @returns {{from:string}[]}
          */
         const fromCustom = () => {
-            let ar = getSpellChoicesFromFeats(compFeat._compAdditionalFeatsMetas?.custom?.comp);
+            let ar = getSpellChoicesFromFeats(compFeat._compAdditionalFeatsMetas?.custom?.comp, "custom");
             for(let i = 0; i < ar.length; ++i){ar[i].from = "custom";}
             return ar;
         }
