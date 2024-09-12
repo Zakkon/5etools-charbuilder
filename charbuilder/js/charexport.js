@@ -770,15 +770,16 @@ class CharacterExportFvtt{
     static getChosenSpellsFromFeats(compFeat){
 
         
-        const getSpellChoices = (choiceComp) => {
+        const getSpellChoices = (featComp) => {
             let toReturn = [];
-            for(let i = 0; i < choiceComp._subCompsAdditionalSpells.length; ++i){
-                let subComp = choiceComp._subCompsAdditionalSpells[i];
-                let subCompState = subComp.__state.ixSet;
-                for(let j = 0; j < subComp._additionalSpellsFlat.length; j++){
-                    let a = subComp._additionalSpellsFlat[j];
-                    for(let key of Object.keys(a.spells)){
-                        let spObj = a.spells[key];
+            for(let i = 0; i < featComp._subCompsAdditionalSpells.length; ++i){ //expect only one to exist for now
+                let subComp = featComp._subCompsAdditionalSpells[i];
+                let subCompState = subComp.__state.ixSet; //this value can tell us which set is currently activated
+                for(let j = 0; j < subComp._additionalSpellsFlat.length; j++){ //expect one per set (for example one set per class list to choose from)
+                    if(j != subCompState){continue;} //No need to include savedata on subcomps that arent active
+                    let choiceSet = subComp._additionalSpellsFlat[j];
+                    for(let key of Object.keys(choiceSet.spells)){
+                        let spObj = choiceSet.spells[key];
                         if(spObj.type == "choose"){
                             let spellUid = subComp.__state[spObj.key];
                             toReturn.push({additionalSpellIx: i, additionalSpellsFlatIx: j, key:spObj.key, value:spellUid, ixSet:subCompState});

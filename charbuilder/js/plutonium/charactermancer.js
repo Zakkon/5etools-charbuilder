@@ -14288,9 +14288,9 @@ class ActorCharactermancerFeat extends ActorCharactermancerBaseComponent {
          * Return all spells that we get from feats
          * @returns {{isChoice:boolean, choiceData:any, gainedSpell:string}[]}
          */
-        function searchRechargedSpells(spells){
+        function searchRechargedSpells(spellsArray){
             let spellsOut = [];
-            for(let sp of spells)
+            for(let sp of spellsArray) //expect entry 0 to be a string of the spell name, and entry 1 to be choice data
             {
                 let returnData = {};
                 if(typeof(sp) == "string"){
@@ -14307,7 +14307,7 @@ class ActorCharactermancerFeat extends ActorCharactermancerBaseComponent {
                 }
                 else{
                     returnData.isChoice = true;
-                    returnData.choiceData = sp.choice;
+                    returnData.choiceData = sp.choice? sp.choice : sp.choose;
                 }
                 spellsOut.push(returnData);
             }
@@ -14315,7 +14315,7 @@ class ActorCharactermancerFeat extends ActorCharactermancerBaseComponent {
         }
         function searchRechargeUses(rechargeType){
             let spellsOut = [];
-            for(const [uses, content] of Object.entries(rechargeType)){
+            for(const [uses, content] of Object.entries(rechargeType)){ //name of the object will be string uses, object itself will be content
                 let spells = searchRechargedSpells(content);
                 for(let spell of spells){
                     spell.uses = uses;
@@ -14325,6 +14325,7 @@ class ActorCharactermancerFeat extends ActorCharactermancerBaseComponent {
             return spellsOut;
         }
         function searchRechargeRegularity(innateKnown){
+            //const validTypes = ["daily", "weekly", "hourly"];
             let spellsOut = [];
             for(let regularity of Object.keys(innateKnown)){
                 let spells = searchRechargeUses(innateKnown[regularity]);
@@ -14336,57 +14337,89 @@ class ActorCharactermancerFeat extends ActorCharactermancerBaseComponent {
             
             return spellsOut;
         }
-        function searchInnateKnown(additionalSpellGroup){
+        function searchSpellSet(spellSet){
             let spellsOut = [];
             //Look through innate spells
-            for(const innate of Object.values(additionalSpellGroup.innate)){
-                let spells = searchRechargeRegularity(innate);
-                for(let spell of spells){
-                    spell.knownInnate = "innate";
+            if(spellSet.innate){
+                for(const innate of Object.values(spellSet.innate)){ //these objects are usually named "_"
+                    let spells = searchRechargeRegularity(innate);
+                    for(let spell of spells){
+                        spell.knownInnate = "innate";
+                    }
+                    spellsOut = spellsOut.concat(spells);
                 }
-                spellsOut = spellsOut.concat(spells);
             }
+            const doKnown = false;
+            //Look through known spells
+            if(spellSet.known && doKnown){
+                for(const known of Object.values(spellSet.known)){ //these objects are usually named "_"
+                    for(let spell of Object.values(known)){
+                        let spells = searchRechargedSpells([spell]);
+                        for(let spell of spells){
+                            spell.knownInnate = "known";
+                        }
+                        spellsOut = spellsOut.concat(spells);
+                    }
+                }
+            }
+            console.log("SpellsOut:", spellsOut);
+            
             return spellsOut;
         }
-        function getAdditionalSpellData(compAdditionalSpell){
+        function getAdditionalSpellData(compAdditionalSpell, spellInfo){
             //_additionalSpellsFlat
             //__state
             let testKeyMistyStep = "innate__" + "_" + "__1e__" + "0"; 
             let testKeyChoiceSpell = "innate_____daily__1e__1__0"; //"innate__" + "_" + "__1e__" + "1__" + "0";
             let featIndex = 0; //This may actually be the index of which choice set to use. A feat may have many choice sets, for example magic initiate
-            return compAdditionalSpell.__state[testKeyChoiceSpell];
+            console.log("STATE", compAdditionalSpell.__state);
+            return compAdditionalSpell.__state[spellInfo.uiKey];
+
+
+
         }
         function searchFeatsForSpells(feats, type, compFeat){
             let featsOut = [];
             //Get chosen spells that derive from that feat
             //When it comes to no-choice spells, that is fairly easy, we can just look into the feat itself to know what we are granted
             for(let i = 0; i < feats.data.length; ++i){
-                let feat = feats.data[i];
+                let featData = feats.data[i];
                 //Look for additional spells granted by the feat
                 let spellsOut = [];
-                for(let as of feat.feat.additionalSpells){
-                    let ability = as.ability; //"inherit"
-                    let spellsGained = searchInnateKnown(as);
-                    for(let sp of spellsGained){
+                for(let k = 0; k < featData.feat.additionalSpells.length; ++k){
+                    let additionalSpellSet = featData.feat.additionalSpells[k];
+                    let castingAbility = additionalSpellSet.ability; //"inherit"
+                    let spellsGained = searchSpellSet(additionalSpellSet);
+                    for(let j = 0; j < spellsGained.length; ++j){
+                        let sp = spellsGained[j];
                         if(sp.isChoice){
                             //we can ask the UI if they know if a spell is set for this choice already
-                            let compRaceMetas = ActorCharactermancerFeat.getCompAdditionalFeatMetas(compFeat, type);
-                            let choose = compRaceMetas._compsFeatFeatureOptionsSelect.choose;
-                            let choice = choose[i][0]; //test
-                            let spellUid = getAdditionalSpellData(choice._subCompsAdditionalSpells[0]);
-                            sp.spell = spellUid; //uid
+                            let compMetas = ActorCharactermancerFeat.getCompAdditionalFeatMetas(compFeat, type);
+                            let featComponents = compMetas._compsFeatFeatureOptionsSelect.choose; //One per feat
+                            console.log("CHOOSE", sp, featComponents);
+                            let component = featComponents[i][0]; //test, usually only have one anyway
+                            console.log("COMPONENT", component);
                             //Trying my best to not hardcode keys here
-                            let additionalSpellsUIKey = `${sp.knownInnate}__${"_"}__${sp.regularity}__${sp.uses}__${i}__${0}`;
+                            let additionalSpellsUIKey = (sp.knownInnate ==
+                            "innate"? `${sp.knownInnate}__${"_"}__${sp.regularity}__${sp.uses}__${j}__${0}` : 
+                            `${sp.knownInnate}__${"_"}__${j}__${0}`);
                             sp.uiKey = additionalSpellsUIKey;
+                            let compAddSpell = component._subCompsAdditionalSpells[0];
+                            console.log("COMPADDSPELLS", compAddSpell, i, k, j);
+                            let spellUid = getAdditionalSpellData(component._subCompsAdditionalSpells[0], sp); //test, usually only have one anyway
+                            sp.spell = spellUid; //uid
+                            console.log("choicedata", sp.choiceData, sp.uiKey, "ixSet "+ sp.ixSet + " = " + k, "turned into", spellUid);
+                            
                         }
                     }
                     spellsOut = spellsOut.concat(spellsGained);
                 }
-                featsOut.push({featName:feat.feat.name, featSource:feat.feat.source, featIx:feat.ixFeat, spells:spellsOut});
+                featsOut.push({featName:featData.feat.name, featSource:featData.feat.source, featIx:featData.ixFeat, spells:spellsOut});
             }
             return featsOut;
         }
 
+        console.log("custom", result.custom);
         
         let output = [];
         output = output.concat(searchFeatsForSpells(result.race, "race", this));

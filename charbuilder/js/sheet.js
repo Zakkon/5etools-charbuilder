@@ -916,6 +916,7 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
 
           let spells = this._parent.compFeat.getAllSpellsFromFeats();
           spells.then((result) => {
+            console.log(result);
             $$`<div><b>Spells From Feats:</b></div>`.appendTo($divSpells);
             for(let feat of result){
               let arr = [];
