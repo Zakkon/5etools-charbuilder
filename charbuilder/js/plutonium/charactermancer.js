@@ -2441,7 +2441,8 @@ class Charactermancer_AdditionalSpellsSelect extends BaseComponent {
         this._addHookBase("ixSet", hkSpellsAvailable);
         hkSpellsAvailable();
 
-        const clarification = additionalSpellsFlatBlock?.meta?.name? ` (${additionalSpellsFlatBlock.meta.name})` : "";
+        const includeClarification = false;
+        const clarification = includeClarification && additionalSpellsFlatBlock?.meta?.name? ` (${additionalSpellsFlatBlock.meta.name})` : "";
 
         const $stgInnatePrepared = isInnatePreparedList ? $$`<div class="ve-flex-col">
 			<div class="bold my-0">Innate/Prepared/Known Spells${clarification}</div>
@@ -2477,9 +2478,8 @@ class Charactermancer_AdditionalSpellsSelect extends BaseComponent {
 
         if (this._additionalSpellsFlat.length !== 1) {
             const hkIsActive = ()=>{
-                console.log("hkisactive disabled");
-               /*  $btnSelect.toggleClass("active", this._state.ixSet === ix);
-                $stg.toggleVe(this._state.ixSet === ix); */
+                $btnSelect.toggleClass("active", this._state.ixSet === ix);
+                $stg.toggleVe(this._state.ixSet === ix);
             }
             ;
             this._addHookBase("ixSet", hkIsActive);
@@ -14259,12 +14259,65 @@ class ActorCharactermancerFeat extends ActorCharactermancerBaseComponent {
     }
 
     async setStateFromSaveFile(actor){
-        const data = actor.featSpells;
+        const data = actor.featSpellsData;
         if(data==null){return;}
-        
-        for(let j = 0; j < data.length; ++j){
-            await this.setSpellChoice(data[j]);
+        const printToState = (stateHaver, inputData) => {
+            for(let [key, value] of Object.entries(inputData)){
+                stateHaver._state[key] = value;
+            }
         }
+        const getFeatSections = async (typeSection) => {
+            console.log(typeSection);
+            let chooseObj = typeSection._compsFeatFeatureOptionsSelect.choose;
+            if(chooseObj == null){
+                //wait for a sec while the UI loads
+                //TODO: improve this
+                await ActorCharactermancerFeat.wait(0.05);
+                chooseObj = typeSection._compsFeatFeatureOptionsSelect.choose;
+            }
+            return Object.values(chooseObj);
+        }
+        const setAdditionalSpellsStates = (featSection, statesArray) => {
+            //Go through every subComp
+            let stateArray = [];
+            for(let ixSubComp = 0; ixSubComp < featSection._subCompsAdditionalSpells.length; ++ixSubComp){
+                let subComp = featSection._subCompsAdditionalSpells[ixSubComp];
+                //These are the properties we care about:
+                //subComp._additionalSpells
+                //subComp._additionalSpellsFlat
+                //subComp.__state
+
+                printToState(subComp, statesArray[ixSubComp]);
+            }
+            return stateArray;
+        }
+        const setFeatSectionState = (featSection, inputData) => {
+            printToState(featSection, inputData.sectionState);
+            setAdditionalSpellsStates(featSection, inputData.additionalSpellStates);
+        }
+
+        //This handles the section of the page related to the type (race feat, ASI feat, custom feat, etc)
+        const handleTypeSection = async (typeSectionData) =>{
+            let compFeat = this;
+            //look through _compAdditionalFeatsMetas to get components that handle choices for each feat
+            let sourceTypeSection = compFeat._compAdditionalFeatsMetas[typeSectionData.type]?.comp;
+            //if(sourceTypeSection == null){return null;}
+            //Set state to this type section
+            
+            printToState(sourceTypeSection, typeSectionData.typeSectionState);
+            
+            //Move on to featureOptionsSelect
+            let featSections = await getFeatSections(sourceTypeSection);
+            for(let ixFeatSection = 0; ixFeatSection < featSections.length; ++ixFeatSection){
+                //By using the index, we are going to get an array that contains the actual components we are looking for
+                if(featSections[ixFeatSection].length > 0){console.warn("feat choose section contained more than one FeatureOptionsSelect. This is uncommon, investigate!");}
+                let featSection = featSections[ixFeatSection][0]; //usually only exists one entry in the array
+                setFeatSectionState(featSection, typeSectionData.featSectionStates[ixFeatSection]);
+            }
+        }
+
+        if(data.custom != null){await handleTypeSection(data.custom);}
+        if(data.race != null){await handleTypeSection(data.race);}
     }
     
     _getFeats() {
