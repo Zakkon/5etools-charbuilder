@@ -6,8 +6,11 @@ body {
     font-family: 'Arial', sans-serif;
     background-color: #f0f0f0;
     color: #333;
-    margin: 20px;
     line-height: normal !important;
+}
+#window-root{
+    padding-left: 20px;
+    padding-right: 20px;
 }
 
 p {
