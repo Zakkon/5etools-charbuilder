@@ -357,6 +357,24 @@ select.chooseAlignment{
     font-weight: bold;
 }
 
+.description_portraitNameHolder {
+    align-items: center;
+    display: flex;
+    position: relative;
+    z-index: 1;
+}
+.character_portrait {
+    border-radius: 3px;
+    height: 120px;
+    margin-right: 8px;
+    margin-left: 8px;
+    margin-bottom: 8px;
+    width: 120px;
+    background-position: 50%;
+    background-size: cover;
+    cursor: pointer;
+}
+
 /* NIGHTMODE ------- */
 
 /* TABLE NIGHTMODE */
