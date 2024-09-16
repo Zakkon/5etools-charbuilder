@@ -504,7 +504,7 @@ class CharacterBuilder {
         const createRightSideBtn = (label, icon="") => {
           let spanIcon = icon != null && icon.length > 0?
             $$`<span class="glyphicon ${icon}"></span>` : null;
-          return $$`<button class="hugRight btn btn-default btn-sm pb-0">${spanIcon}${label}</button>`.appendTo(tabHolder);
+          return $$`<button class="btn btn-default btn-sm pb-0">${spanIcon}${label}</button>`.appendTo(tabHolder);
         }
         const createLabel = (label) => {
           return $$`<label class="btn-sm">${label}</label>`.appendTo(tabHolder);
@@ -527,10 +527,17 @@ class CharacterBuilder {
           createLabel("View Mode Active").addClass("lblDanger");
         }
         createTabBtn("Sheet").click(()=>{ this.e_switchTab("sheet"); });
-        
-        if(!CharacterBuilder.useHeaderTitleAndReturnButton){
-          createRightSideBtn(" Return To Select", "glyphicon-log-out").addClass("btn-danger").click(() => {
-            this._returnToCharSelect();
+
+        //add an invisible button between the tabs and the rest of the buttons
+        //createRightSideBtn("", "").addClass("btn-invis");
+        $$`<div class="btn-invis"></div>`.appendTo(tabHolder);
+
+        if(!this.VIEW_MODE){
+          createRightSideBtn("Save", "glyphicon-floppy-disk").click(()=>{
+            CharacterExportFvtt.exportCharacter(this);
+          });
+          createRightSideBtn(" Configure Sources", "glyphicon-cog").click(async()=>{
+            await this.e_changeSourcesDialog();
           });
         }
         
@@ -539,15 +546,13 @@ class CharacterBuilder {
             this.downloadCharacterCookieData();
           });
         }
-        if(!this.VIEW_MODE){
-          createRightSideBtn(" Configure Sources", "glyphicon-cog").click(async()=>{
-            await this.e_changeSourcesDialog();
-          });
-          createRightSideBtn("Save", "glyphicon-floppy-disk").click(()=>{
-            CharacterExportFvtt.exportCharacter(this);
-          });
-        }
         
+        if(!CharacterBuilder.useHeaderTitleAndReturnButton){
+          
+          createRightSideBtn(" Return To Select", "glyphicon-log-out").addClass("btn-danger").click(() => {
+            this._returnToCharSelect();
+          })
+        }
         
 
         this.tabButtonParent = tabHolder;
