@@ -1621,12 +1621,12 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
         //Try to get items from bought items (we will do starting items later)
         const compEquipShop = this._parent.compEquipment._compEquipmentShopGold;
 
-        let bestArmorAC = Number.NEGATIVE_INFINITY;
+        let bestArmorAC = -999;
         let bestArmor = null;
 
         const tryUseArmor = (item) => {
             //Account for if proficient in armor? nah not yet
-            //check if strength requirement is met?
+            //TODO: check if strength requirement is met?
             const armorAC = item.ac;
             const armorType = item.type.toUpperCase(); //LA, MA, HA
             //Light armor has no dex cap. Medium and heavy has +2 as an upper cap
@@ -1682,7 +1682,7 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
               const foundItem = ActorCharactermancerEquipment.findItemByUID(item.data.uid, itemDatas);
               if(!foundItem){continue;}
               //if(foundItem.armor == true){tryUseArmor(foundItem);}
-              tryUseItem(it);
+              tryUseItem(item);
           }
   
           //We also need to go through starting items
