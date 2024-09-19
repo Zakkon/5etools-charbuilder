@@ -556,7 +556,13 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
           const scoreInitiative = dexMod;
           $lblInitiative.html(`${scoreInitiative>=0?"+"+scoreInitiative : scoreInitiative}`);
 
-          const speedFt = 30;
+          let speedFt = 30;
+          //Try to set base speed based on race
+          let myRace = this.getRace_();
+          if(myRace!=null){speedFt = myRace.speed;}
+          //Then we go through class features and see if we get a speed increase (i know Blood Hunter does this)
+          
+          //Then we go through feats
           $lblSpeed.html(`${speedFt}`);
       };
       this._parent.compClass.addHookBase("class_ixMax", hkHpSpeed); 
