@@ -151,8 +151,8 @@ class CharacterExportFvtt{
         //const feats =
         //await CharacterExportFvtt.getFeats(builder.compFeat);
         //Check featureOptionSelects available from race
-        _char.featSpells = CharacterExportFvtt.getChosenSpellsFromFeats(builder.compFeat);
-        
+        //_char.featSpells = CharacterExportFvtt.getChosenSpellsFromFeats(builder.compFeat); //not used anymore
+        _char.featSpellsData = CharacterExportFvtt.getFeatData(builder.compFeat);
         //#endregion
 
 
@@ -767,19 +767,79 @@ class CharacterExportFvtt{
     static getFeats(compFeat){
         compFeat._getFeats();
     }
+    static getFeatData(compFeat){
+
+        const getFeatSections = (typeSection) => {
+            return Object.values(typeSection._compsFeatFeatureOptionsSelect.choose);
+        }
+        const getAdditionalSpellsStates = (featSection) => {
+            //Go through every subComp
+            let stateArray = [];
+            for(let ixSubComp = 0; ixSubComp < featSection._subCompsAdditionalSpells.length; ++ixSubComp){
+                let subComp = featSection._subCompsAdditionalSpells[ixSubComp];
+                //These are the properties we care about:
+                //subComp._additionalSpells
+                //subComp._additionalSpellsFlat
+                //subComp.__state
+
+                //If we are for example magic initiate, we can see in __state which spell list is chosen
+                let outState = subComp.__state; //lets just grab the whole state for now
+                //{ixSet: subComp.__state.ixSet};
+                stateArray.push(outState);
+            }
+            return stateArray;
+        }
+        const getFeatSectionState = (featSection) => {
+            let featSectionState = featSection.__state; //We can copy this straight off, its usually only ixsChosen anyway
+            let additionalSpellsStates = getAdditionalSpellsStates(featSection);
+            return {sectionState:featSectionState, additionalSpellStates:additionalSpellsStates};
+        }
+
+        //This handles the section of the page related to the type (race feat, ASI feat, custom feat, etc)
+        const handleTypeSection = (type) =>{
+            //look through _compAdditionalFeatsMetas to get components that handle choices for each feat
+            let sourceTypeSection = compFeat._compAdditionalFeatsMetas[type]?.comp;
+            if(sourceTypeSection == null){return null;}
+            let sourceTypeSectionState = {ixSet: sourceTypeSection.__state.ixSet};
+            //Grab values from the state of the section that we care about
+            for(let [k, v] of Object.entries(sourceTypeSection.__state.ixSet)){
+                if(k.startsWith("feat_")){sourceTypeSectionState[k] = v;}
+            }
+
+            let featSectionStates = [];
+            
+            //Move on to featureOptionsSelect
+            let featSections = getFeatSections(sourceTypeSection);
+            for(let ixSection = 0; ixSection < featSections.length; ++ixSection){
+                //By using the index, we are going to get an array that contains the actual components we are looking for
+                if(featSections[ixSection].length > 0){console.warn("feat choose section contained more than one FeatureOptionsSelect. This is uncommon, investigate!");}
+                let featSection = featSections[ixSection][0]; //usually only exists one entry in the array
+                let featSectionState = getFeatSectionState(featSection);
+                featSectionStates.push(featSectionState);
+            }
+
+            return {type:type, typeSectionState:sourceTypeSectionState, featSectionStates:featSectionStates};
+        }
+
+        let outState = {};
+        outState.custom = handleTypeSection("custom");
+        outState.race = handleTypeSection("race");
+        return outState;
+    }
     static getChosenSpellsFromFeats(compFeat){
 
         
         const getSpellChoices = (featComp) => {
             let toReturn = [];
-            for(let i = 0; i < featComp._subCompsAdditionalSpells.length; ++i){ //expect only one to exist for now
-                let subComp = featComp._subCompsAdditionalSpells[i];
-                let subCompState = subComp.__state.ixSet; //this value can tell us which set is currently activated
-                for(let j = 0; j < subComp._additionalSpellsFlat.length; j++){ //expect one per set (for example one set per class list to choose from)
-                    if(j != subCompState){continue;} //No need to include savedata on subcomps that arent active
-                    let choiceSet = subComp._additionalSpellsFlat[j];
-                    for(let key of Object.keys(choiceSet.spells)){
-                        let spObj = choiceSet.spells[key];
+            for(let i = 0; i < choiceComp._subCompsAdditionalSpells.length; ++i){
+                let subComp = choiceComp._subCompsAdditionalSpells[i];
+                let subCompState = subComp.__state.ixSet;
+
+                for(let j = 0; j < subComp._additionalSpellsFlat.length; j++){
+                    let a = subComp._additionalSpellsFlat[j];
+                    if(j != subCompState){continue;} //No point in including savedata from sets that arent activated
+                    for(let key of Object.keys(a.spells)){
+                        let spObj = a.spells[key];
                         if(spObj.type == "choose"){
                             let spellUid = subComp.__state[spObj.key];
                             toReturn.push({additionalSpellIx: i, additionalSpellsFlatIx: j, key:spObj.key, value:spellUid, ixSet:subCompState});
