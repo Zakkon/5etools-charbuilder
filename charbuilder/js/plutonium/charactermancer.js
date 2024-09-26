@@ -14418,7 +14418,6 @@ class ActorCharactermancerFeat extends ActorCharactermancerBaseComponent {
                     }
                 }
             }
-            console.log("SpellsOut:", spellsOut);
             
             return spellsOut;
         }
@@ -14451,11 +14450,9 @@ class ActorCharactermancerFeat extends ActorCharactermancerBaseComponent {
                 //Look for additional spells granted by the feat
 
                 let component = featComponents[i][0]; //test, usually only have one anyway
-                console.log("COMPONENT", component, compMetas);
+                //console.log("COMPONENT", component, compMetas);
                 let compAddSpell = component._subCompsAdditionalSpells[0];
                 let state = compAddSpell.__state;
-                console.log("state", state);
-                //console.log("STATE2", state);
 
                 
 
@@ -14466,46 +14463,23 @@ class ActorCharactermancerFeat extends ActorCharactermancerBaseComponent {
                     let castingAbility = additionalSpellSet.ability; //"inherit"
                     let spellsGained = searchSpellSet(additionalSpellSet);
                     if(k != state.ixSet){continue;}
-                    console.log("SPELLS GAINED", spellsGained);
-                    console.log("SET IX:", k, "PREFERRED IX", state.ixSet);
                     for(let j = 0; j < spellsGained.length; ++j){
                         let sp = spellsGained[j];
                         if(sp.isChoice){
                             //Choice spells can be found in state already
                             continue;
-                            console.log("CHOOSE", sp, featComponents);
-                            
-                            //Trying my best to not hardcode keys here
-                            let additionalSpellsUIKey = (sp.knownInnate ==
-                            "innate"? `${sp.knownInnate}__${"_"}__${sp.regularity}__${sp.uses}__${j}__${0}` : 
-                            `${sp.knownInnate}__${"_"}__${j}__${0}`);
-                            sp.uiKey = additionalSpellsUIKey;
-                            console.log("num compaddspells", component._subCompsAdditionalSpells);
-                            
-                            console.log("COMPADDSPELLS", compAddSpell, i, k, j);
-                            let spellUid = getAdditionalSpellData(compAddSpell, sp); //test, usually only have one anyway
-                            sp.spellUid = spellUid; //uid
-                            console.log("choicedata", sp.choiceData, sp.uiKey, "ixSet "+ sp.ixSet + " = " + k, "turned into", spellUid);
                             
                         }
                     }
                     spellsOut = spellsOut.concat(spellsGained);
                     //Try find choice spells in state
-                    let spellIndicators = [];
                     for(let k of Object.keys(state)){
                         if(k.startsWith("innate") || k.startsWith("known")){
-                            spellIndicators.push([k, state[k]]);
+                            let words = k.split('_');
+                            words = words.filter(word => word.length > 0);
+                            let spellInfo = {knownInnate:words[0], rechargeRegularity:words[1], rechargeUses:words[2], choiceIx:words[3], spellUid:state[k]};
+                            spellsOut.push(spellInfo);
                         }
-                    }
-                    for(let kvPair of spellIndicators)
-                    {
-                        //cant be bothered to learn regex
-                        //example string: innate_____daily__1__0__0
-                        let words = kvPair[0].split('_');
-                        words = words.filter(word => word.length > 0);
-                        let spellInfo = {knownInnate:words[0], rechargeRegularity:words[1], rechargeUses:words[2], choiceIx:words[3], spellUid:kvPair[1]};
-                        console.log(spellInfo);
-                        spellsOut.push(spellInfo);
                     }
                 }
                 featsOut.push({featName:featData.feat.name, featSource:featData.feat.source, featIx:featData.ixFeat, spells:spellsOut});
@@ -14513,7 +14487,6 @@ class ActorCharactermancerFeat extends ActorCharactermancerBaseComponent {
             return featsOut;
         }
 
-        console.log("custom", result.custom);
         
         let output = [];
         output = output.concat(searchFeatsForSpells(result.race, "race", this));

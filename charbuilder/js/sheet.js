@@ -924,14 +924,12 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
           spells.then((result) => {
             $$`<div class="mb10"></div>`.appendTo($divSpells);
             $$`<div><b>Spells From Feats:</b></div>`.appendTo($divSpells);
-            console.log("RESULT", result);
             for(let feat of result){
               let arr = [];
-              console.log("FEAT SPELLS", feat.spells);
               for(let spellObj of feat.spells){
                 //Get spell from data so we can get the proper name and source of the spell
                 //TEMPFIX
-                if(spellObj.spellUid == null){continue;}
+                if(spellObj.spellUid == null || spellObj.isChoice){continue;}
                 let spellName = spellObj.spellUid.substring(0, spellObj.spellUid.indexOf("|")).capitalizeEachWord();
                 let spellSource = spellObj.spellUid.substring(spellObj.spellUid.indexOf("|")+1, spellObj.spellUid.length).toUpperCase();
                 //spellName = spellName.charAt(0).toUpperCase() + spellName.slice(1); //Make first letter capital (camelcase doesnt do this for some reason)
