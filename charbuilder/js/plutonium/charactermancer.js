@@ -14441,6 +14441,7 @@ class ActorCharactermancerFeat extends ActorCharactermancerBaseComponent {
                 let featData = feats.data[i];
                 //Look for additional spells granted by the feat
                 let spellsOut = [];
+                if(!featData.feat.additionalSpells){continue;}
                 for(let k = 0; k < featData.feat.additionalSpells.length; ++k){
                     let additionalSpellSet = featData.feat.additionalSpells[k];
                     let castingAbility = additionalSpellSet.ability; //"inherit"
