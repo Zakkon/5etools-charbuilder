@@ -14329,35 +14329,28 @@ class ActorCharactermancerFeat extends ActorCharactermancerBaseComponent {
      * @returns {{featName:string, featIx:number, spells:[{spell:string, isChoice:string, choiceData:any, uses:string, knownInnate:string, regularity:string}]}[]}
      */
     async getAllSpellsFromFeats(){
-        //console.error("not implemented");
-
-        //Probably best to start by going through all the feats we have
-
-        //console.log(this);
 
         const result = await this.feat_pGetAdditionalFeatFormData();
-        //console.log("result", result);
 
         /**
          * Return all spells that we get from feats
-         * @returns {{isChoice:boolean, choiceData:any, gainedSpell:string}[]}
+         * @returns {{isChoice:boolean, choiceData:any, spellUid:string}[]}
          */
         function searchRechargedSpells(spellsArray){
             let spellsOut = [];
             for(let sp of spellsArray) //expect entry 0 to be a string of the spell name, and entry 1 to be choice data
             {
                 let returnData = {};
+                //if sp is just a string, assume its a spell uid, not a choice
                 if(typeof(sp) == "string"){
                     //This is just a spell, no choice
                     returnData.isChoice = false;
                     if(!sp.includes("|")){
                         //sp is not an uid
-                        sp = DataUtil.proxy.getUid("spell", {
-                            name: sp,
-                            source: "phb"
-                        });
+                        //try to get the uid
+                        sp = DataUtil.proxy.getUid("spell", { name: sp, source: "phb"});
                     }
-                    returnData.spell = sp; //Uid
+                    returnData.spellUid = sp; //Uid
                 }
                 else{
                     returnData.isChoice = true;
@@ -14367,6 +14360,9 @@ class ActorCharactermancerFeat extends ActorCharactermancerBaseComponent {
             }
             return spellsOut;
         }
+        /**
+         * @returns {{isChoice:boolean, choiceData:any, spellUid:string, uses:string}[]}
+         */
         function searchRechargeUses(rechargeType){
             let spellsOut = [];
             for(const [uses, content] of Object.entries(rechargeType)){ //name of the object will be string uses, object itself will be content
@@ -14378,6 +14374,9 @@ class ActorCharactermancerFeat extends ActorCharactermancerBaseComponent {
             }
             return spellsOut;
         }
+        /**
+         * @returns {{isChoice:boolean, choiceData:any, spellUid:string, uses:string, regulairty:string}[]}
+         */
         function searchRechargeRegularity(innateKnown){
             //const validTypes = ["daily", "weekly", "hourly"];
             let spellsOut = [];
@@ -14391,6 +14390,9 @@ class ActorCharactermancerFeat extends ActorCharactermancerBaseComponent {
             
             return spellsOut;
         }
+        /**
+         * @returns {{isChoice:boolean, choiceData:any, spellUid:string, uses:string, regulairty:string, knownInnate:string}[]}
+         */
         function searchSpellSet(spellSet){
             let spellsOut = [];
             //Look through innate spells
@@ -14420,55 +14422,91 @@ class ActorCharactermancerFeat extends ActorCharactermancerBaseComponent {
             
             return spellsOut;
         }
+        
         function getAdditionalSpellData(compAdditionalSpell, spellInfo){
             //_additionalSpellsFlat
             //__state
-            let testKeyMistyStep = "innate__" + "_" + "__1e__" + "0"; 
-            let testKeyChoiceSpell = "innate_____daily__1e__1__0"; //"innate__" + "_" + "__1e__" + "1__" + "0";
-            let featIndex = 0; //This may actually be the index of which choice set to use. A feat may have many choice sets, for example magic initiate
+            //let testKeyMistyStep = "innate__" + "_" + "__1e__" + "0"; 
+            //let testKeyChoiceSpell = "innate_____daily__1e__1__0"; //"innate__" + "_" + "__1e__" + "1__" + "0";
+            //let featIndex = 0; //This may actually be the index of which choice set to use. A feat may have many choice sets, for example magic initiate
             console.log("STATE", compAdditionalSpell.__state);
             return compAdditionalSpell.__state[spellInfo.uiKey];
 
 
 
         }
+         /**
+         * @returns {{featName:string, featIx:number, featSource:string, spells:any[]}[]}
+         */
         function searchFeatsForSpells(feats, type, compFeat){
             let featsOut = [];
             if(feats == null){console.warn("feats is null, cannot return spells learned from feats"); return featsOut;}
+            //We can ask the UI if they know if a spell is set for this choice already
+            let compMetas = ActorCharactermancerFeat.getCompAdditionalFeatMetas(compFeat, type);
+            let featComponents = compMetas._compsFeatFeatureOptionsSelect.choose; //One per feat
             //Get chosen spells that derive from that feat
             //When it comes to no-choice spells, that is fairly easy, we can just look into the feat itself to know what we are granted
             for(let i = 0; i < feats.data.length; ++i){
                 let featData = feats.data[i];
                 //Look for additional spells granted by the feat
+
+                let component = featComponents[i][0]; //test, usually only have one anyway
+                console.log("COMPONENT", component, compMetas);
+                let compAddSpell = component._subCompsAdditionalSpells[0];
+                let state = compAddSpell.__state;
+                console.log("state", state);
+                //console.log("STATE2", state);
+
+                
+
                 let spellsOut = [];
-                if(!featData.feat.additionalSpells){continue;}
+                if(!featData.feat.additionalSpells){continue;} //feat must have additionalSpells data
                 for(let k = 0; k < featData.feat.additionalSpells.length; ++k){
                     let additionalSpellSet = featData.feat.additionalSpells[k];
                     let castingAbility = additionalSpellSet.ability; //"inherit"
                     let spellsGained = searchSpellSet(additionalSpellSet);
+                    if(k != state.ixSet){continue;}
+                    console.log("SPELLS GAINED", spellsGained);
+                    console.log("SET IX:", k, "PREFERRED IX", state.ixSet);
                     for(let j = 0; j < spellsGained.length; ++j){
                         let sp = spellsGained[j];
                         if(sp.isChoice){
-                            //we can ask the UI if they know if a spell is set for this choice already
-                            let compMetas = ActorCharactermancerFeat.getCompAdditionalFeatMetas(compFeat, type);
-                            let featComponents = compMetas._compsFeatFeatureOptionsSelect.choose; //One per feat
+                            //Choice spells can be found in state already
+                            continue;
                             console.log("CHOOSE", sp, featComponents);
-                            let component = featComponents[i][0]; //test, usually only have one anyway
-                            console.log("COMPONENT", component);
+                            
                             //Trying my best to not hardcode keys here
                             let additionalSpellsUIKey = (sp.knownInnate ==
                             "innate"? `${sp.knownInnate}__${"_"}__${sp.regularity}__${sp.uses}__${j}__${0}` : 
                             `${sp.knownInnate}__${"_"}__${j}__${0}`);
                             sp.uiKey = additionalSpellsUIKey;
-                            let compAddSpell = component._subCompsAdditionalSpells[0];
+                            console.log("num compaddspells", component._subCompsAdditionalSpells);
+                            
                             console.log("COMPADDSPELLS", compAddSpell, i, k, j);
-                            let spellUid = getAdditionalSpellData(component._subCompsAdditionalSpells[0], sp); //test, usually only have one anyway
-                            sp.spell = spellUid; //uid
+                            let spellUid = getAdditionalSpellData(compAddSpell, sp); //test, usually only have one anyway
+                            sp.spellUid = spellUid; //uid
                             console.log("choicedata", sp.choiceData, sp.uiKey, "ixSet "+ sp.ixSet + " = " + k, "turned into", spellUid);
                             
                         }
                     }
                     spellsOut = spellsOut.concat(spellsGained);
+                    //Try find choice spells in state
+                    let spellIndicators = [];
+                    for(let k of Object.keys(state)){
+                        if(k.startsWith("innate") || k.startsWith("known")){
+                            spellIndicators.push([k, state[k]]);
+                        }
+                    }
+                    for(let kvPair of spellIndicators)
+                    {
+                        //cant be bothered to learn regex
+                        //example string: innate_____daily__1__0__0
+                        let words = kvPair[0].split('_');
+                        words = words.filter(word => word.length > 0);
+                        let spellInfo = {knownInnate:words[0], rechargeRegularity:words[1], rechargeUses:words[2], choiceIx:words[3], spellUid:kvPair[1]};
+                        console.log(spellInfo);
+                        spellsOut.push(spellInfo);
+                    }
                 }
                 featsOut.push({featName:featData.feat.name, featSource:featData.feat.source, featIx:featData.ixFeat, spells:spellsOut});
             }
