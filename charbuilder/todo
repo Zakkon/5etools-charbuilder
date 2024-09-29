@@ -8,6 +8,7 @@ BUGS:
     - If character learns light cantrip, then gets a race that adds the light cantrip (like aasimar), then the UI will not allow one to unlearn their first light cantrip, so you will have two (seems fixed?)
     - If you choose sorcerer, then aasimar, Light will be marked as learned in the UI. if you swap race away from aasimar, Light will still be marked as learned, and cannot be unlearned (seems fixed?)
     - Adding sources without removing any, should that really have to wipe class?
+    - saving Elevated sight as wizard (prepared AND learned): failed to get brew for elevated sight|HWCS
 WEB:
     - Add UI notifications
     - Test custom urls for content (+ save/load/exportFvtt)

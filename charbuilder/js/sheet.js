@@ -830,9 +830,6 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
       //#region Spells
 
       const hkSpells = () => {
-          $divSpells.empty();
-          $divSpells.append($divSpellAttackMod);
-          $divSpells.append($divSpellDC);
 
           const hotlinkSpells = true;
           
@@ -845,54 +842,36 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
             }
             return spellsStr;
           };
-          const spellsListStr_Innate = (spells, showUses=true) => {
+          const spellsListStr_Innate = (spells, showUses=true, newLine = false) => {
             let spellsStr = "";
             for(let i = 0; i < spells.length; ++i){
-              if(spellsStr.length > 0 ){spellsStr += ", ";}
+              if(spellsStr.length > 0 && !newLine){spellsStr += ", ";}
               let obj = spells[i];
               let spell = obj.spell;
-              if(obj.rechargeMode == "daily"){
-                let charges = obj.charges;
+              spellsStr += (newLine? '<p style="margin:0px">':"");
+              if(spell.rechargeMode == "daily"){
+                let charges = spell.charges;
+                //remove all non-numerical characters
+                charges = charges.replace(/\D/g, '');  // \D matches any non-numeric character
                 spellsStr += showUses? "("+charges + "/day)" : ""; 
               }
-              spellsStr += hotlinkSpells? ActorCharactermancerSheet.hotlink_spell(spell) : spell.name;
+              spellsStr += (hotlinkSpells? ActorCharactermancerSheet.hotlink_spell(spell) : spell.name) + (newLine? "</p>":"");
             }
+            if(!newLine){spellsStr = "<i>"+spellsStr+"</i>";}
             return spellsStr;
           };
           
-          const spellsKnownByLvl = ActorCharactermancerSheet.getAllSpellsKnown(this._parent.compSpell);
+          const knownSpellsByLevel = ActorCharactermancerSheet.getAllSpellsKnown(this._parent.compSpell, true, false, false, true);
+          const preparedSpellsByLevel = ActorCharactermancerSheet.getAllSpellsKnown(this._parent.compSpell, false, true, true, false);
           const raceSpells = ActorCharactermancerSheet.getAdditionalRaceSpells(this._parent.compRace, this._parent.compClass, this._parent.compSpell);
           
           //Add additional cantrips to cantrips list
           for(let sp of raceSpells.known[0]){
-            spellsKnownByLvl[0].push(sp.spell);
+            knownSpellsByLevel[0].push(sp.spell);
           }
 
-          //List cantrips known (these never change)
-          $$`<div class="mb10"><b>Cantrips Known: </b><i>${spellsListStr(spellsKnownByLvl[0])}</i></div>`.appendTo($divSpells);
-          //Add a bit of a spacing here
 
-          $$`<div><b>Prepared Spells:</b></div>`.appendTo($divSpells);
-          for(let lvl = 1; lvl < spellsKnownByLvl.length; ++lvl){
-              const knownSpellsAtLvl = spellsKnownByLvl[lvl] || null;
-              if(!knownSpellsAtLvl || !knownSpellsAtLvl.length){continue;}
-              let str = "Cantrips";
-              switch(lvl){
-                  case 0: str = "Cantrips"; break;
-                  case 1: str = "1st Level"; break;
-                  case 2: str = "2nd Level"; break;
-                  case 3: str = "3rd Level"; break;
-                  case 4: str = "4th Level"; break;
-                  case 5: str = "5th Level"; break;
-                  case 6: str = "6th Level"; break;
-                  case 7: str = "7th Level"; break;
-                  case 8: str = "8th Level"; break;
-                  case 9: str = "9th Level"; break;
-                  default: throw new Error("Unimplemented!"); break;
-              }
-              const slots = ActorCharactermancerSheet.getSpellSlotsAtLvl(lvl, this._parent.compClass);
-              $$`<div class="mb10">${str} (${slots} slots): <i>${spellsListStr(knownSpellsAtLvl)}</i></div>`.appendTo($divSpells);
-          }
+          
 
           const addInnateSpells = (innateLists) => {
             //Merge the arrays to a single array
@@ -909,36 +888,116 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
             
           }
 
-          let merged = addInnateSpells([raceSpells.innate//, featSpells.innate
-          ]);
-          if(merged.count > 0){
+          const spellUidToPrintReady = (spellUid) => {
+            let spellName = spellUid.substring(0, spellUid.indexOf("|")).capitalizeEachWord();
+            let spellSource = spellUid.substring(spellUid.indexOf("|")+1, spellUid.length).toUpperCase();
+            return {name: spellName, source: spellSource};
+          }
+
+          const printCantrips = (cantrips) => {
+            $$`<div class="mb10"><b>Cantrips Known: </b><i>${spellsListStr(cantrips)}</i></div>`.appendTo($divSpells);
+          }
+          const printPreparedSpells = (preparedSpellsByLvl) => {
+            $$`<div class="mb10"></div>`.appendTo($divSpells);
+            $$`<div><b>Prepared Spells:</b></div>`.appendTo($divSpells);
+            for(let lvl = 1; lvl < preparedSpellsByLvl.length; ++lvl){ //skip cantrips
+                const knownSpellsAtLvl = preparedSpellsByLvl[lvl] || null;
+                if(!knownSpellsAtLvl || !knownSpellsAtLvl.length){continue;}
+                let str = "Cantrips";
+                switch(lvl){
+                    case 0: str = "Cantrips"; break;
+                    case 1: str = "1st Level"; break;
+                    case 2: str = "2nd Level"; break;
+                    case 3: str = "3rd Level"; break;
+                    case 4: str = "4th Level"; break;
+                    case 5: str = "5th Level"; break;
+                    case 6: str = "6th Level"; break;
+                    case 7: str = "7th Level"; break;
+                    case 8: str = "8th Level"; break;
+                    case 9: str = "9th Level"; break;
+                    default: throw new Error("Unimplemented!"); break;
+                }
+                const slots = ActorCharactermancerSheet.getSpellSlotsAtLvl(lvl, this._parent.compClass);
+                $$`<div class="mb10">${str} (${slots} slots): <i>${spellsListStr(knownSpellsAtLvl)}</i></div>`.appendTo($divSpells);
+            }
+          }
+          const printInnateSpells = (innateSpells) => {
+            //Draw innate spells
+            $$`<div class="mb10"></div>`.appendTo($divSpells);
             $$`<div><b>Innate Spells:</b></div>`.appendTo($divSpells);
-            for(let lvl = 1; lvl < merged.byLevel.length; ++lvl){
-                const knownSpellsAtLvl = merged.byLevel[lvl] || null;
+            let innateSpellsPrint = [];
+            for(let sp of innateSpells){
+              let printData = spellUidToPrintReady(sp.spellUid);
+              sp.name = printData.name;
+              sp.source = printData.source;
+              innateSpellsPrint.push({spell: sp});
+              console.log(sp);
+            }
+            $$`<div>${spellsListStr_Innate(innateSpellsPrint, true, true)}</div>`.appendTo($divSpells);
+          }
+          const printSpellsFromFeats = (spellsFromFeats) => {
+            $$`<div class="mb10"></div>`.appendTo($divSpells);
+            $$`<div><b>Spells From Feats:</b></div>`.appendTo($divSpells);
+            for(let featPair of spellsFromFeats){
+              let spellsFromThisFeat = featPair.spells;
+              let featToHotlink = { name: featPair.feat.featName, source: featPair.feat.featSource};
+              $$`<div>${ActorCharactermancerSheet.hotlink_feat(featToHotlink)}: <i>${spellsListStr_Innate(spellsFromThisFeat, false)}</i></div>`.appendTo($divSpells);
+            }
+          }
+          
+
+
+          let innateSpells_oldWay = addInnateSpells([raceSpells.innate//, featSpells.innate
+          ]);
+
+          
+          
+
+          if(innateSpells_oldWay.count > 0){
+            $$`<div><b>Innate Spells:</b></div>`.appendTo($divSpells);
+            for(let lvl = 1; lvl < innateSpells_oldWay.byLevel.length; ++lvl){
+                const knownSpellsAtLvl = innateSpells_oldWay.byLevel[lvl] || null;
                 if(!knownSpellsAtLvl || !knownSpellsAtLvl.length){continue;}
                 $$`<div><i>${spellsListStr_Innate(knownSpellsAtLvl)}</i></div>`.appendTo($divSpells);
             }
           }
 
-          let spells = this._parent.compFeat.getAllSpellsFromFeats();
-          spells.then((result) => {
-            $$`<div class="mb10"></div>`.appendTo($divSpells);
-            $$`<div><b>Spells From Feats:</b></div>`.appendTo($divSpells);
+          let innateSpells = [];
+          let cantripSpells = knownSpellsByLevel[0];
+          let featSpells = this._parent.compFeat.getAllSpellsFromFeats();
+
+          featSpells.then((result) => {
+            let spellsByFeat = [];
             for(let feat of result){
-              let arr = [];
+              let spellsFromThisFeat = [];
               for(let spellObj of feat.spells){
                 //Get spell from data so we can get the proper name and source of the spell
                 //TEMPFIX
                 if(spellObj.spellUid == null || spellObj.isChoice){continue;}
-                let spellName = spellObj.spellUid.substring(0, spellObj.spellUid.indexOf("|")).capitalizeEachWord();
-                let spellSource = spellObj.spellUid.substring(spellObj.spellUid.indexOf("|")+1, spellObj.spellUid.length).toUpperCase();
-                //spellName = spellName.charAt(0).toUpperCase() + spellName.slice(1); //Make first letter capital (camelcase doesnt do this for some reason)
-                arr.push({spell:{name: spellName, source:spellSource}});
+                if(spellObj.knownInnate == "innate"){innateSpells.push(spellObj);} //Add to innate spells if spell is marked as innate
+                else if(spellObj.knownInnate == "known")
+                {
+                  //Check if this is a cantrip
+                  const foundItem = ActorCharactermancerSpell.findSpellByUID(spellObj.spellUid, this._parent.compSpell._data.spell);
+                  if(!foundItem){continue;}
+                  if(foundItem.level == 0){
+                    cantripSpells.push(spellUidToPrintReady(spellObj.spellUid));
+                  }
+                }
+                spellsFromThisFeat.push({spell:spellUidToPrintReady(spellObj.spellUid)});
               }
-              let featToHotlink = { name: feat.featName, source: feat.featSource};
-              $$`<div>${ActorCharactermancerSheet.hotlink_feat(featToHotlink)}: <i>${spellsListStr_Innate(arr, false)}</i></div>`.appendTo($divSpells);
+              spellsByFeat.push({feat:feat, spells:spellsFromThisFeat});
             }
+            $divSpells.empty();
+            $divSpells.append($divSpellAttackMod);
+            $divSpells.append($divSpellDC);
+            printCantrips(cantripSpells);
+            printPreparedSpells(preparedSpellsByLevel);
+            printInnateSpells(innateSpells);
+            //printSpellsFromFeats(spellsByFeat);
           });
+
+          
 
           hkCalcAttacks(); //Calculate attacks as well, since it displays cantrip attacks
       };
@@ -1077,10 +1136,26 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
         $divFeatFeatures.empty();
         //We need to get all our feats somehow
         let featInfo = this._getFeats();
+
+        /* const asd = this._parent.compFeat.feat_pGetAdditionalFeatFormData();
+
+        asd.then((result)=>{
+          console.log("RESULT", result);
+        }); */
+
+        /* $$`<div class="mb10"></div>`.appendTo($divSpells);
+        $$`<div><b>Spells From Feats:</b></div>`.appendTo($divSpells);
+        for(let featPair of spellsFromFeats){
+          let spellsFromThisFeat = featPair.spells;
+          let featToHotlink = { name: featPair.feat.featName, source: featPair.feat.featSource};
+          $$`<div>${ActorCharactermancerSheet.hotlink_feat(featToHotlink)}: <i>${spellsListStr_Innate(spellsFromThisFeat, false)}</i></div>`.appendTo($divSpells);
+        } */
         
         let featsText = "";
         for(let asiFeat of featInfo.asiFeats){
-          featsText += (featsText.length>0? ", " : "") + asiFeat.feat.name;
+          //featsText += (featsText.length>0? ", " : "") + asiFeat.feat.name;
+          let text = ActorCharactermancerSheet.hotlink_feat(asiFeat.feat);
+          featsText += (featsText.length>0? ", " : "") + text;
         }
 
         const race = this.getRace_();
@@ -1106,13 +1181,14 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
         $$`<div><b>Feats:</b></div>`.appendTo($divFeatFeatures);
         $$`<div>${featsText}</div>`.appendTo($divFeatFeatures);
 
-        hkSpells(); //re-render spells, since some of them come from feats
+        //hkSpells(); //re-render spells, since some of them come from feats
       }
       this._parent.compClass.addHookBase("class_ixPrimaryClass", hkFeats);
       this._parent.compClass.addHookBase("class_ixMax", hkFeats); 
       this._parent.compClass.addHookBase("class_totalLevels", hkFeats);
       this._parent.compClass.addHookBase("class_pulseChange", hkFeats); //This also senses when subclass is changed
       this._parent.compAbility.compStatgen.addHookBase("common_pulseAsi", hkFeats); //This gets fired like all the time feats get added/removed/altered
+      hkFeats();
       //#endregion
       
       //#region Character Description
@@ -1812,7 +1888,7 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
      * @param {ActorCharactermancerSpell} compSpells
      * @returns {any[][]}
      */
-    static getAllSpellsKnown(compSpells){
+    static getAllSpellsKnown(compSpells, includeLearned=true, includePrepared=true, includeAlwaysPrepared=true, includeAlwaysKnown=true){
         let spellsBylevel = [[],[],[],[],[],[],[],[],[],[]];
         //Go through each component that can add spells
         for(let j = 0; j < compSpells.compsSpellSpells.length; ++j)
@@ -1825,7 +1901,7 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
             {
                 //Grab the subcomponent that handles that specific level
                 const subcomponent = comp1._compsLevel[spellLevelIx];
-                const known = subcomponent.getSpellsKnown(true); //Get the spells known by that subcomponent
+                const known = subcomponent.getSpellsKnown(true, includeLearned, includePrepared, includeAlwaysPrepared, includeAlwaysKnown); //Get the spells known by that subcomponent
                 for(let i = 0; i < known.length; ++i){
                     spellsBylevel[spellLevelIx].push(known[i].spell);
                 }

@@ -10337,7 +10337,6 @@ class ActorCharactermancerSpell extends ActorCharactermancerBaseComponent {
                 //const ix = this._getIxOfSpell(src.spellsByLvl[0][0].spell);
 
                 //WARNING: Not 100% sure about this one
-                console.log(actor);
                 const classIx = data[j].ix;
 
                 for(let lvlIx = 0; lvlIx < data[j].spellsByLvl.length; ++lvlIx){
@@ -10352,7 +10351,7 @@ class ActorCharactermancerSpell extends ActorCharactermancerBaseComponent {
     }
     /**
         * @param {{name:string, source:string, school:string}} spell
-        * @returns {any}
+        * @returns {number}
         */
     _getIxOfSpell(spell){
             const match = this._data.spell.filter(v => v.name == spell.name && v.source == spell.source);
@@ -10374,7 +10373,7 @@ class ActorCharactermancerSpell extends ActorCharactermancerBaseComponent {
             //Use the level of the spell to determine which subcomponent to grab
             const subComp = comp._compsLevel[actualSpell.level];
             //Tell the subcomponent to mark the spell as learned/known
-            subComp.markSpellAsLearnedKnown(ix);
+            subComp.markSpellAsLearnedKnown(ix, spellStub.isLearned, spellStub.isPrepared);
     }
     
     /**
@@ -12369,7 +12368,9 @@ class Charactermancer_Spell extends BaseComponent {
 
     render($wrp, $dispSpell) {
         const hkPreparedLearned = ()=>{
-            const parts = [this._state.maxLearnedCantrips ? `Cantrips learned: ${this._state.cntLearnedCantrips}/${this._state.maxLearnedCantrips}` : null, this._state.fixedLearnedProgression ? `Spells learned: ${this._getCntSpellsKnown()}/${this._getTotalSpellsKnown()}` : null, this._state.maxPrepared ? `Prepared: ${this._state.cntPrepared}/${this._state.maxPrepared}` : null, ].filter(Boolean);
+            const parts = [this._state.maxLearnedCantrips ? `Cantrips learned: ${this._state.cntLearnedCantrips}/${this._state.maxLearnedCantrips}` : null,
+                this._state.fixedLearnedProgression ? `Spells learned: ${this._getCntSpellsKnown()}/${this._getTotalSpellsKnown()}` : null,
+                this._state.maxPrepared ? `Prepared: ${this._state.cntPrepared}/${this._state.maxPrepared}` : null, ].filter(Boolean);
 
             (this._$wrpsPreparedLearned || []).forEach($it=>{
                 $it.toggleVe(parts.length).html(parts.join(`<div class="mx-1">\u2014</div>`));
@@ -12838,7 +12839,7 @@ class Charactermancer_Spell extends BaseComponent {
     }
 
     _getCntSpellsKnown() {
-        return this._compsLevel.map(it=>it.getSpellsKnown().length).sum();
+        return this._compsLevel.map(it=>it.getSpellsKnown(false, true, false, false, true).length).sum();
     }
     _getTotalSpellsKnown() {
         return (this._state.fixedLearnedProgression || []).sum();
@@ -13080,18 +13081,32 @@ class Charactermancer_Spell extends BaseComponent {
      * Get the known spells sorted by level
      * @returns {Charactermancer_Spell_SpellMeta[][]}
      */
-    _test_getKnownSpells(){
+    getLearnedPreparedSpellsByLevel(getLearned, getPrepared){
         let spellsByLvl = [];
         for(let lvl = 0; lvl < this._compsLevel.length; ++lvl){
             if(!spellsByLvl[lvl]){spellsByLvl[lvl] = [];}
             //Get the component that handles spells for this level
             let comp = this._compsLevel[lvl];
             //Ask it for the known spells
-            let known = comp.getKnownSpells().filter(sp => sp.isPrepared || sp.isLearned);
+            let known = comp.getKnownSpells().filter(sp => (sp.isPrepared && getPrepared) || (sp.isLearned && getLearned));
             //Add the known spells onto the array slot
             spellsByLvl[lvl] = spellsByLvl[lvl].concat(known);
         }
         return spellsByLvl;
+    }
+
+    static findSpellByUID(spellUid, spellDatas){
+        const matches = spellDatas.filter(sp => {
+            //Create a uid from the spell
+            const uid = `${sp.name}|${sp.source}`.toLowerCase();//UrlUtil.URL_TO_HASH_BUILDER[UrlUtil.PG_ITEMS]({ name:n, source:src });
+            //then try to match it
+            return spellUid == uid;
+        });
+        if(matches.length > 1){throw new Error("Not supposed to return more than one result", spellUid);}
+        else if(matches.length < 1){
+            console.error("Could not find a match to spell", spellUid, "among our loaded spells. Did you forget to load a source?");
+        }
+        return matches[0];
     }
 }
 Charactermancer_Spell._IMPORT_LIST_SPELL = null;
@@ -13554,8 +13569,10 @@ class Charactermancer_Spell_Level extends BaseComponent {
     /**
      * Mark a spell as prepared or learned. Only used when loading from a save file.
      * @param {number} spI index of the spell
+     * @param {boolean} inputLearned was this spell marked as learned in save
+     * @param {boolean} inputPrepared was this spell marked as prepared in save
      */
-    markSpellAsLearnedKnown(spI){
+    markSpellAsLearnedKnown(spI, inputLearned, inputPrepared){
         const items = this._list._items; //or _filteredItems?
         const matches = items.filter(it => it.ix == spI);
         const m = matches[0];
@@ -13578,19 +13595,22 @@ class Charactermancer_Spell_Level extends BaseComponent {
         const isPreparedCaster = this._parent.isPreparedCaster;
         //console.log("INFO", isLearnDisabled, isPrepareDisabledExistingSpell, isPrepareDisabled, existingSpellMeta, spell);
 
-        const doLearn = !isPreparedCaster || lvl == 0;
+        const doLearn = (!isPreparedCaster || inputLearned) || lvl == 0;
+        const doPrepare = isPreparedCaster && lvl > 0 && inputPrepared;
         if(doLearn){
             m.data.btnLearn.classList.add("active");
             this._state[ixLearned] = true;
             if (lvl == 0){this._parent.cntLearnedCantrips++;}
-            else{this._parent.cntPrepared++;}
+            //else {this._parent.cntPrepared++;}
         }
-        else {
+        if(doPrepare) {
             m.data.btnPrepare.classList.add("active");
             this._state[ixPrepared] = true;
             if (lvl == 0){this._parent.cntLearnedCantrips++;} //Should not happen, we never prepare cantrips
             else{this._parent.cntPrepared++;}
         }
+
+        this._parent.pulseFixedLearned = !this._parent.pulseFixedLearned; //trigger hook
     }
 
     _handleListItemBtnLearnClick_do_doLearn({btnLearn, btnPrepare, isActive, ixPrepared, ixLearned}) {
@@ -14368,7 +14388,7 @@ class ActorCharactermancerFeat extends ActorCharactermancerBaseComponent {
             for(const [uses, content] of Object.entries(rechargeType)){ //name of the object will be string uses, object itself will be content
                 let spells = searchRechargedSpells(content);
                 for(let spell of spells){
-                    spell.uses = uses;
+                    spell.charges = uses;
                 }
                 spellsOut = spellsOut.concat(spells);
             }
@@ -14383,7 +14403,7 @@ class ActorCharactermancerFeat extends ActorCharactermancerBaseComponent {
             for(let regularity of Object.keys(innateKnown)){
                 let spells = searchRechargeUses(innateKnown[regularity]);
                 for(let spell of spells){
-                    spell.regularity = regularity;
+                    spell.rechargeMode = regularity;
                 }
                 spellsOut = spellsOut.concat(spells);
             }
@@ -14477,7 +14497,7 @@ class ActorCharactermancerFeat extends ActorCharactermancerBaseComponent {
                         if(k.startsWith("innate") || k.startsWith("known")){
                             let words = k.split('_');
                             words = words.filter(word => word.length > 0);
-                            let spellInfo = {knownInnate:words[0], rechargeRegularity:words[1], rechargeUses:words[2], choiceIx:words[3], spellUid:state[k]};
+                            let spellInfo = {knownInnate:words[0], rechargeMode:words[1], charges:words[2], choiceIx:words[3], spellUid:state[k]};
                             spellsOut.push(spellInfo);
                         }
                     }

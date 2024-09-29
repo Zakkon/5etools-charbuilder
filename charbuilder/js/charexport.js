@@ -702,7 +702,7 @@ class CharacterExportFvtt{
             //If previous classes were deleted, we are going to shift our classIx down to compensate
             classIx = this.downgradeClassIx_deletedClassCompensation(classIx, deletedClasses);
             forms.push(compSpell.compsSpellSpells[j].pGetFormData(filterValues));
-            let spellsByLvl = compSpell.compsSpellSpells[j]._test_getKnownSpells().map(arr => arr.map(
+            let spellsByLvl = compSpell.compsSpellSpells[j].getLearnedPreparedSpellsByLevel(true, true).map(arr => arr.map(
                 spell => {return {name: spell.spell.name, source:spell.spell.source,
                     isLearned:spell.isLearned, isPrepared:spell.isPrepared, spell:spell.spell};}
             ));
