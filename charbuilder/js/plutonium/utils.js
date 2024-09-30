@@ -332,6 +332,7 @@ class UtilDataSource {
     }
 
     static getSourcesCustomUrl(nxtOpts={}) {
+        if(!SETTINGS.ENABLE_SOURCE_CUSTOM_URL){return [];}
         return [new UtilDataSource.DataSourceUrl("Custom URL","",{
             ...nxtOpts,
             filterTypes: [UtilDataSource.SOURCE_TYP_CUSTOM],
@@ -340,6 +341,7 @@ class UtilDataSource {
     }
 
     static getSourcesUploadFile(nxtOpts={}) {
+        if(!SETTINGS.ENABLE_SOURCE_UPLOAD_FILE){return [];}
         return [new UtilDataSource.DataSourceFile("Upload File",{
             ...nxtOpts,
             filterTypes: [UtilDataSource.SOURCE_TYP_CUSTOM],

@@ -2647,6 +2647,7 @@ Parser.SRC_MPP = "MPP";
 Parser.SRC_BMT = "BMT";
 Parser.SRC_GHLoE = "GHLoE";
 Parser.SRC_DoDk = "DoDk";
+Parser.SRC_HWCS = "HWCS";
 Parser.SRC_SCREEN = "Screen";
 Parser.SRC_SCREEN_WILDERNESS_KIT = "ScreenWildernessKit";
 Parser.SRC_SCREEN_DUNGEON_KIT = "ScreenDungeonKit";
@@ -3379,6 +3380,7 @@ Parser.SOURCES_NON_FR = new Set([
 	Parser.SRC_LK,
 	Parser.SRC_GHLoE,
 	Parser.SRC_DoDk,
+	Parser.SRC_HWCS,
 ]);
 
 // endregion

@@ -165,6 +165,8 @@ class AppSourceSelectorMulti extends ModalFilter {
 						${$btnUpload}${$dispName}${$btnDelete}
 					</div>`.appendTo($wrpUploadRows);
 
+                    
+
                     return {
                         comp,
                         $wrpRow,
@@ -173,10 +175,12 @@ class AppSourceSelectorMulti extends ModalFilter {
                 }
                 ,
             });
+        };
+        if(SETTINGS.ENABLE_SOURCE_UPLOAD_FILE){
+            hkUploadFileMetas();
+            this._comp._addHookBase("uploadedFileMetas", hkUploadFileMetas);
         }
-        ;
-        hkUploadFileMetas();
-        this._comp._addHookBase("uploadedFileMetas", hkUploadFileMetas);
+        
 
         return $stgUpload;
     }
@@ -251,8 +255,10 @@ class AppSourceSelectorMulti extends ModalFilter {
                     this._comp._addHookBase("displayName", hkDisplayNameUrl);
                     hkDisplayNameUrl();
 
+
                     const $btnDelete = !comp._state.isCustom ? null : $(`<button class="btn btn-5et btn-xs btn-danger ml-2" title="Delete"><span class="glyphicon glyphicon-trash"></span></button>`)
-                    .click(()=>this._comp._state.urlMetas = this._comp._state.urlMetas.filter(it=>it !== urlMeta));
+                    .click(()=>{this._comp._state.urlMetas = this._comp._state.urlMetas.filter(it=>it !== urlMeta);
+                    });
 
                     const $wrpRow = $$`<div class="ve-flex-v-center my-1 w-100">
 						${$iptUrl}${$btnDelete}
@@ -937,9 +943,9 @@ class ModalFilterSources extends ModalFilter {
             this._isClassDisabled = isClassDisabled;
             this._isSubclassDisabled = isSubclassDisabled;
             this._filterCache.list.items.forEach(li=>{
-                let isClassDisabled = false;
-                //li.data.cbSel.classList.toggle("disabled", this._isClassDisabled);
-                li.data.cbSel.classList.toggle("disabled", isClassDisabled);
+                li.data.cbSel.classList.toggle("disabled", this._isClassDisabled);
+                //let isClassDisabled = false;
+                //li.data.cbSel.classList.toggle("disabled", isClassDisabled);
             });
 
             if (selectedClass != null) {

@@ -2387,10 +2387,13 @@ class Charactermancer_AdditionalSpellsSelect extends BaseComponent {
     _render_renderOptions($wrpOptionsButtons, $wrpOptions, ix) {
         const additionalSpellsFlatBlock = this._additionalSpellsFlat[ix];
 
-        const $btnSelect = this._additionalSpellsFlat.length === 1 ? null : $(`<button class="btn btn-xs ve-flex-1" title="Select Spell Set">${additionalSpellsFlatBlock.meta.name ?? `Spell Set ${ix + 1}`}</button>`).click(()=>this._state.ixSet = ix);
+        //Make a button for selecting which set we want to use (for example one set per class spell list)
+        const $btnSelect = this._additionalSpellsFlat.length === 1 ? null : 
+        $(`<button class="btn btn-xs ve-flex-1" title="Select Spell Set">${additionalSpellsFlatBlock.meta.name ?? `Spell Set ${ix + 1}`}</button>`).click(()=>this._state.ixSet = ix);
 
         const isInnatePreparedList = this._isAnyInnatePrepared(ix);
         const isExpandedList = this._isAnyExpanded(ix);
+
 
         const sortedSpells = Object.values(additionalSpellsFlatBlock.spells).sort((a,b)=>SortUtil.ascSort(a.requiredLevel || 0,
             b.requiredLevel || 0) || SortUtil.ascSort(a.requiredCasterLevel || 0, b.requiredCasterLevel || 0));
@@ -2404,6 +2407,7 @@ class Charactermancer_AdditionalSpellsSelect extends BaseComponent {
 			<div class="col-3 ve-text-center">Spell Level</div>
 			<div class="col-9">Spells</div>
 		</div>`) : null;
+
 
         const $rowsInnatePrepared = isInnatePreparedList ? this._render_$getRows(ix, sortedSpells, {
             isExpandedMatch: false
@@ -2437,15 +2441,18 @@ class Charactermancer_AdditionalSpellsSelect extends BaseComponent {
         this._addHookBase("ixSet", hkSpellsAvailable);
         hkSpellsAvailable();
 
+        const includeClarification = false;
+        const clarification = includeClarification && additionalSpellsFlatBlock?.meta?.name? ` (${additionalSpellsFlatBlock.meta.name})` : "";
+
         const $stgInnatePrepared = isInnatePreparedList ? $$`<div class="ve-flex-col">
-			<div class="bold my-0">Innate/Prepared/Known Spells</div>
+			<div class="bold my-0">Innate/Prepared/Known Spells${clarification}</div>
 			${$wrpInnatePreparedHeaders}
 			${$rowsInnatePrepared}
 			${$wrpNoneAvailableInnatePrepared}
 		</div>` : null;
 
         const $stgExpanded = isExpandedList ? $$`<div class="ve-flex-col">
-			<div class="bold my-0">Expanded Spell List</div>
+			<div class="bold my-0">Expanded Spell List${clarification}</div>
 			${$wrpExpandedHeaders}
 			${$rowsExpanded}
 			${$wrpNoneAvailableExpanded}
@@ -2471,9 +2478,8 @@ class Charactermancer_AdditionalSpellsSelect extends BaseComponent {
 
         if (this._additionalSpellsFlat.length !== 1) {
             const hkIsActive = ()=>{
-                console.log("hkisactive disabled");
-               /*  $btnSelect.toggleClass("active", this._state.ixSet === ix);
-                $stg.toggleVe(this._state.ixSet === ix); */
+                $btnSelect.toggleClass("active", this._state.ixSet === ix);
+                $stg.toggleVe(this._state.ixSet === ix);
             }
             ;
             this._addHookBase("ixSet", hkIsActive);
@@ -2582,6 +2588,7 @@ class Charactermancer_AdditionalSpellsSelect extends BaseComponent {
 
                     const selected = selecteds[0];
 
+                    //Save the spell uid to our state, and fire a pulsechoose
                     this._state[flat.key] = DataUtil.proxy.getUid("spell", {
                         name: selected.name,
                         source: selected.values.sourceJson
@@ -10330,7 +10337,6 @@ class ActorCharactermancerSpell extends ActorCharactermancerBaseComponent {
                 //const ix = this._getIxOfSpell(src.spellsByLvl[0][0].spell);
 
                 //WARNING: Not 100% sure about this one
-                console.log(actor);
                 const classIx = data[j].ix;
 
                 for(let lvlIx = 0; lvlIx < data[j].spellsByLvl.length; ++lvlIx){
@@ -10345,7 +10351,7 @@ class ActorCharactermancerSpell extends ActorCharactermancerBaseComponent {
     }
     /**
         * @param {{name:string, source:string, school:string}} spell
-        * @returns {any}
+        * @returns {number}
         */
     _getIxOfSpell(spell){
             const match = this._data.spell.filter(v => v.name == spell.name && v.source == spell.source);
@@ -10367,7 +10373,7 @@ class ActorCharactermancerSpell extends ActorCharactermancerBaseComponent {
             //Use the level of the spell to determine which subcomponent to grab
             const subComp = comp._compsLevel[actualSpell.level];
             //Tell the subcomponent to mark the spell as learned/known
-            subComp.markSpellAsLearnedKnown(ix);
+            subComp.markSpellAsLearnedKnown(ix, spellStub.isLearned, spellStub.isPrepared);
     }
     
     /**
@@ -10481,6 +10487,7 @@ class ActorCharactermancerSpell extends ActorCharactermancerBaseComponent {
         this._parent.compClass.addHookBase(propIxSubclass, hook_onChangeSubclass);
         this._parent.compClass.addHookBase(propTargetLevel, hook_onChangeLevel);
         this._parent.compClass.addHookBase("class_pulseChange", onHookPulse);
+        this._parent.compRace.addHookBase("race_ixRace", onHookPulse);
         this._parent.compAbility.addHookAbilityScores(hook_onChangeAbilityScores);
         //Fire the onChangeClass hook straight away, to build the UI
         hook_onChangeClass();
@@ -12361,7 +12368,9 @@ class Charactermancer_Spell extends BaseComponent {
 
     render($wrp, $dispSpell) {
         const hkPreparedLearned = ()=>{
-            const parts = [this._state.maxLearnedCantrips ? `Cantrips learned: ${this._state.cntLearnedCantrips}/${this._state.maxLearnedCantrips}` : null, this._state.fixedLearnedProgression ? `Spells learned: ${this._getCntSpellsKnown()}/${this._getTotalSpellsKnown()}` : null, this._state.maxPrepared ? `Prepared: ${this._state.cntPrepared}/${this._state.maxPrepared}` : null, ].filter(Boolean);
+            const parts = [this._state.maxLearnedCantrips ? `Cantrips learned: ${this._state.cntLearnedCantrips}/${this._state.maxLearnedCantrips}` : null,
+                this._state.fixedLearnedProgression ? `Spells learned: ${this._getCntSpellsKnown()}/${this._getTotalSpellsKnown()}` : null,
+                this._state.maxPrepared ? `Prepared: ${this._state.cntPrepared}/${this._state.maxPrepared}` : null, ].filter(Boolean);
 
             (this._$wrpsPreparedLearned || []).forEach($it=>{
                 $it.toggleVe(parts.length).html(parts.join(`<div class="mx-1">\u2014</div>`));
@@ -12830,7 +12839,7 @@ class Charactermancer_Spell extends BaseComponent {
     }
 
     _getCntSpellsKnown() {
-        return this._compsLevel.map(it=>it.getSpellsKnown().length).sum();
+        return this._compsLevel.map(it=>it.getSpellsKnown(false, true, false, false, true).length).sum();
     }
     _getTotalSpellsKnown() {
         return (this._state.fixedLearnedProgression || []).sum();
@@ -13072,18 +13081,32 @@ class Charactermancer_Spell extends BaseComponent {
      * Get the known spells sorted by level
      * @returns {Charactermancer_Spell_SpellMeta[][]}
      */
-    _test_getKnownSpells(){
+    getLearnedPreparedSpellsByLevel(getLearned, getPrepared){
         let spellsByLvl = [];
         for(let lvl = 0; lvl < this._compsLevel.length; ++lvl){
             if(!spellsByLvl[lvl]){spellsByLvl[lvl] = [];}
             //Get the component that handles spells for this level
             let comp = this._compsLevel[lvl];
             //Ask it for the known spells
-            let known = comp.getKnownSpells().filter(sp => sp.isPrepared || sp.isLearned);
+            let known = comp.getKnownSpells().filter(sp => (sp.isPrepared && getPrepared) || (sp.isLearned && getLearned));
             //Add the known spells onto the array slot
             spellsByLvl[lvl] = spellsByLvl[lvl].concat(known);
         }
         return spellsByLvl;
+    }
+
+    static findSpellByUID(spellUid, spellDatas){
+        const matches = spellDatas.filter(sp => {
+            //Create a uid from the spell
+            const uid = `${sp.name}|${sp.source}`.toLowerCase();//UrlUtil.URL_TO_HASH_BUILDER[UrlUtil.PG_ITEMS]({ name:n, source:src });
+            //then try to match it
+            return spellUid == uid;
+        });
+        if(matches.length > 1){throw new Error("Not supposed to return more than one result", spellUid);}
+        else if(matches.length < 1){
+            console.error("Could not find a match to spell", spellUid, "among our loaded spells. Did you forget to load a source?");
+        }
+        return matches[0];
     }
 }
 Charactermancer_Spell._IMPORT_LIST_SPELL = null;
@@ -13546,8 +13569,10 @@ class Charactermancer_Spell_Level extends BaseComponent {
     /**
      * Mark a spell as prepared or learned. Only used when loading from a save file.
      * @param {number} spI index of the spell
+     * @param {boolean} inputLearned was this spell marked as learned in save
+     * @param {boolean} inputPrepared was this spell marked as prepared in save
      */
-    markSpellAsLearnedKnown(spI){
+    markSpellAsLearnedKnown(spI, inputLearned, inputPrepared){
         const items = this._list._items; //or _filteredItems?
         const matches = items.filter(it => it.ix == spI);
         const m = matches[0];
@@ -13570,19 +13595,22 @@ class Charactermancer_Spell_Level extends BaseComponent {
         const isPreparedCaster = this._parent.isPreparedCaster;
         //console.log("INFO", isLearnDisabled, isPrepareDisabledExistingSpell, isPrepareDisabled, existingSpellMeta, spell);
 
-        const doLearn = !isPreparedCaster || lvl == 0;
+        const doLearn = (!isPreparedCaster || inputLearned) || lvl == 0;
+        const doPrepare = isPreparedCaster && lvl > 0 && inputPrepared;
         if(doLearn){
             m.data.btnLearn.classList.add("active");
             this._state[ixLearned] = true;
             if (lvl == 0){this._parent.cntLearnedCantrips++;}
-            else{this._parent.cntPrepared++;}
+            //else {this._parent.cntPrepared++;}
         }
-        else {
+        if(doPrepare) {
             m.data.btnPrepare.classList.add("active");
             this._state[ixPrepared] = true;
             if (lvl == 0){this._parent.cntLearnedCantrips++;} //Should not happen, we never prepare cantrips
             else{this._parent.cntPrepared++;}
         }
+
+        this._parent.pulseFixedLearned = !this._parent.pulseFixedLearned; //trigger hook
     }
 
     _handleListItemBtnLearnClick_do_doLearn({btnLearn, btnPrepare, isActive, ixPrepared, ixLearned}) {
@@ -14180,15 +14208,18 @@ class ActorCharactermancerFeat extends ActorCharactermancerBaseComponent {
     }
 
     //Return an array, each entry containing a key pointing to the choiceObj, and an array containing the choiceComponents
-    static getChoiceComponents(compAdditionalFeatMetas) {
+    static getChoiceComponents(compAdditionalFeatMetas, type) {
         let chooseObj = compAdditionalFeatMetas._compsFeatFeatureOptionsSelect.choose;
+        console.log("CHOOSEOBJ", chooseObj);
         //chooseObj:
-        //- 0: {
+        //- 0: { //this index counting is going to be seperate for each kind of feat source (ASI feat, race feat, etc)
         //-- Array[
         let toReturn = [];
+        if(chooseObj == null){ console.error("chooseObj was null"); return toReturn;}
+        //We should know which type this chooseObj is (race feat, ASI feat, custom feat, etc)
         for(let choiceKey of Object.keys(chooseObj)){
             let subArray = chooseObj[choiceKey];
-            toReturn.push({key:choiceKey, components:subArray});
+            toReturn.push({sourceType: type, key:choiceKey, components:subArray});
         }
         return toReturn;
     }
@@ -14196,6 +14227,15 @@ class ActorCharactermancerFeat extends ActorCharactermancerBaseComponent {
         return new Promise(resolve => {
             setTimeout(() => resolve(), 1000 * seconds); 
           });
+    }
+    static getCompAdditionalFeatMetas(compFeat, fromType){
+        if(fromType == "race"){
+            return compFeat._compAdditionalFeatsMetas?.race?.comp;
+        }
+        if(fromType == "custom"){
+            return compFeat._compAdditionalFeatsMetas?.custom?.comp;
+        }
+        return null;
     }
     //Return an array, each entry containing a key pointing to the choiceObj, and an array containing the choiceComponents
     static async getChoiceComponentsAsync(compAdditionalFeatMetas) {
@@ -14219,34 +14259,260 @@ class ActorCharactermancerFeat extends ActorCharactermancerBaseComponent {
     }
     
     async setSpellChoice(input) {
-        let comp = null;
-        if(input.from == "race"){
-            comp = this._compAdditionalFeatsMetas.race.comp;
-        }
-        if(comp == null){console.error("no spell source defined?", input.from);}
-        let components = await ActorCharactermancerFeat.getChoiceComponentsAsync(comp);
-        for(let entry of components){
-            if(entry.key != input.choiceSetKey){continue;}
-            let subComp = entry.components[input.choiceComponentIx];
+        if(input.value == null){return;}
+        //Get components that handle feats specific to the from type (ASI feat, race feat, custom feat, etc)
+        let typeSet = ActorCharactermancerFeat.getCompAdditionalFeatMetas(this, input.from);
+        if(typeSet == null){console.error("no spell source defined?", input.from); return;}
+        //Get each of the feat components (one per feat). We call this a "choice set", as they can contain subcomponents
+        let choiceSet = await ActorCharactermancerFeat.getChoiceComponentsAsync(typeSet);
+        for(let set of choiceSet){
+            //input.choiceSetKey should match the key of the set
+            if(set.key != input.choiceSetKey){continue;}
+            //the input should point to the subcomponent index it wants to alter
+            let subComp = set.components[input.choiceComponentIx];
+            //subcomp may include some spells that are pre-determined. the un-determined spells are under "additional spells"
+            //Use our additionalspellIx to know exactly which additional spell property we want to alter
             let addSpellComp = subComp._subCompsAdditionalSpells[input.additionalSpellIx];
-            //let flatComp = addSpellComp._additionalSpellsFlat[input.additionalSpellsFlatIx];
             addSpellComp._state[input.key] = input.value;
-            //console.log("Set " + input.key + " to " + input.value);
+            //TODO: Make this not be set when every single spell is set, just have ixSet be set once at the start before spells are set
+            addSpellComp._state["ixSet"] = input.ixSet;
         }
     }
 
     async setStateFromSaveFile(actor){
-        const data = actor.featSpells;
+        const data = actor.featSpellsData;
         if(data==null){return;}
-        
-        for(let j = 0; j < data.length; ++j){
-            await this.setSpellChoice(data[j]);
+        const printToState = (stateHaver, inputData) => {
+            for(let [key, value] of Object.entries(inputData)){
+                stateHaver._state[key] = value;
+            }
         }
+        const getFeatSections = async (typeSection) => {
+            console.log(typeSection);
+            let chooseObj = typeSection._compsFeatFeatureOptionsSelect.choose;
+            if(chooseObj == null){
+                //wait for a sec while the UI loads
+                //TODO: improve this
+                await ActorCharactermancerFeat.wait(0.05);
+                chooseObj = typeSection._compsFeatFeatureOptionsSelect.choose;
+            }
+            return Object.values(chooseObj);
+        }
+        const setAdditionalSpellsStates = (featSection, statesArray) => {
+            //Go through every subComp
+            let stateArray = [];
+            for(let ixSubComp = 0; ixSubComp < featSection._subCompsAdditionalSpells.length; ++ixSubComp){
+                let subComp = featSection._subCompsAdditionalSpells[ixSubComp];
+                //These are the properties we care about:
+                //subComp._additionalSpells
+                //subComp._additionalSpellsFlat
+                //subComp.__state
+
+                printToState(subComp, statesArray[ixSubComp]);
+            }
+            return stateArray;
+        }
+        const setFeatSectionState = (featSection, inputData) => {
+            printToState(featSection, inputData.sectionState);
+            setAdditionalSpellsStates(featSection, inputData.additionalSpellStates);
+        }
+
+        //This handles the section of the page related to the type (race feat, ASI feat, custom feat, etc)
+        const handleTypeSection = async (typeSectionData) =>{
+            let compFeat = this;
+            //look through _compAdditionalFeatsMetas to get components that handle choices for each feat
+            let sourceTypeSection = compFeat._compAdditionalFeatsMetas[typeSectionData.type]?.comp;
+            //if(sourceTypeSection == null){return null;}
+            //Set state to this type section
+            
+            printToState(sourceTypeSection, typeSectionData.typeSectionState);
+            
+            //Move on to featureOptionsSelect
+            let featSections = await getFeatSections(sourceTypeSection);
+            for(let ixFeatSection = 0; ixFeatSection < featSections.length; ++ixFeatSection){
+                //By using the index, we are going to get an array that contains the actual components we are looking for
+                if(featSections[ixFeatSection].length > 0){console.warn("feat choose section contained more than one FeatureOptionsSelect. This is uncommon, investigate!");}
+                let featSection = featSections[ixFeatSection][0]; //usually only exists one entry in the array
+                setFeatSectionState(featSection, typeSectionData.featSectionStates[ixFeatSection]);
+            }
+        }
+
+        if(data.custom != null){await handleTypeSection(data.custom);}
+        if(data.race != null){await handleTypeSection(data.race);}
     }
     
     _getFeats() {
         console.log("getfeats", this);
-      }
+    }
+    /**
+     * Return all spells that we get from feats
+     * @returns {{featName:string, featIx:number, spells:[{spell:string, isChoice:string, choiceData:any, uses:string, knownInnate:string, regularity:string}]}[]}
+     */
+    async getAllSpellsFromFeats(){
+
+        const result = await this.feat_pGetAdditionalFeatFormData();
+
+        /**
+         * Return all spells that we get from feats
+         * @returns {{isChoice:boolean, choiceData:any, spellUid:string}[]}
+         */
+        function searchRechargedSpells(spellsArray){
+            let spellsOut = [];
+            for(let sp of spellsArray) //expect entry 0 to be a string of the spell name, and entry 1 to be choice data
+            {
+                let returnData = {};
+                //if sp is just a string, assume its a spell uid, not a choice
+                if(typeof(sp) == "string"){
+                    //This is just a spell, no choice
+                    returnData.isChoice = false;
+                    if(!sp.includes("|")){
+                        //sp is not an uid
+                        //try to get the uid
+                        sp = DataUtil.proxy.getUid("spell", { name: sp, source: "phb"});
+                    }
+                    returnData.spellUid = sp; //Uid
+                }
+                else{
+                    returnData.isChoice = true;
+                    returnData.choiceData = sp.choice? sp.choice : sp.choose;
+                }
+                spellsOut.push(returnData);
+            }
+            return spellsOut;
+        }
+        /**
+         * @returns {{isChoice:boolean, choiceData:any, spellUid:string, uses:string}[]}
+         */
+        function searchRechargeUses(rechargeType){
+            let spellsOut = [];
+            for(const [uses, content] of Object.entries(rechargeType)){ //name of the object will be string uses, object itself will be content
+                let spells = searchRechargedSpells(content);
+                for(let spell of spells){
+                    spell.charges = uses;
+                }
+                spellsOut = spellsOut.concat(spells);
+            }
+            return spellsOut;
+        }
+        /**
+         * @returns {{isChoice:boolean, choiceData:any, spellUid:string, uses:string, regulairty:string}[]}
+         */
+        function searchRechargeRegularity(innateKnown){
+            //const validTypes = ["daily", "weekly", "hourly"];
+            let spellsOut = [];
+            for(let regularity of Object.keys(innateKnown)){
+                let spells = searchRechargeUses(innateKnown[regularity]);
+                for(let spell of spells){
+                    spell.rechargeMode = regularity;
+                }
+                spellsOut = spellsOut.concat(spells);
+            }
+            
+            return spellsOut;
+        }
+        /**
+         * @returns {{isChoice:boolean, choiceData:any, spellUid:string, uses:string, regulairty:string, knownInnate:string}[]}
+         */
+        function searchSpellSet(spellSet){
+            let spellsOut = [];
+            //Look through innate spells
+            if(spellSet.innate){
+                for(const innate of Object.values(spellSet.innate)){ //these objects are usually named "_"
+                    let spells = searchRechargeRegularity(innate);
+                    for(let spell of spells){
+                        spell.knownInnate = "innate";
+                    }
+                    spellsOut = spellsOut.concat(spells);
+                }
+            }
+            const doKnown = false;
+            //Look through known spells
+            if(spellSet.known && doKnown){
+                for(const known of Object.values(spellSet.known)){ //these objects are usually named "_"
+                    for(let spell of Object.values(known)){
+                        let spells = searchRechargedSpells([spell]);
+                        for(let spell of spells){
+                            spell.knownInnate = "known";
+                        }
+                        spellsOut = spellsOut.concat(spells);
+                    }
+                }
+            }
+            
+            return spellsOut;
+        }
+        
+        function getAdditionalSpellData(compAdditionalSpell, spellInfo){
+            //_additionalSpellsFlat
+            //__state
+            //let testKeyMistyStep = "innate__" + "_" + "__1e__" + "0"; 
+            //let testKeyChoiceSpell = "innate_____daily__1e__1__0"; //"innate__" + "_" + "__1e__" + "1__" + "0";
+            //let featIndex = 0; //This may actually be the index of which choice set to use. A feat may have many choice sets, for example magic initiate
+            console.log("STATE", compAdditionalSpell.__state);
+            return compAdditionalSpell.__state[spellInfo.uiKey];
+
+
+
+        }
+         /**
+         * @returns {{featName:string, featIx:number, featSource:string, spells:any[]}[]}
+         */
+        function searchFeatsForSpells(feats, type, compFeat){
+            let featsOut = [];
+            if(feats == null){console.warn("feats is null, cannot return spells learned from feats"); return featsOut;}
+            //We can ask the UI if they know if a spell is set for this choice already
+            let compMetas = ActorCharactermancerFeat.getCompAdditionalFeatMetas(compFeat, type);
+            let featComponents = compMetas._compsFeatFeatureOptionsSelect.choose; //One per feat
+            //Get chosen spells that derive from that feat
+            //When it comes to no-choice spells, that is fairly easy, we can just look into the feat itself to know what we are granted
+            for(let i = 0; i < feats.data.length; ++i){
+                let featData = feats.data[i];
+                //Look for additional spells granted by the feat
+
+                let component = featComponents[i][0]; //test, usually only have one anyway
+                //console.log("COMPONENT", component, compMetas);
+                let compAddSpell = component._subCompsAdditionalSpells[0];
+                let state = compAddSpell.__state;
+
+                
+
+                let spellsOut = [];
+                if(!featData.feat.additionalSpells){continue;} //feat must have additionalSpells data
+                for(let k = 0; k < featData.feat.additionalSpells.length; ++k){
+                    let additionalSpellSet = featData.feat.additionalSpells[k];
+                    let castingAbility = additionalSpellSet.ability; //"inherit"
+                    let spellsGained = searchSpellSet(additionalSpellSet);
+                    if(k != state.ixSet){continue;}
+                    for(let j = 0; j < spellsGained.length; ++j){
+                        let sp = spellsGained[j];
+                        if(sp.isChoice){
+                            //Choice spells can be found in state already
+                            continue;
+                            
+                        }
+                    }
+                    spellsOut = spellsOut.concat(spellsGained);
+                    //Try find choice spells in state
+                    for(let k of Object.keys(state)){
+                        if(k.startsWith("innate") || k.startsWith("known")){
+                            let words = k.split('_');
+                            words = words.filter(word => word.length > 0);
+                            let spellInfo = {knownInnate:words[0], rechargeMode:words[1], charges:words[2], choiceIx:words[3], spellUid:state[k]};
+                            spellsOut.push(spellInfo);
+                        }
+                    }
+                }
+                featsOut.push({featName:featData.feat.name, featSource:featData.feat.source, featIx:featData.ixFeat, spells:spellsOut});
+            }
+            return featsOut;
+        }
+
+        
+        let output = [];
+        output = output.concat(searchFeatsForSpells(result.race, "race", this));
+        output = output.concat(searchFeatsForSpells(result.custom, "custom", this));
+        return output;
+    }
 }
 ActorCharactermancerFeat._NAMESPACES_STATGEN = new Set(['ability', "race", "background", "custom"]);
 
@@ -15174,7 +15440,7 @@ class ActorCharactermancerDescription extends ActorCharactermancerBaseComponent 
 
         const ui = $$`<section class="character-builder-description">
         <ul class="inputul">
-          <li>
+        <li>
             <label>Character Name </label>${$inputName}
           </li>
           <li>

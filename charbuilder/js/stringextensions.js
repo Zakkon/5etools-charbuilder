@@ -71,8 +71,16 @@ String.prototype.toCamelCase = String.prototype.toCamelCase || function() {
         return `${word.charAt(0).toUpperCase()}${word.slice(1).toLowerCase()}`;
     }
     ).join("");
-}
-;
+};
+String.prototype.capitalizeEachWord = String.prototype.capitalizeEachWord || function(){
+    return this
+    .toLowerCase()
+    .split(' ')
+    .map(function(word) {
+        return word[0].toUpperCase() + word.substr(1);
+    })
+    .join(' ');
+};
 
 String.prototype.toPlural = String.prototype.toPlural || function() {
     let plural;
