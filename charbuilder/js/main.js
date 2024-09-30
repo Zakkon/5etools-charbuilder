@@ -715,9 +715,9 @@ class CharacterBuilder {
         preEnabledCustomUrls: customUrls,
       });
       const result = await sourceSelector.pWaitForUserInput();
-      console.log(result);
       //If user just tried to simply exit the dialog without confirming any choices, an empty array should be returned
       //Since the dialog won't let the user confirm without choosing at least one source, this is a good way to tell if user aborted
+      if(result == null || result.length < 1){return;} //User aborted
       //Then tell SourceManager that we have these new sourceIds, and let them take it from here
       SourceManager.changeSources(result);
     }

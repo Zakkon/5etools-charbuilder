@@ -991,7 +991,7 @@ class CharacterExportFvtt{
         else {
             const match = this.matchToBrewSourceID(item, brewSourceIds);
             if(!match){ console.log(item, brewSourceIds);
-                throw new Error(`Failed to get brew source for ${item.name}|${item.source}`);}
+                throw new Error(`Failed to get brew source for ${item.name}|${item.source} among brew sources`); }
             return {isOfficialContent:false, brewSource:match};
         }
     }
@@ -1003,9 +1003,9 @@ class CharacterExportFvtt{
     static getLoadedSources(){
         return [...SourceManager.cachedSourceIds, ...SourceManager.cachedCustomUrls];
     }
-    static getBrewSourceIds(){
+    static getBrewSourceIds(includeDefault = false){
         //Only return non-default sources for now
-        return this.getLoadedSources().filter(src => !src.isDefault);
+        return this.getLoadedSources().filter(src => includeDefault == src.isDefault);
     }
     /**
      * @param {{name:string, source:string}} item a class, subclass, race, item, feat, background, etc
@@ -1134,38 +1134,6 @@ class CharacterExportFvtt{
         return Parser.sourceJsonToFull(item.source);
     }
     //#endregion
-
-    static test_getSourceFromSubclass(){
-        const item = {
-            className: "Sorcerer",
-            classSource: "PHB",
-            name: "Blood Magic",
-            shortName: "Blood Magic",
-            source: "FFBloodSorc",
-            __diagnostic: {filename: "Foxfire94; Blood Magic Sorcerous Origin.json" },
-            __prop: "subclass"
-        };
-
-         //First of all, try to figure out if this is a brewed subclass
-        //one easy way (maybe?) of doing this is to check the __diagnostic property (only brewed (and maybe prerelease?) stuff has this)
-        const isBrewedContent = CharacterExportFvtt.isFromOfficialSource(item);
-
-        if(!isBrewedContent){
-            const sourceNameFull = this.matchToOfficialSource(item);
-            const meta = {
-                isOfficial: true,
-                source: item.source,
-                sourceFull: sourceNameFull
-            };
-            return meta;
-        }
-
-
-        const brewSources = CharacterExportFvtt.getBrewSourceIds();
-
-        const matchedBrewSources = brewSources.filter(src => this.doesMatchToBrewSource(item, src));
-        if(matchedBrewSources.length<1){}
-    }
 
     static test_printExportJsonAsString(exportJson){
         const str = JSON.stringify(exportJson);

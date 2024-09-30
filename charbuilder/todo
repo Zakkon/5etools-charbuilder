@@ -8,7 +8,6 @@ BUGS:
     - If character learns light cantrip, then gets a race that adds the light cantrip (like aasimar), then the UI will not allow one to unlearn their first light cantrip, so you will have two (seems fixed?)
     - If you choose sorcerer, then aasimar, Light will be marked as learned in the UI. if you swap race away from aasimar, Light will still be marked as learned, and cannot be unlearned (seems fixed?)
     - Adding sources without removing any, should that really have to wipe class?
-    - saving Elevated sight as wizard (prepared AND learned): failed to get brew for elevated sight|HWCS
 WEB:
     - Add UI notifications
     - Test custom urls for content (+ save/load/exportFvtt)
@@ -49,3 +48,18 @@ TOCHECK:
 IDEAS:
 - When adding a new source, maybe the filters should auto-turn on for that source?
 - Disallow removing sources that are in use, OR include a settings bool that instead just wipes the character when removing a source that is in use
+
+PLAN:
+    - Fix bugs that have to do with online sources
+    - Disable homebrew sources entirely (for now)
+    - Set up popup windows for major errors (specifically source errors) that the user needs to know about
+    - Remove character portraits entirely
+    - Enable character share functionality (give user a string to copy)
+    - Enable character import functionality (let user import string)
+    - RELEASE 1 READY
+    - Enable FVTT Export functionality
+    - RELEASE 2 READY
+    
+    - OTHER PLANS:
+    - Character sheet spell slots counter
+    - Source manager UI improvements

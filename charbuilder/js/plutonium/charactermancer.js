@@ -15438,41 +15438,7 @@ class ActorCharactermancerDescription extends ActorCharactermancerBaseComponent 
             this._state["description_text"] = $inputDescription.val();
         });
 
-        const inputPortrait = $$`<div class="character_portrait" style="background-image: url(charbuilder/img/default_img.jpg)"></div>`.click(() => {
-            //open file browser
-            var input = $(document.createElement("input"));
-            input.attr("type", "file");
-            input.attr("accept", "image/png, image/jpeg, image/webp");
-            // add onchange handler if you wish to get the file :)
-            /* input.change = function(input){
-                console.log("HAHAH", input);
-                var url = input.value;
-                var ext = url.substring(url.lastIndexOf('.') + 1).toLowerCase();
-                if (input.files && input.files[0]&& (ext == "gif" || ext == "png" || ext == "jpeg" || ext == "jpg")) {
-                    var reader = new FileReader();
-
-                    reader.onload = function (e) {
-                        $('#img').attr('src', e.target.result);
-                    }
-                    reader.readAsDataURL(input.files[0]);
-                }
-                else{
-                    $('#img').attr('src', '/assets/no_preview.png');
-                }
-            }; */
-            /* input.on( "change", function() {
-                // Check input( $( this ).val() ) for validity here
-                //console.log("asdasd", this.value);
-                //this.files
-                //now to save this image in cookies somehow?
-                //Probably will need to do some rescaling
-            } ); */
-            input.trigger("click"); // opening dialog
-            return false; // avoiding navigation
-        });
-
         const ui = $$`<section class="character-builder-description">
-        ${inputPortrait}
         <ul class="inputul">
         <li>
             <label>Character Name </label>${$inputName}
