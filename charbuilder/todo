@@ -51,11 +51,7 @@ IDEAS:
 
 PLAN:
     - Fix bugs that have to do with online sources
-    - Disable homebrew sources entirely (for now)
     - Set up popup windows for major errors (specifically source errors) that the user needs to know about
-    - Remove character portraits entirely
-    - Enable character share functionality (give user a string to copy)
-    - Enable character import functionality (let user import string)
     - RELEASE 1 READY
     - Enable FVTT Export functionality
     - RELEASE 2 READY

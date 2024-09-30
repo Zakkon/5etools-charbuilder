@@ -369,6 +369,8 @@ class SETTINGS{
     static GET_FEATOPTSEL_UP_TO_CURLEVEL = true;
     static SPECIFIED_ABILITY_SAVE = false;
     static LOCK_SUBCLASS_LOWLVL = false;
+    static ENABLE_SOURCE_UPLOAD_FILE = false;
+    static ENABLE_SOURCE_CUSTOM_URL = false;
 }
 class CharacterBuilder {
     tabButtonParent;

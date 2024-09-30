@@ -178,3 +178,7 @@
 .page__btn-toggle-nav{
     display: none !important;
 }
+/*Not using character portraits for now*/
+.user-selected-avatar {
+    display:none !important; 
+}

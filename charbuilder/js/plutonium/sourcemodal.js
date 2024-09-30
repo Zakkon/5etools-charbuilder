@@ -165,6 +165,8 @@ class AppSourceSelectorMulti extends ModalFilter {
 						${$btnUpload}${$dispName}${$btnDelete}
 					</div>`.appendTo($wrpUploadRows);
 
+                    
+
                     return {
                         comp,
                         $wrpRow,
@@ -173,10 +175,12 @@ class AppSourceSelectorMulti extends ModalFilter {
                 }
                 ,
             });
+        };
+        if(SETTINGS.ENABLE_SOURCE_UPLOAD_FILE){
+            hkUploadFileMetas();
+            this._comp._addHookBase("uploadedFileMetas", hkUploadFileMetas);
         }
-        ;
-        hkUploadFileMetas();
-        this._comp._addHookBase("uploadedFileMetas", hkUploadFileMetas);
+        
 
         return $stgUpload;
     }
