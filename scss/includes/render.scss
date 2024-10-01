@@ -2,7 +2,7 @@
 Renderer
  */
 
-@use "vars";
+@use "../vars/vars";
 
 $rgb-inset-border: #656565;
 
@@ -17,6 +17,8 @@ $rgb-inset-border: #656565;
 	--h-mb-quote-line-last: 5px;
 	--h-mb-li: 3px;
 	--w-text-indent-inline-p: 0.7em;
+	--w-text-indent-li-hang: 1.1em;
+	--w-text-indent-li-hang--inv: calc(-1 * var(--w-text-indent-li-hang));
 	--w-pl-list: 24px;
 	--w-pl-list-no-bullets: 10px;
 }
@@ -98,13 +100,6 @@ $rgb-inset-border: #656565;
 			margin-bottom: var(--h-mb-p);
 		}
 
-		&compact-stats {
-			display: flex;
-			flex-wrap: wrap;
-			place-content: flex-start space-between;
-			align-items: flex-start;
-		}
-
 		&title-link {
 			opacity: 0.3;
 			font-size: 12px;
@@ -118,6 +113,19 @@ $rgb-inset-border: #656565;
 		&wrp-image {
 			margin: 5px auto 0;
 			text-align: center;
+
+			&--bg {
+				border-radius: 5px;
+				padding: 7px;
+			}
+
+			&--bg-light {
+				background: vars.$rgb-bg;
+			}
+
+			&--bg-dark {
+				background: vars.$rgb-off-black;
+			}
 		}
 
 		&image {
@@ -165,6 +173,11 @@ $rgb-inset-border: #656565;
 			}
 		}
 
+		&wrp-centered-ability {
+			text-align: center;
+			margin-bottom: var(--h-mb-p);
+		}
+
 		&p-list-item {
 			// This prevents e.g. "italic" on the list item name from affecting the list item"s text.
 			font-style: initial;
@@ -172,7 +185,7 @@ $rgb-inset-border: #656565;
 
 		&p-cont-indent {
 			display: block;
-			text-indent: 1em;
+			text-indent: var(--w-text-indent-inline-p);
 		}
 
 		&tab-indent {
@@ -209,6 +222,14 @@ $rgb-inset-border: #656565;
 		&scroller-viewer {
 			scrollbar-width: auto;
 
+			&--bg-light {
+				background: vars.$rgb-bg;
+			}
+
+			&--bg-dark {
+				background: vars.$rgb-off-black;
+			}
+
 			&::-webkit-scrollbar {
 				width: 15px;
 				height: 15px;
@@ -228,10 +249,14 @@ $rgb-inset-border: #656565;
 			padding: 0;
 			list-style: none;
 
+			> .rd__list-name {
+				margin-left: 0;
+			}
+
 			> .rd__li {
 				margin-bottom: var(--h-mb-li);
-				text-indent: -1.1em;
-				margin-left: 1.1em;
+				text-indent: var(--w-text-indent-li-hang--inv);
+				margin-left: var(--w-text-indent-li-hang);
 
 				a,
 				span {
@@ -244,7 +269,7 @@ $rgb-inset-border: #656565;
 
 				// fixme?
 				> ul {
-					text-indent: 0;
+					text-indent: initial;
 				}
 			}
 		}
@@ -258,8 +283,8 @@ $rgb-inset-border: #656565;
 
 			// Firefox workaround; list bullets are pseudo-elements "::marker"
 			> li > *:not(::marker) {
-				text-indent: -1.1em;
-				margin-left: 1.1em;
+				text-indent: var(--w-text-indent-li-hang--inv);
+				margin-left: var(--w-text-indent-li-hang);
 			}
 		}
 
@@ -385,21 +410,12 @@ $rgb-inset-border: #656565;
 
 		&b--3 > p,
 		&b--4 > p {
-			text-indent: var(--w-text-indent-inline-p);
 			margin-bottom: var(--h-mb-p-inline);
-
-			&:first-of-type {
-				display: inline;
-			}
 		}
 
-		&b-inset > p {
+		&b--3 > p + p,
+		&b-inset > p + p {
 			text-indent: var(--w-text-indent-inline-p);
-			margin-bottom: 0;
-
-			&:first-of-type {
-				text-indent: 0;
-			}
 		}
 
 		&b-inset {
@@ -411,7 +427,7 @@ $rgb-inset-border: #656565;
 			border-bottom: 2px solid $rgb-inset-border;
 			background-color: #e9ecda;
 
-			> *:last-of-type {
+			> *:last-child {
 				margin-bottom: 0;
 			}
 
@@ -488,9 +504,15 @@ $rgb-inset-border: #656565;
 		&table {
 			width: 100%;
 			margin-bottom: var(--h-mb-p);
+			// Avoid outer `white-space: pre` inflating cells when embedded in e.g. a Markdown render
+			white-space: initial;
 
 			> caption {
 				text-align: left;
+				margin-left: 5px;
+				padding: 0;
+				font-weight: bold;
+				font-size: 1.08em;
 			}
 		}
 
@@ -567,7 +589,7 @@ $rgb-inset-border: #656565;
 			border-bottom: 2px solid $rgb-inset-border;
 			background-color: #ece4da;
 
-			> *:last-of-type {
+			> *:last-child {
 				margin-bottom: 0;
 			}
 		}
@@ -601,13 +623,6 @@ $rgb-inset-border: #656565;
 
 	&-item__ {
 		&type-rarity-attunement {
-			color: vars.$rgb-off-black;
-		}
-	}
-
-	&-spell__ {
-		&level-school-ritual {
-			font-style: italic;
 			color: vars.$rgb-off-black;
 		}
 	}
@@ -677,10 +692,7 @@ td > .rd__b:last-child {
 .rd-recipes {
 	&__ {
 		&wrp-recipe {
-			.rd__b--3 > p,
-			.rd__b--4 > p {
-				text-indent: 0;
-			}
+			--w-text-indent-inline-p: 0;
 		}
 
 		&wrp-instructions {

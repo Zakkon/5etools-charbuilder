@@ -1,4 +1,4 @@
-@use "vars";
+@use "../vars/vars";
 
 @mixin mix-source-color ($rgb) {
 	color: $rgb !important;
@@ -13,6 +13,7 @@
 	$rgb-source-category-prerelease--local: #54ce19;
 	$rgb-source-category-homebrew: vars.$rgb-class-brew;
 	$rgb-source-category-homebrew--local: #4b40ed;
+	$rgb-source-category-homebrew--partnered: #963b4f;
 
 	$rgb-source-PHB: #4a6898;
 	$rgb-source-DMG: #800080;
@@ -85,11 +86,16 @@
 	$rgb-source-HFFotM: #7b702c;
 	$rgb-source-BMT: #694165;
 	$rgb-source-QftIS: #6191ae;
+	$rgb-source-VEoR: #b74c62;
 	$rgb-source-GHLoE: #c07e4e;
 	$rgb-source-DoDk: #825494;
 	$rgb-source-HWCS: #d0914b;
 	$rgb-source-ToB1-2023: #917792;
 	$rgb-source-TD: #bb9528;
+	$rgb-source-PaF: #5d7993;
+	$rgb-source-XPHB: #ed7c00;
+	$rgb-source-XDMG: #c43c4c;
+	$rgb-source-XMM: #5686b6;
 
 	// region Categories
 
@@ -105,6 +111,10 @@
 		&homebrew {
 			@include mix-source-color($rgb-source-category-homebrew);
 
+			&--partnered {
+				@include mix-source-color($rgb-source-category-homebrew--partnered);
+			}
+
 			&--local {
 				@include mix-source-color($rgb-source-category-homebrew--local);
 			}
@@ -112,6 +122,10 @@
 
 		&spicy {
 			@include mix-source-color($rgb-source-category-prerelease);
+
+			&--partnered {
+				@include mix-source-color(#ff00ff); // (Should never occur)
+			}
 
 			&--local {
 				@include mix-source-color($rgb-source-category-prerelease--local);
@@ -459,6 +473,11 @@
 			@include mix-source-color($rgb-source-QftIS);
 		}
 
+		&VEoR,
+		&VNotEE {
+			@include mix-source-color($rgb-source-VEoR);
+		}
+
 		&GHLoE {
 			@include mix-source-color($rgb-source-GHLoE);
 		}
@@ -478,6 +497,22 @@
 
 		&TD {
 			@include mix-source-color($rgb-source-TD);
+		}
+
+		&PaF {
+			@include mix-source-color($rgb-source-PaF);
+		}
+
+		&XPHB {
+			@include mix-source-color($rgb-source-XPHB);
+		}
+
+		&XDMG {
+			@include mix-source-color($rgb-source-XDMG);
+		}
+
+		&XMM {
+			@include mix-source-color($rgb-source-XMM);
 		}
 	}
 	// endregion

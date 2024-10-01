@@ -17,7 +17,7 @@
 	border-top: 1px solid #ccc;
 }
 
-.night-mode #content_input_controls {
+.ve-night-mode #content_input_controls {
 	border-color: #555;
 }
 
@@ -43,14 +43,8 @@ textarea.form-control {
 	border-bottom: 1px solid #ccc;
 }
 
-.night-mode .mkbru__wrp-tab-heads--border {
+.ve-night-mode .mkbru__wrp-tab-heads--border {
 	border-color: #555;
-}
-
-/* Loading overlay */
-.initial-message {
-	font-size: 5vmin;
-	color: initial;
 }
 
 /* Control bar */
@@ -70,7 +64,7 @@ textarea.form-control {
 	border-right: 1px solid #ccc;
 }
 
-.night-mode .mkbru__wrp-output-tab-data {
+.ve-night-mode .mkbru__wrp-output-tab-data {
 	border-color: transparent;
 }
 
@@ -113,7 +107,7 @@ textarea.form-control {
 	margin-bottom: 4px;
 }
 
-.night-mode .mkbru__row-mark {
+.ve-night-mode .mkbru__row-mark {
 	background: #555;
 }
 
@@ -175,10 +169,6 @@ textarea.form-control {
 /* *** */
 
 /* CREATURE STYLES */
-tr th.mon__name--token {
-	padding-right: 0;
-}
-
 .mkbru_mon__ac-split {
 	max-width: calc(50% - 0.25rem);
 }
@@ -213,7 +203,7 @@ tr th.mon__name--token {
 	background: #ccc;
 }
 
-.night-mode .mkbru_mon__spell-header-divider {
+.ve-night-mode .mkbru_mon__spell-header-divider {
 	background: #555;
 }
 

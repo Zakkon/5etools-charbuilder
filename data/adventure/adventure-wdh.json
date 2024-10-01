@@ -1729,15 +1729,6 @@
 							"height": 1724
 						},
 						{
-							"type": "image",
-							"href": {
-								"type": "internal",
-								"path": "adventure/WDH/Yawning-Portal-Key.webp"
-							},
-							"width": 1000,
-							"height": 587
-						},
-						{
 							"type": "entries",
 							"name": "Familiar Faces",
 							"page": 20,
@@ -3001,7 +2992,7 @@
 								"The main sewer tunnel expands into a circular hub with a pair of arrow slits carved into its outer walls, directly across from each other. Two passages continue on to the north and south. A stone door is set into the back wall of a stone ledge to the west."
 							]
 						},
-						"If the characters talk loudly or otherwise make a lot of noise here, the goblin sentries in areas Q2a and Q2b awaken and shoot arrows at them through the arrow slits. The slits provide the goblins with three-quarters cover.",
+						"If the characters talk loudly or otherwise make a lot of noise here, the goblin sentries in areas Q2a and Q2b awaken and shoot arrows at them through the arrow slits. The slits provide the goblins with {@quickref Cover||3||three-quarters cover}.",
 						{
 							"type": "entries",
 							"name": "Secret Door",
@@ -3597,52 +3588,7 @@
 							"page": 31,
 							"id": "096",
 							"entries": [
-								"See {@adventure appendix C|WDH|12} for a handout showing the floor plan of this building. Give a copy of this handout to your players as their characters begin to explore Trollskull Manor.",
-								{
-									"type": "gallery",
-									"images": [
-										{
-											"type": "image",
-											"imageType": "map",
-											"grid": {
-												"type": "square",
-												"size": 57,
-												"offsetY": 19,
-												"scale": 2
-											},
-											"href": {
-												"type": "internal",
-												"path": "adventure/WDH/Trollskull-Manor-DM.webp"
-											},
-											"title": "Trollskull Manor",
-											"width": 589,
-											"height": 800,
-											"id": "528"
-										},
-										{
-											"type": "image",
-											"imageType": "mapPlayer",
-											"grid": {
-												"type": "square",
-												"size": 71,
-												"offsetX": 2,
-												"offsetY": 28,
-												"scale": 2
-											},
-											"href": {
-												"type": "internal",
-												"path": "adventure/WDH/Trollskull-Manor-Players.webp"
-											},
-											"title": "Player Version",
-											"width": 737,
-											"height": 1000,
-											"mapParent": {
-												"id": "528",
-												"autoScale": true
-											}
-										}
-									]
-								},
+								"See {@adventure appendix C|WDH|13|Trollskull Manor} for a handout showing the floor plan of this building. Give a copy of this handout to your players as their characters begin to explore Trollskull Manor.",
 								"Four stories tall and boasting balconies, a turret, and five chimneys, the abandoned building is one of the grandest in Trollskull Alley. Characters can refurnish, rebuild, rename, and otherwise personalize their new stronghold to their hearts' content.",
 								{
 									"type": "entries",
@@ -6557,7 +6503,8 @@
 													},
 													"title": "Dock Ward",
 													"width": 574,
-													"height": 500
+													"height": 500,
+													"id": "53f"
 												},
 												{
 													"type": "image",
@@ -6571,7 +6518,8 @@
 														"type": "none"
 													},
 													"width": 512,
-													"height": 800
+													"height": 800,
+													"id": "540"
 												},
 												{
 													"type": "image",
@@ -6585,7 +6533,8 @@
 													},
 													"title": "Trades Ward Map",
 													"width": 600,
-													"height": 900
+													"height": 900,
+													"id": "541"
 												},
 												{
 													"type": "image",
@@ -6599,7 +6548,8 @@
 													},
 													"title": "Field Ward Map",
 													"width": 600,
-													"height": 600
+													"height": 600,
+													"id": "542"
 												}
 											]
 										}
@@ -7347,7 +7297,7 @@
 									"id": "147",
 									"entries": [
 										"Parked in the middle of the alley is a hire-coach pulled by two {@creature draft horse||draft horses}. The driver, Haru Hamatori (LG male Kozakuran human commoner), wears a feathered cap and matching outfit.",
-										"Lord Cassalanter's {@creature doppelganger} valet, in the guise of an elderly tiefling named {@creature Willifort Crowelle|WDH}, sits in the passenger cab, which grants half cover. Standing next to the hire-coach is a {@creature bearded devil} disguised as a cloaked human bodyguard wearing a wide-brimmed hat, and perched on the coach are three {@condition invisible} {@creature imp||imps}. Any {@creature spined devil||spined devils} that survived the previous encounter are also present, having just delivered the {@item Stone of Golorr|WDH} to Willifort.",
+										"Lord Cassalanter's {@creature doppelganger} valet, in the guise of an elderly tiefling named {@creature Willifort Crowelle|WDH}, sits in the passenger cab, which grants {@quickref Cover||3||half cover}. Standing next to the hire-coach is a {@creature bearded devil} disguised as a cloaked human bodyguard wearing a wide-brimmed hat, and perched on the coach are three {@condition invisible} {@creature imp||imps}. Any {@creature spined devil||spined devils} that survived the previous encounter are also present, having just delivered the {@item Stone of Golorr|WDH} to Willifort.",
 										"When he sees the characters, Willifort orders the imps and the spined devils to attack. The bearded devil stays close to Willifort and engages any character who tries to reach the hire-coach.",
 										"The hire-coach has AC 14, 45 hit points, and immunity to poison and psychic damage.",
 										"If there's any chance that the characters might obtain the {@item Stone of Golorr|WDH} as the encounter progresses, Willifort orders the driver to move the hire-coach out of the alley as quickly as possible. If the driver is {@condition incapacitated} or killed, the bearded devil climbs into the driver's seat on the back of the coach and steers the vehicle. If the bearded devil is unable to replace the driver, the doppelganger takes the reins. Willifort flees on foot if the hirecoach is destroyed or its horses are unable to move."
@@ -7465,7 +7415,7 @@
 									"page": 64,
 									"id": "153",
 									"entries": [
-										"At the end of a dead-end side alley south of areas L1 and L2 is an iron grate that covers an opening to the sewers under the North Ward. Five {@creature bugbear||bugbears} have quietly climbed up through the grate and concealed themselves in the side alley. They pour out and attack the characters, hoping to gain surprise in the blizzard. Characters who have a passive Perception score of 16 or higher aren't {@quickref Surprise|PHB|3|0|surprised}.",
+										"At the end of a dead-end side alley south of areas L1 and L2 is an iron grate that covers an opening to the sewers under the North Ward. Five {@creature bugbear||bugbears} have quietly climbed up through the grate and concealed themselves in the side alley. They pour out and attack the characters, hoping to gain surprise in the blizzard. Characters who have a passive Perception score of 16 or higher aren't {@status surprised}.",
 										"The bugbears were sent by {@creature Xanathar|WDH} to retrieve a prisoner being held in the Zhent safe house, but they're too bloodthirsty to pass up the chance to murder a band of adventurers standing in their way. The wind and snow render the City Watch oblivious to the danger."
 									]
 								},
@@ -7986,7 +7936,7 @@
 									"id": "170",
 									"entries": [
 										"If Willifort flees in a hire-coach, his getaway is thwarted on the third round of the chase when a large crowd blocks the road, forcing the hire-coach to stop. (If the chase occurs on Founders' Day, the crowd is part of the holiday celebration.) The doppelganger jumps out of the hire-coach on his next turn and makes his way through the crowd on foot.",
-										"Any creature in the crowd has half cover, and any attack that misses the creature because of the cover hits an innocent {@creature commoner} instead.",
+										"Any creature in the crowd has {@quickref Cover||3||half cover}, and any attack that misses the creature because of the cover hits an innocent {@creature commoner} instead.",
 										"If Willifort is {@condition incapacitated}, a raven abruptly swoops down, acting next in the initiative count. It snatches the stone and flees with it. This raven is a shapechanged {@creature imp} that works for Lady Cassalanter."
 									]
 								},
@@ -9500,7 +9450,8 @@
 											},
 											"title": "Tower",
 											"width": 1000,
-											"height": 691
+											"height": 691,
+											"id": "543"
 										},
 										{
 											"type": "image",
@@ -9559,7 +9510,8 @@
 											},
 											"title": "Tower, View",
 											"width": 556,
-											"height": 800
+											"height": 800,
+											"id": "544"
 										}
 									]
 								},
@@ -9637,7 +9589,7 @@
 											"rows": [
 												[
 													"1",
-													"A charred {@item wand of magic missiles} (each time a charge is expended, there's a {@chance 50|50 percent} chance that nothing happens and the charge is wasted)"
+													"A charred {@item wand of magic missiles} (each time a charge is expended, there's a {@chance 50} chance that nothing happens and the charge is wasted)"
 												],
 												[
 													"2",
@@ -11778,7 +11730,7 @@
 									"page": 84,
 									"id": "1e6",
 									"entries": [
-										"A brick wall with arrow slits was added to this room at some point. The arrow slits are designed to allow archers to fire at intruders who come through the door at {@area B4|1e5}. The arrow slits provide three-quarters cover."
+										"A brick wall with arrow slits was added to this room at some point. The arrow slits are designed to allow archers to fire at intruders who come through the door at {@area B4|1e5}. The arrow slits provide {@quickref Cover||3||three-quarters cover}."
 									]
 								},
 								{
@@ -14879,7 +14831,7 @@
 											"id": "24a",
 											"entries": [
 												"A successful DC 17 Intelligence (Religion) check enables a character to recognize the statue as a depiction of Gorm Gulthyn, the dwarven god of vigilance also known as Fire Eyes. The statue melds seamlessly with the floor and can't be toppled. It also seems impervious to damage. A {@spell detect magic} spell reveals an aura of evocation magic on the statue.",
-												"The trapdoor is false and can't be lifted. Anyone who touches the trapdoor or its pull ring must succeed on a DC 18 Dexterity saving throw or be struck by rays of magical fire that spring from the statue's eyes, dealing 22 ({@dice 4d10}) fire damage. The trap doesn't trigger if the target has total cover."
+												"The trapdoor is false and can't be lifted. Anyone who touches the trapdoor or its pull ring must succeed on a DC 18 Dexterity saving throw or be struck by rays of magical fire that spring from the statue's eyes, dealing 22 ({@dice 4d10}) fire damage. The trap doesn't trigger if the target has {@quickref Cover||3||total cover}."
 											]
 										},
 										{
@@ -33288,62 +33240,194 @@
 			"id": "4e6",
 			"entries": [
 				{
-					"type": "image",
-					"href": {
-						"type": "internal",
-						"path": "adventure/WDH/Friendly-Faces.webp"
-					},
-					"title": "Yawning Portal Friendly Faces",
-					"width": 1000,
-					"height": 1276
+					"type": "entries",
+					"name": "Yawning Portal Friendly Faces",
+					"entries": [
+						{
+							"type": "image",
+							"href": {
+								"type": "internal",
+								"path": "adventure/WDH/Friendly-Faces.webp"
+							},
+							"width": 1000,
+							"height": 1276
+						}
+					],
+					"id": "53b"
 				},
 				{
-					"type": "image",
-					"href": {
-						"type": "internal",
-						"path": "adventure/WDH/The-Code-Legal.webp"
-					},
-					"title": "The Code Legal",
-					"width": 2201,
-					"height": 2714
+					"type": "entries",
+					"name": "The Code Legal",
+					"entries": [
+						{
+							"type": "image",
+							"href": {
+								"type": "internal",
+								"path": "adventure/WDH/The-Code-Legal.webp"
+							},
+							"width": 2201,
+							"height": 2714
+						}
+					],
+					"id": "53c"
 				},
 				{
-					"type": "image",
-					"imageType": "mapPlayer",
-					"href": {
-						"type": "internal",
-						"path": "adventure/WDH/Trollskull-Manor-Players.webp"
-					},
-					"title": "Trollskull Manor",
-					"width": 737,
-					"height": 1000,
-					"grid": {
-						"type": "square",
-						"size": 71,
-						"offsetX": 2,
-						"offsetY": 28,
-						"scale": 2
-					}
+					"type": "entries",
+					"name": "Trollskull Manor",
+					"entries": [
+						{
+							"type": "gallery",
+							"images": [
+								{
+									"type": "image",
+									"imageType": "map",
+									"href": {
+										"type": "internal",
+										"path": "adventure/WDH/Trollskull-Manor-DM.webp"
+									},
+									"title": "Trollskull Manor",
+									"id": "528",
+									"width": 2513,
+									"height": 3338,
+									"grid": {
+										"type": "square",
+										"size": 104,
+										"offsetX": 69,
+										"offsetY": 69
+									}
+								},
+								{
+									"type": "image",
+									"imageType": "mapPlayer",
+									"href": {
+										"type": "internal",
+										"path": "adventure/WDH/Trollskull-Manor-Players.webp"
+									},
+									"title": "Trollskull Manor (Player Version)",
+									"width": 2100,
+									"height": 2850,
+									"grid": {
+										"type": "square",
+										"size": 101,
+										"offsetX": 3,
+										"offsetY": 49
+									}
+								}
+							]
+						}
+					],
+					"id": "53d"
 				},
 				{
-					"type": "image",
-					"href": {
-						"type": "internal",
-						"path": "adventure/WDH/The-Yawning-Portal.webp"
-					},
-					"title": "The Yawning Portal",
-					"width": 2400,
-					"height": 1724
-				},
-				{
-					"type": "image",
-					"href": {
-						"type": "internal",
-						"path": "adventure/WDH/Yawning-Portal-Key.webp"
-					},
-					"title": "The Yawning Portal Key",
-					"width": 1000,
-					"height": 587
+					"type": "entries",
+					"name": "Key to the Yawning Portal",
+					"page": 224,
+					"entries": [
+						"Here are the names of the numbered characters featured in the Yawning Portal illustration in the Introduction.",
+						{
+							"type": "list",
+							"style": "list-hang-notitle",
+							"columns": 2,
+							"items": [
+								"1. Victoro Cassalanter",
+								"2. Ammalia Cassalanter",
+								"3. Vajra Safahr",
+								"4. Renaer Neverember",
+								"5. Laeral Silverhand",
+								"6. Mordenkainen",
+								"7. Qilué Veladorn",
+								"8. Alustriel Silverhand",
+								"9. The Simbul",
+								"10. Elminster",
+								"11. Harkle Harpell",
+								"12. Storm Silverhand",
+								"13. Syluné Silverhand",
+								"14. Dove Falconhand",
+								"15. Florin Falconhand",
+								"16. Illistyl Elventree",
+								"17. Jhessail Silventree",
+								"18. Merith Strongbow",
+								"19. Lanseril Snowmantle",
+								"20. Artus Cimber",
+								"21. Volothamp Geddarm",
+								"22. Minsc and Boo",
+								"23. Krydle",
+								"24. Delina",
+								"25. Vartan Hai Sylvar",
+								"26. Priam Agrivar",
+								"27. Ishi Barasume",
+								"28. Minder",
+								"29. Foxilon Cardluck",
+								"30. Shandie",
+								"31. Obaya Uday",
+								"32. Manshoon",
+								"33. Yoshimo",
+								"34. The Nameless One",
+								"35. Valygar Corthala",
+								"36. Abdel Adrian",
+								"37. Hexxat",
+								"38. Pikel Bouldershoulder",
+								"39. Ivan Bouldershoulder",
+								"40. Cadderly Bonaduce",
+								"41. Hrolf",
+								"42. Drizzt Do'Urden",
+								"43. Guenhwyvar",
+								"44. Ruqiah",
+								"45. Reginald Roundshield",
+								"46. Krebbyg Masq'il'yr",
+								"47. Spider Parrafin",
+								"48. Arkhan the Cruel",
+								"49. Tyril Tallguy",
+								"50. Dagny Halvor",
+								"51. Jamilah",
+								"52. Hitch",
+								"53. Dragonbait",
+								"54. Brawlwin Chainminer",
+								"55. Durnan (proprietor)",
+								"56. Skip Brickard",
+								"57. Diath Woodrow",
+								"58. Evelyn Marthain",
+								"59. Strix",
+								"60. Alias",
+								"61. Akabar Bel Akash",
+								"62. Olive Rustkettle",
+								"63. Mirt",
+								"64. The Black Viper",
+								"65. Artemis Entreri",
+								"66. Joppa",
+								"67. Fel'rekt Lafeen",
+								"68. Soluun Xibrindas",
+								"69. Jarlaxle Baenre",
+								"70. Danilo Thann",
+								"71. Paultin Seppa",
+								"72. Calliope",
+								"73. Ziraj the Hunter",
+								"74. Skeemo Weirdbottle",
+								"75. Davil Starsong",
+								"76. Tashlyn Yafeera",
+								"77. Istrid Horn",
+								"78. Nihiloor",
+								"79. Noska Ur'gray",
+								"80. Nar'l Xibrindas",
+								"81. Ahmaergo",
+								"82. Thorvin Twinbeard",
+								"83. Ott Steeltoes",
+								"84. Xanathar",
+								"85. Matthew Mercer"
+							]
+						},
+						{
+							"type": "image",
+							"href": {
+								"type": "internal",
+								"path": "adventure/WDH/The-Yawning-Portal.webp"
+							},
+							"title": "The Yawning Portal",
+							"width": 2400,
+							"height": 1724
+						}
+					],
+					"id": "53e"
 				}
 			]
 		},

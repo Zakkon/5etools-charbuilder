@@ -1,4 +1,4 @@
-@use "vars";
+@use "../vars/vars";
 
 .lst__ {
 	&wrp-search-glass {
@@ -31,6 +31,43 @@
 
 		&--reverse {
 			transform: rotate(180deg);
+		}
+	}
+
+	&is-exporting-image {
+		.lst-is-exporting-image {
+			&__hidden {
+				display: none !important;
+			}
+		}
+	}
+
+	&row {
+		&:hover {
+			background: vars.$rgb-bg--alt;
+		}
+
+		&--blocklisted {
+			display: none !important;
+		}
+
+		&-inner {
+			line-height: 14px;
+			color: inherit;
+			display: flex;
+			align-items: center;
+			overflow: hidden;
+			padding: 0 2px 1px;
+			text-decoration: none;
+
+			&:hover,
+			&:focus {
+				text-decoration: none;
+			}
+		}
+
+		&-border {
+			border-bottom: 1px solid vars.$rgb-border-grey--list-row;
 		}
 	}
 }

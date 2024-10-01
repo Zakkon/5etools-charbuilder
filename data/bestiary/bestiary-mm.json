@@ -25,6 +25,9 @@
 				},
 				{
 					"source": "LoX"
+				},
+				{
+					"source": "QftIS"
 				}
 			],
 			"size": [
@@ -154,6 +157,12 @@
 				},
 				{
 					"source": "DoDk"
+				},
+				{
+					"source": "QftIS"
+				},
+				{
+					"source": "CoA"
 				}
 			],
 			"size": [
@@ -305,6 +314,7 @@
 				"Y"
 			],
 			"miscTags": [
+				"DIS",
 				"MW",
 				"RCH"
 			],
@@ -543,6 +553,9 @@
 				},
 				{
 					"source": "DoDk"
+				},
+				{
+					"source": "QftIS"
 				}
 			],
 			"size": [
@@ -680,6 +693,12 @@
 				},
 				{
 					"source": "KftGV"
+				},
+				{
+					"source": "QftIS"
+				},
+				{
+					"source": "CoA"
 				}
 			],
 			"size": [
@@ -3065,6 +3084,9 @@
 				},
 				{
 					"source": "BMT"
+				},
+				{
+					"source": "CoA"
 				}
 			],
 			"size": [
@@ -4022,6 +4044,12 @@
 				},
 				{
 					"source": "DoDk"
+				},
+				{
+					"source": "VEoR"
+				},
+				{
+					"source": "QftIS"
 				}
 			],
 			"size": [
@@ -6387,6 +6415,9 @@
 				},
 				{
 					"source": "SatO"
+				},
+				{
+					"source": "VEoR"
 				}
 			],
 			"size": [
@@ -7259,6 +7290,9 @@
 		},
 		{
 			"name": "Androsphinx",
+			"group": [
+				"Sphinxes"
+			],
 			"source": "MM",
 			"page": 281,
 			"srd": true,
@@ -7606,6 +7640,12 @@
 				},
 				{
 					"source": "DoDk"
+				},
+				{
+					"source": "VEoR"
+				},
+				{
+					"source": "QftIS"
 				}
 			],
 			"size": [
@@ -7736,6 +7776,9 @@
 				},
 				{
 					"source": "BMT"
+				},
+				{
+					"source": "QftIS"
 				}
 			],
 			"size": [
@@ -7920,6 +7963,9 @@
 				{
 					"source": "CM"
 				}
+			],
+			"reprintedAs": [
+				"Ape|XPHB"
 			],
 			"size": [
 				"M"
@@ -8377,6 +8423,15 @@
 				},
 				{
 					"source": "DoDk"
+				},
+				{
+					"source": "VEoR"
+				},
+				{
+					"source": "QftIS"
+				},
+				{
+					"source": "CoA"
 				}
 			],
 			"size": [
@@ -8698,6 +8753,12 @@
 				},
 				{
 					"source": "DoDk"
+				},
+				{
+					"source": "VEoR"
+				},
+				{
+					"source": "CoA"
 				}
 			],
 			"size": [
@@ -8759,7 +8820,7 @@
 				{
 					"name": "Assassinate",
 					"entries": [
-						"During its first turn, the assassin has advantage on attack rolls against any creature that hasn't taken a turn. Any hit the assassin scores against a {@quickref Surprise|PHB|3|0|surprised} creature is a critical hit."
+						"During its first turn, the assassin has advantage on attack rolls against any creature that hasn't taken a turn. Any hit the assassin scores against a {@status surprised} creature is a critical hit."
 					]
 				},
 				{
@@ -8863,6 +8924,9 @@
 				},
 				{
 					"source": "DoDk"
+				},
+				{
+					"source": "QftIS"
 				}
 			],
 			"size": [
@@ -8973,6 +9037,9 @@
 				},
 				{
 					"source": "PSI"
+				},
+				{
+					"source": "QftIS"
 				}
 			],
 			"size": [
@@ -9141,6 +9208,9 @@
 				},
 				{
 					"source": "DoDk"
+				},
+				{
+					"source": "CoA"
 				}
 			],
 			"size": [
@@ -9338,7 +9408,13 @@
 			"otherSources": [
 				{
 					"source": "WBtW"
+				},
+				{
+					"source": "QftIS"
 				}
+			],
+			"reprintedAs": [
+				"Badger|XPHB"
 			],
 			"size": [
 				"T"
@@ -9433,6 +9509,9 @@
 				},
 				{
 					"source": "DoDk"
+				},
+				{
+					"source": "CoA"
 				}
 			],
 			"size": [
@@ -9698,6 +9777,12 @@
 				},
 				{
 					"source": "DoDk"
+				},
+				{
+					"source": "QftIS"
+				},
+				{
+					"source": "CoA"
 				}
 			],
 			"size": [
@@ -9877,6 +9962,9 @@
 				},
 				{
 					"source": "DoDk"
+				},
+				{
+					"source": "QftIS"
 				}
 			],
 			"size": [
@@ -10040,6 +10128,9 @@
 				},
 				{
 					"source": "BMT"
+				},
+				{
+					"source": "QftIS"
 				}
 			],
 			"size": [
@@ -10215,6 +10306,12 @@
 				},
 				{
 					"source": "GHLoE"
+				},
+				{
+					"source": "VEoR"
+				},
+				{
+					"source": "CoA"
 				}
 			],
 			"size": [
@@ -10342,7 +10439,7 @@
 					"name": "Summon Devil (1/Day)",
 					"entries": [
 						"The devil chooses what to summon and attempts a magical summoning.",
-						"A barbed devil has a {@chance 30|30 percent} chance of summoning one barbed devil.",
+						"A barbed devil has a {@chance 30} chance of summoning one barbed devil.",
 						"A summoned devil appears in an unoccupied space within 60 feet of its summoner, acts as an ally of its summoner, and can't summon other devils. It remains for 1 minute, until it or its summoner dies, or until its summoner dismisses it as an action."
 					],
 					"_version": {
@@ -10414,6 +10511,15 @@
 				},
 				{
 					"source": "BMT"
+				},
+				{
+					"source": "VEoR"
+				},
+				{
+					"source": "QftIS"
+				},
+				{
+					"source": "CoA"
 				}
 			],
 			"size": [
@@ -10615,6 +10721,9 @@
 				},
 				{
 					"source": "PaBTSO"
+				},
+				{
+					"source": "QftIS"
 				}
 			],
 			"size": [
@@ -10655,7 +10764,7 @@
 					"name": "Petrifying Gaze",
 					"entries": [
 						"If a creature starts its turn within 30 feet of the basilisk and the two of them can see each other, the basilisk can force the creature to make a {@dc 12} Constitution saving throw if the basilisk isn't {@condition incapacitated}. On a failed save, the creature magically begins to turn to stone and is {@condition restrained}. It must repeat the saving throw at the end of its next turn. On a success, the effect ends. On a failure, the creature is {@condition petrified} until freed by the  {@spell greater restoration} spell or other magic.",
-						"A creature that isn't {@quickref Surprise|PHB|3|0|surprised} can avert its eyes to avoid the saving throw at the start of its turn. If it does so, it can't see the basilisk until the start of its next turn, when it can avert its eyes again. If it looks at the basilisk in the meantime, it must immediately make the save.",
+						"A creature that isn't {@status surprised} can avert its eyes to avoid the saving throw at the start of its turn. If it does so, it can't see the basilisk until the start of its next turn, when it can avert its eyes again. If it looks at the basilisk in the meantime, it must immediately make the save.",
 						"If the basilisk sees its reflection within 30 feet of it in bright light, it mistakes itself for a rival and targets itself with its gaze."
 					]
 				}
@@ -10724,6 +10833,9 @@
 				{
 					"source": "DoDk"
 				}
+			],
+			"reprintedAs": [
+				"Bat|XPHB"
 			],
 			"size": [
 				"T"
@@ -10825,6 +10937,15 @@
 				},
 				{
 					"source": "DoDk"
+				},
+				{
+					"source": "VEoR"
+				},
+				{
+					"source": "QftIS"
+				},
+				{
+					"source": "CoA"
 				}
 			],
 			"size": [
@@ -10940,7 +11061,7 @@
 					"name": "Summon Devil (1/Day)",
 					"entries": [
 						"The devil chooses what to summon and attempts a magical summoning.",
-						"A bearded devil has a {@chance 30|30 percent} chance of summoning one bearded devil.",
+						"A bearded devil has a {@chance 30} chance of summoning one bearded devil.",
 						"A summoned devil appears in an unoccupied space within 60 feet of its summoner, acts as an ally of its summoner, and can't summon other devils. It remains for 1 minute, until it or its summoner dies, or until its summoner dismisses it as an action."
 					],
 					"_version": {
@@ -11018,6 +11139,12 @@
 				},
 				{
 					"source": "BMT"
+				},
+				{
+					"source": "VEoR"
+				},
+				{
+					"source": "QftIS"
 				}
 			],
 			"size": [
@@ -11093,7 +11220,7 @@
 				{
 					"name": "Swallow",
 					"entries": [
-						"The behir makes one bite attack against a Medium or smaller target it is grappling. If the attack hits, the target is also swallowed, and the grapple ends. While swallowed, the target is {@condition blinded} and {@condition restrained}, it has total cover against attacks and other effects outside the behir, and it takes 21 ({@damage 6d6}) acid damage at the start of each of the behir's turns. A behir can have only one creature swallowed at a time.",
+						"The behir makes one bite attack against a Medium or smaller target it is grappling. If the attack hits, the target is also swallowed, and the grapple ends. While swallowed, the target is {@condition blinded} and {@condition restrained}, it has {@quickref Cover||3||total cover} against attacks and other effects outside the behir, and it takes 21 ({@damage 6d6}) acid damage at the start of each of the behir's turns. A behir can have only one creature swallowed at a time.",
 						"If the behir takes 30 damage or more on a single turn from the swallowed creature, the behir must succeed on a {@dc 14} Constitution saving throw at the end of that turn or regurgitate the creature, which falls {@condition prone} in a space within 10 feet of the behir. If the behir dies, a swallowed creature is no longer {@condition restrained} by it and can escape from the corpse by using 15 feet of movement, exiting {@condition prone}."
 					]
 				}
@@ -11189,6 +11316,9 @@
 				},
 				{
 					"source": "BMT"
+				},
+				{
+					"source": "CoA"
 				}
 			],
 			"size": [
@@ -11495,6 +11625,9 @@
 				},
 				{
 					"source": "ToFW"
+				},
+				{
+					"source": "VEoR"
 				}
 			],
 			"size": [
@@ -11832,7 +11965,13 @@
 				},
 				{
 					"source": "ToFW"
+				},
+				{
+					"source": "QftIS"
 				}
+			],
+			"reprintedAs": [
+				"Black Bear|XPHB"
 			],
 			"size": [
 				"M"
@@ -11929,6 +12068,9 @@
 			"otherSources": [
 				{
 					"source": "TftYP"
+				},
+				{
+					"source": "VEoR"
 				}
 			],
 			"size": [
@@ -12165,6 +12307,12 @@
 				},
 				{
 					"source": "DoDk"
+				},
+				{
+					"source": "QftIS"
+				},
+				{
+					"source": "CoA"
 				}
 			],
 			"size": [
@@ -12301,6 +12449,9 @@
 				},
 				{
 					"source": "BMT"
+				},
+				{
+					"source": "VEoR"
 				}
 			],
 			"size": [
@@ -12704,6 +12855,9 @@
 				},
 				{
 					"source": "SatO"
+				},
+				{
+					"source": "QftIS"
 				}
 			],
 			"size": [
@@ -12828,6 +12982,7 @@
 				"Y"
 			],
 			"miscTags": [
+				"DIS",
 				"HPR",
 				"MW"
 			],
@@ -12864,7 +13019,13 @@
 				},
 				{
 					"source": "WBtW"
+				},
+				{
+					"source": "QftIS"
 				}
+			],
+			"reprintedAs": [
+				"Boar|XPHB"
 			],
 			"size": [
 				"M"
@@ -12979,6 +13140,9 @@
 				},
 				{
 					"source": "DoDk"
+				},
+				{
+					"source": "CoA"
 				}
 			],
 			"size": [
@@ -13118,7 +13282,7 @@
 					"name": "Summon Devil (1/Day)",
 					"entries": [
 						"The devil chooses what to summon and attempts a magical summoning.",
-						"A bone devil has a {@chance 40|40 percent} chance of summoning {@dice 2d6} {@creature spined devil||spined devils} or one bone devil.",
+						"A bone devil has a {@chance 40} chance of summoning {@dice 2d6} {@creature spined devil||spined devils} or one bone devil.",
 						"A summoned devil appears in an unoccupied space within 60 feet of its summoner, acts as an ally of its summoner, and can't summon other devils. It remains for 1 minute, until it or its summoner dies, or until its summoner dismisses it as an action."
 					],
 					"_version": {
@@ -13929,7 +14093,13 @@
 				},
 				{
 					"source": "BMT"
+				},
+				{
+					"source": "QftIS"
 				}
+			],
+			"reprintedAs": [
+				"Brown Bear|XPHB"
 			],
 			"size": [
 				"L"
@@ -14077,6 +14247,9 @@
 				},
 				{
 					"source": "DoDk"
+				},
+				{
+					"source": "QftIS"
 				}
 			],
 			"size": [
@@ -14354,6 +14527,9 @@
 				},
 				{
 					"source": "DSotDQ"
+				},
+				{
+					"source": "QftIS"
 				}
 			],
 			"size": [
@@ -14613,6 +14789,9 @@
 				},
 				{
 					"source": "ToFW"
+				},
+				{
+					"source": "CoA"
 				}
 			],
 			"size": [
@@ -14921,7 +15100,13 @@
 				},
 				{
 					"source": "CM"
+				},
+				{
+					"source": "QftIS"
 				}
+			],
+			"reprintedAs": [
+				"Camel|XPHB"
 			],
 			"size": [
 				"L"
@@ -14999,6 +15184,9 @@
 				},
 				{
 					"source": "BMT"
+				},
+				{
+					"source": "QftIS"
 				}
 			],
 			"size": [
@@ -15152,6 +15340,9 @@
 				{
 					"source": "DoDk"
 				}
+			],
+			"reprintedAs": [
+				"Cat|XPHB"
 			],
 			"size": [
 				"T"
@@ -15348,6 +15539,12 @@
 				},
 				{
 					"source": "WBtW"
+				},
+				{
+					"source": "QftIS"
+				},
+				{
+					"source": "CoA"
 				}
 			],
 			"size": [
@@ -15473,6 +15670,9 @@
 				},
 				{
 					"source": "BMT"
+				},
+				{
+					"source": "CoA"
 				}
 			],
 			"size": [
@@ -15639,6 +15839,12 @@
 				},
 				{
 					"source": "KftGV"
+				},
+				{
+					"source": "QftIS"
+				},
+				{
+					"source": "CoA"
 				}
 			],
 			"size": [
@@ -15811,6 +16017,9 @@
 				},
 				{
 					"source": "DoDk"
+				},
+				{
+					"source": "QftIS"
 				}
 			],
 			"size": [
@@ -15950,6 +16159,12 @@
 				},
 				{
 					"source": "DoDk"
+				},
+				{
+					"source": "QftIS"
+				},
+				{
+					"source": "CoA"
 				}
 			],
 			"size": [
@@ -16105,6 +16320,9 @@
 				},
 				{
 					"source": "BMT"
+				},
+				{
+					"source": "QftIS"
 				}
 			],
 			"size": [
@@ -16278,6 +16496,15 @@
 				},
 				{
 					"source": "DoDk"
+				},
+				{
+					"source": "VEoR"
+				},
+				{
+					"source": "QftIS"
+				},
+				{
+					"source": "CoA"
 				}
 			],
 			"size": [
@@ -16837,6 +17064,15 @@
 				},
 				{
 					"source": "DoDk"
+				},
+				{
+					"source": "VEoR"
+				},
+				{
+					"source": "QftIS"
+				},
+				{
+					"source": "CoA"
 				}
 			],
 			"size": [
@@ -16932,6 +17168,9 @@
 				{
 					"source": "WDMM"
 				}
+			],
+			"reprintedAs": [
+				"Constrictor Snake|XPHB"
 			],
 			"size": [
 				"L"
@@ -17238,6 +17477,12 @@
 				},
 				{
 					"source": "BMT"
+				},
+				{
+					"source": "VEoR"
+				},
+				{
+					"source": "CoA"
 				}
 			],
 			"size": [
@@ -17433,7 +17678,13 @@
 				},
 				{
 					"source": "BGDIA"
+				},
+				{
+					"source": "VEoR"
 				}
+			],
+			"reprintedAs": [
+				"Crab|XPHB"
 			],
 			"size": [
 				"T"
@@ -17672,6 +17923,9 @@
 					"source": "PSA"
 				}
 			],
+			"reprintedAs": [
+				"Crocodile|XPHB"
+			],
 			"size": [
 				"L"
 			],
@@ -17834,6 +18088,15 @@
 				},
 				{
 					"source": "DoDk"
+				},
+				{
+					"source": "VEoR"
+				},
+				{
+					"source": "QftIS"
+				},
+				{
+					"source": "CoA"
 				}
 			],
 			"size": [
@@ -18079,6 +18342,12 @@
 				},
 				{
 					"source": "DoDk"
+				},
+				{
+					"source": "VEoR"
+				},
+				{
+					"source": "QftIS"
 				}
 			],
 			"size": [
@@ -18211,6 +18480,9 @@
 				},
 				{
 					"source": "SatO"
+				},
+				{
+					"source": "VEoR"
 				}
 			],
 			"size": [
@@ -18340,6 +18612,9 @@
 				},
 				{
 					"source": "SatO"
+				},
+				{
+					"source": "QftIS"
 				}
 			],
 			"size": [
@@ -18791,6 +19066,7 @@
 				"P"
 			],
 			"miscTags": [
+				"DIS",
 				"MW"
 			],
 			"conditionInflict": [
@@ -18840,6 +19116,12 @@
 				},
 				{
 					"source": "BMT"
+				},
+				{
+					"source": "VEoR"
+				},
+				{
+					"source": "CoA"
 				}
 			],
 			"size": [
@@ -19076,6 +19358,9 @@
 				},
 				{
 					"source": "PSI"
+				},
+				{
+					"source": "VEoR"
 				}
 			],
 			"size": [
@@ -19547,6 +19832,9 @@
 				},
 				{
 					"source": "PaBTSO"
+				},
+				{
+					"source": "QftIS"
 				}
 			],
 			"size": [
@@ -19653,6 +19941,12 @@
 				"type": "internal",
 				"path": "bestiary/svirfneblin.mp3"
 			},
+			"altArt": [
+				{
+					"name": "Svirfneblin",
+					"source": "QftIS"
+				}
+			],
 			"attachedItems": [
 				"war pick|phb"
 			],
@@ -19974,6 +20268,7 @@
 				"N"
 			],
 			"miscTags": [
+				"CUR",
 				"HPR"
 			],
 			"conditionInflict": [
@@ -20053,6 +20348,15 @@
 				},
 				{
 					"source": "DoDk"
+				},
+				{
+					"source": "VEoR"
+				},
+				{
+					"source": "QftIS"
+				},
+				{
+					"source": "CoA"
 				}
 			],
 			"size": [
@@ -20245,7 +20549,13 @@
 				},
 				{
 					"source": "ToFW"
+				},
+				{
+					"source": "QftIS"
 				}
+			],
+			"reprintedAs": [
+				"Dire Wolf|XPHB"
 			],
 			"size": [
 				"L"
@@ -20361,6 +20671,9 @@
 				},
 				{
 					"source": "BMT"
+				},
+				{
+					"source": "QftIS"
 				}
 			],
 			"size": [
@@ -20480,6 +20793,12 @@
 				},
 				{
 					"source": "DoDk"
+				},
+				{
+					"source": "QftIS"
+				},
+				{
+					"source": "CoA"
 				}
 			],
 			"size": [
@@ -20785,6 +21104,12 @@
 				},
 				{
 					"source": "DoDk"
+				},
+				{
+					"source": "QftIS"
+				},
+				{
+					"source": "CoA"
 				}
 			],
 			"size": [
@@ -20840,7 +21165,7 @@
 				{
 					"name": "Ambusher",
 					"entries": [
-						"In the first round of a combat, the doppelganger has advantage on attack rolls against any creature it {@quickref Surprise|PHB|3|0|surprised}."
+						"In the first round of a combat, the doppelganger has advantage on attack rolls against any creature it {@status surprised}."
 					]
 				},
 				{
@@ -20928,7 +21253,13 @@
 				},
 				{
 					"source": "DoDk"
+				},
+				{
+					"source": "QftIS"
 				}
+			],
+			"reprintedAs": [
+				"Draft Horse|XPHB"
 			],
 			"size": [
 				"L"
@@ -21004,6 +21335,9 @@
 				},
 				{
 					"source": "JttRC"
+				},
+				{
+					"source": "CoA"
 				}
 			],
 			"size": [
@@ -21168,6 +21502,9 @@
 				},
 				{
 					"source": "BMT"
+				},
+				{
+					"source": "CoA"
 				}
 			],
 			"size": [
@@ -21296,6 +21633,9 @@
 				},
 				{
 					"source": "SatO"
+				},
+				{
+					"source": "VEoR"
 				}
 			],
 			"size": [
@@ -22062,6 +22402,12 @@
 				},
 				{
 					"source": "WBtW"
+				},
+				{
+					"source": "VEoR"
+				},
+				{
+					"source": "CoA"
 				}
 			],
 			"size": [
@@ -22605,6 +22951,15 @@
 				},
 				{
 					"source": "DoDk"
+				},
+				{
+					"source": "VEoR"
+				},
+				{
+					"source": "QftIS"
+				},
+				{
+					"source": "CoA"
 				}
 			],
 			"size": [
@@ -22797,6 +23152,12 @@
 				},
 				{
 					"source": "DoDk"
+				},
+				{
+					"source": "VEoR"
+				},
+				{
+					"source": "QftIS"
 				}
 			],
 			"size": [
@@ -22976,6 +23337,12 @@
 				},
 				{
 					"source": "KftGV"
+				},
+				{
+					"source": "QftIS"
+				},
+				{
+					"source": "CoA"
 				}
 			],
 			"size": [
@@ -23115,6 +23482,9 @@
 				},
 				{
 					"source": "ToFW"
+				},
+				{
+					"source": "QftIS"
 				}
 			],
 			"size": [
@@ -23264,6 +23634,9 @@
 				},
 				{
 					"source": "DoDk"
+				},
+				{
+					"source": "QftIS"
 				}
 			],
 			"size": [
@@ -23525,6 +23898,12 @@
 				},
 				{
 					"source": "DoDk"
+				},
+				{
+					"source": "VEoR"
+				},
+				{
+					"source": "QftIS"
 				}
 			],
 			"size": [
@@ -23686,6 +24065,12 @@
 				},
 				{
 					"source": "DoDk"
+				},
+				{
+					"source": "QftIS"
+				},
+				{
+					"source": "CoA"
 				}
 			],
 			"size": [
@@ -23926,6 +24311,9 @@
 					"source": "ToFW"
 				}
 			],
+			"reprintedAs": [
+				"Elephant|XPHB"
+			],
 			"size": [
 				"H"
 			],
@@ -24021,7 +24409,13 @@
 				},
 				{
 					"source": "IDRotF"
+				},
+				{
+					"source": "QftIS"
 				}
+			],
+			"reprintedAs": [
+				"Elk|XPHB"
 			],
 			"size": [
 				"L"
@@ -24121,6 +24515,12 @@
 				},
 				{
 					"source": "BMT"
+				},
+				{
+					"source": "QftIS"
+				},
+				{
+					"source": "CoA"
 				}
 			],
 			"size": [
@@ -24355,6 +24755,12 @@
 				},
 				{
 					"source": "DoDk"
+				},
+				{
+					"source": "VEoR"
+				},
+				{
+					"source": "CoA"
 				}
 			],
 			"size": [
@@ -24481,7 +24887,7 @@
 					"name": "Summon Devil (1/Day)",
 					"entries": [
 						"The devil chooses what to summon and attempts a magical summoning.",
-						"An erinyes has a {@chance 50|50 percent} chance of summoning {@dice 3d6} {@creature spined devil||spined devils}, {@dice 1d6} {@creature bearded devil||bearded devils}, or one {@creature erinyes}.",
+						"An erinyes has a {@chance 50} chance of summoning {@dice 3d6} {@creature spined devil||spined devils}, {@dice 1d6} {@creature bearded devil||bearded devils}, or one {@creature erinyes}.",
 						"A summoned devil appears in an unoccupied space within 60 feet of its summoner, acts as an ally of its summoner, and can't summon other devils. It remains for 1 minute, until it or its summoner dies, or until its summoner dismisses it as an action."
 					],
 					"_version": {
@@ -24602,6 +25008,9 @@
 				},
 				{
 					"source": "BMT"
+				},
+				{
+					"source": "QftIS"
 				}
 			],
 			"size": [
@@ -24769,6 +25178,9 @@
 				},
 				{
 					"source": "ToFW"
+				},
+				{
+					"source": "VEoR"
 				}
 			],
 			"size": [
@@ -26237,6 +26649,12 @@
 				},
 				{
 					"source": "HFStCM"
+				},
+				{
+					"source": "QftIS"
+				},
+				{
+					"source": "CoA"
 				}
 			],
 			"size": [
@@ -26390,6 +26808,9 @@
 				},
 				{
 					"source": "DoSI"
+				},
+				{
+					"source": "CoA"
 				}
 			],
 			"size": [
@@ -26565,6 +26986,15 @@
 				},
 				{
 					"source": "SatO"
+				},
+				{
+					"source": "VEoR"
+				},
+				{
+					"source": "QftIS"
+				},
+				{
+					"source": "CoA"
 				}
 			],
 			"size": [
@@ -26791,6 +27221,9 @@
 				},
 				{
 					"source": "ToFW"
+				},
+				{
+					"source": "CoA"
 				}
 			],
 			"size": [
@@ -26991,7 +27424,7 @@
 				{
 					"name": "Advanced Telepathy",
 					"entries": [
-						"The flumph can perceive the content of any telepathic communication used within 60 feet of it, and it can't be {@quickref Surprise|PHB|3|0|surprised} by creatures with any form of telepathy."
+						"The flumph can perceive the content of any telepathic communication used within 60 feet of it, and it can't be {@status surprised} by creatures with any form of telepathy."
 					]
 				},
 				{
@@ -27209,6 +27642,9 @@
 				},
 				{
 					"source": "DoDk"
+				},
+				{
+					"source": "VEoR"
 				}
 			],
 			"size": [
@@ -27337,6 +27773,15 @@
 				},
 				{
 					"source": "ToFW"
+				},
+				{
+					"source": "VEoR"
+				},
+				{
+					"source": "QftIS"
+				},
+				{
+					"source": "CoA"
 				}
 			],
 			"size": [
@@ -27433,6 +27878,7 @@
 				"Y"
 			],
 			"miscTags": [
+				"CUR",
 				"MLW",
 				"MW",
 				"RCH"
@@ -27465,7 +27911,13 @@
 				},
 				{
 					"source": "KftGV"
+				},
+				{
+					"source": "QftIS"
 				}
+			],
+			"reprintedAs": [
+				"Frog|XPHB"
 			],
 			"size": [
 				"T"
@@ -27559,6 +28011,9 @@
 				},
 				{
 					"source": "SatO"
+				},
+				{
+					"source": "CoA"
 				}
 			],
 			"size": [
@@ -27705,6 +28160,9 @@
 				},
 				{
 					"source": "PaBTSO"
+				},
+				{
+					"source": "QftIS"
 				}
 			],
 			"size": [
@@ -27880,6 +28338,9 @@
 				},
 				{
 					"source": "DoDk"
+				},
+				{
+					"source": "QftIS"
 				}
 			],
 			"size": [
@@ -28011,6 +28472,9 @@
 				},
 				{
 					"source": "WDMM"
+				},
+				{
+					"source": "QftIS"
 				}
 			],
 			"size": [
@@ -28097,6 +28561,7 @@
 				"I"
 			],
 			"miscTags": [
+				"DIS",
 				"MW"
 			],
 			"conditionInflict": [
@@ -28138,6 +28603,9 @@
 				},
 				{
 					"source": "DoDk"
+				},
+				{
+					"source": "QftIS"
 				}
 			],
 			"size": [
@@ -28181,7 +28649,7 @@
 					"name": "Ooze Cube",
 					"entries": [
 						"The cube takes up its entire space. Other creatures can enter the space, but a creature that does so is subjected to the cube's Engulf and has disadvantage on the saving throw.",
-						"Creatures inside the cube can be seen but have total cover.",
+						"Creatures inside the cube can be seen but have {@quickref Cover||3||total cover}.",
 						"A creature within 5 feet of the cube can take an action to pull a creature or object out of the cube. Doing so requires a successful {@dc 12} Strength check, and the creature making the attempt takes 10 ({@damage 3d6}) acid damage.",
 						"The cube can hold only one Large creature or up to four Medium or smaller creatures inside it at a time."
 					]
@@ -28189,7 +28657,7 @@
 				{
 					"name": "Transparent",
 					"entries": [
-						"Even when the cube is in plain sight, it takes a successful {@dc 15} Wisdom ({@skill Perception}) check to spot a cube that has neither moved nor attacked. A creature that tries to enter the cube's space while unaware of the cube is {@quickref Surprise|PHB|3|0|surprised} by the cube."
+						"Even when the cube is in plain sight, it takes a successful {@dc 15} Wisdom ({@skill Perception}) check to spot a cube that has neither moved nor attacked. A creature that tries to enter the cube's space while unaware of the cube is {@status surprised} by the cube."
 					]
 				}
 			],
@@ -28277,6 +28745,9 @@
 				},
 				{
 					"source": "PSI"
+				},
+				{
+					"source": "QftIS"
 				}
 			],
 			"size": [
@@ -28485,6 +28956,12 @@
 				},
 				{
 					"source": "DoDk"
+				},
+				{
+					"source": "VEoR"
+				},
+				{
+					"source": "QftIS"
 				}
 			],
 			"size": [
@@ -28718,6 +29195,12 @@
 				},
 				{
 					"source": "GHLoE"
+				},
+				{
+					"source": "VEoR"
+				},
+				{
+					"source": "QftIS"
 				}
 			],
 			"size": [
@@ -28911,7 +29394,13 @@
 				},
 				{
 					"source": "PaBTSO"
+				},
+				{
+					"source": "QftIS"
 				}
+			],
+			"reprintedAs": [
+				"Giant Badger|XPHB"
 			],
 			"size": [
 				"M"
@@ -29017,6 +29506,9 @@
 				},
 				{
 					"source": "PSX"
+				},
+				{
+					"source": "QftIS"
 				}
 			],
 			"size": [
@@ -29226,6 +29718,9 @@
 				},
 				{
 					"source": "PSA"
+				},
+				{
+					"source": "QftIS"
 				}
 			],
 			"size": [
@@ -29324,6 +29819,9 @@
 				},
 				{
 					"source": "PaBTSO"
+				},
+				{
+					"source": "QftIS"
 				}
 			],
 			"size": [
@@ -29436,7 +29934,13 @@
 				},
 				{
 					"source": "CM"
+				},
+				{
+					"source": "VEoR"
 				}
+			],
+			"reprintedAs": [
+				"Giant Crab|XPHB"
 			],
 			"size": [
 				"M"
@@ -29658,6 +30162,9 @@
 				},
 				{
 					"source": "ToFW"
+				},
+				{
+					"source": "QftIS"
 				}
 			],
 			"size": [
@@ -29879,6 +30386,9 @@
 				},
 				{
 					"source": "PSX"
+				},
+				{
+					"source": "QftIS"
 				}
 			],
 			"size": [
@@ -29984,6 +30494,9 @@
 				},
 				{
 					"source": "PSA"
+				},
+				{
+					"source": "QftIS"
 				}
 			],
 			"size": [
@@ -30043,7 +30556,7 @@
 				{
 					"name": "Swallow",
 					"entries": [
-						"The frog makes one bite attack against a Small or smaller target it is grappling. If the attack hits, the target is swallowed, and the grapple ends. The swallowed target is {@condition blinded} and {@condition restrained}, it has total cover against attacks and other effects outside the frog, and it takes 5 ({@damage 2d4}) acid damage at the start of each of the frog's turns. The frog can have only one target swallowed at a time. If the frog dies, a swallowed creature is no longer {@condition restrained} by it and can escape from the corpse using 5 feet of movement, exiting {@condition prone}."
+						"The frog makes one bite attack against a Small or smaller target it is grappling. If the attack hits, the target is swallowed, and the grapple ends. The swallowed target is {@condition blinded} and {@condition restrained}, it has {@quickref Cover||3||total cover} against attacks and other effects outside the frog, and it takes 5 ({@damage 2d4}) acid damage at the start of each of the frog's turns. The frog can have only one target swallowed at a time. If the frog dies, a swallowed creature is no longer {@condition restrained} by it and can escape from the corpse using 5 feet of movement, exiting {@condition prone}."
 					]
 				}
 			],
@@ -30100,7 +30613,13 @@
 				},
 				{
 					"source": "WBtW"
+				},
+				{
+					"source": "QftIS"
 				}
+			],
+			"reprintedAs": [
+				"Giant Goat|XPHB"
 			],
 			"size": [
 				"L"
@@ -30295,6 +30814,12 @@
 				},
 				{
 					"source": "PSA"
+				},
+				{
+					"source": "VEoR"
+				},
+				{
+					"source": "QftIS"
 				}
 			],
 			"size": [
@@ -30695,6 +31220,9 @@
 				},
 				{
 					"source": "PaBTSO"
+				},
+				{
+					"source": "QftIS"
 				}
 			],
 			"size": [
@@ -30810,6 +31338,9 @@
 				},
 				{
 					"source": "DoDk"
+				},
+				{
+					"source": "QftIS"
 				}
 			],
 			"size": [
@@ -30899,6 +31430,7 @@
 				"P"
 			],
 			"miscTags": [
+				"DIS",
 				"MW"
 			],
 			"savingThrowForced": [
@@ -30952,6 +31484,9 @@
 				},
 				{
 					"source": "PSA"
+				},
+				{
+					"source": "CoA"
 				}
 			],
 			"size": [
@@ -31049,6 +31584,9 @@
 				{
 					"source": "JttRC"
 				}
+			],
+			"reprintedAs": [
+				"Giant Seahorse|XPHB"
 			],
 			"size": [
 				"L"
@@ -31168,6 +31706,9 @@
 				},
 				{
 					"source": "PSX"
+				},
+				{
+					"source": "VEoR"
 				}
 			],
 			"size": [
@@ -31325,7 +31866,19 @@
 				},
 				{
 					"source": "BMT"
+				},
+				{
+					"source": "VEoR"
+				},
+				{
+					"source": "QftIS"
+				},
+				{
+					"source": "CoA"
 				}
+			],
+			"reprintedAs": [
+				"Giant Spider|XPHB"
 			],
 			"size": [
 				"L"
@@ -31463,6 +32016,9 @@
 				},
 				{
 					"source": "KftGV"
+				},
+				{
+					"source": "QftIS"
 				}
 			],
 			"size": [
@@ -31518,7 +32074,7 @@
 				{
 					"name": "Swallow",
 					"entries": [
-						"The toad makes one bite attack against a Medium or smaller target it is grappling. If the attack hits, the target is swallowed, and the grapple ends. The swallowed target is {@condition blinded} and {@condition restrained}, it has total cover against attacks and other effects outside the toad, and it takes 10 ({@damage 3d6}) acid damage at the start of each of the toad's turns. The toad can have only one target swallowed at a time.",
+						"The toad makes one bite attack against a Medium or smaller target it is grappling. If the attack hits, the target is swallowed, and the grapple ends. The swallowed target is {@condition blinded} and {@condition restrained}, it has {@quickref Cover||3||total cover} against attacks and other effects outside the toad, and it takes 10 ({@damage 3d6}) acid damage at the start of each of the toad's turns. The toad can have only one target swallowed at a time.",
 						"If the toad dies, a swallowed creature is no longer {@condition restrained} by it and can escape from the corpse using 5 feet of movement, exiting {@condition prone}."
 					]
 				}
@@ -31582,6 +32138,9 @@
 				},
 				{
 					"source": "CRCotN"
+				},
+				{
+					"source": "CoA"
 				}
 			],
 			"size": [
@@ -31774,7 +32333,13 @@
 				},
 				{
 					"source": "GoS"
+				},
+				{
+					"source": "QftIS"
 				}
+			],
+			"reprintedAs": [
+				"Giant Weasel|XPHB"
 			],
 			"size": [
 				"M"
@@ -32016,6 +32581,12 @@
 				},
 				{
 					"source": "DoDk"
+				},
+				{
+					"source": "QftIS"
+				},
+				{
+					"source": "CoA"
 				}
 			],
 			"size": [
@@ -32139,6 +32710,15 @@
 				},
 				{
 					"source": "BMT"
+				},
+				{
+					"source": "VEoR"
+				},
+				{
+					"source": "QftIS"
+				},
+				{
+					"source": "CoA"
 				}
 			],
 			"size": [
@@ -32278,6 +32858,9 @@
 				},
 				{
 					"source": "BMT"
+				},
+				{
+					"source": "QftIS"
 				}
 			],
 			"size": [
@@ -32679,6 +33262,12 @@
 				},
 				{
 					"source": "DoDk"
+				},
+				{
+					"source": "VEoR"
+				},
+				{
+					"source": "CoA"
 				}
 			],
 			"size": [
@@ -32912,6 +33501,12 @@
 				},
 				{
 					"source": "DoDk"
+				},
+				{
+					"source": "QftIS"
+				},
+				{
+					"source": "CoA"
 				}
 			],
 			"size": [
@@ -33512,6 +34107,9 @@
 				{
 					"source": "PaBTSO"
 				}
+			],
+			"reprintedAs": [
+				"Goat|XPHB"
 			],
 			"size": [
 				"M"
@@ -34191,6 +34789,9 @@
 				},
 				{
 					"source": "DoDk"
+				},
+				{
+					"source": "QftIS"
 				}
 			],
 			"size": [
@@ -34303,6 +34904,15 @@
 			"otherSources": [
 				{
 					"source": "SatO"
+				},
+				{
+					"source": "VEoR"
+				},
+				{
+					"source": "QftIS"
+				},
+				{
+					"source": "CoA"
 				}
 			],
 			"size": [
@@ -34656,6 +35266,9 @@
 				},
 				{
 					"source": "BMT"
+				},
+				{
+					"source": "QftIS"
 				}
 			],
 			"size": [
@@ -35291,7 +35904,8 @@
 				"path": "bestiary/green-hag.mp3"
 			},
 			"traitTags": [
-				"Amphibious"
+				"Amphibious",
+				"Mimicry"
 			],
 			"senseTags": [
 				"D"
@@ -35420,6 +36034,9 @@
 				},
 				{
 					"source": "BMT"
+				},
+				{
+					"source": "VEoR"
 				}
 			],
 			"size": [
@@ -35651,6 +36268,15 @@
 				},
 				{
 					"source": "BMT"
+				},
+				{
+					"source": "VEoR"
+				},
+				{
+					"source": "QftIS"
+				},
+				{
+					"source": "CoA"
 				}
 			],
 			"size": [
@@ -35792,6 +36418,9 @@
 				},
 				{
 					"source": "PaBTSO"
+				},
+				{
+					"source": "QftIS"
 				}
 			],
 			"size": [
@@ -36063,6 +36692,9 @@
 				},
 				{
 					"source": "DoDk"
+				},
+				{
+					"source": "QftIS"
 				}
 			],
 			"size": [
@@ -36170,6 +36802,12 @@
 				},
 				{
 					"source": "GHLoE"
+				},
+				{
+					"source": "VEoR"
+				},
+				{
+					"source": "CoA"
 				}
 			],
 			"size": [
@@ -36354,6 +36992,9 @@
 				},
 				{
 					"source": "DoDk"
+				},
+				{
+					"source": "QftIS"
 				}
 			],
 			"size": [
@@ -36455,6 +37096,12 @@
 				},
 				{
 					"source": "BMT"
+				},
+				{
+					"source": "VEoR"
+				},
+				{
+					"source": "CoA"
 				}
 			],
 			"size": [
@@ -36642,6 +37289,9 @@
 		},
 		{
 			"name": "Gynosphinx",
+			"group": [
+				"Sphinxes"
+			],
 			"source": "MM",
 			"page": 282,
 			"srd": true,
@@ -36657,6 +37307,9 @@
 				},
 				{
 					"source": "JttRC"
+				},
+				{
+					"source": "QftIS"
 				}
 			],
 			"size": [
@@ -37172,6 +37825,9 @@
 				},
 				{
 					"source": "DoDk"
+				},
+				{
+					"source": "CoA"
 				}
 			],
 			"size": [
@@ -37294,7 +37950,13 @@
 				},
 				{
 					"source": "JttRC"
+				},
+				{
+					"source": "QftIS"
 				}
+			],
+			"reprintedAs": [
+				"Hawk|XPHB"
 			],
 			"size": [
 				"T"
@@ -37421,6 +38083,9 @@
 				},
 				{
 					"source": "DoDk"
+				},
+				{
+					"source": "CoA"
 				}
 			],
 			"size": [
@@ -37574,6 +38239,12 @@
 				},
 				{
 					"source": "BMT"
+				},
+				{
+					"source": "VEoR"
+				},
+				{
+					"source": "QftIS"
 				}
 			],
 			"size": [
@@ -37731,6 +38402,15 @@
 				},
 				{
 					"source": "BMT"
+				},
+				{
+					"source": "VEoR"
+				},
+				{
+					"source": "QftIS"
+				},
+				{
+					"source": "CoA"
 				}
 			],
 			"size": [
@@ -37914,6 +38594,9 @@
 				},
 				{
 					"source": "SatO"
+				},
+				{
+					"source": "QftIS"
 				}
 			],
 			"size": [
@@ -38182,6 +38865,9 @@
 				},
 				{
 					"source": "PaBTSO"
+				},
+				{
+					"source": "QftIS"
 				}
 			],
 			"size": [
@@ -38445,6 +39131,9 @@
 				},
 				{
 					"source": "SatO"
+				},
+				{
+					"source": "QftIS"
 				}
 			],
 			"size": [
@@ -38734,6 +39423,12 @@
 				},
 				{
 					"source": "PaBTSO"
+				},
+				{
+					"source": "QftIS"
+				},
+				{
+					"source": "CoA"
 				}
 			],
 			"size": [
@@ -38853,6 +39548,12 @@
 				},
 				{
 					"source": "DoDk"
+				},
+				{
+					"source": "VEoR"
+				},
+				{
+					"source": "CoA"
 				}
 			],
 			"size": [
@@ -38970,7 +39671,7 @@
 					"name": "Summon Devil (1/Day)",
 					"entries": [
 						"The devil chooses what to summon and attempts a magical summoning.",
-						"A horned devil has a {@chance 30|30 percent} chance of summoning one horned devil.",
+						"A horned devil has a {@chance 30} chance of summoning one horned devil.",
 						"A summoned devil appears in an unoccupied space within 60 feet of its summoner, acts as an ally of its summoner, and can't summon other devils. It remains for 1 minute, until it or its summoner dies, or until its summoner dismisses it as an action."
 					],
 					"_version": {
@@ -39386,6 +40087,12 @@
 				},
 				{
 					"source": "SatO"
+				},
+				{
+					"source": "VEoR"
+				},
+				{
+					"source": "CoA"
 				}
 			],
 			"size": [
@@ -39536,7 +40243,7 @@
 					"name": "Summon Devil (1/Day)",
 					"entries": [
 						"The devil chooses what to summon and attempts a magical summoning.",
-						"An ice devil has a {@chance 60|60 percent} chance of summoning one ice devil.",
+						"An ice devil has a {@chance 60} chance of summoning one ice devil.",
 						"A summoned devil appears in an unoccupied space within 60 feet of its summoner, acts as an ally of its summoner, and can't summon other devils. It remains for 1 minute, until it or its summoner dies, or until its summoner dismisses it as an action."
 					],
 					"_version": {
@@ -39805,7 +40512,19 @@
 				},
 				{
 					"source": "DoDk"
+				},
+				{
+					"source": "VEoR"
+				},
+				{
+					"source": "QftIS"
+				},
+				{
+					"source": "CoA"
 				}
+			],
+			"reprintedAs": [
+				"Imp|XPHB"
 			],
 			"size": [
 				"T"
@@ -39999,6 +40718,9 @@
 				},
 				{
 					"source": "GHLoE"
+				},
+				{
+					"source": "CoA"
 				}
 			],
 			"size": [
@@ -40164,6 +40886,12 @@
 				},
 				{
 					"source": "PaBTSO"
+				},
+				{
+					"source": "QftIS"
+				},
+				{
+					"source": "CoA"
 				}
 			],
 			"size": [
@@ -40247,7 +40975,7 @@
 				{
 					"name": "Body Thief",
 					"entries": [
-						"The intellect devourer initiates an Intelligence contest with an {@condition incapacitated} humanoid within 5 feet of it that isn't protected by {@spell protection from evil and good}. If it wins the contest, the intellect devourer magically consumes the target's brain, teleports into the target's skull, and takes control of the target's body. While inside a creature, the intellect devourer has total cover against attacks and other effects originating outside its host. The intellect devourer retains its Intelligence, Wisdom, and Charisma scores, as well as its understanding of Deep Speech, its telepathy, and its traits. It otherwise adopts the target's statistics. It knows everything the creature knew, including spells and languages.",
+						"The intellect devourer initiates an Intelligence contest with an {@condition incapacitated} humanoid within 5 feet of it that isn't protected by {@spell protection from evil and good}. If it wins the contest, the intellect devourer magically consumes the target's brain, teleports into the target's skull, and takes control of the target's body. While inside a creature, the intellect devourer has {@quickref Cover||3||total cover} against attacks and other effects originating outside its host. The intellect devourer retains its Intelligence, Wisdom, and Charisma scores, as well as its understanding of Deep Speech, its telepathy, and its traits. It otherwise adopts the target's statistics. It knows everything the creature knew, including spells and languages.",
 						"If the host body dies, the intellect devourer must leave it. A {@spell protection from evil and good} spell cast on the body drives the intellect devourer out. The intellect devourer is also forced out if the target regains its devoured brain by means of a {@spell wish}. By spending 5 feet of its movement, the intellect devourer can voluntarily leave the body, teleporting to the nearest unoccupied space within 5 feet of it. The body then dies, unless its brain is restored within 1 round."
 					]
 				}
@@ -40343,6 +41071,12 @@
 				},
 				{
 					"source": "DoDk"
+				},
+				{
+					"source": "VEoR"
+				},
+				{
+					"source": "QftIS"
 				}
 			],
 			"size": [
@@ -40503,6 +41237,12 @@
 				},
 				{
 					"source": "DoDk"
+				},
+				{
+					"source": "VEoR"
+				},
+				{
+					"source": "CoA"
 				}
 			],
 			"size": [
@@ -40752,6 +41492,9 @@
 				},
 				{
 					"source": "JttRC"
+				},
+				{
+					"source": "QftIS"
 				}
 			],
 			"size": [
@@ -40955,7 +41698,7 @@
 				{
 					"name": "Ambusher",
 					"entries": [
-						"In the first round of a combat, the kenku has advantage on attack rolls against any creature it {@quickref Surprise|PHB|3|0|surprised}."
+						"In the first round of a combat, the kenku has advantage on attack rolls against any creature it {@status surprised}."
 					]
 				},
 				{
@@ -40992,7 +41735,8 @@
 				"shortsword|phb"
 			],
 			"traitTags": [
-				"Ambusher"
+				"Ambusher",
+				"Mimicry"
 			],
 			"languageTags": [
 				"AU",
@@ -41201,6 +41945,12 @@
 				},
 				{
 					"source": "DoDk"
+				},
+				{
+					"source": "QftIS"
+				},
+				{
+					"source": "CoA"
 				}
 			],
 			"size": [
@@ -41361,6 +42111,9 @@
 				},
 				{
 					"source": "GHLoE"
+				},
+				{
+					"source": "CoA"
 				}
 			],
 			"size": [
@@ -41499,6 +42252,12 @@
 				},
 				{
 					"source": "BMT"
+				},
+				{
+					"source": "VEoR"
+				},
+				{
+					"source": "CoA"
 				}
 			],
 			"size": [
@@ -41601,7 +42360,7 @@
 				{
 					"name": "Bite",
 					"entries": [
-						"{@atk mw} {@hit 17} to hit, reach 5 ft., one target. {@h}23 ({@damage 3d8 + 10}) piercing damage. If the target is a Large or smaller creature {@condition grappled} by the kraken, that creature is swallowed, and the grapple ends. While swallowed, the creature is {@condition blinded} and {@condition restrained}, it has total cover against attacks and other effects outside the kraken, and it takes 42 ({@damage 12d6}) acid damage at the start of each of the kraken's turns. If the kraken takes 50 damage or more on a single turn from a creature inside it, the kraken must succeed on a {@dc 25} Constitution saving throw at the end of that turn or regurgitate all swallowed creatures, which fall {@condition prone} in a space within 10 feet of the kraken. If the kraken dies, a swallowed creature is no longer {@condition restrained} by it and can escape from the corpse using 15 feet of movement, exiting {@condition prone}."
+						"{@atk mw} {@hit 17} to hit, reach 5 ft., one target. {@h}23 ({@damage 3d8 + 10}) piercing damage. If the target is a Large or smaller creature {@condition grappled} by the kraken, that creature is swallowed, and the grapple ends. While swallowed, the creature is {@condition blinded} and {@condition restrained}, it has {@quickref Cover||3||total cover} against attacks and other effects outside the kraken, and it takes 42 ({@damage 12d6}) acid damage at the start of each of the kraken's turns. If the kraken takes 50 damage or more on a single turn from a creature inside it, the kraken must succeed on a {@dc 25} Constitution saving throw at the end of that turn or regurgitate all swallowed creatures, which fall {@condition prone} in a space within 10 feet of the kraken. If the kraken dies, a swallowed creature is no longer {@condition restrained} by it and can escape from the corpse using 15 feet of movement, exiting {@condition prone}."
 					]
 				},
 				{
@@ -41890,6 +42649,9 @@
 				},
 				{
 					"source": "WDMM"
+				},
+				{
+					"source": "CoA"
 				}
 			],
 			"size": [
@@ -42098,6 +42860,9 @@
 				},
 				{
 					"source": "GoS"
+				},
+				{
+					"source": "CoA"
 				}
 			],
 			"size": [
@@ -42429,6 +43194,9 @@
 				},
 				{
 					"source": "WBtW"
+				},
+				{
+					"source": "QftIS"
 				}
 			],
 			"size": [
@@ -42556,6 +43324,7 @@
 				"I"
 			],
 			"miscTags": [
+				"CUR",
 				"MLW",
 				"MW"
 			],
@@ -42580,6 +43349,12 @@
 				},
 				{
 					"source": "PSI"
+				},
+				{
+					"source": "VEoR"
+				},
+				{
+					"source": "CoA"
 				}
 			],
 			"size": [
@@ -42706,6 +43481,12 @@
 				},
 				{
 					"source": "BMT"
+				},
+				{
+					"source": "QftIS"
+				},
+				{
+					"source": "CoA"
 				}
 			],
 			"size": [
@@ -43008,6 +43789,9 @@
 					"source": "KftGV"
 				}
 			],
+			"reprintedAs": [
+				"Lion|XPHB"
+			],
 			"size": [
 				"L"
 			],
@@ -43123,6 +43907,9 @@
 				{
 					"source": "KftGV"
 				}
+			],
+			"reprintedAs": [
+				"Lizard|XPHB"
 			],
 			"size": [
 				"T"
@@ -43925,6 +44712,15 @@
 				},
 				{
 					"source": "DoDk"
+				},
+				{
+					"source": "VEoR"
+				},
+				{
+					"source": "QftIS"
+				},
+				{
+					"source": "CoA"
 				}
 			],
 			"size": [
@@ -44425,6 +45221,12 @@
 				},
 				{
 					"source": "CRCotN"
+				},
+				{
+					"source": "QftIS"
+				},
+				{
+					"source": "CoA"
 				}
 			],
 			"size": [
@@ -44531,6 +45333,9 @@
 				},
 				{
 					"source": "BMT"
+				},
+				{
+					"source": "CoA"
 				}
 			],
 			"size": [
@@ -44811,6 +45616,12 @@
 				},
 				{
 					"source": "BMT"
+				},
+				{
+					"source": "VEoR"
+				},
+				{
+					"source": "QftIS"
 				}
 			],
 			"size": [
@@ -45087,6 +45898,12 @@
 				},
 				{
 					"source": "DoDk"
+				},
+				{
+					"source": "VEoR"
+				},
+				{
+					"source": "CoA"
 				}
 			],
 			"size": [
@@ -45306,7 +46123,13 @@
 				},
 				{
 					"source": "BMT"
+				},
+				{
+					"source": "QftIS"
 				}
+			],
+			"reprintedAs": [
+				"Mastiff|XPHB"
 			],
 			"size": [
 				"M"
@@ -45404,6 +46227,15 @@
 				},
 				{
 					"source": "CM"
+				},
+				{
+					"source": "SatO"
+				},
+				{
+					"source": "BMT"
+				},
+				{
+					"source": "DoDk"
 				}
 			],
 			"size": [
@@ -45454,7 +46286,7 @@
 					"name": "Petrifying Gaze",
 					"entries": [
 						"When a creature that can see the medusa's eyes starts its turn within 30 feet of the medusa, the medusa can force it to make a {@dc 14} Constitution saving throw if the medusa isn't {@condition incapacitated} and can see the creature. If the saving throw fails by 5 or more, the creature is instantly {@condition petrified}. Otherwise, a creature that fails the save begins to turn to stone and is {@condition restrained}. The {@condition restrained} creature must repeat the saving throw at the end of its next turn, becoming {@condition petrified} on a failure or ending the effect on a success. The petrification lasts until the creature is freed by the  {@spell greater restoration} spell or other magic.",
-						"Unless {@quickref Surprise|PHB|3|0|surprised}, a creature can avert its eyes to avoid the saving throw at the start of its turn. If the creature does so, it can't see the medusa until the start of its next turn, when it can avert its eyes again. If the creature looks at the medusa in the meantime, it must immediately make the save.",
+						"Unless {@status surprised}, a creature can avert its eyes to avoid the saving throw at the start of its turn. If the creature does so, it can't see the medusa until the start of its next turn, when it can avert its eyes again. If the creature looks at the medusa in the meantime, it must immediately make the save.",
 						"If the medusa sees itself reflected on a polished surface within 30 feet of it and in an area of bright light, the medusa is, due to its curse, affected by its own gaze."
 					]
 				}
@@ -45666,6 +46498,9 @@
 				},
 				{
 					"source": "DoDk"
+				},
+				{
+					"source": "QftIS"
 				}
 			],
 			"size": [
@@ -46051,6 +46886,12 @@
 				},
 				{
 					"source": "DoDk"
+				},
+				{
+					"source": "VEoR"
+				},
+				{
+					"source": "QftIS"
 				}
 			],
 			"size": [
@@ -46219,6 +47060,12 @@
 				},
 				{
 					"source": "BMT"
+				},
+				{
+					"source": "QftIS"
+				},
+				{
+					"source": "CoA"
 				}
 			],
 			"size": [
@@ -46644,6 +47491,9 @@
 				},
 				{
 					"source": "SatO"
+				},
+				{
+					"source": "QftIS"
 				}
 			],
 			"size": [
@@ -46796,6 +47646,9 @@
 				},
 				{
 					"source": "AATM"
+				},
+				{
+					"source": "VEoR"
 				}
 			],
 			"size": [
@@ -47220,6 +48073,9 @@
 					"source": "DoDk"
 				}
 			],
+			"reprintedAs": [
+				"Mule|XPHB"
+			],
 			"size": [
 				"M"
 			],
@@ -47338,6 +48194,9 @@
 				},
 				{
 					"source": "DoDk"
+				},
+				{
+					"source": "QftIS"
 				}
 			],
 			"size": [
@@ -47446,6 +48305,7 @@
 				"N"
 			],
 			"miscTags": [
+				"CUR",
 				"MW"
 			],
 			"conditionInflict": [
@@ -47483,6 +48343,9 @@
 				},
 				{
 					"source": "SatO"
+				},
+				{
+					"source": "CoA"
 				}
 			],
 			"size": [
@@ -47723,6 +48586,7 @@
 				"CC"
 			],
 			"miscTags": [
+				"CUR",
 				"MW"
 			],
 			"conditionInflict": [
@@ -47897,6 +48761,7 @@
 			],
 			"miscTags": [
 				"AOE",
+				"DIS",
 				"MW"
 			],
 			"conditionInflict": [
@@ -47931,6 +48796,9 @@
 				},
 				{
 					"source": "KftGV"
+				},
+				{
+					"source": "QftIS"
 				}
 			],
 			"size": [
@@ -48075,6 +48943,7 @@
 			],
 			"miscTags": [
 				"AOE",
+				"DIS",
 				"MW"
 			],
 			"conditionInflict": [
@@ -48211,6 +49080,15 @@
 				},
 				{
 					"source": "DoDk"
+				},
+				{
+					"source": "VEoR"
+				},
+				{
+					"source": "QftIS"
+				},
+				{
+					"source": "CoA"
 				}
 			],
 			"size": [
@@ -48537,6 +49415,9 @@
 				},
 				{
 					"source": "DoDk"
+				},
+				{
+					"source": "CoA"
 				}
 			],
 			"size": [
@@ -48887,6 +49768,9 @@
 				},
 				{
 					"source": "BMT"
+				},
+				{
+					"source": "VEoR"
 				}
 			],
 			"size": [
@@ -49072,6 +49956,12 @@
 				},
 				{
 					"source": "DoDk"
+				},
+				{
+					"source": "VEoR"
+				},
+				{
+					"source": "QftIS"
 				}
 			],
 			"size": [
@@ -49210,6 +50100,12 @@
 				},
 				{
 					"source": "BMT"
+				},
+				{
+					"source": "VEoR"
+				},
+				{
+					"source": "CoA"
 				}
 			],
 			"size": [
@@ -49601,6 +50497,9 @@
 				},
 				{
 					"source": "DoDk"
+				},
+				{
+					"source": "QftIS"
 				}
 			],
 			"size": [
@@ -49724,6 +50623,9 @@
 				{
 					"source": "WBtW"
 				}
+			],
+			"reprintedAs": [
+				"Octopus|XPHB"
 			],
 			"size": [
 				"S"
@@ -49898,6 +50800,9 @@
 				},
 				{
 					"source": "DoDk"
+				},
+				{
+					"source": "QftIS"
 				}
 			],
 			"size": [
@@ -50027,6 +50932,9 @@
 				},
 				{
 					"source": "DoDk"
+				},
+				{
+					"source": "VEoR"
 				}
 			],
 			"size": [
@@ -51102,6 +52010,7 @@
 				"P"
 			],
 			"miscTags": [
+				"DIS",
 				"MW",
 				"RCH"
 			],
@@ -51143,6 +52052,9 @@
 				{
 					"source": "DoDk"
 				}
+			],
+			"reprintedAs": [
+				"Owl|XPHB"
 			],
 			"size": [
 				"T"
@@ -51286,6 +52198,9 @@
 				},
 				{
 					"source": "BMT"
+				},
+				{
+					"source": "QftIS"
 				}
 			],
 			"size": [
@@ -51401,6 +52316,9 @@
 				{
 					"source": "WDH"
 				}
+			],
+			"reprintedAs": [
+				"Panther|XPHB"
 			],
 			"size": [
 				"M"
@@ -51608,6 +52526,9 @@
 				},
 				{
 					"source": "ToFW"
+				},
+				{
+					"source": "CoA"
 				}
 			],
 			"size": [
@@ -51919,6 +52840,9 @@
 				},
 				{
 					"source": "DoDk"
+				},
+				{
+					"source": "QftIS"
 				}
 			],
 			"size": [
@@ -52155,6 +53079,12 @@
 				},
 				{
 					"source": "ToFW"
+				},
+				{
+					"source": "VEoR"
+				},
+				{
+					"source": "CoA"
 				}
 			],
 			"size": [
@@ -52401,6 +53331,9 @@
 				},
 				{
 					"source": "BMT"
+				},
+				{
+					"source": "QftIS"
 				}
 			],
 			"size": [
@@ -52541,6 +53474,9 @@
 				},
 				{
 					"source": "DoDk"
+				},
+				{
+					"source": "CoA"
 				}
 			],
 			"size": [
@@ -52837,7 +53773,13 @@
 				},
 				{
 					"source": "IMR"
+				},
+				{
+					"source": "QftIS"
 				}
+			],
+			"reprintedAs": [
+				"Venomous Snake|XPHB"
 			],
 			"size": [
 				"T"
@@ -52928,6 +53870,9 @@
 				},
 				{
 					"source": "IDRotF"
+				},
+				{
+					"source": "CoA"
 				}
 			],
 			"size": [
@@ -53037,6 +53982,9 @@
 				},
 				{
 					"source": "ToFW"
+				},
+				{
+					"source": "QftIS"
 				}
 			],
 			"size": [
@@ -53192,6 +54140,9 @@
 					"source": "SatO"
 				}
 			],
+			"reprintedAs": [
+				"Pony|XPHB"
+			],
 			"size": [
 				"M"
 			],
@@ -53330,6 +54281,15 @@
 				},
 				{
 					"source": "DoDk"
+				},
+				{
+					"source": "VEoR"
+				},
+				{
+					"source": "QftIS"
+				},
+				{
+					"source": "CoA"
 				}
 			],
 			"size": [
@@ -53501,6 +54461,9 @@
 				{
 					"source": "DoDk"
 				}
+			],
+			"reprintedAs": [
+				"Pseudodragon|XPHB"
 			],
 			"size": [
 				"T"
@@ -53765,6 +54728,12 @@
 				},
 				{
 					"source": "DoDk"
+				},
+				{
+					"source": "VEoR"
+				},
+				{
+					"source": "CoA"
 				}
 			],
 			"size": [
@@ -53824,7 +54793,7 @@
 				{
 					"name": "Bite",
 					"entries": [
-						"{@atk mw} {@hit 14} to hit, reach 10 ft., one target. {@h}22 ({@damage 3d8 + 9}) piercing damage. If the target is a Large or smaller creature, it must succeed on a {@dc 19} Dexterity saving throw or be swallowed by the worm. A swallowed creature is {@condition blinded} and {@condition restrained}, it has total cover against attacks and other effects outside the worm, and it takes 21 ({@damage 6d6}) acid damage at the start of each of the worm's turns.",
+						"{@atk mw} {@hit 14} to hit, reach 10 ft., one target. {@h}22 ({@damage 3d8 + 9}) piercing damage. If the target is a Large or smaller creature, it must succeed on a {@dc 19} Dexterity saving throw or be swallowed by the worm. A swallowed creature is {@condition blinded} and {@condition restrained}, it has {@quickref Cover||3||total cover} against attacks and other effects outside the worm, and it takes 21 ({@damage 6d6}) acid damage at the start of each of the worm's turns.",
 						"If the worm takes 30 damage or more on a single turn from a creature inside it, the worm must succeed on a {@dc 21} Constitution saving throw at the end of that turn or regurgitate all swallowed creatures, which fall {@condition prone} in a space within 10 feet of the worm. If the worm dies, a swallowed creature is no longer {@condition restrained} by it and can escape from the corpse by using 20 feet of movement, exiting {@condition prone}."
 					]
 				},
@@ -53897,6 +54866,9 @@
 				},
 				{
 					"source": "ToFW"
+				},
+				{
+					"source": "CoA"
 				}
 			],
 			"size": [
@@ -54427,7 +55399,13 @@
 				},
 				{
 					"source": "DoDk"
+				},
+				{
+					"source": "VEoR"
 				}
+			],
+			"reprintedAs": [
+				"Quasit|XPHB"
 			],
 			"size": [
 				"T"
@@ -54708,6 +55686,9 @@
 				},
 				{
 					"source": "CM"
+				},
+				{
+					"source": "VEoR"
 				}
 			],
 			"size": [
@@ -54849,6 +55830,7 @@
 				"I"
 			],
 			"miscTags": [
+				"CUR",
 				"MW"
 			],
 			"savingThrowForcedSpell": [
@@ -54892,7 +55874,13 @@
 				},
 				{
 					"source": "DoDk"
+				},
+				{
+					"source": "QftIS"
 				}
+			],
+			"reprintedAs": [
+				"Rat|XPHB"
 			],
 			"size": [
 				"T"
@@ -54983,7 +55971,13 @@
 				},
 				{
 					"source": "KftGV"
+				},
+				{
+					"source": "VEoR"
 				}
+			],
+			"reprintedAs": [
+				"Raven|XPHB"
 			],
 			"size": [
 				"T"
@@ -55040,6 +56034,9 @@
 				"type": "internal",
 				"path": "bestiary/raven.mp3"
 			},
+			"traitTags": [
+				"Mimicry"
+			],
 			"damageTags": [
 				"P"
 			],
@@ -55402,6 +56399,7 @@
 				"Y"
 			],
 			"miscTags": [
+				"DIS",
 				"MW"
 			],
 			"savingThrowForced": [
@@ -55433,6 +56431,9 @@
 				{
 					"source": "JttRC"
 				}
+			],
+			"reprintedAs": [
+				"Reef Shark|XPHB"
 			],
 			"size": [
 				"M"
@@ -55550,6 +56551,9 @@
 				},
 				{
 					"source": "BMT"
+				},
+				{
+					"source": "CoA"
 				}
 			],
 			"size": [
@@ -55609,7 +56613,7 @@
 				{
 					"name": "Swallow",
 					"entries": [
-						"The remorhaz makes one bite attack against a Medium or smaller creature it is grappling. If the attack hits, that creature takes the bite's damage and is swallowed, and the grapple ends. While swallowed, the creature is {@condition blinded} and {@condition restrained}, it has total cover against attacks and other effects outside the remorhaz, and it takes 21 ({@damage 6d6}) acid damage at the start of each of the remorhaz's turns.",
+						"The remorhaz makes one bite attack against a Medium or smaller creature it is grappling. If the attack hits, that creature takes the bite's damage and is swallowed, and the grapple ends. While swallowed, the creature is {@condition blinded} and {@condition restrained}, it has {@quickref Cover||3||total cover} against attacks and other effects outside the remorhaz, and it takes 21 ({@damage 6d6}) acid damage at the start of each of the remorhaz's turns.",
 						"If the remorhaz takes 30 damage or more on a single turn from a creature inside it, the remorhaz must succeed on a {@dc 15} Constitution saving throw at the end of that turn or regurgitate all swallowed creatures, which fall {@condition prone} in a space within 10 feet of the remorhaz. If the remorhaz dies, a swallowed creature is no longer {@condition restrained} by it and can escape from the corpse using 15 feet of movement, exiting {@condition prone}."
 					]
 				}
@@ -55864,6 +56868,9 @@
 				},
 				{
 					"source": "ToFW"
+				},
+				{
+					"source": "QftIS"
 				}
 			],
 			"size": [
@@ -55978,7 +56985,13 @@
 				},
 				{
 					"source": "DoDk"
+				},
+				{
+					"source": "QftIS"
 				}
+			],
+			"reprintedAs": [
+				"Riding Horse|XPHB"
 			],
 			"size": [
 				"L"
@@ -56068,6 +57081,9 @@
 				},
 				{
 					"source": "SatO"
+				},
+				{
+					"source": "VEoR"
 				}
 			],
 			"size": [
@@ -56209,6 +57225,9 @@
 				},
 				{
 					"source": "DoDk"
+				},
+				{
+					"source": "QftIS"
 				}
 			],
 			"size": [
@@ -56378,6 +57397,9 @@
 				},
 				{
 					"source": "DoDk"
+				},
+				{
+					"source": "QftIS"
 				}
 			],
 			"size": [
@@ -56504,6 +57526,9 @@
 				},
 				{
 					"source": "SatO"
+				},
+				{
+					"source": "QftIS"
 				}
 			],
 			"size": [
@@ -56619,6 +57644,9 @@
 				},
 				{
 					"source": "ToFW"
+				},
+				{
+					"source": "QftIS"
 				}
 			],
 			"size": [
@@ -57230,6 +58258,9 @@
 				},
 				{
 					"source": "BMT"
+				},
+				{
+					"source": "CoA"
 				}
 			],
 			"size": [
@@ -57389,6 +58420,9 @@
 				},
 				{
 					"source": "BMT"
+				},
+				{
+					"source": "QftIS"
 				}
 			],
 			"size": [
@@ -57696,6 +58730,9 @@
 					"source": "PSX"
 				}
 			],
+			"reprintedAs": [
+				"Scorpion|XPHB"
+			],
 			"size": [
 				"T"
 			],
@@ -57839,6 +58876,12 @@
 				},
 				{
 					"source": "DoDk"
+				},
+				{
+					"source": "QftIS"
+				},
+				{
+					"source": "CoA"
 				}
 			],
 			"size": [
@@ -57996,6 +59039,9 @@
 				},
 				{
 					"source": "DoDk"
+				},
+				{
+					"source": "CoA"
 				}
 			],
 			"size": [
@@ -58052,7 +59098,7 @@
 					"name": "Horrific Appearance",
 					"entries": [
 						"Any humanoid that starts its turn within 30 feet of the hag and can see the hag's true form must make a {@dc 11} Wisdom saving throw. On a failed save, the creature is {@condition frightened} for 1 minute. A creature can repeat the saving throw at the end of each of its turns, with disadvantage if the hag is within line of sight, ending the effect on itself on a success. If a creature's saving throw is successful or the effect ends for it, the creature is immune to the hag's Horrific Appearance for the next 24 hours.",
-						"Unless the target is {@quickref Surprise|PHB|3|0|surprised} or the revelation of the hag's true form is sudden, the target can avert its eyes and avoid making the initial saving throw. Until the start of its next turn, a creature that averts its eyes has disadvantage on attack rolls against the hag."
+						"Unless the target is {@status surprised} or the revelation of the hag's true form is sudden, the target can avert its eyes and avoid making the initial saving throw. Until the start of its next turn, a creature that averts its eyes has disadvantage on attack rolls against the hag."
 					]
 				}
 			],
@@ -58379,6 +59425,12 @@
 				},
 				{
 					"source": "DoDk"
+				},
+				{
+					"source": "VEoR"
+				},
+				{
+					"source": "QftIS"
 				}
 			],
 			"size": [
@@ -58551,6 +59603,9 @@
 				},
 				{
 					"source": "BMT"
+				},
+				{
+					"source": "CoA"
 				}
 			],
 			"size": [
@@ -58741,6 +59796,12 @@
 				},
 				{
 					"source": "DoDk"
+				},
+				{
+					"source": "VEoR"
+				},
+				{
+					"source": "QftIS"
 				}
 			],
 			"size": [
@@ -58905,6 +59966,12 @@
 				},
 				{
 					"source": "DoDk"
+				},
+				{
+					"source": "VEoR"
+				},
+				{
+					"source": "CoA"
 				}
 			],
 			"size": [
@@ -59041,6 +60108,15 @@
 				},
 				{
 					"source": "PaBTSO"
+				},
+				{
+					"source": "VEoR"
+				},
+				{
+					"source": "QftIS"
+				},
+				{
+					"source": "CoA"
 				}
 			],
 			"size": [
@@ -59415,7 +60491,16 @@
 				},
 				{
 					"source": "DoDk"
+				},
+				{
+					"source": "VEoR"
+				},
+				{
+					"source": "QftIS"
 				}
+			],
+			"reprintedAs": [
+				"Skeleton|XPHB"
 			],
 			"size": [
 				"M"
@@ -59535,6 +60620,9 @@
 				{
 					"source": "SatO"
 				}
+			],
+			"reprintedAs": [
+				"Slaad Tadpole|XPHB"
 			],
 			"size": [
 				"T"
@@ -60067,6 +61155,9 @@
 				},
 				{
 					"source": "ToFW"
+				},
+				{
+					"source": "QftIS"
 				}
 			],
 			"size": [
@@ -60307,6 +61398,12 @@
 				},
 				{
 					"source": "BMT"
+				},
+				{
+					"source": "VEoR"
+				},
+				{
+					"source": "QftIS"
 				}
 			],
 			"size": [
@@ -60452,6 +61549,9 @@
 					"source": "KftGV"
 				}
 			],
+			"reprintedAs": [
+				"Spider|XPHB"
+			],
 			"size": [
 				"T"
 			],
@@ -60557,6 +61657,9 @@
 				},
 				{
 					"source": "PSI"
+				},
+				{
+					"source": "CoA"
 				}
 			],
 			"size": [
@@ -60732,6 +61835,9 @@
 				},
 				{
 					"source": "PaBTSO"
+				},
+				{
+					"source": "VEoR"
 				}
 			],
 			"size": [
@@ -60939,7 +62045,13 @@
 				},
 				{
 					"source": "BMT"
+				},
+				{
+					"source": "QftIS"
 				}
+			],
+			"reprintedAs": [
+				"Sprite|XPHB"
 			],
 			"size": [
 				"T"
@@ -61127,6 +62239,12 @@
 				},
 				{
 					"source": "DoDk"
+				},
+				{
+					"source": "QftIS"
+				},
+				{
+					"source": "CoA"
 				}
 			],
 			"size": [
@@ -61453,6 +62571,9 @@
 				},
 				{
 					"source": "PaBTSO"
+				},
+				{
+					"source": "QftIS"
 				}
 			],
 			"size": [
@@ -61549,6 +62670,9 @@
 				},
 				{
 					"source": "DoDk"
+				},
+				{
+					"source": "QftIS"
 				}
 			],
 			"size": [
@@ -61771,6 +62895,15 @@
 				},
 				{
 					"source": "DoDk"
+				},
+				{
+					"source": "VEoR"
+				},
+				{
+					"source": "QftIS"
+				},
+				{
+					"source": "CoA"
 				}
 			],
 			"size": [
@@ -62151,6 +63284,9 @@
 				},
 				{
 					"source": "GHLoE"
+				},
+				{
+					"source": "CoA"
 				}
 			],
 			"size": [
@@ -62336,6 +63472,9 @@
 				},
 				{
 					"source": "AATM"
+				},
+				{
+					"source": "QftIS"
 				}
 			],
 			"size": [
@@ -62804,6 +63943,12 @@
 				},
 				{
 					"source": "JttRC"
+				},
+				{
+					"source": "VEoR"
+				},
+				{
+					"source": "QftIS"
 				}
 			],
 			"size": [
@@ -62941,6 +64086,9 @@
 				},
 				{
 					"source": "GHLoE"
+				},
+				{
+					"source": "QftIS"
 				}
 			],
 			"size": [
@@ -63315,6 +64463,9 @@
 				},
 				{
 					"source": "BMT"
+				},
+				{
+					"source": "QftIS"
 				}
 			],
 			"size": [
@@ -63446,6 +64597,9 @@
 				},
 				{
 					"source": "WBtW"
+				},
+				{
+					"source": "QftIS"
 				}
 			],
 			"size": [
@@ -63693,7 +64847,7 @@
 				{
 					"name": "Swallow",
 					"entries": [
-						"The tarrasque makes one bite attack against a Large or smaller creature it is grappling. If the attack hits, the target takes the bite's damage, the target is swallowed, and the grapple ends. While swallowed, the creature is {@condition blinded} and {@condition restrained}, it has total cover against attacks and other effects outside the tarrasque, and it takes 56 ({@damage 16d6}) acid damage at the start of each of the tarrasque's turns.",
+						"The tarrasque makes one bite attack against a Large or smaller creature it is grappling. If the attack hits, the target takes the bite's damage, the target is swallowed, and the grapple ends. While swallowed, the creature is {@condition blinded} and {@condition restrained}, it has {@quickref Cover||3||total cover} against attacks and other effects outside the tarrasque, and it takes 56 ({@damage 16d6}) acid damage at the start of each of the tarrasque's turns.",
 						"If the tarrasque takes 60 damage or more on a single turn from a creature inside it, the tarrasque must succeed on a {@dc 20} Constitution saving throw at the end of that turn or regurgitate all swallowed creatures, which fall {@condition prone} in a space within 10 feet of the tarrasque. If the tarrasque dies, a swallowed creature is no longer {@condition restrained} by it and can escape from the corpse by using 30 feet of movement, exiting {@condition prone}."
 					]
 				}
@@ -63774,6 +64928,9 @@
 				},
 				{
 					"source": "LoX"
+				},
+				{
+					"source": "QftIS"
 				}
 			],
 			"size": [
@@ -64076,6 +65233,9 @@
 				},
 				{
 					"source": "DoDk"
+				},
+				{
+					"source": "CoA"
 				}
 			],
 			"size": [
@@ -64208,6 +65368,9 @@
 				{
 					"source": "MOT"
 				}
+			],
+			"reprintedAs": [
+				"Tiger|XPHB"
 			],
 			"size": [
 				"L"
@@ -64364,6 +65527,12 @@
 				},
 				{
 					"source": "DoDk"
+				},
+				{
+					"source": "VEoR"
+				},
+				{
+					"source": "QftIS"
 				}
 			],
 			"size": [
@@ -64620,6 +65789,9 @@
 				},
 				{
 					"source": "ToFW"
+				},
+				{
+					"source": "CoA"
 				}
 			],
 			"size": [
@@ -64714,6 +65886,12 @@
 				},
 				{
 					"source": "BMT"
+				},
+				{
+					"source": "QftIS"
+				},
+				{
+					"source": "CoA"
 				}
 			],
 			"size": [
@@ -64874,6 +66052,9 @@
 				},
 				{
 					"source": "BMT"
+				},
+				{
+					"source": "QftIS"
 				}
 			],
 			"size": [
@@ -65055,6 +66236,9 @@
 				},
 				{
 					"source": "DoDk"
+				},
+				{
+					"source": "QftIS"
 				}
 			],
 			"size": [
@@ -65473,6 +66657,9 @@
 				},
 				{
 					"source": "DoDk"
+				},
+				{
+					"source": "QftIS"
 				}
 			],
 			"size": [
@@ -65826,6 +67013,12 @@
 				},
 				{
 					"source": "BMT"
+				},
+				{
+					"source": "QftIS"
+				},
+				{
+					"source": "CoA"
 				}
 			],
 			"size": [
@@ -65873,7 +67066,7 @@
 					"entries": [
 						"When a creature starts its turn within 30 feet of the umber hulk and is able to see the umber hulk's eyes, the umber hulk can magically force it to make a {@dc 15} Charisma saving throw, unless the umber hulk is {@condition incapacitated}.",
 						"On a failed saving throw, the creature can't take reactions until the start of its next turn and rolls a {@dice d8} to determine what it does during that turn. On a 1 to 4, the creature does nothing. On a 5 or 6, the creature takes no action but uses all its movement to move in a random direction. On a 7 or 8, the creature makes one melee attack against a random creature, or it does nothing if no creature is within reach.",
-						"Unless {@quickref Surprise|PHB|3|0|surprised}, a creature can avert its eyes to avoid the saving throw at the start of its turn. If the creature does so, it can't see the umber hulk until the start of its next turn, when it can avert its eyes again. If the creature looks at the umber hulk in the meantime, it must immediately make the save."
+						"Unless {@status surprised}, a creature can avert its eyes to avoid the saving throw at the start of its turn. If the creature does so, it can't see the umber hulk until the start of its next turn, when it can avert its eyes again. If the creature looks at the umber hulk in the meantime, it must immediately make the save."
 					]
 				},
 				{
@@ -65965,6 +67158,12 @@
 				},
 				{
 					"source": "SatO"
+				},
+				{
+					"source": "VEoR"
+				},
+				{
+					"source": "QftIS"
 				}
 			],
 			"size": [
@@ -66213,6 +67412,9 @@
 				},
 				{
 					"source": "BMT"
+				},
+				{
+					"source": "VEoR"
 				}
 			],
 			"size": [
@@ -66466,6 +67668,12 @@
 				},
 				{
 					"source": "GHLoE"
+				},
+				{
+					"source": "VEoR"
+				},
+				{
+					"source": "QftIS"
 				}
 			],
 			"size": [
@@ -67213,6 +68421,15 @@
 				},
 				{
 					"source": "DoDk"
+				},
+				{
+					"source": "VEoR"
+				},
+				{
+					"source": "QftIS"
+				},
+				{
+					"source": "CoA"
 				}
 			],
 			"size": [
@@ -67598,6 +68815,9 @@
 				},
 				{
 					"source": "DoDk"
+				},
+				{
+					"source": "VEoR"
 				}
 			],
 			"size": [
@@ -67896,6 +69116,9 @@
 				{
 					"source": "DoDk"
 				}
+			],
+			"reprintedAs": [
+				"Warhorse|XPHB"
 			],
 			"size": [
 				"L"
@@ -68243,6 +69466,12 @@
 				},
 				{
 					"source": "DoDk"
+				},
+				{
+					"source": "VEoR"
+				},
+				{
+					"source": "QftIS"
 				}
 			],
 			"size": [
@@ -68414,6 +69643,12 @@
 				},
 				{
 					"source": "LK"
+				},
+				{
+					"source": "VEoR"
+				},
+				{
+					"source": "QftIS"
 				}
 			],
 			"size": [
@@ -68539,7 +69774,13 @@
 				},
 				{
 					"source": "PaBTSO"
+				},
+				{
+					"source": "QftIS"
 				}
+			],
+			"reprintedAs": [
+				"Weasel|XPHB"
 			],
 			"size": [
 				"T"
@@ -68760,6 +70001,7 @@
 				"S"
 			],
 			"miscTags": [
+				"CUR",
 				"MLW",
 				"MW"
 			],
@@ -68946,6 +70188,7 @@
 				"S"
 			],
 			"miscTags": [
+				"CUR",
 				"MLW",
 				"MW"
 			],
@@ -69001,6 +70244,9 @@
 				},
 				{
 					"source": "BMT"
+				},
+				{
+					"source": "QftIS"
 				}
 			],
 			"size": [
@@ -69135,6 +70381,7 @@
 				"P"
 			],
 			"miscTags": [
+				"CUR",
 				"MLW",
 				"MW",
 				"RNG",
@@ -69318,6 +70565,7 @@
 				"S"
 			],
 			"miscTags": [
+				"CUR",
 				"MLW",
 				"MW",
 				"RNG",
@@ -69379,6 +70627,9 @@
 				},
 				{
 					"source": "BMT"
+				},
+				{
+					"source": "VEoR"
 				}
 			],
 			"size": [
@@ -69520,6 +70771,7 @@
 				"S"
 			],
 			"miscTags": [
+				"CUR",
 				"MLW",
 				"MW",
 				"RW",
@@ -69801,6 +71053,12 @@
 				},
 				{
 					"source": "DoDk"
+				},
+				{
+					"source": "VEoR"
+				},
+				{
+					"source": "QftIS"
 				}
 			],
 			"size": [
@@ -70008,6 +71266,12 @@
 				},
 				{
 					"source": "DoDk"
+				},
+				{
+					"source": "VEoR"
+				},
+				{
+					"source": "QftIS"
 				}
 			],
 			"size": [
@@ -70476,7 +71740,16 @@
 				},
 				{
 					"source": "GHLoE"
+				},
+				{
+					"source": "QftIS"
+				},
+				{
+					"source": "CoA"
 				}
+			],
+			"reprintedAs": [
+				"Wolf|XPHB"
 			],
 			"size": [
 				"M"
@@ -70769,6 +72042,12 @@
 				},
 				{
 					"source": "DoDk"
+				},
+				{
+					"source": "VEoR"
+				},
+				{
+					"source": "QftIS"
 				}
 			],
 			"size": [
@@ -70937,6 +72216,9 @@
 				},
 				{
 					"source": "BMT"
+				},
+				{
+					"source": "QftIS"
 				}
 			],
 			"size": [
@@ -71049,6 +72331,12 @@
 				},
 				{
 					"source": "SatO"
+				},
+				{
+					"source": "QftIS"
+				},
+				{
+					"source": "CoA"
 				}
 			],
 			"size": [
@@ -71333,6 +72621,9 @@
 				},
 				{
 					"source": "PaBTSO"
+				},
+				{
+					"source": "VEoR"
 				}
 			],
 			"size": [
@@ -71806,6 +73097,9 @@
 				},
 				{
 					"source": "LK"
+				},
+				{
+					"source": "QftIS"
 				}
 			],
 			"size": [
@@ -72274,6 +73568,9 @@
 				},
 				{
 					"source": "DoDk"
+				},
+				{
+					"source": "QftIS"
 				}
 			],
 			"size": [
@@ -73289,6 +74586,12 @@
 				},
 				{
 					"source": "BMT"
+				},
+				{
+					"source": "QftIS"
+				},
+				{
+					"source": "CoA"
 				}
 			],
 			"size": [
@@ -73501,6 +74804,12 @@
 			"otherSources": [
 				{
 					"source": "AATM"
+				},
+				{
+					"source": "QftIS"
+				},
+				{
+					"source": "CoA"
 				}
 			],
 			"size": [
@@ -75395,7 +76704,16 @@
 				},
 				{
 					"source": "DoDk"
+				},
+				{
+					"source": "VEoR"
+				},
+				{
+					"source": "QftIS"
 				}
+			],
+			"reprintedAs": [
+				"Zombie|XPHB"
 			],
 			"size": [
 				"M"

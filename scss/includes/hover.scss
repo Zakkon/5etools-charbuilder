@@ -1,14 +1,4 @@
-@use "vars";
-
-@keyframes kf-fade-in {
-	from {
-		opacity: 0;
-	}
-
-	to {
-		opacity: 1;
-	}
-}
+@use "../vars/vars";
 
 .hwin {
 	position: fixed;
@@ -72,7 +62,7 @@
 		margin-bottom: 5px;
 	}
 
-	.rnd-name {
+	.stats__th-name {
 		font-size: 22.4px;
 	}
 
@@ -90,10 +80,6 @@
 	min-height: 3px;
 	max-height: 16px;
 	text-align: right;
-
-	&--btm {
-		cursor: ns-resize;
-	}
 
 	&--top {
 		cursor: move;
@@ -169,6 +155,7 @@
 		right: 4px;
 		left: 4px;
 		height: 2px;
+		cursor: ns-resize;
 	}
 
 	&__resize-sw {

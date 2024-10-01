@@ -118,6 +118,7 @@
 				"charisma",
 				"constitution"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -245,6 +246,7 @@
 			"savingThrowForced": [
 				"dexterity"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -448,6 +450,7 @@
 				"dexterity",
 				"wisdom"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -643,6 +646,7 @@
 				"dexterity",
 				"wisdom"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -833,6 +837,7 @@
 				"dexterity",
 				"wisdom"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -1019,6 +1024,7 @@
 				"dexterity",
 				"wisdom"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -1236,6 +1242,7 @@
 				"dexterity",
 				"wisdom"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -1436,6 +1443,7 @@
 				"strength",
 				"wisdom"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -1609,6 +1617,7 @@
 			"savingThrowForced": [
 				"strength"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -1743,6 +1752,7 @@
 			"savingThrowForced": [
 				"dexterity"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -1874,6 +1884,7 @@
 				"charisma",
 				"constitution"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -2050,6 +2061,7 @@
 			"savingThrowForced": [
 				"dexterity"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -2148,6 +2160,7 @@
 				"RW",
 				"THW"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -2254,6 +2267,7 @@
 			"savingThrowForced": [
 				"constitution"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -2457,6 +2471,7 @@
 				"dexterity",
 				"wisdom"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -2652,6 +2667,7 @@
 				"dexterity",
 				"wisdom"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -2842,6 +2858,7 @@
 				"dexterity",
 				"wisdom"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -3028,6 +3045,7 @@
 				"dexterity",
 				"wisdom"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -3177,6 +3195,7 @@
 				"constitution",
 				"dexterity"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -3404,6 +3423,7 @@
 				"dexterity",
 				"wisdom"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -3604,6 +3624,7 @@
 				"strength",
 				"wisdom"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -3733,6 +3754,7 @@
 				"charisma",
 				"constitution"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -3869,6 +3891,7 @@
 				"dexterity",
 				"wisdom"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -4014,6 +4037,7 @@
 				"dexterity",
 				"strength"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -4161,6 +4185,7 @@
 			"savingThrowForced": [
 				"strength"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -4309,6 +4334,7 @@
 			],
 			"miscTags": [
 				"AOE",
+				"DIS",
 				"MW"
 			],
 			"conditionInflict": [
@@ -4318,6 +4344,7 @@
 				"constitution",
 				"dexterity"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -4429,6 +4456,7 @@
 				"grappled",
 				"restrained"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -4599,6 +4627,7 @@
 			"savingThrowForcedSpell": [
 				"wisdom"
 			],
+			"hasToken": true,
 			"hasFluff": true
 		},
 		{
@@ -4831,6 +4860,7 @@
 			"savingThrowForced": [
 				"constitution"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -5032,6 +5062,7 @@
 				"dexterity",
 				"wisdom"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -5184,6 +5215,7 @@
 			"savingThrowForced": [
 				"dexterity"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -5291,6 +5323,7 @@
 				"P"
 			],
 			"miscTags": [
+				"DIS",
 				"MW",
 				"RCH"
 			],
@@ -5302,6 +5335,7 @@
 			"savingThrowForced": [
 				"constitution"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -5429,6 +5463,7 @@
 				"constitution",
 				"dexterity"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -5537,6 +5572,7 @@
 			"savingThrowForced": [
 				"constitution"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -5713,6 +5749,7 @@
 				"strength",
 				"wisdom"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -5801,6 +5838,7 @@
 			"savingThrowForced": [
 				"constitution"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -6017,6 +6055,7 @@
 			"savingThrowForcedSpell": [
 				"charisma"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -6119,6 +6158,7 @@
 				"constitution",
 				"dexterity"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -6264,6 +6304,7 @@
 				"RW",
 				"THW"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -6411,6 +6452,7 @@
 			"savingThrowForcedSpell": [
 				"wisdom"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -6628,6 +6670,7 @@
 				"strength",
 				"wisdom"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -6753,6 +6796,7 @@
 				"MLW",
 				"MW"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -6860,6 +6904,7 @@
 			"savingThrowForced": [
 				"constitution"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -6998,6 +7043,7 @@
 				"charisma",
 				"constitution"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -7125,6 +7171,7 @@
 				"constitution",
 				"dexterity"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -7255,6 +7302,7 @@
 			"savingThrowForced": [
 				"constitution"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -7362,6 +7410,7 @@
 			"savingThrowForced": [
 				"constitution"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -7495,7 +7544,7 @@
 				{
 					"name": "Enclose",
 					"entries": [
-						"The berstuc encloses a Medium or smaller creature {@condition grappled} by it in a mossy growth on the berstuc's body, and the grapple ends. While enclosed in the berstuc's growth, the target is {@condition blinded} and {@condition restrained}, it has total cover from attacks and other effects outside the berstuc, and it takes 21 ({@damage 6d6}) poison damage at the start of each of the berstuc's turns. The berstuc can have only one creature enclosed at a time.",
+						"The berstuc encloses a Medium or smaller creature {@condition grappled} by it in a mossy growth on the berstuc's body, and the grapple ends. While enclosed in the berstuc's growth, the target is {@condition blinded} and {@condition restrained}, it has {@quickref Cover||3||total cover} from attacks and other effects outside the berstuc, and it takes 21 ({@damage 6d6}) poison damage at the start of each of the berstuc's turns. The berstuc can have only one creature enclosed at a time.",
 						"If the berstuc takes 30 damage or more on a single turn from a creature inside its growth, the berstuc must succeed on a {@dc 15} Constitution saving throw at the end of that turn or expel the enclosed creature as the growth bursts. The expelled creature falls {@condition prone} in a space within 5 feet of the berstuc. If the berstuc dies, an enclosed creature is no longer {@condition restrained} by it and can escape from the growth by using 5 feet of movement, exiting {@condition prone}."
 					]
 				}
@@ -7534,6 +7583,7 @@
 			"savingThrowForced": [
 				"constitution"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -7671,6 +7721,7 @@
 			"savingThrowForced": [
 				"dexterity"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -7736,7 +7787,7 @@
 				{
 					"name": "Bite",
 					"entries": [
-						"{@atk mw} {@hit 8} to hit, reach 5 ft., one target. {@h}19 ({@damage 4d6 + 5}) piercing damage. If the target is {@condition incapacitated} and a Medium or smaller creature, the target is swallowed. A swallowed creature is {@condition blinded} and {@condition restrained}, it has total cover against attacks and other effects outside the blemmyes, and it takes 14 ({@damage 4d6}) acid damage at the start of each of the blemmyes' turns. The blemmyes can have only one target swallowed at a time.",
+						"{@atk mw} {@hit 8} to hit, reach 5 ft., one target. {@h}19 ({@damage 4d6 + 5}) piercing damage. If the target is {@condition incapacitated} and a Medium or smaller creature, the target is swallowed. A swallowed creature is {@condition blinded} and {@condition restrained}, it has {@quickref Cover||3||total cover} against attacks and other effects outside the blemmyes, and it takes 14 ({@damage 4d6}) acid damage at the start of each of the blemmyes' turns. The blemmyes can have only one target swallowed at a time.",
 						"If the blemmyes takes 20 damage or more on a single turn from the swallowed creature, the blemmyes must succeed on a {@dc 15} Constitution saving throw at the end of that turn or regurgitate the creature, which falls {@condition prone} in a space within 5 feet of the blemmyes. If the blemmyes dies, a swallowed creature is no longer {@condition restrained} by it and can escape from the corpse using 5 feet of movement, exiting {@condition prone}."
 					]
 				},
@@ -7787,6 +7838,7 @@
 				"constitution",
 				"wisdom"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -7960,6 +8012,7 @@
 			"savingThrowForcedSpell": [
 				"wisdom"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -8128,6 +8181,7 @@
 			"savingThrowForcedSpell": [
 				"strength"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -8320,6 +8374,7 @@
 			"savingThrowForced": [
 				"constitution"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -8349,6 +8404,9 @@
 			"speed": {
 				"walk": 20,
 				"swim": 10
+			},
+			"initiative": {
+				"advantageMode": "adv"
 			},
 			"str": 10,
 			"dex": 14,
@@ -8428,11 +8486,13 @@
 				"S"
 			],
 			"miscTags": [
+				"DIS",
 				"MW"
 			],
 			"savingThrowForced": [
 				"constitution"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -8578,6 +8638,7 @@
 				"grappled",
 				"restrained"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -8769,6 +8830,7 @@
 			],
 			"miscTags": [
 				"AOE",
+				"DIS",
 				"MW"
 			],
 			"conditionInflict": [
@@ -8787,6 +8849,7 @@
 				"constitution",
 				"wisdom"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -8946,6 +9009,7 @@
 				"constitution",
 				"dexterity"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -9065,6 +9129,7 @@
 			"miscTags": [
 				"MW"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -9183,6 +9248,7 @@
 			"savingThrowForced": [
 				"constitution"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -9318,6 +9384,7 @@
 			"savingThrowForced": [
 				"constitution"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -9502,6 +9569,7 @@
 				"charisma",
 				"constitution"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -9618,6 +9686,7 @@
 				"MW",
 				"RW"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -9730,6 +9799,7 @@
 				"constitution",
 				"dexterity"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -9942,6 +10012,7 @@
 				"charisma",
 				"wisdom"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -10035,6 +10106,7 @@
 			"savingThrowForced": [
 				"dexterity"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -10147,6 +10219,7 @@
 				"constitution",
 				"strength"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -10267,6 +10340,7 @@
 			"savingThrowForced": [
 				"constitution"
 			],
+			"hasToken": true,
 			"hasFluff": true
 		},
 		{
@@ -10374,6 +10448,7 @@
 			"savingThrowForced": [
 				"constitution"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -10523,6 +10598,7 @@
 				"dexterity",
 				"strength"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -10715,6 +10791,7 @@
 			"savingThrowForcedSpell": [
 				"wisdom"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -10851,6 +10928,7 @@
 			"savingThrowForced": [
 				"constitution"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -10960,6 +11038,7 @@
 			"conditionInflict": [
 				"grappled"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -11159,6 +11238,7 @@
 			"savingThrowForcedSpell": [
 				"wisdom"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -11297,6 +11377,7 @@
 			"savingThrowForced": [
 				"wisdom"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -11397,6 +11478,7 @@
 			"savingThrowForced": [
 				"constitution"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -11505,6 +11587,7 @@
 			"savingThrowForced": [
 				"dexterity"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -11541,6 +11624,9 @@
 			},
 			"speed": {
 				"walk": 30
+			},
+			"initiative": {
+				"advantageMode": "adv"
 			},
 			"str": 13,
 			"dex": 16,
@@ -11644,6 +11730,7 @@
 				"MW",
 				"RW"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -11813,6 +11900,7 @@
 			"savingThrowForced": [
 				"dexterity"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -11932,6 +12020,7 @@
 			"savingThrowForced": [
 				"constitution"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -12041,6 +12130,7 @@
 			"miscTags": [
 				"MW"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -12176,6 +12266,7 @@
 				"dexterity",
 				"strength"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -12336,6 +12427,7 @@
 			"savingThrowForced": [
 				"dexterity"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -12496,6 +12588,7 @@
 			"savingThrowForced": [
 				"dexterity"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -12635,6 +12728,7 @@
 			"conditionInflict": [
 				"restrained"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -12775,6 +12869,7 @@
 				"constitution",
 				"dexterity"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -12923,6 +13018,7 @@
 			"savingThrowForcedSpell": [
 				"wisdom"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -13033,6 +13129,7 @@
 			"savingThrowForced": [
 				"dexterity"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -13174,6 +13271,7 @@
 				"constitution",
 				"dexterity"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -13322,6 +13420,7 @@
 				"constitution",
 				"strength"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -13474,6 +13573,7 @@
 			"savingThrowForced": [
 				"dexterity"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -13596,6 +13696,7 @@
 				"constitution",
 				"dexterity"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -13720,6 +13821,7 @@
 				"constitution",
 				"dexterity"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -13892,6 +13994,7 @@
 				"dexterity",
 				"wisdom"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -14036,6 +14139,7 @@
 				"S"
 			],
 			"miscTags": [
+				"DIS",
 				"MLW",
 				"MW"
 			],
@@ -14046,6 +14150,7 @@
 			"savingThrowForced": [
 				"constitution"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -14199,6 +14304,7 @@
 			"savingThrowForcedSpell": [
 				"wisdom"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -14317,6 +14423,7 @@
 				"constitution",
 				"dexterity"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -14432,6 +14539,7 @@
 			"savingThrowForced": [
 				"constitution"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -14603,6 +14711,7 @@
 			"savingThrowForced": [
 				"constitution"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -14753,6 +14862,7 @@
 				"constitution",
 				"dexterity"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -14851,6 +14961,7 @@
 			"miscTags": [
 				"MW"
 			],
+			"hasToken": true,
 			"hasFluff": true
 		},
 		{
@@ -15031,6 +15142,7 @@
 				"dexterity",
 				"wisdom"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -15197,6 +15309,7 @@
 			"savingThrowForcedSpell": [
 				"wisdom"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -15319,6 +15432,7 @@
 			"savingThrowForced": [
 				"dexterity"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -15559,6 +15673,7 @@
 			"savingThrowForcedSpell": [
 				"constitution"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -15831,6 +15946,7 @@
 				"dexterity",
 				"wisdom"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -16076,6 +16192,7 @@
 			],
 			"miscTags": [
 				"AOE",
+				"DIS",
 				"MW",
 				"RCH"
 			],
@@ -16096,6 +16213,7 @@
 				"dexterity",
 				"wisdom"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -16243,7 +16361,7 @@
 				{
 					"name": "Bite",
 					"entries": [
-						"{@atk mw} {@hit 16} to hit, reach 10 ft., one target. {@h}22 ({@damage 2d12 + 9}) piercing damage. If the target is a Large or smaller creature, it must succeed on a {@dc 21} Dexterity saving throw or be swallowed by Qorgeth. A swallowed creature is {@condition blinded} and {@condition restrained}, it has total cover against attacks and other effects outside the worm, and it takes 16 ({@damage 3d10}) necrotic damage at the start of each of Qorgeth's turns.",
+						"{@atk mw} {@hit 16} to hit, reach 10 ft., one target. {@h}22 ({@damage 2d12 + 9}) piercing damage. If the target is a Large or smaller creature, it must succeed on a {@dc 21} Dexterity saving throw or be swallowed by Qorgeth. A swallowed creature is {@condition blinded} and {@condition restrained}, it has {@quickref Cover||3||total cover} against attacks and other effects outside the worm, and it takes 16 ({@damage 3d10}) necrotic damage at the start of each of Qorgeth's turns.",
 						"If Qorgeth takes 50 damage or more in a single turn from a creature inside it, Qorgeth must succeed on a {@dc 25} Constitution saving throw at the end of that turn or regurgitate all swallowed creatures, which fall {@condition prone} in a space within 10 feet of Qorgeth. If Qorgeth dies, a swallowed creature is no longer {@condition restrained} by it and can escape the corpse by spending 30 feet of movement, exiting {@condition prone}."
 					]
 				},
@@ -16342,6 +16460,7 @@
 				"constitution",
 				"dexterity"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -16469,6 +16588,7 @@
 			"savingThrowForced": [
 				"wisdom"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -16633,6 +16753,7 @@
 			"savingThrowForced": [
 				"wisdom"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -16740,6 +16861,7 @@
 				"RCH",
 				"RW"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -16946,6 +17068,7 @@
 				"dexterity",
 				"wisdom"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -17064,6 +17187,7 @@
 			"savingThrowForced": [
 				"constitution"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -17191,6 +17315,7 @@
 			"savingThrowForced": [
 				"wisdom"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -17285,6 +17410,7 @@
 			"miscTags": [
 				"MW"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -17394,6 +17520,7 @@
 			"miscTags": [
 				"MW"
 			],
+			"hasToken": true,
 			"hasFluff": true
 		},
 		{
@@ -17535,6 +17662,7 @@
 			"conditionInflict": [
 				"invisible"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -17588,7 +17716,7 @@
 				{
 					"name": "Hidden Original",
 					"entries": [
-						"While the doppelrat is in the space of a swarm it created with Arcane Doubling, it is indiscernible from the other rats and has total cover. A creature must take an action to visually inspect the swarm and succeed on a {@dc 15} Intelligence ({@skill Investigation}) check to find the doppelrat among its duplicates. Once a creature succeeds on this check, the doppelrat loses total cover against attacks and spells from that creature and that creature's allies until the doppelrat starts its turn in the same space as one of its swarms."
+						"While the doppelrat is in the space of a swarm it created with Arcane Doubling, it is indiscernible from the other rats and has {@quickref Cover||3||total cover}. A creature must take an action to visually inspect the swarm and succeed on a {@dc 15} Intelligence ({@skill Investigation}) check to find the doppelrat among its duplicates. Once a creature succeeds on this check, the doppelrat loses {@quickref Cover||3||total cover} against attacks and spells from that creature and that creature's allies until the doppelrat starts its turn in the same space as one of its swarms."
 					]
 				},
 				{
@@ -17625,6 +17753,7 @@
 				"P"
 			],
 			"miscTags": [
+				"DIS",
 				"MW"
 			],
 			"conditionInflict": [
@@ -17633,6 +17762,7 @@
 			"savingThrowForced": [
 				"constitution"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -17763,6 +17893,7 @@
 				"constitution",
 				"strength"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -17909,6 +18040,7 @@
 				"dexterity",
 				"strength"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -18022,6 +18154,7 @@
 			"savingThrowForced": [
 				"dexterity"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -18144,6 +18277,7 @@
 			"savingThrowForced": [
 				"constitution"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -18303,6 +18437,7 @@
 				"charisma",
 				"constitution"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -18435,6 +18570,7 @@
 			"savingThrowForced": [
 				"charisma"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -18594,6 +18730,7 @@
 				"constitution",
 				"wisdom"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -18729,6 +18866,7 @@
 			"savingThrowForced": [
 				"constitution"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -18900,6 +19038,7 @@
 				"strength",
 				"wisdom"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -19008,6 +19147,7 @@
 			"savingThrowForced": [
 				"wisdom"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -19193,6 +19333,7 @@
 			"savingThrowForcedSpell": [
 				"dexterity"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -19294,6 +19435,7 @@
 				"charisma",
 				"dexterity"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -19444,6 +19586,7 @@
 			"savingThrowForced": [
 				"constitution"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -19593,6 +19736,7 @@
 			"savingThrowForced": [
 				"constitution"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -19706,6 +19850,7 @@
 			"savingThrowForced": [
 				"dexterity"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -19855,6 +20000,7 @@
 				"MLW",
 				"MW"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -19996,6 +20142,7 @@
 			"savingThrowForced": [
 				"constitution"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -20171,6 +20318,7 @@
 			"savingThrowForced": [
 				"strength"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -20308,6 +20456,7 @@
 			"savingThrowForced": [
 				"dexterity"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -20454,6 +20603,7 @@
 			"savingThrowForced": [
 				"charisma"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -20484,6 +20634,9 @@
 			},
 			"speed": {
 				"walk": 30
+			},
+			"initiative": {
+				"advantageMode": "adv"
 			},
 			"str": 14,
 			"dex": 10,
@@ -20625,6 +20778,7 @@
 				"dexterity",
 				"wisdom"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -20771,6 +20925,7 @@
 				"grappled",
 				"restrained"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -20865,6 +21020,7 @@
 			"savingThrowForced": [
 				"wisdom"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -20979,6 +21135,7 @@
 				"MW",
 				"RW"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -21112,6 +21269,7 @@
 				"MW",
 				"RW"
 			],
+			"hasToken": true,
 			"hasFluff": true
 		},
 		{
@@ -21270,6 +21428,7 @@
 				"dexterity",
 				"wisdom"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -21395,6 +21554,7 @@
 			"savingThrowForced": [
 				"strength"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -21546,6 +21706,7 @@
 				"charisma",
 				"constitution"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -21720,6 +21881,7 @@
 			"savingThrowForcedSpell": [
 				"wisdom"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -21858,6 +22020,7 @@
 				"constitution",
 				"dexterity"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -22013,6 +22176,7 @@
 			"savingThrowForced": [
 				"wisdom"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -22181,6 +22345,7 @@
 			"savingThrowForced": [
 				"dexterity"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -22409,6 +22574,7 @@
 				"MLW",
 				"MW"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -22585,6 +22751,7 @@
 				"dexterity",
 				"wisdom"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -22712,6 +22879,7 @@
 				"dexterity",
 				"wisdom"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -22819,6 +22987,7 @@
 			"savingThrowForced": [
 				"strength"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -22933,6 +23102,7 @@
 			"savingThrowForced": [
 				"dexterity"
 			],
+			"hasToken": true,
 			"hasFluff": true
 		},
 		{
@@ -23105,6 +23275,7 @@
 				"constitution",
 				"wisdom"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -23279,6 +23450,7 @@
 			"savingThrowForcedSpell": [
 				"wisdom"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -23404,6 +23576,7 @@
 			"savingThrowForced": [
 				"strength"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -23508,6 +23681,7 @@
 				"RW",
 				"THW"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -23663,6 +23837,7 @@
 			"savingThrowForced": [
 				"constitution"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -23750,6 +23925,7 @@
 			"conditionInflict": [
 				"grappled"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -23837,6 +24013,7 @@
 				"grappled",
 				"restrained"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -23988,6 +24165,7 @@
 				"dexterity",
 				"strength"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -24090,6 +24268,7 @@
 			"miscTags": [
 				"MW"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -24242,6 +24421,7 @@
 			"conditionInflict": [
 				"prone"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -24386,6 +24566,7 @@
 			"savingThrowForced": [
 				"constitution"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -24482,6 +24663,7 @@
 			"savingThrowForced": [
 				"constitution"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -24585,6 +24767,7 @@
 			"savingThrowForced": [
 				"constitution"
 			],
+			"hasToken": true,
 			"hasFluff": true
 		},
 		{
@@ -24791,6 +24974,7 @@
 				"O"
 			],
 			"miscTags": [
+				"CUR",
 				"MLW",
 				"MW"
 			],
@@ -24804,6 +24988,7 @@
 			"savingThrowForcedSpell": [
 				"wisdom"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -24925,6 +25110,7 @@
 			"savingThrowForced": [
 				"strength"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -25064,6 +25250,7 @@
 				"prone",
 				"restrained"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -25186,6 +25373,7 @@
 				"MLW",
 				"MW"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -25305,6 +25493,7 @@
 				"constitution",
 				"strength"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -25426,6 +25615,7 @@
 			"savingThrowForced": [
 				"constitution"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -25533,6 +25723,7 @@
 				"forest",
 				"urban"
 			],
+			"tokenCredit": "ZombiOctopi",
 			"senseTags": [
 				"D"
 			],
@@ -25553,6 +25744,7 @@
 				"constitution",
 				"dexterity"
 			],
+			"hasToken": true,
 			"hasFluff": true
 		},
 		{
@@ -25680,6 +25872,7 @@
 			"savingThrowForcedSpell": [
 				"dexterity"
 			],
+			"hasToken": true,
 			"hasFluff": true
 		},
 		{
@@ -25884,6 +26077,7 @@
 				"charisma",
 				"dexterity"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -25985,7 +26179,7 @@
 				{
 					"name": "Swallow",
 					"entries": [
-						"The gug makes one Grasping Claw attack against a Large or smaller creature it is grappling. If the attack hits, the target is also swallowed, and the grapple ends. While swallowed, the target is {@condition blinded} and {@condition restrained}, it has total cover against attacks and other effects outside the gug, and it takes 14 ({@damage 4d6}) acid damage at the start of each of the gug's turns. A gug can have only one creature swallowed at a time.",
+						"The gug makes one Grasping Claw attack against a Large or smaller creature it is grappling. If the attack hits, the target is also swallowed, and the grapple ends. While swallowed, the target is {@condition blinded} and {@condition restrained}, it has {@quickref Cover||3||total cover} against attacks and other effects outside the gug, and it takes 14 ({@damage 4d6}) acid damage at the start of each of the gug's turns. A gug can have only one creature swallowed at a time.",
 						"If the gug takes 30 damage or more on a single turn from the swallowed creature, the gug must succeed on a {@dc 19} Constitution saving throw at the end of that turn or regurgitate the creature, which falls {@condition prone} in a space within 10 feet of the gug. If the gug dies, a swallowed creature is no longer {@condition restrained} by it and can escape from the corpse by using 10 feet of movement, exiting {@condition prone}."
 					]
 				}
@@ -26025,6 +26219,7 @@
 				"dexterity",
 				"strength"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -26236,6 +26431,7 @@
 				"constitution",
 				"strength"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -26438,6 +26634,7 @@
 			"savingThrowForcedSpell": [
 				"strength"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -26591,6 +26788,7 @@
 			"savingThrowForced": [
 				"constitution"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -26748,6 +26946,7 @@
 			"savingThrowForced": [
 				"constitution"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -26901,6 +27100,7 @@
 				"dexterity",
 				"wisdom"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -27021,6 +27221,7 @@
 			"conditionInflict": [
 				"blinded"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -27145,6 +27346,7 @@
 				"dexterity",
 				"strength"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -27281,7 +27483,7 @@
 				{
 					"name": "Swallow (Roc Form Only)",
 					"entries": [
-						"Hraesvelgr makes one Beak attack against a Large or smaller creature he is grappling. If the attack hits, the target is also swallowed, and the grapple ends. While swallowed, the creature is {@condition blinded} and {@condition restrained}, it has total cover against attacks and other effects outside Hraesvelgr, and it takes 17 ({@damage 5d6}) acid damage at the start of each of Hraesvelgr's turns. Hraesvelgr can have only one creature swallowed at a time.",
+						"Hraesvelgr makes one Beak attack against a Large or smaller creature he is grappling. If the attack hits, the target is also swallowed, and the grapple ends. While swallowed, the creature is {@condition blinded} and {@condition restrained}, it has {@quickref Cover||3||total cover} against attacks and other effects outside Hraesvelgr, and it takes 17 ({@damage 5d6}) acid damage at the start of each of Hraesvelgr's turns. Hraesvelgr can have only one creature swallowed at a time.",
 						"If Hraesvelgr takes 40 damage or more on a single turn from the swallowed creature, Hraesvelgr must succeed on a {@dc 15} Constitution saving throw at the end of that turn or regurgitate the creature, which falls {@condition prone} in a space within 10 feet of Hraesvelgr. Hraesvelgr has disadvantage on this saving throw if he isn't in his roc form. If Hraesvelgr dies, a swallowed creature is no longer {@condition restrained} by him and can escape from the corpse by using 15 feet of movement, exiting {@condition prone}."
 					]
 				},
@@ -27366,6 +27568,7 @@
 				"constitution",
 				"strength"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -27488,6 +27691,7 @@
 			"savingThrowForced": [
 				"wisdom"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -27709,6 +27913,7 @@
 				"dexterity",
 				"wisdom"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -27880,6 +28085,7 @@
 				"dexterity",
 				"wisdom"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -28047,6 +28253,7 @@
 			"savingThrowForced": [
 				"wisdom"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -28166,6 +28373,7 @@
 				"S"
 			],
 			"miscTags": [
+				"DIS",
 				"MW",
 				"RW"
 			],
@@ -28175,6 +28383,7 @@
 			"savingThrowForced": [
 				"constitution"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -28364,6 +28573,7 @@
 			"savingThrowForcedSpell": [
 				"dexterity"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -28490,6 +28700,7 @@
 				"S"
 			],
 			"miscTags": [
+				"DIS",
 				"MLW",
 				"MW",
 				"RCH",
@@ -28501,6 +28712,7 @@
 			"savingThrowForced": [
 				"constitution"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -28595,7 +28807,7 @@
 				{
 					"name": "Bite",
 					"entries": [
-						"{@atk mw} {@hit 15} to hit, reach 15 ft., one target. {@h}36 ({@damage 4d12 + 10}) piercing damage. If the target is a Large or smaller creature, it must succeed on a {@dc 18} Dexterity saving throw or be swallowed by the isonade. A swallowed creature is {@condition blinded} and {@condition restrained}, it has total cover against attacks and other effects outside the isonade, and it takes 21 ({@damage 6d6}) acid damage at the start of each of the isonade's turns. An isonade can have no more than four creatures swallowed at a time. If the isonade takes 30 damage or more on a single turn from a creature inside it, it must succeed on a {@dc 23} Constitution saving throw at the end of that turn or regurgitate all swallowed creatures, which fall {@condition prone} in a space within 10 feet of the isonade. If the isonade dies, a swallowed creature is no longer {@condition restrained} by it and can escape from the corpse by using 20 feet of movement, exiting {@condition prone}."
+						"{@atk mw} {@hit 15} to hit, reach 15 ft., one target. {@h}36 ({@damage 4d12 + 10}) piercing damage. If the target is a Large or smaller creature, it must succeed on a {@dc 18} Dexterity saving throw or be swallowed by the isonade. A swallowed creature is {@condition blinded} and {@condition restrained}, it has {@quickref Cover||3||total cover} against attacks and other effects outside the isonade, and it takes 21 ({@damage 6d6}) acid damage at the start of each of the isonade's turns. An isonade can have no more than four creatures swallowed at a time. If the isonade takes 30 damage or more on a single turn from a creature inside it, it must succeed on a {@dc 23} Constitution saving throw at the end of that turn or regurgitate all swallowed creatures, which fall {@condition prone} in a space within 10 feet of the isonade. If the isonade dies, a swallowed creature is no longer {@condition restrained} by it and can escape from the corpse by using 20 feet of movement, exiting {@condition prone}."
 					]
 				},
 				{
@@ -28648,6 +28860,7 @@
 			"savingThrowForced": [
 				"dexterity"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -28774,6 +28987,7 @@
 				"constitution",
 				"dexterity"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -28896,6 +29110,7 @@
 			"savingThrowForced": [
 				"strength"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -29115,6 +29330,7 @@
 				"strength",
 				"wisdom"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -29231,6 +29447,7 @@
 			"savingThrowForced": [
 				"intelligence"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -29372,6 +29589,7 @@
 			"conditionInflict": [
 				"invisible"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -29570,6 +29788,7 @@
 			"savingThrowForcedSpell": [
 				"wisdom"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -29718,6 +29937,7 @@
 				"constitution",
 				"dexterity"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -29883,6 +30103,7 @@
 				"constitution",
 				"wisdom"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -30048,6 +30269,7 @@
 			"savingThrowForced": [
 				"dexterity"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -30161,6 +30383,7 @@
 			"savingThrowForced": [
 				"constitution"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -30326,6 +30549,7 @@
 			"savingThrowForced": [
 				"constitution"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -30401,6 +30625,19 @@
 					"entries": [
 						"The kot bayun magically turns {@condition invisible} until it attacks or uses Slumbering Song, or until its {@status concentration} ends (as if {@status concentration||concentrating} on a spell). Any equipment the kot bayun wears or carries is {@condition invisible} with it."
 					]
+				},
+				{
+					"name": "Slumbering Song",
+					"entries": [
+						"The kot bayun sings a magical song to one creature it can see within 60 feet of it. The target must succeed on a {@dc 13} Charisma saving throw on fall {@condition unconscious} for 1 minute. The target can repeat the saving throw at the end of each of its turns, ending the effect on itself on a success. If the kot bayun uses a bonus action on its subsequent turns to continue singing, the target has disadvantage on this saving throw. Otherwise, the effect ends for a target if the target takes damage while below half its hp maximum.",
+						"If a creature's saving throw is successful or the effect ends for it, the creature is immune to the kot bayun's Slumbering Song for the next 24 hours. The kot bayun can have up to two creatures {@condition unconscious} from its song at a time."
+					]
+				},
+				{
+					"name": "Healing Purr (2/Day)",
+					"entries": [
+						"The kot bayun purrs at a creature it can see within 15 feet of it. The target magically regains 10 ({@dice 3d6}) hp and is freed from any disease, poison, blindness, or deafness."
+					]
 				}
 			],
 			"environment": [
@@ -30427,6 +30664,7 @@
 			"conditionInflict": [
 				"invisible"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -30587,6 +30825,7 @@
 				"constitution",
 				"dexterity"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -30707,6 +30946,7 @@
 			"savingThrowForced": [
 				"dexterity"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -30827,6 +31067,7 @@
 			"savingThrowForced": [
 				"dexterity"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -30925,6 +31166,7 @@
 			"savingThrowForced": [
 				"constitution"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -31041,6 +31283,9 @@
 			"attachedItems": [
 				"club|phb"
 			],
+			"traitTags": [
+				"Mimicry"
+			],
 			"senseTags": [
 				"D"
 			],
@@ -31064,6 +31309,7 @@
 			"savingThrowForced": [
 				"wisdom"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -31185,6 +31431,7 @@
 			"savingThrowForced": [
 				"wisdom"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -31336,6 +31583,7 @@
 				"strength",
 				"wisdom"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -31462,6 +31710,7 @@
 				"charisma",
 				"strength"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -31584,6 +31833,7 @@
 				"S"
 			],
 			"miscTags": [
+				"DIS",
 				"MW",
 				"RCH"
 			],
@@ -31594,6 +31844,7 @@
 			"savingThrowForced": [
 				"constitution"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -31764,6 +32015,7 @@
 				"constitution",
 				"wisdom"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -31867,6 +32119,7 @@
 			"savingThrowForced": [
 				"dexterity"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -32074,6 +32327,7 @@
 			"savingThrowForced": [
 				"charisma"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -32199,6 +32453,7 @@
 			"savingThrowForced": [
 				"wisdom"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -32313,6 +32568,7 @@
 				"dexterity",
 				"strength"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -32531,6 +32787,7 @@
 				"constitution",
 				"dexterity"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -32643,6 +32900,7 @@
 				"strength",
 				"wisdom"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -32799,6 +33057,7 @@
 			"savingThrowForced": [
 				"constitution"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -32978,6 +33237,7 @@
 			"savingThrowForcedSpell": [
 				"strength"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -33109,6 +33369,7 @@
 			"savingThrowForced": [
 				"constitution"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -33265,6 +33526,7 @@
 			"savingThrowForced": [
 				"constitution"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -33370,6 +33632,7 @@
 			"conditionInflict": [
 				"blinded"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -33537,6 +33800,7 @@
 				"strength",
 				"wisdom"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -33736,6 +34000,7 @@
 			"savingThrowForcedSpell": [
 				"wisdom"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -33836,6 +34101,7 @@
 				"constitution",
 				"strength"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -33969,6 +34235,7 @@
 			"savingThrowForced": [
 				"dexterity"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -34085,6 +34352,7 @@
 			"savingThrowForced": [
 				"dexterity"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -34195,12 +34463,14 @@
 			],
 			"miscTags": [
 				"AOE",
+				"DIS",
 				"MW"
 			],
 			"savingThrowForced": [
 				"constitution",
 				"dexterity"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -34353,6 +34623,7 @@
 			"savingThrowForcedSpell": [
 				"wisdom"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -34474,6 +34745,7 @@
 			"savingThrowForced": [
 				"constitution"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -34639,6 +34911,7 @@
 				"O"
 			],
 			"miscTags": [
+				"CUR",
 				"MW"
 			],
 			"conditionInflict": [
@@ -34651,6 +34924,7 @@
 			"savingThrowForcedSpell": [
 				"constitution"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -34743,6 +35017,7 @@
 				"mountain"
 			],
 			"dragonAge": "wyrmling",
+			"tokenCredit": "Cory Trego-Erdner",
 			"traitTags": [
 				"Magic Resistance"
 			],
@@ -34768,6 +35043,7 @@
 			"savingThrowForced": [
 				"dexterity"
 			],
+			"hasToken": true,
 			"hasFluff": true
 		},
 		{
@@ -34914,6 +35190,7 @@
 			"miscTags": [
 				"MW"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -35044,6 +35321,7 @@
 			"savingThrowForced": [
 				"charisma"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -35178,6 +35456,7 @@
 				"charisma",
 				"dexterity"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -35437,6 +35716,7 @@
 				"charisma",
 				"constitution"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -35586,6 +35866,7 @@
 			"savingThrowForced": [
 				"dexterity"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -35697,6 +35978,7 @@
 				"RW",
 				"THW"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -35821,6 +36103,7 @@
 				"constitution",
 				"strength"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -35945,6 +36228,7 @@
 			"savingThrowForced": [
 				"dexterity"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -36167,6 +36451,7 @@
 			"savingThrowForcedSpell": [
 				"wisdom"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -36232,7 +36517,7 @@
 				{
 					"name": "Multiple Heads",
 					"entries": [
-						"The necrohydra has five fleshy heads. While it has more than one head, the necrohydra has advantage on saving throws against being {@condition blinded}, {@condition charmed}, {@condition deafened}, {@condition frightened}, {@condition stunned}, and knocked {@condition unconscious}. Whenever the necrohydra takes 25 or more damage in a single turn, one of its fleshy heads dies. If all its fleshy heads die, the necrohydra can't use Unnerving Faces and can't use or maintain Dreadful Dirge. At the end of its turn, it grows two skeletal heads for each of its fleshy heads that died since its last turn, unless it has taken radiant damage since its last turn. The necrohydra regains 10 hp for each skeletal head regrown in this way."
+						"The necrohydra has five fleshy heads. While it has more than one head, the necrohydra has advantage on saving throws against being {@condition blinded}, {@condition charmed}, {@condition deafened}, {@condition frightened}, {@condition stunned}, and knocked {@condition unconscious}. Whenever the necrohydra takes 25 or more damage in a single turn, one of its fleshy heads dies. If all its fleshy heads die, the necrohydra can't use or maintain Dreadful Dirge. At the end of its turn, it grows two skeletal heads for each of its fleshy heads that died since its last turn, unless it has taken radiant damage since its last turn. The necrohydra regains 10 hp for each skeletal head regrown in this way."
 					]
 				},
 				{
@@ -36303,6 +36588,7 @@
 				"dexterity",
 				"wisdom"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -36404,6 +36690,7 @@
 			"savingThrowForced": [
 				"strength"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -36562,6 +36849,7 @@
 			"savingThrowForced": [
 				"wisdom"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -36648,6 +36936,7 @@
 			"savingThrowForced": [
 				"constitution"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -36733,7 +37022,7 @@
 				{
 					"name": "Bite",
 					"entries": [
-						"{@atk mw} {@hit 8} to hit, reach 5 ft., one target. {@h}16 ({@damage 2d10 + 5}) piercing damage. If the target is a Medium or smaller creature, it must succeed on a {@dc 15} Strength saving throw or be swallowed. A swallowed creature is {@condition blinded} and {@condition restrained}, it has total cover against attacks and other effects outside the nightgarm, and it takes 10 ({@damage 3d6}) acid damage at the start of each of the nightgarm's turns. The nightgarm can have only one creature swallowed at a time. If the nightgarm takes 20 damage or more on a single turn from the swallowed creature, the nightgarm must succeed on a {@dc 14} Constitution saving throw at the end of that turn or regurgitate the creature, which falls {@condition prone} in a space within 5 feet of the nightgarm. If the nightgarm dies, a swallowed creature is no longer {@condition restrained} by her and can escape from the corpse by using 10 feet of movement, exiting {@condition prone}."
+						"{@atk mw} {@hit 8} to hit, reach 5 ft., one target. {@h}16 ({@damage 2d10 + 5}) piercing damage. If the target is a Medium or smaller creature, it must succeed on a {@dc 15} Strength saving throw or be swallowed. A swallowed creature is {@condition blinded} and {@condition restrained}, it has {@quickref Cover||3||total cover} against attacks and other effects outside the nightgarm, and it takes 10 ({@damage 3d6}) acid damage at the start of each of the nightgarm's turns. The nightgarm can have only one creature swallowed at a time. If the nightgarm takes 20 damage or more on a single turn from the swallowed creature, the nightgarm must succeed on a {@dc 14} Constitution saving throw at the end of that turn or regurgitate the creature, which falls {@condition prone} in a space within 5 feet of the nightgarm. If the nightgarm dies, a swallowed creature is no longer {@condition restrained} by her and can escape from the corpse by using 10 feet of movement, exiting {@condition prone}."
 					]
 				},
 				{
@@ -36781,6 +37070,7 @@
 			"savingThrowForced": [
 				"strength"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -36998,6 +37288,7 @@
 				"Y"
 			],
 			"miscTags": [
+				"DIS",
 				"MW",
 				"RCH"
 			],
@@ -37005,6 +37296,7 @@
 				"constitution",
 				"wisdom"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -37119,6 +37411,7 @@
 				"underdark",
 				"underwater"
 			],
+			"tokenCredit": "Donghyeok Lee",
 			"traitTags": [
 				"Undead Fortitude"
 			],
@@ -37148,6 +37441,7 @@
 			"savingThrowForced": [
 				"strength"
 			],
+			"hasToken": true,
 			"hasFluff": true
 		},
 		{
@@ -37277,6 +37571,7 @@
 			"miscTags": [
 				"MW"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -37401,6 +37696,7 @@
 			"savingThrowForced": [
 				"strength"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -37545,6 +37841,7 @@
 			"savingThrowForced": [
 				"strength"
 			],
+			"hasToken": true,
 			"hasFluff": true
 		},
 		{
@@ -37645,6 +37942,7 @@
 				"MLW",
 				"MW"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -37776,6 +38074,7 @@
 				"charisma",
 				"strength"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -37916,6 +38215,7 @@
 			"savingThrowForced": [
 				"wisdom"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -38074,6 +38374,7 @@
 				"constitution",
 				"wisdom"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -38305,6 +38606,7 @@
 				"intelligence",
 				"wisdom"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -38463,6 +38765,7 @@
 				"charisma",
 				"constitution"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -38598,6 +38901,7 @@
 			"savingThrowForced": [
 				"wisdom"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -38815,6 +39119,7 @@
 				"constitution",
 				"wisdom"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -38941,6 +39246,7 @@
 			"savingThrowForced": [
 				"dexterity"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -39108,6 +39414,7 @@
 			"savingThrowForced": [
 				"constitution"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -39228,6 +39535,7 @@
 			"savingThrowForced": [
 				"wisdom"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -39371,6 +39679,7 @@
 			"savingThrowForced": [
 				"strength"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -39528,6 +39837,7 @@
 			"savingThrowForced": [
 				"constitution"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -39653,6 +39963,7 @@
 			"savingThrowForced": [
 				"dexterity"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -39926,6 +40237,7 @@
 				"constitution",
 				"wisdom"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -40185,6 +40497,7 @@
 				"dexterity",
 				"wisdom"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -40361,6 +40674,7 @@
 			"savingThrowForced": [
 				"dexterity"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -40496,6 +40810,7 @@
 				"constitution",
 				"wisdom"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -40602,6 +40917,7 @@
 			"savingThrowForced": [
 				"intelligence"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -40737,12 +41053,14 @@
 				"P"
 			],
 			"miscTags": [
+				"DIS",
 				"MW"
 			],
 			"savingThrowForced": [
 				"charisma",
 				"constitution"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -40913,6 +41231,7 @@
 			"savingThrowForcedSpell": [
 				"wisdom"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -41018,6 +41337,7 @@
 				"RW",
 				"THW"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -41112,6 +41432,7 @@
 			"environment": [
 				"urban"
 			],
+			"tokenCredit": "Targete",
 			"attachedItems": [
 				"dagger|phb",
 				"light crossbow|phb"
@@ -41136,6 +41457,7 @@
 				"RW",
 				"THW"
 			],
+			"hasToken": true,
 			"hasFluff": true
 		},
 		{
@@ -41230,7 +41552,7 @@
 				{
 					"name": "Lamenting Engulfment",
 					"entries": [
-						"The ravenala engulfs a Medium or smaller creature {@condition grappled} by it. The engulfed target is {@condition blinded} and {@condition restrained}, it has total cover against attacks and other effects outside the ravenala, and it must succeed on a {@dc 14} Charisma saving throw at the start of each of the ravenala's turns or sing a lament of the mistakes and misdeeds it has performed in its lifetime. While singing, the engulfed creature can still act, but it can't otherwise speak, including casting spells with verbal components. If the ravenala moves, the engulfed creature moves with it. The ravenala can have only one creature engulfed at a time."
+						"The ravenala engulfs a Medium or smaller creature {@condition grappled} by it. The engulfed target is {@condition blinded} and {@condition restrained}, it has {@quickref Cover||3||total cover} against attacks and other effects outside the ravenala, and it must succeed on a {@dc 14} Charisma saving throw at the start of each of the ravenala's turns or sing a lament of the mistakes and misdeeds it has performed in its lifetime. While singing, the engulfed creature can still act, but it can't otherwise speak, including casting spells with verbal components. If the ravenala moves, the engulfed creature moves with it. The ravenala can have only one creature engulfed at a time."
 					]
 				},
 				{
@@ -41280,6 +41602,7 @@
 				"charisma",
 				"dexterity"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -41408,7 +41731,8 @@
 				"arctic"
 			],
 			"traitTags": [
-				"Magic Resistance"
+				"Magic Resistance",
+				"Mimicry"
 			],
 			"senseTags": [
 				"SD"
@@ -41435,6 +41759,7 @@
 				"dexterity",
 				"wisdom"
 			],
+			"hasToken": true,
 			"hasFluff": true
 		},
 		{
@@ -41534,6 +41859,9 @@
 				"longbow|phb",
 				"rapier|phb"
 			],
+			"traitTags": [
+				"Mimicry"
+			],
 			"senseTags": [
 				"SD"
 			],
@@ -41555,6 +41883,7 @@
 			"savingThrowForced": [
 				"dexterity"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -41675,6 +42004,9 @@
 			"attachedItems": [
 				"longbow|phb"
 			],
+			"traitTags": [
+				"Mimicry"
+			],
 			"senseTags": [
 				"SD"
 			],
@@ -41700,6 +42032,7 @@
 			"savingThrowForced": [
 				"dexterity"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -41886,6 +42219,7 @@
 				"strength",
 				"wisdom"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -41993,6 +42327,7 @@
 			"savingThrowForced": [
 				"constitution"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -42130,6 +42465,7 @@
 				"constitution",
 				"strength"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -42279,6 +42615,7 @@
 			"savingThrowForced": [
 				"constitution"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -42407,6 +42744,7 @@
 			"savingThrowForced": [
 				"constitution"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -42505,6 +42843,7 @@
 			"miscTags": [
 				"MW"
 			],
+			"hasToken": true,
 			"hasFluff": true
 		},
 		{
@@ -42619,6 +42958,7 @@
 			"savingThrowForced": [
 				"strength"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -42854,6 +43194,7 @@
 			"savingThrowForcedSpell": [
 				"strength"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -42971,6 +43312,7 @@
 				"MW",
 				"RW"
 			],
+			"hasToken": true,
 			"hasFluff": true
 		},
 		{
@@ -43081,6 +43423,7 @@
 				"MW",
 				"RW"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -43199,6 +43542,7 @@
 				"N"
 			],
 			"miscTags": [
+				"DIS",
 				"MW"
 			],
 			"conditionInflict": [
@@ -43207,6 +43551,7 @@
 			"savingThrowForced": [
 				"constitution"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -43408,6 +43753,7 @@
 				"dexterity",
 				"strength"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -43539,6 +43885,7 @@
 			"savingThrowForcedSpell": [
 				"wisdom"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -43653,6 +44000,7 @@
 			],
 			"miscTags": [
 				"AOE",
+				"DIS",
 				"MW"
 			],
 			"conditionInflict": [
@@ -43662,6 +44010,7 @@
 				"constitution",
 				"dexterity"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -43827,6 +44176,7 @@
 			"savingThrowForced": [
 				"constitution"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -43974,6 +44324,7 @@
 				"constitution",
 				"dexterity"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -44098,7 +44449,8 @@
 				"desert"
 			],
 			"traitTags": [
-				"Magic Resistance"
+				"Magic Resistance",
+				"Mimicry"
 			],
 			"senseTags": [
 				"SD"
@@ -44130,6 +44482,7 @@
 			"savingThrowForced": [
 				"constitution"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -44286,6 +44639,7 @@
 				"constitution",
 				"wisdom"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -44395,6 +44749,7 @@
 			"savingThrowForced": [
 				"strength"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -44529,6 +44884,7 @@
 			],
 			"miscTags": [
 				"AOE",
+				"CUR",
 				"MW"
 			],
 			"conditionInflict": [
@@ -44540,6 +44896,7 @@
 				"charisma",
 				"constitution"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -44647,6 +45004,7 @@
 				"constitution",
 				"dexterity"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -44778,6 +45136,7 @@
 			"savingThrowForced": [
 				"constitution"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -44903,6 +45262,7 @@
 				"constitution",
 				"wisdom"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -45021,7 +45381,7 @@
 				{
 					"name": "Swallow",
 					"entries": [
-						"The sathaq worm makes one Bite attack against a Large or smaller creature it is grappling. If the attack hits, the target is also swallowed, and the grapple ends. While swallowed, the target is {@condition blinded} and {@condition restrained}, it has total cover against attacks and other effects outside the worm (including the worm's Agonizing Aura), and takes 10 ({@damage 3d6}) piercing damage and 10 ({@damage 3d6}) acid damage at the start of each of the sathaq worm's turns. The sathaq worm can have only one creature swallowed at a time.",
+						"The sathaq worm makes one Bite attack against a Large or smaller creature it is grappling. If the attack hits, the target is also swallowed, and the grapple ends. While swallowed, the target is {@condition blinded} and {@condition restrained}, it has {@quickref Cover||3||total cover} against attacks and other effects outside the worm (including the worm's Agonizing Aura), and takes 10 ({@damage 3d6}) piercing damage and 10 ({@damage 3d6}) acid damage at the start of each of the sathaq worm's turns. The sathaq worm can have only one creature swallowed at a time.",
 						"If the sathaq worm takes 30 damage or more on a single turn from the swallowed creature, the sathaq worm must succeed on a {@dc 15} Constitution saving throw at the end of that turn or regurgitate the creature, which falls {@condition prone} in a space within 5 feet of the sathaq worm. If the sathaq worm dies, a swallowed creature is no longer {@condition restrained} by it and can escape from the corpse by using 10 feet of movement, exiting {@condition prone}."
 					]
 				}
@@ -45064,6 +45424,7 @@
 			"savingThrowForced": [
 				"constitution"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -45181,6 +45542,7 @@
 			"savingThrowForced": [
 				"strength"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -45354,6 +45716,7 @@
 				"dexterity",
 				"wisdom"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -45461,6 +45824,7 @@
 				"MW",
 				"RW"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -45579,6 +45943,7 @@
 			"savingThrowForced": [
 				"dexterity"
 			],
+			"hasToken": true,
 			"hasFluff": true
 		},
 		{
@@ -45757,6 +46122,7 @@
 			"savingThrowForced": [
 				"wisdom"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -45874,6 +46240,7 @@
 			"savingThrowForced": [
 				"dexterity"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -45997,6 +46364,7 @@
 			"savingThrowForced": [
 				"wisdom"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -46160,6 +46528,7 @@
 			"savingThrowForced": [
 				"wisdom"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -46278,6 +46647,7 @@
 				"MW",
 				"RW"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -46435,6 +46805,7 @@
 			"savingThrowForced": [
 				"constitution"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -46643,6 +47014,7 @@
 			"savingThrowForcedSpell": [
 				"wisdom"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -46796,6 +47168,7 @@
 				"RW",
 				"THW"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -46947,89 +47320,9 @@
 				"RW",
 				"THW"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
-		},
-		{
-			"name": "Shambling Pile",
-			"source": "ToB1-2023",
-			"page": 225,
-			"size": [
-				"M"
-			],
-			"type": {
-				"type": "plant",
-				"tags": [
-					"minion"
-				]
-			},
-			"alignment": [
-				"U"
-			],
-			"ac": [
-				{
-					"ac": 13,
-					"from": [
-						"natural armor"
-					]
-				}
-			],
-			"hp": {
-				"average": 12,
-				"formula": "1d4"
-			},
-			"speed": {
-				"walk": 20
-			},
-			"str": 16,
-			"dex": 7,
-			"con": 16,
-			"int": 5,
-			"wis": 10,
-			"cha": 5,
-			"senses": [
-				"blindsight 60 ft. (blind beyond this radius)"
-			],
-			"passive": 10,
-			"immune": [
-				"poison"
-			],
-			"conditionImmune": [
-				"blinded",
-				"charmed",
-				"deafened",
-				"frightened",
-				"poisoned",
-				"prone"
-			],
-			"trait": [
-				{
-					"name": "False Appearance",
-					"entries": [
-						"While the pile remains motionless, they are indistinguishable from an ordinary mass of vegetation."
-					]
-				},
-				{
-					"name": "Hungry Grab",
-					"entries": [
-						"If an enemy starts their turn within 5 feet of three or more piles, the creature must succeed on a Dexterity saving throw or be {@condition grappled}. While {@condition grappled} in this way, the target is {@condition restrained}, and at the start of each of the target's turns, they take poison damage equal to the number of piles within 5 feet of them. The saving throw and (escape DC equal 10 plus the number of piles within 5 feet of the creature. The grapple ends if fewer than three piles are within 5 feet of the creature. Minion. If the pile takes damage from an attack or as the result of a failed saving throw, their hit points are reduced to 0. If the pile takes damage from another effect, they die if the damage equals or exceeds their hit point maximum; otherwise they take no damage. Actions Vine Lash (Group Attack). Melee Weapon Attack: {@hit 6} to hit, reach 5 ft., one target. {@h}4 piercing damage."
-					]
-				}
-			],
-			"traitTags": [
-				"False Appearance"
-			],
-			"senseTags": [
-				"B"
-			],
-			"damageTags": [
-				"P"
-			],
-			"conditionInflict": [
-				"grappled",
-				"restrained"
-			],
-			"hasFluff": true
 		},
 		{
 			"name": "Sharkjaw Skeleton",
@@ -47132,6 +47425,7 @@
 				"grappled",
 				"restrained"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -47288,6 +47582,7 @@
 			"savingThrowForced": [
 				"constitution"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -47445,6 +47740,7 @@
 				"strength",
 				"wisdom"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -47585,6 +47881,7 @@
 			"miscTags": [
 				"MW"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -47732,6 +48029,7 @@
 				"constitution",
 				"wisdom"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -47835,6 +48133,7 @@
 			"savingThrowForced": [
 				"constitution"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -47966,6 +48265,7 @@
 				"constitution",
 				"dexterity"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -48116,6 +48416,7 @@
 				"constitution",
 				"dexterity"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -48270,6 +48571,7 @@
 			"savingThrowForced": [
 				"dexterity"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -48471,6 +48773,7 @@
 				"constitution",
 				"dexterity"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -48575,7 +48878,7 @@
 				{
 					"name": "Bite",
 					"entries": [
-						"{@atk mw} {@hit 12} to hit, reach 5 ft., one target. {@h}19 ({@damage 2d10 + 8}) piercing damage plus 10 ({@damage 3d6}) necrotic damage or ({@dice 3d6}) radiant damage (the son's choice). If the target is a Large or smaller creature, it must succeed on a {@dc 18} Dexterity saving throw or be swallowed by the son of Fenris. A swallowed creature is {@condition blinded} and {@condition restrained}, it has total cover against attacks and other effects outside the son, and it takes 21 ({@damage 6d6}) acid damage at the start of each of the son's turns. The son can have only one creature swallowed at a time.",
+						"{@atk mw} {@hit 12} to hit, reach 5 ft., one target. {@h}19 ({@damage 2d10 + 8}) piercing damage plus 10 ({@damage 3d6}) necrotic damage or ({@dice 3d6}) radiant damage (the son's choice). If the target is a Large or smaller creature, it must succeed on a {@dc 18} Dexterity saving throw or be swallowed by the son of Fenris. A swallowed creature is {@condition blinded} and {@condition restrained}, it has {@quickref Cover||3||total cover} against attacks and other effects outside the son, and it takes 21 ({@damage 6d6}) acid damage at the start of each of the son's turns. The son can have only one creature swallowed at a time.",
 						"If the son takes 30 damage or more on a single turn from a creature inside it, the son must succeed on a {@dc 20} Constitution saving throw at the end of that turn or regurgitate the swallowed creature, which falls {@condition prone} in a space within 10 feet of the son. If the son dies, the swallowed creature is no longer {@condition restrained} by it and can escape from the corpse by using 10 feet of movement, exiting {@condition prone}."
 					]
 				},
@@ -48634,6 +48937,7 @@
 				"constitution",
 				"dexterity"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -48786,6 +49090,7 @@
 				"charisma",
 				"constitution"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -48913,6 +49218,7 @@
 				"charisma",
 				"constitution"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -49045,6 +49351,7 @@
 			"savingThrowForced": [
 				"constitution"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -49080,6 +49387,9 @@
 			"speed": {
 				"walk": 40,
 				"climb": 20
+			},
+			"initiative": {
+				"advantageMode": "adv"
 			},
 			"str": 18,
 			"dex": 15,
@@ -49205,6 +49515,7 @@
 			"savingThrowForced": [
 				"constitution"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -49352,6 +49663,7 @@
 				"constitution",
 				"wisdom"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -49538,6 +49850,7 @@
 			"savingThrowForcedSpell": [
 				"wisdom"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -49673,6 +49986,7 @@
 				"MW",
 				"RW"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -49815,6 +50129,7 @@
 			"savingThrowForced": [
 				"wisdom"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -49924,6 +50239,7 @@
 			"savingThrowForced": [
 				"dexterity"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -50104,6 +50420,7 @@
 				"constitution",
 				"dexterity"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -50262,6 +50579,7 @@
 				"charisma",
 				"constitution"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -50422,6 +50740,7 @@
 				"constitution",
 				"dexterity"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -50519,6 +50838,9 @@
 				"planar",
 				"urban"
 			],
+			"traitTags": [
+				"Mimicry"
+			],
 			"senseTags": [
 				"D"
 			],
@@ -50542,6 +50864,7 @@
 			"savingThrowForced": [
 				"wisdom"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -50658,6 +50981,7 @@
 			"miscTags": [
 				"MW"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -50805,6 +51129,7 @@
 			"savingThrowForced": [
 				"constitution"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -50890,6 +51215,7 @@
 			"savingThrowForced": [
 				"constitution"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -51005,6 +51331,7 @@
 			"savingThrowForced": [
 				"strength"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -51085,6 +51412,7 @@
 			"savingThrowForced": [
 				"dexterity"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -51155,6 +51483,7 @@
 			"savingThrowForced": [
 				"constitution"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -51305,6 +51634,7 @@
 			"savingThrowForced": [
 				"wisdom"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -51422,6 +51752,7 @@
 			"miscTags": [
 				"MW"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -51526,6 +51857,7 @@
 				"constitution",
 				"wisdom"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -51644,6 +51976,7 @@
 			"savingThrowForced": [
 				"constitution"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -51750,6 +52083,7 @@
 			"savingThrowForced": [
 				"dexterity"
 			],
+			"hasToken": true,
 			"hasFluff": true
 		},
 		{
@@ -51906,6 +52240,7 @@
 			"savingThrowForced": [
 				"constitution"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -51937,6 +52272,9 @@
 			},
 			"speed": {
 				"walk": 30
+			},
+			"initiative": {
+				"advantageMode": "adv"
 			},
 			"str": 18,
 			"dex": 14,
@@ -52051,6 +52389,7 @@
 			"savingThrowForced": [
 				"strength"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -52166,6 +52505,7 @@
 			"savingThrowForced": [
 				"dexterity"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -52317,6 +52657,7 @@
 				"constitution",
 				"dexterity"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -52428,6 +52769,7 @@
 				"RCH",
 				"RW"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -52514,7 +52856,7 @@
 				{
 					"name": "Swallow",
 					"entries": [
-						"The titanoboa makes one Bite attack against a Huge or smaller target it is grappling. If the attack hits, the target is also swallowed, and the grapple ends. While swallowed, the target is {@condition blinded} and {@condition restrained}, it has total cover against attacks and other effects outside the titanoboa, and it takes 21 ({@damage 6d6}) acid damage at the start of each of the titanoboa's turns. If the titanoboa takes 30 damage or more on a single turn from a swallowed creature, the titanoboa must succeed on a {@dc 15} Constitution saving throw at the end of that turn or regurgitate all swallowed creatures, which fall {@condition prone} in a space within 10 feet of the titanoboa. If the titanoboa dies, a swallowed creature is no longer {@condition restrained} by it and can escape from the corpse by using 20 feet of movement, exiting {@condition prone}."
+						"The titanoboa makes one Bite attack against a Huge or smaller target it is grappling. If the attack hits, the target is also swallowed, and the grapple ends. While swallowed, the target is {@condition blinded} and {@condition restrained}, it has {@quickref Cover||3||total cover} against attacks and other effects outside the titanoboa, and it takes 21 ({@damage 6d6}) acid damage at the start of each of the titanoboa's turns. If the titanoboa takes 30 damage or more on a single turn from a swallowed creature, the titanoboa must succeed on a {@dc 15} Constitution saving throw at the end of that turn or regurgitate all swallowed creatures, which fall {@condition prone} in a space within 10 feet of the titanoboa. If the titanoboa dies, a swallowed creature is no longer {@condition restrained} by it and can escape from the corpse by using 20 feet of movement, exiting {@condition prone}."
 					]
 				}
 			],
@@ -52547,6 +52889,7 @@
 				"constitution",
 				"wisdom"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -52651,7 +52994,7 @@
 				{
 					"name": "Burning Belly",
 					"entries": [
-						"The tophet makes one Slam attack against a target it is grappling as it shoves the creature into its open, flame-filled belly. If the attack hits, the target is forced into the tophet's burning belly, and the grapple ends. While inside the belly, the target is {@condition restrained}, has three-quarters cover against attacks and other effects outside the belly, and it takes 14 ({@damage 4d6}) fire damage at the start of each of its turns. A creature, including the target, can take its action to pull the target free from the belly by succeeding on a {@dc 16} Strength check. The creature making the attempt takes 7 ({@damage 2d6}) fire damage."
+						"The tophet makes one Slam attack against a target it is grappling as it shoves the creature into its open, flame-filled belly. If the attack hits, the target is forced into the tophet's burning belly, and the grapple ends. While inside the belly, the target is {@condition restrained}, has {@quickref Cover||3||three-quarters cover} against attacks and other effects outside the belly, and it takes 14 ({@damage 4d6}) fire damage at the start of each of its turns. A creature, including the target, can take its action to pull the target free from the belly by succeeding on a {@dc 16} Strength check. The creature making the attempt takes 7 ({@damage 2d6}) fire damage."
 					]
 				},
 				{
@@ -52688,6 +53031,7 @@
 			"savingThrowForced": [
 				"dexterity"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -52773,6 +53117,7 @@
 			"miscTags": [
 				"MW"
 			],
+			"hasToken": true,
 			"hasFluff": true
 		},
 		{
@@ -52896,6 +53241,7 @@
 				"MW",
 				"RW"
 			],
+			"hasToken": true,
 			"hasFluff": true
 		},
 		{
@@ -53048,6 +53394,7 @@
 				"S"
 			],
 			"miscTags": [
+				"DIS",
 				"MLW",
 				"MW"
 			],
@@ -53060,6 +53407,7 @@
 				"constitution",
 				"dexterity"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -53169,6 +53517,7 @@
 			"savingThrowForced": [
 				"constitution"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -53244,7 +53593,8 @@
 				"urban"
 			],
 			"traitTags": [
-				"Amorphous"
+				"Amorphous",
+				"Mimicry"
 			],
 			"senseTags": [
 				"B"
@@ -53252,6 +53602,7 @@
 			"miscTags": [
 				"MW"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -53389,6 +53740,7 @@
 				"RW",
 				"THW"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -53507,6 +53859,7 @@
 			"savingThrowForced": [
 				"constitution"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -53667,6 +54020,7 @@
 			"savingThrowForced": [
 				"dexterity"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -53824,6 +54178,7 @@
 				"constitution",
 				"dexterity"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -53988,6 +54343,7 @@
 				"strength",
 				"wisdom"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -54142,6 +54498,7 @@
 				"N"
 			],
 			"miscTags": [
+				"CUR",
 				"MW"
 			],
 			"conditionInflict": [
@@ -54151,6 +54508,7 @@
 				"constitution",
 				"strength"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -54368,6 +54726,7 @@
 				"constitution",
 				"strength"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -54556,6 +54915,7 @@
 			"savingThrowForced": [
 				"wisdom"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -54690,6 +55050,7 @@
 			"savingThrowForced": [
 				"constitution"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -54805,6 +55166,7 @@
 			],
 			"miscTags": [
 				"AOE",
+				"CUR",
 				"MW"
 			],
 			"conditionInflict": [
@@ -54813,6 +55175,7 @@
 			"savingThrowForced": [
 				"constitution"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -54945,6 +55308,7 @@
 				"constitution",
 				"wisdom"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -54969,6 +55333,9 @@
 			},
 			"speed": {
 				"walk": 30
+			},
+			"initiative": {
+				"advantageMode": "adv"
 			},
 			"str": 12,
 			"dex": 20,
@@ -55118,6 +55485,7 @@
 			"savingThrowForced": [
 				"wisdom"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -55232,6 +55600,7 @@
 				"dexterity",
 				"wisdom"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -55372,12 +55741,14 @@
 				"S"
 			],
 			"miscTags": [
+				"DIS",
 				"MW",
 				"RCH"
 			],
 			"savingThrowForced": [
 				"constitution"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -55514,6 +55885,7 @@
 				"MW",
 				"RW"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -55669,6 +56041,7 @@
 			"savingThrowForced": [
 				"dexterity"
 			],
+			"hasToken": true,
 			"hasFluff": true
 		},
 		{
@@ -55811,6 +56184,7 @@
 				"dexterity",
 				"wisdom"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -55967,6 +56341,7 @@
 			"savingThrowForced": [
 				"strength"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -56118,6 +56493,7 @@
 				"charisma",
 				"constitution"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -56228,6 +56604,7 @@
 				"charisma",
 				"wisdom"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -56319,6 +56696,7 @@
 				"strength",
 				"wisdom"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -56400,7 +56778,7 @@
 				{
 					"name": "Swallow",
 					"entries": [
-						"The water leaper makes a Bite attack against a Medium or smaller creature it is grappling. If the attack hits, the target is also swallowed, and the grapple ends. While swallowed, the target is {@condition blinded} and {@condition restrained}, it has total cover against attacks and other effects outside the water leaper, and it takes 7 ({@damage 2d6}) acid damage at the start of each of the water leaper's turns. The water leaper can have only one creature swallowed at a time.",
+						"The water leaper makes a Bite attack against a Medium or smaller creature it is grappling. If the attack hits, the target is also swallowed, and the grapple ends. While swallowed, the target is {@condition blinded} and {@condition restrained}, it has {@quickref Cover||3||total cover} against attacks and other effects outside the water leaper, and it takes 7 ({@damage 2d6}) acid damage at the start of each of the water leaper's turns. The water leaper can have only one creature swallowed at a time.",
 						"If the water leaper takes 15 damage or more on a single turn from the swallowed creature, the leaper must succeed on a {@dc 12} Constitution saving throw at the end of that turn or regurgitate the creature, which falls {@condition prone} in a space within 5 feet of the leaper. If the leaper dies, a swallowed creature is no longer {@condition restrained} by it and can escape from the corpse by using 10 feet of movement, exiting {@condition prone}."
 					]
 				}
@@ -56435,6 +56813,7 @@
 			"savingThrowForced": [
 				"constitution"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -56561,6 +56940,7 @@
 			"savingThrowForced": [
 				"dexterity"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -56634,6 +57014,7 @@
 			"miscTags": [
 				"MW"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -56752,12 +57133,14 @@
 			],
 			"miscTags": [
 				"AOE",
+				"DIS",
 				"MW"
 			],
 			"savingThrowForced": [
 				"constitution",
 				"dexterity"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -56881,6 +57264,7 @@
 			"savingThrowForced": [
 				"strength"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -57000,6 +57384,7 @@
 			"savingThrowForced": [
 				"dexterity"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -57142,6 +57527,7 @@
 				"RW",
 				"THW"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -57261,6 +57647,7 @@
 				"N"
 			],
 			"miscTags": [
+				"DIS",
 				"MW"
 			],
 			"conditionInflict": [
@@ -57269,6 +57656,7 @@
 			"savingThrowForced": [
 				"constitution"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -57378,6 +57766,7 @@
 			"savingThrowForced": [
 				"dexterity"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -57511,6 +57900,7 @@
 			"savingThrowForced": [
 				"charisma"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -57623,6 +58013,7 @@
 				"dexterity",
 				"strength"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -57777,6 +58168,7 @@
 				"constitution",
 				"dexterity"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -57912,6 +58304,7 @@
 			"savingThrowForced": [
 				"dexterity"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -57936,7 +58329,7 @@
 			],
 			"hp": {
 				"average": 170,
-				"formula": "20d20 + 60"
+				"formula": "20d10 + 60"
 			},
 			"speed": {
 				"walk": 40,
@@ -58045,6 +58438,7 @@
 				"constitution",
 				"dexterity"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -58185,6 +58579,7 @@
 			"savingThrowForced": [
 				"dexterity"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -58282,6 +58677,7 @@
 				"grappled",
 				"restrained"
 			],
+			"hasToken": true,
 			"hasFluff": true
 		},
 		{
@@ -58453,6 +58849,7 @@
 			"savingThrowForced": [
 				"dexterity"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -58597,6 +58994,7 @@
 			"savingThrowForced": [
 				"strength"
 			],
+			"hasToken": true,
 			"hasFluff": true
 		},
 		{
@@ -58667,6 +59065,7 @@
 			"savingThrowForced": [
 				"constitution"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -58744,7 +59143,7 @@
 				{
 					"name": "Swallow",
 					"entries": [
-						"The zimwi makes one Bite attack against a Medium or smaller creature it is grappling. If the attack hits, the target is also swallowed, and the grapple ends. While swallowed, the target is {@condition blinded} and {@condition restrained}, it has total cover against attacks and other effects outside the zimwi, and it takes 10 ({@damage 3d6}) acid damage at the start of each of the zimwi's turns. A zimwi can have up to two creatures swallowed at a time.",
+						"The zimwi makes one Bite attack against a Medium or smaller creature it is grappling. If the attack hits, the target is also swallowed, and the grapple ends. While swallowed, the target is {@condition blinded} and {@condition restrained}, it has {@quickref Cover||3||total cover} against attacks and other effects outside the zimwi, and it takes 10 ({@damage 3d6}) acid damage at the start of each of the zimwi's turns. A zimwi can have up to two creatures swallowed at a time.",
 						"If the zimwi takes 20 damage or more on a single turn from a swallowed creature, the zimwi must succeed on a {@dc 14} Constitution saving throw at the end of that turn or regurgitate all swallowed creatures, which fall {@condition prone} in a space within 5 feet of the zimwi. If the zimwi dies, a swallowed creature is no longer {@condition restrained} by it and can escape from the corpse by using 5 feet of movement, exiting {@condition prone}."
 					]
 				}
@@ -58778,6 +59177,7 @@
 			"savingThrowForced": [
 				"constitution"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -58962,6 +59362,7 @@
 				"dexterity",
 				"wisdom"
 			],
+			"hasToken": true,
 			"hasFluff": true,
 			"hasFluffImages": true
 		},
@@ -59089,6 +59490,7 @@
 			"savingThrowForced": [
 				"dexterity"
 			],
+			"hasToken": true,
 			"hasFluff": true
 		}
 	]

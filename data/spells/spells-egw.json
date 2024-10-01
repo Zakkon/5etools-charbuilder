@@ -111,6 +111,7 @@
 				}
 			],
 			"miscTags": [
+				"SCT",
 				"SGT"
 			],
 			"areaTags": [
@@ -314,7 +315,8 @@
 				"strength"
 			],
 			"miscTags": [
-				"OBJ"
+				"OBJ",
+				"PRM"
 			],
 			"areaTags": [
 				"ST"
@@ -689,6 +691,9 @@
 			],
 			"savingThrow": [
 				"wisdom"
+			],
+			"miscTags": [
+				"SCT"
 			],
 			"areaTags": [
 				"ST"

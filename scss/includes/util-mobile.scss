@@ -1,4 +1,4 @@
-@use "vars";
+@use "../vars/vars";
 
 @mixin mix-mobile-styles ($width-screen) {
 	@media screen and (width > #{$width-screen}) {
@@ -39,6 +39,11 @@
 
 		&ve-flex-ai-start {
 			align-items: flex-start !important;
+		}
+
+		&ve-flex-wrap {
+			display: flex !important;
+			flex-wrap: wrap !important;
 		}
 
 		&w-100 {
