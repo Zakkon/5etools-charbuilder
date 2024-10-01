@@ -424,3 +424,6 @@ select.chooseAlignment{
 .ve-night-mode .cls-tbl__stripe-odd:nth-child(2n) {
     background: none !important;
 }
+.ve-night-mode .hwin__wrp-table{
+    color: #bbb;
+}

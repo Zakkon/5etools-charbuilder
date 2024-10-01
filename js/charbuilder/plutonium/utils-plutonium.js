@@ -1648,7 +1648,7 @@ let TabUiUtil$1 = class TabUiUtil extends TabUiUtilBase {
 
         obj.__renderTypedTabMeta_buttons = function({tabMeta, ixTab}) {
             const $btns = tabMeta.buttons.map((meta,j)=>{
-                const $btn = $(`<button class="btn ui-tab__btn-tab-head ${meta.type ? `btn-${meta.type}` : "btn-primary"}" ${meta.title ? `title="${meta.title.qq()}"` : ""}>${meta.html}</button>`).click(evt=>meta.pFnClick(evt, $btn));
+                const $btn = $(`<button class="btn ui-tab__btn-tab-head ${meta.type ? `btn-${meta.type}` : "ve-btn-primary"}" ${meta.title ? `title="${meta.title.qq()}"` : ""}>${meta.html}</button>`).click(evt=>meta.pFnClick(evt, $btn));
                 return $btn;
             }
             );
@@ -1727,7 +1727,7 @@ let TabUiUtilSide$1 = class TabUiUtilSide extends TabUiUtilBase {
 
         obj.__renderTypedTabMeta_buttons = function({tabMeta, ixTab}) {
             const $btns = tabMeta.buttons.map((meta,j)=>{
-                const $btn = $(`<button class="btn ${meta.type ? `btn-${meta.type}` : "btn-primary"} btn-sm" ${meta.title ? `title="${meta.title.qq()}"` : ""}>${meta.html}</button>`).click(evt=>meta.pFnClick(evt, $btn));
+                const $btn = $(`<button class="btn ${meta.type ? `btn-${meta.type}` : "ve-btn-primary"} btn-sm" ${meta.title ? `title="${meta.title.qq()}"` : ""}>${meta.html}</button>`).click(evt=>meta.pFnClick(evt, $btn));
 
                 if (j === tabMeta.buttons.length - 1)
                     $btn.addClass(`br-0 btr-0 bbr-0`);
@@ -10643,7 +10643,7 @@ class InputUiUtil {
     }
 
     static _$getBtnOk({comp=null, opts, doClose}) {
-        return $(`<button class="btn btn-primary mr-2">${opts.buttonText || "OK"}</button>`).click(evt=>{
+        return $(`<button class="btn ve-btn-primary mr-2">${opts.buttonText || "OK"}</button>`).click(evt=>{
             evt.stopPropagation();
             if (comp && !comp._state.isValid)
                 return JqueryUtil.doToast({
@@ -10762,7 +10762,7 @@ class InputUiUtil {
                 return prev;
         }
 
-        const $btnTrueRemember = opts.textYesRemember ? $(`<button class="btn btn-primary ve-flex-v-center mr-2"><span class="glyphicon glyphicon-ok mr-2"></span><span>${opts.textYesRemember}</span></button>`).click(()=>{
+        const $btnTrueRemember = opts.textYesRemember ? $(`<button class="btn ve-btn-primary ve-flex-v-center mr-2"><span class="glyphicon glyphicon-ok mr-2"></span><span>${opts.textYesRemember}</span></button>`).click(()=>{
             doClose(true, true);
             if (opts.fnRemember) {
                 opts.fnRemember(true);
@@ -10772,7 +10772,7 @@ class InputUiUtil {
         }
         ) : null;
 
-        const $btnTrue = $(`<button class="btn btn-primary ve-flex-v-center mr-3"><span class="glyphicon glyphicon-ok mr-2"></span><span>${opts.textYes || "OK"}</span></button>`).click(evt=>{
+        const $btnTrue = $(`<button class="btn ve-btn-primary ve-flex-v-center mr-3"><span class="glyphicon glyphicon-ok mr-2"></span><span>${opts.textYes || "OK"}</span></button>`).click(evt=>{
             evt.stopPropagation();
             doClose(true, true);
         }

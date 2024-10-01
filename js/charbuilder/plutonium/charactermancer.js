@@ -4268,7 +4268,7 @@ class StatGenUi extends BaseComponent {
         }
         ).change(()=>this._$rollIptFormula.removeClass("form-control--error"));
 
-        const $btnRoll = $(`<button class="btn btn-primary bold">Roll</button>`).click(()=>{
+        const $btnRoll = $(`<button class="btn ve-btn-primary bold">Roll</button>`).click(()=>{
             this._state.rolled_rolls = this._roll_getRolledStats();
         });
 
@@ -18098,7 +18098,7 @@ class Charactermancer_ImmResVulnSelect extends BaseComponent {
 
             if (isChoices) {
 
-                const $btnSetActive = $(`<button class="btn btn-primary btn-5et btn-xs">Set Group Active</button>`).click(()=>{
+                const $btnSetActive = $(`<button class="btn ve-btn-primary btn-5et btn-xs">Set Group Active</button>`).click(()=>{
                     outMeta.children.forEach(it=>it.isActive = false);
                     nxtMeta.isActive = true;
                     this._state.readonly_selectedValues = this._getOutputObject();

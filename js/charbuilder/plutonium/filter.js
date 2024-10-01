@@ -285,7 +285,7 @@ class FilterBox extends ProxyBase
 
         const $btnSettings = $(`<button class="btn btn-xs ve-btn-default mr-3"><span class="glyphicon glyphicon-cog"></span></button>`).click(()=>this._pOpenSettingsModal());
 
-        const $btnSaveAlt = $(`<button class="btn btn-xs btn-primary" title="Save"><span class="glyphicon glyphicon-ok"></span></button>`).click(()=>this._modalMeta.doClose(true));
+        const $btnSaveAlt = $(`<button class="btn btn-xs ve-btn-primary" title="Save"><span class="glyphicon glyphicon-ok"></span></button>`).click(()=>this._modalMeta.doClose(true));
 
         const $wrpBtnCombineFilters = $(`<div class="btn-group mr-3"></div>`);
         const $btnCombineFilterSettings = $(`<button class="btn btn-xs ve-btn-default"><span class="glyphicon glyphicon-cog"></span></button>`).click(()=>this._pOpenCombineAsModal());
@@ -309,7 +309,7 @@ class FilterBox extends ProxyBase
         this._addHook("meta", "modeCombineFilters", hook);
         hook();
 
-        const $btnSave = $(`<button class="btn btn-primary fltr__btn-close mr-2">Save</button>`).click(()=>this._modalMeta.doClose(true));
+        const $btnSave = $(`<button class="btn ve-btn-primary fltr__btn-close mr-2">Save</button>`).click(()=>this._modalMeta.doClose(true));
 
         const $btnCancel = $(`<button class="btn ve-btn-default fltr__btn-close">Cancel</button>`).click(()=>this._modalMeta.doClose(false));
 
