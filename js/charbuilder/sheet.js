@@ -560,7 +560,11 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
           let speedFt = 30;
           //Try to set base speed based on race
           let myRace = this.getRace_();
-          if(myRace!=null){speedFt = myRace.speed;}
+          if(myRace!=null){
+            
+            speedFt = myRace.speed;
+            if(typeof(myRace.speed) === "object"){speedFt = myRace.speed.walk;}
+          }
           //Then we go through class features and see if we get a speed increase (i know Blood Hunter does this)
           
           //Then we go through feats
