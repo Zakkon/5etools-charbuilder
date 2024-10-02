@@ -1,9 +1,6 @@
 class CharacterExportFvtt{
 
-    /* CONCEPT =====================
-
-    */
-
+    static VERSION = "a1.0";
     /**
      * @param {CharacterBuilder} builder
      */
@@ -13,7 +10,7 @@ class CharacterExportFvtt{
         //Ids of brew sources that are fully loaded into memory
         const brewSourceIds = CharacterExportFvtt.getBrewSourceIds();
 
-        const _meta = {};
+        const _meta = {version:CharacterExportFvtt.VERSION};
         const _char = {race:null, classes:null};
 
         //probably needs to be cleaned of duplicates later
