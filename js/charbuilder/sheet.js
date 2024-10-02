@@ -242,6 +242,7 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
           $divClassFeatures.empty();
           $divSubclassFeatures.empty();
           $lblProfBonus.text("+2"); //Default, even for lvl 0 characters
+          const hideGainSubclassFeature = true;
           const bannedFeatureNames = ["ability score improvement"]; //Any features with this name (in lower case) will not be displayed
           let classData = ActorCharactermancerSheet.getClassData(this._parent.compClass);
           const tracker = this._parent.featureSourceTracker_;
@@ -277,6 +278,7 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
                 if(feature.level > d.targetLevel){return text;}
                 let drawParentFeature = false;
                 if(bannedFeatureNames.includes(feature.name.toLowerCase())){return text;}
+                if(hideGainSubclassFeature && feature.gainSubclassFeature){return text;}
                 for(let l of feature.loadeds) {
                   if(bannedLoadedsNames.includes(l.entity.name.toLowerCase())){continue;}
                   if(l.entity.level > d.targetLevel){continue;} //Must not be from a higher level than we are
@@ -735,7 +737,6 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
               }
               dmg1 = formula;
             }
-            console.log(dmg1);
             const dmg = //spell.item.dmg1 + 
             dmg1 + (attr>=0? "+" : "") + attr.toString();
             return {toHit:(toHit>=0? "+" : "")+toHit.toString(), dmg:dmg, dmgType:dmgType};//spell.item.dmgType};
@@ -884,7 +885,6 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
           //Get spells from our race
           const raceSpells = ActorCharactermancerSheet.getAdditionalRaceSpells(this._parent.compRace, this._parent.compClass, this._parent.compSpell);
           
-          console.log("RACE SPELLS", raceSpells);
           //Add additional cantrips to cantrips list
           for(let sp of raceSpells.known[0]){ //cantrips are always known, never innate
             knownInnateSpellsByLevel[0].push(sp.spell);
@@ -955,7 +955,6 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
               //sp.name = printData.name;
               //sp.source = printData.source;
               innateSpellsPrint.push({spell: sp});
-              console.log("sp", sp);
             }
             $$`<div>${spellsListStr_Innate(innateSpellsPrint, true, true)}</div>`.appendTo($divSpells);
           }
@@ -986,7 +985,6 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
 
           //Add innate spells from race to the innate spell list
           for(let lvl = 1; lvl < raceSpells.innate.length; ++lvl){
-            console.log("known at lvl ", lvl, raceSpells.innate[lvl]);
             for(let sp of raceSpells.innate[lvl]){
               innateSpells.push({name:sp.spell.name, source:sp.spell.source, charges:sp.charges, rechargeMode:sp.rechargeMode});
             }

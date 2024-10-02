@@ -9,8 +9,7 @@ MINOR_BUGS:
     - Adding sources without removing any, should that really have to wipe class?
 
 MAJOR_BUGS:
-    - Wizard lvl 20 feature 'Signature Spells' not having any FOS
-    - Wizard 'Arcane Tradition' not having any FOS
+    - Wizard features 'Spell Mastery' and 'Signature Spells' not having any FOS
 ----------------------------------------------------------------------------
 WEB:
     - Add UI more notifications for various errors and warnings
