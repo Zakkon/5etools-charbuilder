@@ -13804,7 +13804,7 @@ class Charactermancer_Spell_Level extends BaseComponent {
 
     /**
      * Returns all spells chosen to be learned at this level. Does not handle level 0 (cantrips)
-     * @returns {{ix:number, spell:any}[]}
+     * @returns {{ix:number, spell:{name:string, source:string, level:number}}[]}
      */
     getSpellsKnown(includeCantrips = false, includeLearned = true, includePrepared = true, includeAlwaysPrepared=true, includeAlwaysKnown=true) {
         //TEMPFIX, quite lazy

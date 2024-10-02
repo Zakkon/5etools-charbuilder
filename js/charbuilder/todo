@@ -1,5 +1,4 @@
-BUGS:
-    - Going down in level and then up again will not re-render FOS components (seems fixed)
+MINOR_BUGS:
     - FOS subcomponents are getting their states set even after spells are renderered, even though they should be before (shouldnt be a big issue)
     - verify if url-linked spells on the sheet work for 3rd party homebrew (or your own homebrew)
     - Removing sources in use (for example class) doesnt wipe the ui fields (fixed by just wiping the entire class instead)
@@ -8,18 +7,22 @@ BUGS:
     - If character learns light cantrip, then gets a race that adds the light cantrip (like aasimar), then the UI will not allow one to unlearn their first light cantrip, so you will have two (seems fixed?)
     - If you choose sorcerer, then aasimar, Light will be marked as learned in the UI. if you swap race away from aasimar, Light will still be marked as learned, and cannot be unlearned (seems fixed?)
     - Adding sources without removing any, should that really have to wipe class?
+
+MAJOR_BUGS:
+    - Wizard lvl 20 feature 'Signature Spells' not having any FOS
+    - Wizard 'Arcane Tradition' not having any FOS
+----------------------------------------------------------------------------
 WEB:
-    - Add UI notifications
+    - Add UI more notifications for various errors and warnings
     - Test custom urls for content (+ save/load/exportFvtt)
     - Test custom uploaded files for content (+ save/load/exportFvtt)
-    - Make sure all used content(classes/races/backgrounds) are turned ON in the filter when a save file is loaded (should be on already, assuming user didnt turn them off in the filter afterwards)
     - Some kind of filter button in Select Sources that sorts sources by active or not, so its easier to toggle off sources you already have enabled
     - Option to favourite sources so you can easily toggle them on/off later
     - Change warning for changing sources so that it says it (MAY) wipe your sheet
+    - Clarify to ourselves when exactly, and how exactly, we wipe the sheets
 
 CSS:
     - Tidy up as much as possible into a single .css file
-    - Rip some of the later css code from a .css file intended for use in foundry (i think it was style.css?)
 
 SERIALIZIATION:
     - Make the cookies or character save file remember filter settings on each of the components?
@@ -28,11 +31,9 @@ SERIALIZIATION:
 CHARSELECT:
 
 SHEET:
-    - Cantrip attacks (sort of solved with hoverable spell popups)
-    - Better attack parsing overall
-FEAT:
-    - Make spell choices in feats like Fey Touched be save/loaded
-    - Also make the choice appear in Sheet view
+    - Cantrip attacks (sort of solved with hoverable spell popups instead)
+FEATS:
+
 CLASS:
     - Make subclass dropdown be locked until high enough level
     - Make sure when class is removed, that the Feats menu understands that and doesnt allow feat choices from that class
@@ -42,7 +43,7 @@ EXPORT:
     - Include entities from uploaded homebrew files in export to FVTT
 
 TOCHECK:
-    - Removing homebrew content for a subclass that is in sue
+    - Removing homebrew content for a subclass that is in use
     - Removing homebrew content for a class feature that is in use (Warlock pacts)
 
 IDEAS:

@@ -242,12 +242,12 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
           $divClassFeatures.empty();
           $divSubclassFeatures.empty();
           $lblProfBonus.text("+2"); //Default, even for lvl 0 characters
+          const bannedFeatureNames = ["ability score improvement"]; //Any features with this name (in lower case) will not be displayed
           let classData = ActorCharactermancerSheet.getClassData(this._parent.compClass);
           const tracker = this._parent.featureSourceTracker_;
           const enabledOptionalFeatures = tracker.getStatesForKey("features", {
           });
           const hotlinkFeatures = true;
-          console.log("ENABLED", enabledOptionalFeatures);
           //If there are no classes selected, just print none and return
           let textOut = "";
           if(!classData?.length){ $lblClass.html(textOut); return; }
@@ -276,8 +276,9 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
               const tryPrintClassFeature = (feature, text, cls, bannedFeatureNames=[], bannedLoadedsNames=[]) => {
                 if(feature.level > d.targetLevel){return text;}
                 let drawParentFeature = false;
+                if(bannedFeatureNames.includes(feature.name.toLowerCase())){return text;}
                 for(let l of feature.loadeds) {
-                  if(bannedLoadedsNames.includes(l.entity.name)){continue;}
+                  if(bannedLoadedsNames.includes(l.entity.name.toLowerCase())){continue;}
                   if(l.entity.level > d.targetLevel){continue;} //Must not be from a higher level than we are
                   if(l.type=="optionalfeature" && !l.isRequiredOption){
                     text = isOptFeatureEnabled(l, text); continue;
@@ -286,7 +287,7 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
                   text += hotlinkFeatures? ActorCharactermancerSheet.hotlink_classFeature(l, cls) : l.entity.name;
                 }
                 //Check that the feature name isnt banned
-                if(!drawParentFeature || bannedFeatureNames.includes(feature.name)){return text;}
+                if(!drawParentFeature || bannedFeatureNames.includes(feature.name.toLowerCase())){return text;}
                 text += `${text.length > 0? ", " : ""}${feature.name}`; console.log("just wrote " + feature.name + " for some reason", feature);
                 return text;
               }
@@ -294,7 +295,7 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
                 if(feature.level > d.targetLevel){return text;} //Just return the text if the level is too low
                 let drawParentFeature = false;
                 for(let l of feature.loadeds){
-                  if(bannedLoadedsNames.includes(l.entity.name)){continue;}
+                  if(bannedLoadedsNames.includes(l.entity.name.toLowerCase())){continue;}
                   if(l.entity.level > d.targetLevel){continue;} //Must not be from a higher level than we are
                   if(l.type=="optionalfeature" && !l.isRequiredOption){
                     text = isOptFeatureEnabled(l, text); continue;
@@ -303,13 +304,13 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
                   text += `${text.length > 0? ", " : ""}`;
                   text += hotlinkFeatures? ActorCharactermancerSheet.hotlink_subclassFeature(l, cls, subcls) : l.entity.name;
                 }
-                if(!drawParentFeature || bannedFeatureNames.includes(feature.name)){return text;}
+                if(!drawParentFeature || bannedFeatureNames.includes(feature.name.toLowerCase())){return text;}
                 text += `${text.length > 0? ", " : ""}${feature.name}`;
                 return text;
               }
               
               for(let f of d.cls.classFeatures){
-                classFeaturesText = tryPrintClassFeature(f, classFeaturesText, d.cls);
+                classFeaturesText = tryPrintClassFeature(f, classFeaturesText, d.cls, bannedFeatureNames);
               }
               if(classFeaturesText.length > 0){
                 $$`<div><b>${d.cls.name} Class Features:</b></div>`.appendTo($divClassFeatures);
@@ -320,7 +321,7 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
                 let subclassFeaturesText = "";
                 for(let f of d.sc.subclassFeatures){
                   //Do not print subclass features named after the subclass (normally the first feature)
-                  subclassFeaturesText = tryPrintSubclassFeature(f, subclassFeaturesText, d.cls, d.sc, [d.sc.name], [d.sc.name]);
+                  subclassFeaturesText = tryPrintSubclassFeature(f, subclassFeaturesText, d.cls, d.sc, [d.sc.name], [d.sc.name], bannedFeatureNames);
                 }
                 if(subclassFeaturesText.length > 0){
                   $$`<div><b>${d.sc.name} Subclass Features:</b></div>`.appendTo($divSubclassFeatures);
@@ -768,7 +769,6 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
             
           }
           
-          //TODO: cantrip attacks
           const printCantripAttacks = false;
           if(!printCantripAttacks){
             return;
@@ -829,11 +829,16 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
 
       //#region Spells
 
+      
       const hkSpells = () => {
 
           const hotlinkSpells = true;
           
-          //Create hotlinks to spells, which lets us render a hoverbox when mouse is over them
+          /**
+           * Create hotlinks to spells, which lets us render a hoverbox when mouse is over them
+           * @param {{name:string, source:string}[]} spells
+           * @returns {string}
+           */
           const spellsListStr = (spells) => {
             let spellsStr = "";
             for(let i = 0; i < spells.length; ++i){
@@ -842,6 +847,12 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
             }
             return spellsStr;
           };
+          /**
+           * @param {{spell:{rechargeMode:string, charges:number|string, name:string, source:string}}[]} spells
+           * @param {any} showUses=true
+           * @param {any} newLine=false
+           * @returns {string}
+           */
           const spellsListStr_Innate = (spells, showUses=true, newLine = false) => {
             let spellsStr = "";
             for(let i = 0; i < spells.length; ++i){
@@ -851,6 +862,7 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
               spellsStr += (newLine? '<p style="margin:0px">':"");
               if(spell.rechargeMode == "daily"){
                 let charges = spell.charges;
+                if(typeof(charges) === "number"){charges = charges.toString();}
                 //remove all non-numerical characters
                 charges = charges.replace(/\D/g, '');  // \D matches any non-numeric character
                 spellsStr += showUses? "("+charges + "/day)" : ""; 
@@ -861,16 +873,18 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
             return spellsStr;
           };
           
-          const knownSpellsByLevel = ActorCharactermancerSheet.getAllSpellsKnown(this._parent.compSpell, true, false, false, true);
+          //Get learned and always known spells
+          const knownInnateSpellsByLevel = ActorCharactermancerSheet.getAllSpellsKnown(this._parent.compSpell, true, false, false, true);
+          //Get prepared and always prepared spells
           const preparedSpellsByLevel = ActorCharactermancerSheet.getAllSpellsKnown(this._parent.compSpell, false, true, true, false);
+          //Get spells from our race
           const raceSpells = ActorCharactermancerSheet.getAdditionalRaceSpells(this._parent.compRace, this._parent.compClass, this._parent.compSpell);
           
+          console.log("RACE SPELLS", raceSpells);
           //Add additional cantrips to cantrips list
-          for(let sp of raceSpells.known[0]){
-            knownSpellsByLevel[0].push(sp.spell);
+          for(let sp of raceSpells.known[0]){ //cantrips are always known, never innate
+            knownInnateSpellsByLevel[0].push(sp.spell);
           }
-
-
           
 
           const addInnateSpells = (innateLists) => {
@@ -887,16 +901,18 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
 
             
           }
-
           const spellUidToPrintReady = (spellUid) => {
             let spellName = spellUid.substring(0, spellUid.indexOf("|")).capitalizeEachWord();
             let spellSource = spellUid.substring(spellUid.indexOf("|")+1, spellUid.length).toUpperCase();
             return {name: spellName, source: spellSource};
           }
-
           const printCantrips = (cantrips) => {
             $$`<div class="mb10"><b>Cantrips Known: </b><i>${spellsListStr(cantrips)}</i></div>`.appendTo($divSpells);
           }
+          /**
+           * Print prepared spells, one div for each level
+           * @param {{name:string, source:string}[][]} preparedSpellsByLvl
+           */
           const printPreparedSpells = (preparedSpellsByLvl) => {
             $$`<div class="mb10"></div>`.appendTo($divSpells);
             $$`<div><b>Prepared Spells:</b></div>`.appendTo($divSpells);
@@ -921,17 +937,21 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
                 $$`<div class="mb10">${str} (${slots} slots): <i>${spellsListStr(knownSpellsAtLvl)}</i></div>`.appendTo($divSpells);
             }
           }
+          /**
+           * Print innate spells
+           * @param {{spellUid:string}[]} innateSpells
+           */
           const printInnateSpells = (innateSpells) => {
             //Draw innate spells
             $$`<div class="mb10"></div>`.appendTo($divSpells);
             $$`<div><b>Innate Spells:</b></div>`.appendTo($divSpells);
             let innateSpellsPrint = [];
             for(let sp of innateSpells){
-              let printData = spellUidToPrintReady(sp.spellUid);
-              sp.name = printData.name;
-              sp.source = printData.source;
+              //let printData = spellUidToPrintReady(sp.spellUid);
+              //sp.name = printData.name;
+              //sp.source = printData.source;
               innateSpellsPrint.push({spell: sp});
-              console.log(sp);
+              console.log("sp", sp);
             }
             $$`<div>${spellsListStr_Innate(innateSpellsPrint, true, true)}</div>`.appendTo($divSpells);
           }
@@ -944,14 +964,9 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
               $$`<div>${ActorCharactermancerSheet.hotlink_feat(featToHotlink)}: <i>${spellsListStr_Innate(spellsFromThisFeat, false)}</i></div>`.appendTo($divSpells);
             }
           }
-          
 
-
-          let innateSpells_oldWay = addInnateSpells([raceSpells.innate//, featSpells.innate
+          /* let innateSpells_oldWay = addInnateSpells([raceSpells.innate//, featSpells.innate
           ]);
-
-          
-          
 
           if(innateSpells_oldWay.count > 0){
             $$`<div><b>Innate Spells:</b></div>`.appendTo($divSpells);
@@ -960,10 +975,19 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
                 if(!knownSpellsAtLvl || !knownSpellsAtLvl.length){continue;}
                 $$`<div><i>${spellsListStr_Innate(knownSpellsAtLvl)}</i></div>`.appendTo($divSpells);
             }
-          }
+          } */
 
           let innateSpells = [];
-          let cantripSpells = knownSpellsByLevel[0];
+          let cantripSpells = knownInnateSpellsByLevel[0];
+
+          //Add innate spells from race to the innate spell list
+          for(let lvl = 1; lvl < raceSpells.innate.length; ++lvl){
+            console.log("known at lvl ", lvl, raceSpells.innate[lvl]);
+            for(let sp of raceSpells.innate[lvl]){
+              innateSpells.push({name:sp.spell.name, source:sp.spell.source, charges:sp.charges, rechargeMode:sp.rechargeMode});
+            }
+          }
+
           let featSpells = this._parent.compFeat.getAllSpellsFromFeats();
 
           featSpells.then((result) => {
@@ -1005,6 +1029,7 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
       this._parent.compSpell.addHookBase("pulseAlwaysPrepared", hkSpells);
       this._parent.compSpell.addHookBase("pulseAlwaysKnown", hkSpells);
       this._parent.compSpell.addHookBase("pulseExpandedSpells", hkSpells); //Not sure if this one is needed
+      this._parent.compClass.addHookBase("class_totalLevels", hkSpells); //leveling up/down can determine what spells are accessible from your race
       hkSpells();
 
       const hkSpellDC = () => {
@@ -1252,7 +1277,6 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
         return classList;
     }
     /**
-     * Description
      * @param {ActorCharactermancerClass} compClass
      * @param {number} ix
      * @param {number} conMod
@@ -1886,7 +1910,7 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
 
     /**
      * @param {ActorCharactermancerSpell} compSpells
-     * @returns {any[][]}
+     * @returns {{name:string, source:string, level:number}[][]}
      */
     static getAllSpellsKnown(compSpells, includeLearned=true, includePrepared=true, includeAlwaysPrepared=true, includeAlwaysKnown=true){
         let spellsBylevel = [[],[],[],[],[],[],[],[],[],[]];
@@ -1911,6 +1935,13 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
 
         return spellsBylevel;
     }
+    /**
+     * Get spells gained from race
+     * @param {any} compRace
+     * @param {any} compClass
+     * @param {any} compSpell
+     * @returns {{innate:{charges:number, rechargeMode:string, spell:any}, known:{charges:number, rechargeMode:string, spell:any}, ability:string}}
+     */
     static getAdditionalRaceSpells(compRace, compClass, compSpell){
       let curRace = compRace.getRace_();
 
@@ -1926,10 +1957,6 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
         let classLevel = d.targetLevel; //this is base 1, so value 1 = level 1
         combinedCharacterLevel += classLevel;
       }
-
-      
-
-      
 
       function serializeCantrip(spellName, rechargeMode, charges, spellsByLvl, compSpell){
         let spellLevel = 0;
@@ -2003,7 +2030,6 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
           }
         }
       }
-
 
       return {innate:spellsByLevel_innate, known:spellsByLevel_known, ability:abilityUsed};
     }
@@ -2218,6 +2244,11 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
       }
       return output;
     }
+    /**
+     * Render a hotlink for a spell
+     * @param {{name:string, source:string}} spell
+     * @returns {string}
+     */
     static hotlink_spell(spell){
       let output = "";
       try{
