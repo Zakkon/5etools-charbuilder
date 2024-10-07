@@ -56,7 +56,7 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
         this._data = parentInfo.data; //data is an object containing information about all classes, subclasses, feats, etc
         this._parent = parentInfo.parent;
         this._tabSheet = parentInfo.tabSheet;
-  
+        this._meta = {attributes:[]};
     }
     render(charInfo){
       ActorCharactermancerSheet.characterName = null;
@@ -253,12 +253,28 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
           });
           const hotlinkFeatures = true;
           const hotlinkClassSubclass = true;
+          const getClassByName = (classData, className) => {
+            for(let cls of classData){
+              if(cls.cls.name.toLowerCase() == className.toLowerCase()){return cls;}
+            }
+            return null;
+          }
+          //Verify that attributes are still valid
+          /* for(let i = this._meta.attributes.length-1; i >= 0; --i){
+            const attr = this._meta.attributes[i];
+            //Check if the feature creating the attribute is still present
+            const [name, className, classSource] = attr.featureUid.split("|");
+            const cls = getClassByName(classData, className);
+            if(!cls){ //For now, simply check that we have the class that gives us the attribute
+              this._meta.attributes.splice(i, 1); continue;
+            }
+          } */
+
           //If there are no classes selected, just print none and return
           let textOut = "";
           if(!classData?.length){ $lblClass.html(textOut); return; }
           for(let i = 0; i < classData.length; ++i){
               const d = classData[i];
-              console.log(d);
               if(d.isDeleted){continue;}
               textOut += `${textOut.length > 0? " / " : ""}${hotlinkClassTop? ActorCharactermancerSheet.hotlink_class(d.cls) : d.cls.name} ${d.targetLevel}
               ${d.sc? ` (${hotlinkClassTop? ActorCharactermancerSheet.hotlink_subclass(d.sc) : d.sc.name})` : ""}`;
@@ -288,11 +304,11 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
                 for(let l of feature.loadeds) {
                   if(bannedLoadedsNames.includes(l.entity.name.toLowerCase())){continue;}
                   if(l.entity.level > d.targetLevel){continue;} //Must not be from a higher level than we are
-                  console.log(l);
                   if(l.type=="optionalfeature" && !l.isRequiredOption){
                     //Only print this if the optional feature is chosen
                     text = isOptFeatureEnabled(l, text); continue;
                   }
+                  //else{tryPrintSpecialClassFeatures(l, cls);}
                   text += `${text.length > 0? ", " : ""}`;
                   text += hotlinkFeatures? ActorCharactermancerSheet.hotlink_classFeature(l, cls) : l.entity.name;
                 }
@@ -319,6 +335,54 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
                 text += `${text.length > 0? ", " : ""}${feature.name}`;
                 return text;
               }
+              const createAttribute = (name, formula, featureUid) => {
+                const attr = {name:name, formula:formula, featureUid:featureUid, alterations:[]};
+                if(this._meta.attributes == null){this._meta.attributes = [];}
+                let match = null; for(let m of this._meta.attributes){if(m.name == name && m.featureUid == featureUid){match = m;}}
+                if(match != null){
+                  //Already exists
+                }
+                else{
+                  this._meta.attributes.push(attr);
+                }
+              }
+              const calcAttribute = (attribute) => {
+                let formula = attribute.formula;
+                for(let alteration of attribute.alterations){
+                  formula = formula + "+" + alteration.formula;
+                }
+                //Calculate the formula
+
+                const pattern = /@\w+(\.\w+)*/g;
+
+                
+
+                // Replace object references with random numbers
+                const result = formula.replace(pattern, (match) => {
+                    //calculate the object reference
+                    //split the string by periods
+                    //remove @
+                    let words = (match.startsWith('@') ? match.slice(1) : match).split(".");
+                    console.log(words);
+                    if(words[0] == "class"){
+                      //assume the next word is the name of a class
+                      let className = words[1];
+                      const ourClass = getClassByName(classData, className);
+                      if(words[2] == "level"){
+                        return ourClass.targetLevel.toString();
+                      }
+                    }
+                    return "4";
+                });
+                return eval(result);
+
+              }
+              const tryPrintSpecialClassFeatures = (feature, cls) => {
+                if(feature.entity.name == "Sorcery Points" && cls.name == "Sorcerer"){
+                  //createAttribute(feature.entity.name, "@class.sorcerer.level", `${feature.entity.name}|${cls.name}|${cls.source}`);
+                }
+
+              }
               
               for(let f of d.cls.classFeatures){
                 classFeaturesText = tryPrintClassFeature(f, classFeaturesText, d.cls, bannedFeatureNames);
@@ -326,6 +390,14 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
               if(classFeaturesText.length > 0){
                 $$`<div><b>${d.cls.name} Class Features:</b></div>`.appendTo($divClassFeatures);
                 $$`<div>${classFeaturesText}</div>`.appendTo($divClassFeatures);
+
+                /* for(let attr of this._meta.attributes){
+                  try {
+                    $$`<div><b>${attr.name}: </b>${calcAttribute(attr)}</div>`.appendTo($divClassFeatures);
+                  }
+                  catch(e){console.error(e);}
+                  
+                } */
               }
 
               if(d.sc){
