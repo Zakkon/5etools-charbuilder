@@ -39,7 +39,7 @@ div.box {
 }
 
 form.charsheet {
-  width: 800px;
+  width: 950px;
   right: 0;
   left: 0;
   margin-right: auto;
@@ -719,6 +719,44 @@ form.charsheet main .bkFeatures li{
   margin-left: 10px;
   display: list-item;
 }
+
+.ct-inventory{
+  font-size: 12px;
+}
+.ct-inventory__row-header{
+  display: flex;
+  font-size: 9px;
+  font-weight: 700;
+  padding-bottom: 5px;
+  text-transform: uppercase;
+}
+.ct-inventory-item{
+  align-items: center;
+  display: flex;
+  line-height: 1;
+  padding: 8px 0;
+}
+.ct-inventory-item__action{
+  width: 40px;
+}
+.ct-inventory-col--active{
+  width: 40px;
+}
+.ct-inventory-item__name{
+  width: 200px;
+}
+.ct-inventory-col--name{
+  width: 200px;
+}
+.ct-inventory-item__weight{
+  width: 50px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ct-inventory-col--weight{
+  width: 50px;
+}
+
 
 
 form.charsheet .pt5 {

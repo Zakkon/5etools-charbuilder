@@ -13,7 +13,7 @@ class CharacterExportFvtt{
         //Ids of brew sources that are fully loaded into memory
         const brewSourceIds = CharacterExportFvtt.getBrewSourceIds();
 
-        const _meta = {};
+        const _meta = {sheet:{}};
         const _char = {race:null, classes:null};
 
         //probably needs to be cleaned of duplicates later
@@ -115,8 +115,10 @@ class CharacterExportFvtt{
         const equipment = await CharacterExportFvtt.getEquipmentData(builder.compEquipment);
         //Add equipment to character output
         _char.equipment = equipment;
+        _meta.sheet.equipped = builder.compSheet._meta.equipped;
         for(let it of equipment.boughtItems){
             let uid = it.uid; //plate_armor|phb
+            console.log(it);
             //TODO: get the full source of the item (assuming its not a PHB item or something)
         }
         //#endregion
@@ -678,7 +680,7 @@ class CharacterExportFvtt{
         //Then we need info on which items were purchased in the item shop
         const compShop = compEquipment._compEquipmentShopGold;
         const boughtItems = compShop.__state.itemPurchases.map(it =>  { 
-            return {isIgnoreCost: it.data.isIgnoreCost, quantity: it.data.quantity, value: it.data.value, uid: it.data.uid};});
+            return {isIgnoreCost: it.data.isIgnoreCost, quantity: it.data.quantity, value: it.data.value, uid: it.data.uid, collectionId:it.id};});
 
         const out = {stateDefault:stateDefault, cpRolled:cpRolled, boughtItems:boughtItems};
 
