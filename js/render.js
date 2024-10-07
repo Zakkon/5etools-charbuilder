@@ -4214,7 +4214,6 @@ Renderer.utils = class {
 				const unpacked = DataUtil.class.unpackUidSubclassFeature(text);
 
 				const classPageHash = `${UrlUtil.URL_TO_HASH_BUILDER[UrlUtil.PG_CLASSES]({name: unpacked.className, source: unpacked.classSource})}${HASH_PART_SEP}${UrlUtil.getClassesPageStatePart({feature: {ixLevel: unpacked.level - 1, ixFeature: 0}})}`;
-
 				return {
 					name: unpacked.name,
 					displayText: unpacked.displayText,

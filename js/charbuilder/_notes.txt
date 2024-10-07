@@ -1,0 +1,7 @@
+---SHEET DISPLAY---
+
+Races:
+    - Sub-features of races (like natural armor, unarmed strike variations, features that give flying/swimming speed) will all be baked into the race itself, and not exist as independent features on the sheet.
+
+Backgrounds:
+    - Sub-features of backgrounds will not be seperately rendered, just like sub-features of races

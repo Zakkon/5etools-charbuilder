@@ -111,6 +111,7 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
       const $spanToolsProf = $$`<span></span>`;
       const $spanLanguages = $$`<span></span>`;
       const $divFeatures = $$`<div class ="featureTextArea textbox"></div>`;
+      const $divRaceFeatures = $$`<div></div>`;
       const $divClassFeatures = $$`<div></div>`;
       const $divSubclassFeatures = $$`<div></div>`;
       const $divSpellAttackMod = $$`<div></div>`;
@@ -213,6 +214,7 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
           <label class="upperCase lbl-sectionHeader">Features & Traits</label>
           <div class ="sectionTextArea textbox">
           ${$divBackgroundFeatures}
+          ${$divRaceFeatures}
           ${$divClassFeatures}
           ${$divSubclassFeatures}
           ${$divFeatFeatures}
@@ -242,6 +244,7 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
           $divClassFeatures.empty();
           $divSubclassFeatures.empty();
           $lblProfBonus.text("+2"); //Default, even for lvl 0 characters
+          const hotlinkClassTop = false;
           const hideGainSubclassFeature = true;
           const bannedFeatureNames = ["ability score improvement"]; //Any features with this name (in lower case) will not be displayed
           let classData = ActorCharactermancerSheet.getClassData(this._parent.compClass);
@@ -249,13 +252,16 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
           const enabledOptionalFeatures = tracker.getStatesForKey("features", {
           });
           const hotlinkFeatures = true;
+          const hotlinkClassSubclass = true;
           //If there are no classes selected, just print none and return
           let textOut = "";
           if(!classData?.length){ $lblClass.html(textOut); return; }
           for(let i = 0; i < classData.length; ++i){
               const d = classData[i];
+              console.log(d);
               if(d.isDeleted){continue;}
-              textOut += `${textOut.length > 0? " / " : ""}${d.cls.name} ${d.targetLevel}${d.sc? ` (${d.sc.name})` : ""}`;
+              textOut += `${textOut.length > 0? " / " : ""}${hotlinkClassTop? ActorCharactermancerSheet.hotlink_class(d.cls) : d.cls.name} ${d.targetLevel}
+              ${d.sc? ` (${hotlinkClassTop? ActorCharactermancerSheet.hotlink_subclass(d.sc) : d.sc.name})` : ""}`;
               //Try to get features from class
               let classFeaturesText = "";
 
@@ -282,7 +288,9 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
                 for(let l of feature.loadeds) {
                   if(bannedLoadedsNames.includes(l.entity.name.toLowerCase())){continue;}
                   if(l.entity.level > d.targetLevel){continue;} //Must not be from a higher level than we are
+                  console.log(l);
                   if(l.type=="optionalfeature" && !l.isRequiredOption){
+                    //Only print this if the optional feature is chosen
                     text = isOptFeatureEnabled(l, text); continue;
                   }
                   text += `${text.length > 0? ", " : ""}`;
@@ -297,6 +305,7 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
                 if(feature.level > d.targetLevel){return text;} //Just return the text if the level is too low
                 let drawParentFeature = false;
                 for(let l of feature.loadeds){
+                  if(l.entity.name == subcls.name){continue;} //Each subclass gives a feature with its own name, no need to include it
                   if(bannedLoadedsNames.includes(l.entity.name.toLowerCase())){continue;}
                   if(l.entity.level > d.targetLevel){continue;} //Must not be from a higher level than we are
                   if(l.type=="optionalfeature" && !l.isRequiredOption){
@@ -349,9 +358,37 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
       //#region Race
       //When race version changes, redraw the elements
       const hkRace = () => {
+        const hotlinkRaceTop = true;
+          $divRaceFeatures.empty();
           let curRace = this.getRace_();
-          const n = curRace? curRace.name : "None";
-          $lblRace.text(n);
+          if(curRace && hotlinkRaceTop){
+            $lblRace.append(`${ActorCharactermancerSheet.hotlink_race(curRace)}`);
+          }
+          else{$lblRace.text(curRace? curRace.name : "None");}
+          
+          console.log(curRace);
+          const tryPrintRaceFeature = (feature, text, race, bannedFeatureNames=[], bannedLoadedsNames=[]) => {
+            if(feature.level > d.targetLevel){return text;}
+            let drawParentFeature = false;
+            if(bannedFeatureNames.includes(feature.name.toLowerCase())){return text;}
+            if(hideGainSubclassFeature && feature.gainSubclassFeature){return text;}
+            for(let l of feature.loadeds) {
+              if(bannedLoadedsNames.includes(l.entity.name.toLowerCase())){continue;}
+              if(l.entity.level > d.targetLevel){continue;} //Must not be from a higher level than we are
+              if(l.type=="optionalfeature" && !l.isRequiredOption){
+                text = isOptFeatureEnabled(l, text); continue;
+              }
+              text += `${text.length > 0? ", " : ""}`;
+              text += hotlinkFeatures? ActorCharactermancerSheet.hotlink_classFeature(l, cls) : l.entity.name;
+            }
+            //Check that the feature name isnt banned
+            if(!drawParentFeature || bannedFeatureNames.includes(feature.name.toLowerCase())){return text;}
+            text += `${text.length > 0? ", " : ""}${feature.name}`; console.log("just wrote " + feature.name + " for some reason", feature);
+            return text;
+          }
+          /* for(let f of d.cls.classFeatures){
+            classFeaturesText = tryPrintClassFeature(f, classFeaturesText, d.cls, bannedFeatureNames);
+          } */
       };
       this._parent.compRace.addHookBase("race_ixRace_version", hkRace);
       hkRace();
@@ -359,31 +396,44 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
       
       //#region Background
       const hkBackground = () => {
+        const hotlinkBackgroundTop = true;
+        const hotlinkBackground = false;
+        const printBackgroundFeatures = false;
+        const printBackgroundCharacteristics = false;
           $divBackgroundFeatures.empty();
           let curBackground = this.getBackground();
-          const n = curBackground? curBackground.name : "None";
-          $lblBackground.text(n);
+          if(curBackground && hotlinkBackgroundTop){
+            $lblBackground.append(`${ActorCharactermancerSheet.hotlink_background(curBackground)}`);
+          }
+          else{$lblBackground.text(curBackground? curBackground.name : "None");}
 
           //Lets also do some info for the personalities, ideals, bonds and flaws
           if(!curBackground){return;}
-          const hotlinkBackground = false;
-          $$`<div><b>${
-            hotlinkBackground? ActorCharactermancerSheet.hotlink_background(curBackground) : 
-            curBackground.name} Background:</b></div>`.appendTo($divBackgroundFeatures);
-          //Get feature from background
-          let foundFeature = "";
-          for(let i = 0; i < curBackground.entries.length && foundFeature.length < 1; ++i){
-            let e = curBackground.entries[i];
-            if(e.type=="entries" && e.name.startsWith("Feature: ")){
-              foundFeature = e.name.substr(("Feature: ").length);
+          if(printBackgroundFeatures)
+          {
+            $$`<div><b>${
+              hotlinkBackground? ActorCharactermancerSheet.hotlink_background(curBackground) : 
+              curBackground.name} Background:</b></div>`.appendTo($divBackgroundFeatures);
+            //Get feature from background
+            let foundFeature = "";
+            for(let i = 0; i < curBackground.entries.length && foundFeature.length < 1; ++i){
+              let e = curBackground.entries[i];
+              if(e.type=="entries" && e.name.startsWith("Feature: ")){
+                let name = e.name;
+                if(name.startsWith("Feature: ")){name = name.slice(("Feature: ").length);}
+                foundFeature = ActorCharactermancerSheet.createFootnoteLink(name, e.entries.join("\n"), name);
+              }
             }
+            let list = $$`<ul></ul>`;
+            if(foundFeature){
+              $$`<li><a>${foundFeature}</a></li>`.appendTo(list);
+            }
+            list.appendTo($divBackgroundFeatures);
           }
-          let list = $$`<ul></ul>`;
-          if(foundFeature){
-            $$`<li><div><b>Feature: </b>${foundFeature}</div></li>`.appendTo(list);
-          }
-          list.appendTo($divBackgroundFeatures);
-          let characteristics = this.getBackgroundChoices();
+          
+          if(printBackgroundCharacteristics)
+          {
+            let characteristics = this.getBackgroundChoices();
           let bonds = [];
           let flaws = [];
           let ideals = [];
@@ -426,6 +476,8 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
           if(flaws.length > 0){
             createSubElements(flaws, `Flaw${flaws.length>1?"s":""}: `).appendTo(list);
           }
+          }
+          
       };
       this._parent.compBackground.addHookBase("background_pulseBackground", hkBackground);
       hkBackground();
@@ -2214,15 +2266,9 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
     static hotlink_subclassFeature(feature, cls, subcls){
       let output = "";
       try{
-        //"name|className|classSource|subclassShortName|subclassSource|level|source|displayText"
-        let uid = feature.entity.name.toLowerCase() + "|"
-        + cls.name.toLowerCase() + "|"
-        + cls.source.toLowerCase() + "|"
-        + subcls.name.toLowerCase() + "|"
-        + subcls.source.toLowerCase() + "|"
-        + feature.entity.level.toString().toLowerCase() + "|"
-        + feature.entity.source.toLowerCase() + "|"
-        + feature.entity.name;
+        //"name|className|classSource|subclassShortName|subclassSource|level"
+        //or //"name|className|classSource|subclassShortName|subclassSource|level|source|displayText"
+        const uid = (`${feature.entity.name}|${cls.name}|${cls.source}|${subcls.shortName}|${subcls.source}|${feature.entity.level}`);
         output = Renderer.get().render(`{@subclassFeature ${uid}}`);
       }
       catch(e){
@@ -2234,10 +2280,9 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
     static hotlink_optionalFeature(feature){
       let output = "";
       try{
+        const useDisplayName = false;
         //"name|source|displayText"
-        let uid = feature.entity.name.toLowerCase() + "|" 
-        + feature.entity.source.toLowerCase() + "|"
-        + feature.entity._displayName;
+        const uid = `${feature.entity.name}|${feature.entity.source}|${useDisplayName? feature.entity._displayName : feature.entity.name}`;
         output = Renderer.get().render(`{@optfeature ${uid}}`);
       }
       catch(e){
@@ -2291,6 +2336,58 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
       }
       return output;
     }
+    static hotlink_backgroundFeature(bgFeature){
+      let output = "";
+      try{
+        output = Renderer.get().render(bgFeature);
+      }
+      catch(e){
+        output = bgFeature.name;
+      }
+      return output;
+    }
+    static hotlink_class(clazz){
+      let output = "";
+      try{
+        //"name|source|displayText" not sure
+        let uid = clazz.name.toLowerCase() + "|"
+          + clazz.source.toLowerCase() + "|"
+          + clazz.name;
+        output = Renderer.get().render(`{@class ${uid}}`);
+      }
+      catch(e){
+        output = item.item.name;
+      }
+      return output;
+    }
+    static hotlink_subclass(subclass){
+      let output = "";
+      try{
+        //"name|source|displayText" not sure
+        let uid = subclass.name.toLowerCase() + "|"
+          + subclass.source.toLowerCase() + "|"
+          + subclass.name;
+        output = Renderer.get().render(`{@subclass ${uid}}`);
+      }
+      catch(e){
+        output = item.item.name;
+      }
+      return output;
+    }
+    static hotlink_race(race){
+      let output = "";
+      try{
+        //"name|source|displayText"
+        let uid = race.name.toLowerCase() + "|"
+          + race.source.toLowerCase() + "|"
+          + race.name;
+        output = Renderer.get().render(`{@race ${uid}}`);
+      }
+      catch(e){
+        output = item.item.name;
+      }
+      return output;
+    }
     static hotlink_feat(feat){
       let output = "";
       try{
@@ -2306,5 +2403,43 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
         console.log("Failed to create a hotlink for feat", feat);
       }
       return output;
+    }
+    static createFootnoteLink(linkText, content, optTitle=null, source=null){
+      let html = Renderer.get().render(`{@footnote ${linkText}|${content}${optTitle? "|" + optTitle : ""}}`);
+      let obj = $($.parseHTML(html)); //Convert string to jquery object, for easier management
+      //Add mouse events
+      obj.attr("onmouseover", "Renderer.hover.handleInlineMouseOver(event, this)");
+      obj.attr("onmouseleave", "Renderer.hover.handleLinkMouseLeave(event, this)");
+      obj.attr("onmousemove", "Renderer.hover.handleLinkMouseMove(event, this)");
+      obj.attr("ontouchstart", "Renderer.hover.handleTouchStart(event, this)");
+      //Get value from 'data-plut-hover-inline-entry' and copy it to 'data-vet-entry'
+      let data = JSON.parse(obj.attr("data-plut-hover-inline-entry"));
+      obj.attr("data-plut-hover-inline-entry", "");
+      obj.attr("data-vet-entry", JSON.stringify(data));
+      html = obj.prop('outerHTML'); //Use the outer HTML of the jquery object
+      return html;
+
+      //Add mouse events
+      const events = ` onmouseover="ActorCharactermancerSheet.hoverWrapper(event, this)" onmouseleave="Renderer.hover.handleLinkMouseLeave(event, this)" onmousemove="Renderer.hover.handleLinkMouseMove(event, this)" ontouchstart="Renderer.hover.handleTouchStart(event, this)"`;
+      //Copy value of 'data-plut-hover-inline-entry' to 'data-vet-entry'
+      let parts = html.split(`"`);
+      //Remove whitespaces in each part, and search for the value's index
+      const ix = parts.map(str => str.replace(/\s+/g, '')).indexOf("data-plut-hover-inline-entry=");
+      //let data = JSON.parse(parts[ix+1]);
+      //console.log("DATA", data);
+      const entry = ` data-vet-entry="${parts[ix+1]}"`;
+      //Paste in the values right after the opening tag '<span'
+      const words = html.split(" ");
+      const firstWord = words[0];
+      let insertIndex = html.indexOf(firstWord) + firstWord.length;
+      html = html.slice(0, insertIndex) + events + entry + (source? ` data-vet-source="${source}"` : "") + html.slice(insertIndex);
+      return html;
+    }
+    static hoverWrapper(event, ele){
+      console.log(event);
+      console.log(ele);
+      let val = Renderer.hover.handleInlineMouseOver(event, ele);
+      let val2 = Renderer.hover._getSetMeta(ele);
+      console.log(Renderer.hover._eleCache.length);
     }
 }
