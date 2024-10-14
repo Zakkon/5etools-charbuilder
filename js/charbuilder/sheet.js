@@ -56,7 +56,7 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
         this._data = parentInfo.data; //data is an object containing information about all classes, subclasses, feats, etc
         this._parent = parentInfo.parent;
         this._tabSheet = parentInfo.tabSheet;
-        this._meta = {attributes:[]};
+        this._meta = {attributes:[], equipped:{}};
     }
     render(charInfo){
       ActorCharactermancerSheet.characterName = null;
@@ -120,6 +120,7 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
       const $divFeatFeatures = $$`<div></div>`;
       const $divBackgroundFeatures = $$`<div class="bkFeatures"></div>`;
       const $divEquipment = $$`<div class ="equipmentTextArea textbox"></div>`;
+      const $divInventory = $$`<div class="ct-inventory"></div>`;
       const $attacksTextArea = $$`<div class ="attacksTextArea textbox"></div>`;
       const $lblMaxHP = $$`<label class="score"></label>`;
       const $lblHitDice = $$`<label class="scoreHitDice"></label>`;
@@ -229,6 +230,19 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
           </div>
         </div>
       </section>
+      <section class="sectionRight inventory">
+        <div>
+          <label class="upperCase lbl-sectionheader">Inventory</label>
+          <div>
+            <div class="ct-inventory__row-header">
+              <div class="ct-inventory-col--active">Active</div>
+              <div class="ct-inventory-col--name">Name</div>
+              <div class="ct-inventory-col--weight">Weight</div>
+            </div>
+            ${$divInventory}
+          </div>
+        </div>
+      </section
     </section>
       </main>`;
       mainSection.appendTo($form);
@@ -1184,10 +1198,37 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
 
           const hotlinkItemNames = true;
 
+          const populateInventoryScreen = (result) => {
+            $divInventory.empty();
+            const createItemDiv = (item, quantity, colId) => {
+              const isEquippable = item.armor == true;
+              const isPreChecked = isEquippable && this._meta.equipped[colId];
+              const chbxEquip = $$`<input type="checkbox">`;
+              chbxEquip.prop("checked", isPreChecked);
+              chbxEquip.change(()=>{
+                if(colId == null){return;}
+                //Tell this sheet meta that this item is supposed to be active
+                this._meta.equipped[colId] = true;
+              });
+              $$`<div class="ct-inventory-item">
+                <div class="ct-inventory-item__action">${isEquippable && colId? chbxEquip : ""}</input></div>
+                <div class="ct-inventory-item__name"><span>${item.name}</span></div>
+                <div class="ct-inventory-item__weight"><span>${item.weight | "0"}</span></div>
+              </div>`.appendTo($divInventory);
+            }
+            for(let it of result.startingItems){
+              let div = createItemDiv(it.item, it.quantity, it.collectionId);
+            }
+            for(let it of result.boughtItems){
+              //let div = createItemDiv(it.item, it.quantity);
+              createItemDiv(it.item, it.quantity, it.collectionId);
+            }
+          }
 
           this._getOurItems().then(result => {
             $divEquipment.empty();
             $divCarry.empty();
+            populateInventoryScreen(result);
             let outStr = "";
             for(let it of result.startingItems){
               outStr += (outStr.length>0? ", " : "") + (it.quantity>1? it.quantity+"x " : "");
@@ -1329,6 +1370,11 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
       //#endregion
 
       wrapper.appendTo(tabSheet);
+    }
+
+    loadFromState(stateMeta){
+      if(stateMeta==null){return;}
+      this._meta = stateMeta;
     }
 
     getRace_() { return this._parent.compRace.getRace_(); }
@@ -1559,7 +1605,7 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
           //cant be trusted to not be null
           const foundItem = ActorCharactermancerEquipment.findItemByUID(item.data.uid, itemDatas);
           if(!foundItem){continue;}
-          boughtItems.push({item:foundItem, quantity:item.data.quantity});
+          boughtItems.push({item:foundItem, quantity:item.data.quantity, collectionId:item.id});
       }
 
       //We also need to go through starting items, but only if we didnt roll for gold instead

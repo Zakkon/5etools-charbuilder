@@ -8680,7 +8680,7 @@ class ActorCharactermancerEquipment extends ActorCharactermancerBaseComponent {
             let matchedItem = ActorCharactermancerEquipment.findItemByUID(it.uid, compShop.__state.itemDatas.item);
             if(!matchedItem){continue;}
             //Add it to list of bought items (it will auto draw from remaining currency)
-            compShop.addBoughtItem(it.uid, {quantity:it.quantity, isIgnoreCost:it.isIgnoreCost});
+            compShop.addBoughtItem(it.uid, {quantity:it.quantity, isIgnoreCost:it.isIgnoreCost, collectionId: it.collectionId});
         }
     }
 
@@ -10192,7 +10192,8 @@ Charactermancer_StartingEquipment.ComponentGold = class extends Charactermancer_
         opts.isIgnoreCost = opts.isIgnoreCost === undefined ? false : opts.isIgnoreCost;
 
         itemUid = itemUid.toLowerCase();
-        const collectionId = `${itemUid}__${opts.isIgnoreCost}`;
+        //Generate a unique ID number for this specific collection. If one is already supplied, use that one. Else, generate a new one
+        const collectionId = opts.collectionId? opts.collectionId : `${itemUid}__${opts.isIgnoreCost}__${Date.now() + Math.random()}`;
 
         //See if we already bought an item like this, and if so, just add to its quantity
         const existing = this._state.itemPurchases.find(it=>it.id === collectionId);
