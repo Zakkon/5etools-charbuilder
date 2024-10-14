@@ -1,4 +1,5 @@
 class System5e{
+    
     /**
      * @param {string} formula
      * * @param {{formula:string}[]} alterations
@@ -91,5 +92,31 @@ class System5e{
 
         });
         console.log(formula);
+    }
+
+    static extendSchema_Item(item, state=null){
+        if(state != null){ //Just load from existing state
+            return System5e.loadSchemaExtension(item, state);
+        }
+        item.system = {
+            isEquipped: false,
+            identified: true,
+            quantity: 1,
+            uses: {
+                max: "",
+                spent: 0,
+                recovery: [],
+            },
+            container: null
+        }
+        return item;
+    }
+    static loadSchemaExtension(schema, state){
+        if(typeof(state) === "String"){state = JSON.parse(state);}
+        schema.system = state;
+        return schema;
+    }
+    static serializeSchemaExtension(schema){
+        return JSON.stringify(schema.system);
     }
 }

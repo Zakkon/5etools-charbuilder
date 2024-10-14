@@ -1200,18 +1200,19 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
 
           const populateInventoryScreen = (result) => {
             $divInventory.empty();
-            const createItemDiv = (item, quantity, colId) => {
-              const isEquippable = item.armor == true;
-              const isPreChecked = isEquippable && this._meta.equipped[colId];
+            const createItemDiv = (item, quantity, collectionID) => {
+              console.log("ITEM", item, collectionID);
+              const isEquippable = item.armor || item.weapon || item.arrow;
+              const isPreChecked = isEquippable && this._meta.equipped[collectionID];
               const chbxEquip = $$`<input type="checkbox">`;
               chbxEquip.prop("checked", isPreChecked);
               chbxEquip.change(()=>{
-                if(colId == null){return;}
+                if(collectionID == null){return;}
                 //Tell this sheet meta that this item is supposed to be active
-                this._meta.equipped[colId] = true;
+                this._meta.equipped[collectionID] = true;
               });
               $$`<div class="ct-inventory-item">
-                <div class="ct-inventory-item__action">${isEquippable && colId? chbxEquip : ""}</input></div>
+                <div class="ct-inventory-item__action">${isEquippable && collectionID? chbxEquip : ""}</input></div>
                 <div class="ct-inventory-item__name"><span>${item.name}</span></div>
                 <div class="ct-inventory-item__weight"><span>${item.weight | "0"}</span></div>
               </div>`.appendTo($divInventory);
@@ -1616,7 +1617,10 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
           const compEquipDefault = this._parent.compEquipment._compEquipmentStartingDefault;
           const form = await compEquipDefault.pGetFormData();
           const items = form.data.equipmentItemEntries;
-          for(let it of items){ startingItems.push(it); }
+          for(let it of items){
+            console.log("ST ITEM", it);
+            startingItems.push(it);
+          }
       }
 
       return {boughtItems: boughtItems, startingItems:startingItems};
