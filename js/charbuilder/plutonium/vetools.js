@@ -1260,7 +1260,7 @@ class Vetools {
     }
 }
 Vetools._RE_HTTP_URL = /(^https?:\/\/)/;
-Vetools._BASE_SITE_URL = "https://5etools-mirror-2.github.io/";
+Vetools._BASE_SITE_URL = "https://5etools-mirror-3.github.io/";
 Vetools.BESTIARY_FLUFF_INDEX = null;
 Vetools.BESTIARY_TOKEN_LOOKUP = null;
 Vetools._CACHED_GET_ROLLABLE_ENTRY_DICE = null;

@@ -308,7 +308,7 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
                     //Only print this if the optional feature is chosen
                     text = isOptFeatureEnabled(l, text); continue;
                   }
-                  //else{tryPrintSpecialClassFeatures(l, cls);}
+                  else{tryPrintSpecialClassFeatures(l, cls);}
                   text += `${text.length > 0? ", " : ""}`;
                   text += hotlinkFeatures? ActorCharactermancerSheet.hotlink_classFeature(l, cls) : l.entity.name;
                 }
@@ -346,40 +346,9 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
                   this._meta.attributes.push(attr);
                 }
               }
-              const calcAttribute = (attribute) => {
-                let formula = attribute.formula;
-                for(let alteration of attribute.alterations){
-                  formula = formula + "+" + alteration.formula;
-                }
-                //Calculate the formula
-
-                const pattern = /@\w+(\.\w+)*/g;
-
-                
-
-                // Replace object references with random numbers
-                const result = formula.replace(pattern, (match) => {
-                    //calculate the object reference
-                    //split the string by periods
-                    //remove @
-                    let words = (match.startsWith('@') ? match.slice(1) : match).split(".");
-                    console.log(words);
-                    if(words[0] == "class"){
-                      //assume the next word is the name of a class
-                      let className = words[1];
-                      const ourClass = getClassByName(classData, className);
-                      if(words[2] == "level"){
-                        return ourClass.targetLevel.toString();
-                      }
-                    }
-                    return "4";
-                });
-                return eval(result);
-
-              }
               const tryPrintSpecialClassFeatures = (feature, cls) => {
                 if(feature.entity.name == "Sorcery Points" && cls.name == "Sorcerer"){
-                  //createAttribute(feature.entity.name, "@class.sorcerer.level", `${feature.entity.name}|${cls.name}|${cls.source}`);
+                  createAttribute(feature.entity.name, "@scale.sorcerer.sorcery-points", `${feature.entity.name}|${cls.name}|${cls.source}`);
                 }
 
               }
@@ -393,7 +362,7 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
 
                 /* for(let attr of this._meta.attributes){
                   try {
-                    $$`<div><b>${attr.name}: </b>${calcAttribute(attr)}</div>`.appendTo($divClassFeatures);
+                    $$`<div><b>${attr.name}: </b>${System5e.replaceFormulaData(attr, this._parent)}</div>`.appendTo($divClassFeatures);
                   }
                   catch(e){console.error(e);}
                   
