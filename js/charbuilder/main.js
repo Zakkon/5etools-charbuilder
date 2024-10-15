@@ -410,8 +410,8 @@ class CharacterBuilder {
       ActorCharactermancerBaseComponent.class_clearDeleted();
       CharacterBuilder.currentUid = null; //Reset the publicly readable uid
       this.parent = this;
+      CharacterBuilder.instance = this;
       this._data = data;
-      console.log("ME", this);
 
       const _root = $("#window-root");
 
@@ -430,6 +430,16 @@ class CharacterBuilder {
         CharacterBuilder.currentUid = existingUid; //And cache the uid we used, available publicly to read
       }
       else { //If that failed, just create a fresh uid for the blank character we are about to show
+        this._actor = {
+          character:{
+            system:{
+              override:{},
+              inventory:{
+                items:[],
+              }
+            }
+          }
+        }
         CharacterBuilder.currentUid = CookieManager.createUid();
       }
 
@@ -498,7 +508,7 @@ class CharacterBuilder {
       
       if(doLoad){await this.compFeat.setStateFromSaveFile(character);}
 
-      this.compSheet.loadFromState(charInfo._meta.sheet);
+      if(doLoad){this.compSheet.loadFromState(charInfo._meta.sheet);}
       this.compSheet.render(charInfo);
       
 

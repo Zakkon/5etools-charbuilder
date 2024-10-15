@@ -9575,6 +9575,29 @@ Charactermancer_StartingEquipment.ComponentDefault = class extends Charactermanc
         this._compCurrency.addHookStartingEquipment(hkStartingEquipment);
         hkStartingEquipment();
 
+        //Create a button that applies chosen items to inventory
+        const $btnApplyStarterItems = $(`<button class="btn ve-btn-default btn-xs btn-5et">Add Starting Equipment</button>`).click(async()=>{
+            //Create a popup that asks the user if they are sure
+            const isSure = await InputUiUtil.pGetUserBoolean({
+                title: `Are you sure?`,
+                htmlDescription: ``,
+            });
+            if (!isSure){return;}
+                //Get form data
+                //Apply items to inventory
+                const compEquipDefault = CharacterBuilder.instance.compEquipment._compEquipmentStartingDefault;
+                const form = await compEquipDefault.pGetFormData();
+                const items = form.data.equipmentItemEntries;
+                for(let it of items){
+                    const itemUid = (it.item.name + "|" + it.item.source).toLowerCase();
+                    System5e.addToInventory(CharacterBuilder.instance._actor, new Item5e(itemUid, it.quantity));
+                }
+            }
+        );
+        const $row2 = $$`<div class="w-100 py-1 ve-flex-v-center">
+			${$btnApplyStarterItems}
+		</div>`.appendTo($wrpRows);
+
         //Add a hook for when the amount of coins we get to use with starting equipment changes
         const hkSetCoinsFromDefault = ()=>{
             if (Config.get("equipmentShop", "startingGold") != null) {

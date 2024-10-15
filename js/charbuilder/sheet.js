@@ -1633,7 +1633,7 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
           const form = await compEquipDefault.pGetFormData();
           const items = form.data.equipmentItemEntries;
           for(let it of items){
-            startingItems.push(it);
+            //startingItems.push(it);
           }
       }
 
