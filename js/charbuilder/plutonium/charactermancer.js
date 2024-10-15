@@ -9592,6 +9592,7 @@ Charactermancer_StartingEquipment.ComponentDefault = class extends Charactermanc
                     const itemUid = (it.item.name + "|" + it.item.source).toLowerCase();
                     System5e.addToInventory(CharacterBuilder.instance._actor, new Item5e(itemUid, it.quantity));
                 }
+                this._state["defaultItemPulse"] = !this._state["defaultItemPulse"];
             }
         );
         const $row2 = $$`<div class="w-100 py-1 ve-flex-v-center">
