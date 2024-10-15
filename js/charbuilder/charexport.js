@@ -11,7 +11,7 @@ class CharacterExportFvtt{
         const brewSourceIds = CharacterExportFvtt.getBrewSourceIds();
 
         const _meta = {version:CharacterExportFvtt.VERSION, sheet:{}};
-        const _char = {race:null, classes:null};
+        const _char = {race:null, classes:null, character:{system: builder.actor.character.system}};
 
         //probably needs to be cleaned of duplicates later
         let metaDataStack = [];
@@ -189,7 +189,6 @@ class CharacterExportFvtt{
         filters.spell = builder.compSpell.modalFilterSpells._pageFilter._filterBox.getValues();
         filters.feat = builder.compFeat.modalFilterFeats._pageFilter._filterBox.getValues();
         _meta.filters = filters;
-
 
         const output = {character: _char, _meta:_meta};
 

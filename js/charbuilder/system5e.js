@@ -94,6 +94,21 @@ class System5e{
         console.log(formula);
     }
 
+    static extendSchema_Character(character, state=null){
+        let system = {
+            inventory: {
+                items:[],
+                currency:{}
+            },
+            override: {
+            },
+        }
+        if(state != null){ //Just load from existing state
+            Object.assign(system, System5e.loadSchemaExtension(character, state));
+        }
+        character.system = system;
+        return character;
+    }
     static extendSchema_Item(item, state=null){
         if(state != null){ //Just load from existing state
             return System5e.loadSchemaExtension(item, state);
@@ -107,16 +122,74 @@ class System5e{
                 spent: 0,
                 recovery: [],
             },
-            container: null
+            container: null,
+            override: {},
         }
         return item;
     }
+    static ensureProperties(obj, template) {
+
+
+
+        properties.forEach(prop => {
+            if (!(prop.name in obj)) {
+                obj[prop.name] = {};
+            }
+            if (prop.children) {
+                ensureProperties(obj[prop.name], prop.children);
+            }
+        });
+    }
     static loadSchemaExtension(schema, state){
         if(typeof(state) === "String"){state = JSON.parse(state);}
+        console.log("LOADED STATE", state);
         schema.system = state;
         return schema;
     }
     static serializeSchemaExtension(schema){
         return JSON.stringify(schema.system);
+    }
+
+    static addToInventory(actor, item){
+        actor.character.system.inventory.items.push(item);
+        console.log("num items", actor.character.system.inventory.items.length);
+    }
+    static createUniqueID(){
+        return Math.random().toString(16).slice(2);
+    }
+}
+class Item5e {
+    override;
+    constructor(itemUid, quantity=1, collectionId=null){
+        this.uid = itemUid;
+        this.type = "item";
+        this.quantity = quantity;
+        this.collectionId = collectionId? collectionId : System5e.createUniqueID();
+        this.override = {};
+    }
+    prop(path){
+    
+        const recursiveSearch = (start, _path) => {
+            const properties = _path.split('.');
+            let current = start;
+            for (let i = 0; i < properties.length; i++) {
+                if (current[properties[i]] === undefined) {
+                    return undefined;
+                } else {
+                    current = current[properties[i]];
+                }
+            }
+            return current;
+        }
+        let result = recursiveSearch(this, path);
+       
+    
+        //Try to get an override (if present)
+        const override = recursiveSearch(this.override, path);
+        if(override != null && override != undefined){return override;}
+        return result;
+    }
+    loadItem(fromData){
+
     }
 }

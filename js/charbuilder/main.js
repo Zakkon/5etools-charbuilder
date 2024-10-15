@@ -393,6 +393,8 @@ class CharacterBuilder {
     compSheet;
     tabs;
     _featureSourceTracker;
+    _actor;
+    get actor(){return this._actor;}
     static useHeaderTitleAndReturnButton = false;
     static enableSaveToFile = true;
     
@@ -409,6 +411,7 @@ class CharacterBuilder {
       CharacterBuilder.currentUid = null; //Reset the publicly readable uid
       this.parent = this;
       this._data = data;
+      console.log("ME", this);
 
       const _root = $("#window-root");
 
@@ -423,12 +426,15 @@ class CharacterBuilder {
       //Try to load a character from cookies using a cookie uid
       const charInfo = existingUid? CookieManager.getCharacterInfo(existingUid).result : null;
       if(!!charInfo){ //If that succeded, load the character stored in the cookie
-        this.actor = charInfo.character;
+        this._actor = charInfo.character;
         CharacterBuilder.currentUid = existingUid; //And cache the uid we used, available publicly to read
       }
       else { //If that failed, just create a fresh uid for the blank character we are about to show
         CharacterBuilder.currentUid = CookieManager.createUid();
       }
+
+      //Test overrides
+      //this.actor.character = System5e.extendSchema_Character(this.actor.character, this.actor.character?.system);
 
       //Create a feature source tracker (this one gets used alot by the components)
       this._featureSourceTracker = new Charactermancer_FeatureSourceTracker();
@@ -455,8 +461,9 @@ class CharacterBuilder {
     async _pRenderTest(charInfo){
       const character = charInfo?.character;
       const doLoad = !!character;
-
-      
+      if(doLoad){
+        this.actor.character = System5e.extendSchema_Character(this.actor.character, character.character?.system);
+      }
 
       await this._pLoad();
 

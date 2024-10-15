@@ -58,6 +58,8 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
         this._tabSheet = parentInfo.tabSheet;
         this._meta = {attributes:[], equipped:{}};
     }
+    get actor(){return this._actor;}
+    get inventory(){return this._actor.character.system.inventory;}
     render(charInfo){
       ActorCharactermancerSheet.characterName = null;
       if(!!charInfo?.character?.about?.name?.length){ActorCharactermancerSheet.characterName = charInfo.character.about.name;}
@@ -653,6 +655,11 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
           }
 
           hpTotal += (conMod * levelTotal);
+
+          //Look through character override to see if there is a custom HP set
+          if(this.actor.character.system.override.hp?.max?.value){
+            hpTotal = this.actor.character.system.override.hp.max.value;
+          }
 
           $lblMaxHP.text(hpTotal);
           $lblHitDice.empty();
@@ -1606,7 +1613,15 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
           //cant be trusted to not be null
           const foundItem = ActorCharactermancerEquipment.findItemByUID(item.data.uid, itemDatas);
           if(!foundItem){continue;}
-          boughtItems.push({item:foundItem, quantity:item.data.quantity, collectionId:item.id});
+          //boughtItems.push({item:foundItem, quantity:item.data.quantity, collectionId:item.id});
+      }
+
+      //Test, using actor inventory instead
+      for(let item of this.inventory.items){
+          const foundItem = ActorCharactermancerEquipment.findItemByUID(item.uid, itemDatas);
+          if(!foundItem){continue;}
+          console.log("INV ITEM", item);
+          boughtItems.push({item:foundItem, quantity:item.quantity, collectionId:item.collectionId});
       }
 
       //We also need to go through starting items, but only if we didnt roll for gold instead
@@ -1618,7 +1633,6 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
           const form = await compEquipDefault.pGetFormData();
           const items = form.data.equipmentItemEntries;
           for(let it of items){
-            console.log("ST ITEM", it);
             startingItems.push(it);
           }
       }

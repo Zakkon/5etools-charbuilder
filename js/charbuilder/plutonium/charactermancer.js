@@ -10207,6 +10207,7 @@ Charactermancer_StartingEquipment.ComponentGold = class extends Charactermancer_
                     isIgnoreCost: opts.isIgnoreCost,
                 },
             });
+            System5e.addToInventory(this._actor, new Item5e(itemUid, opts.quantity, collectionId));
         }
 
         if (opts.isTriggerUpdate) { this._triggerCollectionUpdate("itemPurchases"); }
