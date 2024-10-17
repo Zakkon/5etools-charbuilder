@@ -756,6 +756,27 @@ form.charsheet main .bkFeatures li{
 .ct-inventory-col--weight{
   width: 50px;
 }
+.ct-inventory-item__quantity{
+  width: 50px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ct-inventory-col--quantity{
+  width: 50px;
+}
+.ct-inventory-item__edit{
+  width: 50px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ct-inventory-col--edit{
+  width: 50px;
+}
+.ct-inventory-item-editbtn{
+  width: 20px;
+  padding: 0px;
+}
+
 
 
 

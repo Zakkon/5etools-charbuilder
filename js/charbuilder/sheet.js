@@ -236,6 +236,8 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
               <div class="ct-inventory-col--active">Active</div>
               <div class="ct-inventory-col--name">Name</div>
               <div class="ct-inventory-col--weight">Weight</div>
+              <div class="ct-inventory-col--quantity">Quantity</div>
+              <div class="ct-inventory-col--edit"></div>
             </div>
             ${$divInventory}
           </div>
@@ -1090,10 +1092,16 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
                 //Tell this sheet meta that this item is supposed to be active
                 this._meta.equipped[colId] = true;
               });
+              const btnEdit = $$`<button class="ct-inventory-item-editbtn"><span class="glyphicon glyphicon-edit"></button>`;
+              const btnRemove = $$`<button class="ct-inventory-item-editbtn"><span class="glyphicon glyphicon-remove"></span></button>`;
               $$`<div class="ct-inventory-item">
                 <div class="ct-inventory-item__action">${isEquippable && colId? chbxEquip : ""}</input></div>
                 <div class="ct-inventory-item__name"><span>${item.name}</span></div>
                 <div class="ct-inventory-item__weight"><span>${item.weight | "0"}</span></div>
+                <div class="ct-inventory-item__quantity"><span>${quantity | "0"}</span></div>
+                <div class="ct-inventory-item__edit">
+                ${btnEdit}${btnRemove}
+                </div>
               </div>`.appendTo($divInventory);
             }
             for(let it of result.startingItems){
@@ -1497,7 +1505,9 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
           const compEquipDefault = this._parent.compEquipment._compEquipmentStartingDefault;
           const form = await compEquipDefault.pGetFormData();
           const items = form.data.equipmentItemEntries;
-          for(let it of items){ startingItems.push(it); }
+          for(let it of items){
+            startingItems.push(it);
+          }
       }
 
       return {boughtItems: boughtItems, startingItems:startingItems};
