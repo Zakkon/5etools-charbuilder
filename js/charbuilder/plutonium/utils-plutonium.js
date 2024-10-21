@@ -4599,6 +4599,73 @@ class UtilDocumentSource {
     }
 }
 //#endregion
+//#region UtilDocumentItem
+class UtilDocumentItem {
+	static getNameAsIdentifier (name) {
+		return name.slugify({strict: true});
+	}
+
+	static getPrice ({cp}) {
+		const singleCurrency = CurrencyUtil.getAsSingleCurrency({cp});
+		const [denomination, value] = Object.entries(singleCurrency)[0];
+
+		return {
+			value,
+			denomination,
+		};
+	}
+
+	
+	static hasProperty ({item, property}) {
+		if (!item?.system?.properties) return false;
+		if (item.system.properties instanceof Set) return item.system.properties.has(property);
+		if (item.system.properties instanceof Array) return item.system.properties.includes(property);
+		console.error(...LGT, item.system.properties);
+		throw new Error(`Unable to check if item ${item.name} (${item.id}) has property "${property}"!`);
+	}
+
+	
+	static TYPE_WEAPON = "weapon";
+	static TYPE_TOOL = "tool";
+	static TYPE_CONSUMABLE = "consumable";
+	static TYPE_EQUIPMENT = "equipment";
+	static TYPE_CONTAINER = "container";
+	static TYPE_LOOT = "loot";
+
+	static TYPES_ITEM = new Set([
+		this.TYPE_WEAPON,
+		this.TYPE_TOOL,
+		this.TYPE_CONSUMABLE,
+		this.TYPE_EQUIPMENT,
+		this.TYPE_CONTAINER,
+		this.TYPE_LOOT,
+	]);
+
+	static TYPES_ITEM_ORDERED = [
+		this.TYPE_WEAPON,
+		this.TYPE_TOOL,
+		this.TYPE_CONSUMABLE,
+		this.TYPE_EQUIPMENT,
+		this.TYPE_CONTAINER,
+		this.TYPE_LOOT,
+	];
+
+	
+		static getBaseItemOptions ({itemType}) {
+		switch (itemType) {
+			case "equipment": {
+				return Object.keys({
+					...CONFIG.DND5E.armorIds,
+					...CONFIG.DND5E.shieldIds,
+				});
+			}
+			default: {
+				return Object.keys(CONFIG.DND5E[`${itemType}Ids`] || {});
+			}
+		}
+	}
+}
+//#endregion
 //#region UtilGameSettings
 class UtilGameSettings {
     static prePreInit() {
@@ -9963,6 +10030,7 @@ class DataConverterFeat extends DataConverterFeature {
         return out;
     }
 }
+
 
 
 //#endregion

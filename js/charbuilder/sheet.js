@@ -1200,6 +1200,10 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
               outStr += hotlinkItemNames? ActorCharactermancerSheet.hotlink_item(it) : it.item.name;
               if(!it.item.weight){continue;}
               weightLbs += (it.item.weight * it.quantity);
+
+              //Test import
+              const tester = new ImportTester();
+              tester.runTest(it.item);
             }
             const span = $$`<span>${outStr}</span>`;
             $$`<label><b>Carried Gear: </b>${span}</label>`.appendTo($divEquipment);

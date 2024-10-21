@@ -93,3 +93,16 @@ class System5e{
         console.log(formula);
     }
 }
+class CONFIG{
+    static DND5E = {
+        attunementTypes: {
+            NONE: "none"
+        }
+    }
+    
+}
+class CONST {
+    static USER_ROLES = {
+        GAMEMASTER: 0,
+    }
+}

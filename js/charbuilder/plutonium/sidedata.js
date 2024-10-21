@@ -517,6 +517,94 @@ class SideDataInterfaceVehicleUpgrade extends SideDataInterfaceBase {
     }
 }
 
+class SideDataInterfaceItem extends SideDataInterfaceBase {
+	static _SIDE_LOAD_OPTS = {
+		propBrew: "foundryItem",
+		fnLoadJson: Vetools.pGetItemSideData,
+		propJson: "item",
+	};
+
+	static _SIDE_LOAD_OPTS_MAGICVARIANT = {
+		propBrew: "foundryMagicvariant",
+		fnLoadJson: Vetools.pGetItemSideData,
+		propJson: "magicvariant",
+	};
+
+	static async pGetSideLoadedType (item, opts = {}) {
+		return super.pGetSideLoadedType(item, {...opts, validTypes: UtilDocumentItem.TYPES_ITEM});
+	}
+
+	static async pGetRoot (ent, opts) {
+		const fromItem = await super.pGetRoot(ent, opts);
+
+		if (!ent._variantName) return fromItem;
+
+		const fromVariant = await super.pGetRoot(UtilEntityItem.getFauxGeneric(ent), {...opts, propOpts: "_SIDE_LOAD_OPTS_MAGICVARIANT"});
+		if (!fromItem || !fromVariant) return fromVariant;
+
+				return {
+			...fromVariant,
+			...fromItem,
+		};
+	}
+
+	static async pGetSystemSideLoaded (ent, opts) {
+		const fromItem = await super.pGetSystemSideLoaded(ent, opts);
+
+		if (!ent._variantName) return fromItem;
+
+		const fromVariant = await super.pGetSystemSideLoaded(UtilEntityItem.getFauxGeneric(ent), {...opts, propOpts: "_SIDE_LOAD_OPTS_MAGICVARIANT"});
+		if (!fromItem || !fromVariant) return fromVariant;
+
+				return {
+			...fromVariant,
+			...fromItem,
+		};
+	}
+
+	static async pGetFlagsSideLoaded (ent, opts) {
+		const fromItem = await super.pGetFlagsSideLoaded(ent, opts);
+
+		if (!ent._variantName) return fromItem;
+
+		const fromVariant = await super.pGetFlagsSideLoaded(UtilEntityItem.getFauxGeneric(ent), {...opts, propOpts: "_SIDE_LOAD_OPTS_MAGICVARIANT"});
+		if (!fromItem || !fromVariant) return fromVariant;
+
+				return {
+			...fromVariant,
+			...fromItem,
+		};
+	}
+
+	static async pGetImgSideLoaded (ent, opts) {
+		const fromItem = await super.pGetImgSideLoaded(ent, opts);
+		if (fromItem || !ent._variantName) return fromItem;
+
+		return super.pGetImgSideLoaded(UtilEntityItem.getFauxGeneric(ent), {...opts, propOpts: "_SIDE_LOAD_OPTS_MAGICVARIANT"});
+	}
+
+	static async pGetEffectsRawSideLoaded (ent, opts) {
+		const fromItem = await super.pGetEffectsRawSideLoaded(ent, opts);
+
+				if (fromItem?.length) return fromItem;
+
+		if (!ent._variantName) return fromItem;
+
+		const fromVariant = await super.pGetEffectsRawSideLoaded(UtilEntityItem.getFauxGeneric(ent), {...opts, propOpts: "_SIDE_LOAD_OPTS_MAGICVARIANT"});
+		if (!fromItem || !fromVariant) return fromVariant;
+
+		return [
+			...fromItem,
+			...fromVariant,
+		];
+	}
+}
+
+var SideDataInterfaceItem$1 = /*#__PURE__*/Object.freeze({
+    __proto__: null,
+    SideDataInterfaceItem: SideDataInterfaceItem
+});
+
 class SideDataInterfaces {
     static init() {
         SideDataInterfaceClass.init();
