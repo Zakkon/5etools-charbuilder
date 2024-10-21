@@ -377,6 +377,7 @@ Renderer.spell.populateBrewLookup(await BrewUtil2.pGetBrewProcessed(), {isForce:
     } */
 
     //CLASS FEATURES
+    return;
     for(let i = 0; i < data.classFeature.length; ++i){
       const f = data.classFeature[i];
       if(f == null || f.className != "Sorcerer" || f.classSource != "PHB"){continue;}

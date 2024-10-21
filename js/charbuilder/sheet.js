@@ -129,6 +129,8 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
       const $lblCoinage = $$`<span></span>`;
       const $divCarry = $$`<div class="textbox"></div>`;
 
+      const $divInventory2 = ActorCharactermancerSheet.createEl_tab_inventory();
+
       const mainSection = $$`<main>
     <section class="sectionMainLeft">
       <section class="attributes">
@@ -168,7 +170,7 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
     </section>
 
     <section class="sectionMainRight">
-      <section>
+      <section class="flex-row">
         <section class="sectionHalf">
           <section class="combat">
             <div class="scoreBubble">
@@ -237,7 +239,7 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
           </section>
         </section>
       </section>
-      <section>
+      <section class="flex-column">
         <section class="sectionRight inventory">
           <div>
             <label class="upperCase lbl-sectionheader">Inventory</label>
@@ -250,6 +252,9 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
               ${$divInventory}
             </div>
           </div>
+        </section>
+        <section>
+        ${$divInventory2}
         </section>
       </section>
     </section>
@@ -2552,4 +2557,78 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
       let val2 = Renderer.hover._getSetMeta(ele);
       console.log(Renderer.hover._eleCache.length);
     }
+
+
+    static createEl_tab_inventory(){
+      const searchbar = null;
+
+      const scrollContainer = $$`<div class="scroll-container flex-column small-gap" data-tidy-sheet-part="items-container"></div>`;
+
+      //Create one per category (weapons, equipment, consumables, tools, containers, loot)
+      this.createEl_inventory_list_section().appendTo(scrollContainer);
+
+      const footer = null;
+
+      let tab = $$`<div class="tidy-tab inventory" data-tab-contents-for="inventory">
+      ${searchbar}
+      ${scrollContainer}
+      </div>`;
+      return tab;
+    }
+    static createEl_inventory_list_section(){
+      const header = $$`<header class="item-table-header-row svelte-1x4fy16 toggleable" data-tidy-sheet-part="table-expansion-toggle">
+            <i class="expand-indicator fas fa-angle-right svelte-1x4fy16 expanded"></i>
+            <div class="item-table-column null svelte-14w3uu6 primary">Weapons (3)</div>
+            <div class="item-table-column null svelte-14w3uu6" title="Weight (lbs.)" style="flex-basis: 4rem;">
+              <i class="fas fa-weight-hanging"></i>
+            </div>
+            <div class="item-table-column null svelte-14w3uu6" title="Charges" style="flex-basis: 3.125rem;">
+              <i class="fas fa-bolt"></i>
+            </div>
+            <div class="item-table-column null svelte-14w3uu6" style="flex-basis: 7.5rem;">Usage</div>
+            <div class="item-table-column null svelte-14w3uu6" style="flex-basis: 7.5rem;"></div>
+            </header>`;
+
+      
+      //This cell has an icon, and the name for the item. Clicking the icon should roll it. Clicking the name should expand the object.
+      const cell_primary = $$`
+      <div class="item-table-cell primary" title="Unarmed Strike">
+        <div class="item-image" style="background-image: url(&quot;icons/skills/melee/unarmed-punch-fist-yellow-red.webp&quot;);">
+          <div role="presentation" aria-hidden="true" class="unidentified-glyph no-transition">
+            <i class="fas fa-question"></i>
+          </div>
+          <button type="button" class="item-use-button icon-button" data-tidy-sheet-part="item-use-command" tabindex="-1">
+            <i class="fa fa-dice-d20"></i>
+          </button>
+        </div>
+
+        <span role="button" tabindex="-1" class="item-name truncate extra-small-gap has-children">
+          <span class="truncate" data-tidy-item-name="Unarmed Strike" data-tidy-sheet-part="item-name">Unarmed Strike</span>
+          <span class="item-quantity">(
+            <input type="text" placeholder="0" class="item-count" data-tidy-field="system.quantity">)
+          </span>
+        </span>
+      </div>`;
+      
+      const content = $$`
+      <div class="expandable svelte-wjp1ys expanded" role="presentation">
+        <div class="item-table-body">
+          <div class="item-table-row-container show-item-count-on-hover" aria-hidden="false" data-context-menu="items" data-context-menu-entity-id="QFcYNtYSysYlZPJn"
+            draggable="true" data-item-id="QFcYNtYSysYlZPJn" data-tidy-item-table-row="" data-tidy-sheet-part="item-table-row" data-tidy-item-type="weapon">
+            <div class="item-table-row equipped">
+              ${cell_primary}
+            </div>
+          </div>
+        </div>
+      </div>`;
+      const section = $$`<section class="inventory-list-section">
+        <section class="item-table" data-tidy-sheet-part="item-table">
+          ${header}
+          ${content}
+        </section>
+      </section>`;
+
+      return section;
+    }
+
 }
