@@ -169,8 +169,24 @@ form.charsheet main div.label-container {
   border-left: 0;
   text-align: center;
 }
-form.charsheet main > section {
+/* form.charsheet main > section > section {
+  display: flex;
+  flex-direction: column;
+} */
+section.sectionMainLeft{
   width: 32%;
+}
+section.sectionMainRight{
+  width: 64%;
+  display: flex;
+  flex-direction: column;
+}
+section.sectionMainRight > section{
+  display: flex;
+  flex-direction: row;
+}
+section.sectionHalf{
+  width: 50%;
   display: flex;
   flex-direction: column;
 }
@@ -720,6 +736,9 @@ form.charsheet main .bkFeatures li{
   display: list-item;
 }
 
+section.inventory{
+  width: 100%;
+}
 .ct-inventory{
   font-size: 12px;
 }

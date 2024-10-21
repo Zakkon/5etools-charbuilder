@@ -130,7 +130,7 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
       const $divCarry = $$`<div class="textbox"></div>`;
 
       const mainSection = $$`<main>
-    <section>
+    <section class="sectionMainLeft">
       <section class="attributes">
         ${$sectionAttributeScores}
         <div class="attr-applications">
@@ -166,87 +166,94 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
         </div>
       </div>
     </section>
-    <section>
-      <section class="combat">
-        <div class="scoreBubble">
-          <div>
-            <label class="title upperCase lbl-bubbleFooter">Armor Class</label>${$lblArmorClass}
-          </div>
-        </div>
-        <div class="scoreBubble">
-          <div>
-            <label class="title upperCase lbl-bubbleFooter">Initiative</label>${$lblInitiative}
-          </div>
-        </div>
-        <div class="scoreBubble">
-          <div>
-            <label class="title upperCase lbl-bubbleFooter">Speed</label>${$lblSpeed}
-          </div>
-        </div>
-        <div class="armorWornText"><b>Armor worn: </b>${$armorWornText}</div>
-        <div class="scoreBubble scoreBubbleWide">
-          <div>
-            <label class="title upperCase lbl-bubbleFooter">Max HP</label>${$lblMaxHP}
-          </div>
-        </div>
-        <div class="scoreBubble scoreBubbleWide">
-          <div>
-            <label class="title upperCase lbl-bubbleFooter">Hit Dice</label>${$lblHitDice}
-          </div>
-        </div>
-      </section>
-      <section class="attacksandspellcasting">
-        <div>
-          <label class="upperCase lbl-sectionFooter">Attacks</label>
-          ${$attacksTextArea}
-        </div>
-      </section>
-      <section class="equipment">
-        <div>
-          <label class="upperCase lbl-sectionFooter">Equipment</label>
-          ${$divEquipment}
-          <div class="coinage"><b>Currency: </b>${$lblCoinage}</div>
-        </div>
-      </section>
-      
-      ${$divCarry}
-    </section>
-    <section>
-      <section class="sectionRight features">
-        <div>
-          <label class="upperCase lbl-sectionHeader">Features & Traits</label>
-          <div class ="sectionTextArea textbox">
-          ${$divBackgroundFeatures}
-          ${$divRaceFeatures}
-          ${$divClassFeatures}
-          ${$divSubclassFeatures}
-          ${$divFeatFeatures}
-          </div>
-        </div>
-      </section>
-      <section class="sectionRight spells">
-        <div>
-          <label class="upperCase lbl-sectionHeader">Spells</label>
-          <div class ="sectionTextArea textbox">
-          ${$divSpells}
-          </div>
-        </div>
-      </section>
-      <section class="sectionRight inventory">
-        <div>
-          <label class="upperCase lbl-sectionheader">Inventory</label>
-          <div>
-            <div class="ct-inventory__row-header">
-              <div class="ct-inventory-col--active">Active</div>
-              <div class="ct-inventory-col--name">Name</div>
-              <div class="ct-inventory-col--weight">Weight</div>
+
+    <section class="sectionMainRight">
+      <section>
+        <section class="sectionHalf">
+          <section class="combat">
+            <div class="scoreBubble">
+              <div>
+                <label class="title upperCase lbl-bubbleFooter">Armor Class</label>${$lblArmorClass}
+              </div>
             </div>
-            ${$divInventory}
+            <div class="scoreBubble">
+              <div>
+                <label class="title upperCase lbl-bubbleFooter">Initiative</label>${$lblInitiative}
+              </div>
+            </div>
+            <div class="scoreBubble">
+              <div>
+                <label class="title upperCase lbl-bubbleFooter">Speed</label>${$lblSpeed}
+              </div>
+            </div>
+            <div class="armorWornText"><b>Armor worn: </b>${$armorWornText}</div>
+            <div class="scoreBubble scoreBubbleWide">
+              <div>
+                <label class="title upperCase lbl-bubbleFooter">Max HP</label>${$lblMaxHP}
+              </div>
+            </div>
+            <div class="scoreBubble scoreBubbleWide">
+              <div>
+                <label class="title upperCase lbl-bubbleFooter">Hit Dice</label>${$lblHitDice}
+              </div>
+            </div>
+          </section>
+          <section class="attacksandspellcasting">
+            <div>
+              <label class="upperCase lbl-sectionFooter">Attacks</label>
+              ${$attacksTextArea}
+            </div>
+          </section>
+          <section class="equipment">
+            <div>
+              <label class="upperCase lbl-sectionFooter">Equipment</label>
+              ${$divEquipment}
+              <div class="coinage"><b>Currency: </b>${$lblCoinage}</div>
+            </div>
+          </section>
+          ${$divCarry}
+        </section>
+
+        <section class="sectionHalf">
+          <section class="sectionRight features">
+            <div>
+              <label class="upperCase lbl-sectionHeader">Features & Traits</label>
+              <div class ="sectionTextArea textbox">
+              ${$divBackgroundFeatures}
+              ${$divRaceFeatures}
+              ${$divClassFeatures}
+              ${$divSubclassFeatures}
+              ${$divFeatFeatures}
+              </div>
+            </div>
+          </section>
+          <section class="sectionRight spells">
+            <div>
+              <label class="upperCase lbl-sectionHeader">Spells</label>
+              <div class ="sectionTextArea textbox">
+              ${$divSpells}
+              </div>
+            </div>
+          </section>
+        </section>
+      </section>
+      <section>
+        <section class="sectionRight inventory">
+          <div>
+            <label class="upperCase lbl-sectionheader">Inventory</label>
+            <div>
+              <div class="ct-inventory__row-header">
+                <div class="ct-inventory-col--active">Active</div>
+                <div class="ct-inventory-col--name">Name</div>
+                <div class="ct-inventory-col--weight">Weight</div>
+              </div>
+              ${$divInventory}
+            </div>
           </div>
-        </div>
-      </section
+        </section>
+      </section>
     </section>
-      </main>`;
+    </main>`;
       mainSection.appendTo($form);
 
       $form.appendTo(sheet);
