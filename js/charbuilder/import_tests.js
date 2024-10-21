@@ -22,7 +22,6 @@ class ImportTester{
             else {
 				//This is what we want. Tell the importlist to import ent (an obj in 5etools schema)
 				const summary = await imp.pImportEntry(ent, {filterValues: flags.filterValues, isDataOnly:true});
-				console.log("SUMMARY", summary);
 				return summary._imported[0].document;
 			}
 
@@ -654,6 +653,7 @@ static _getCacheKeyPart (str) {
 }
 class CompendiumCacheUtil {
 	static getCompendiumsFromConfigValue (idArr) {
+		return []; //TEMPFIX
 		if (!idArr?.length) return [];
 
 		idArr = idArr
@@ -1212,7 +1212,7 @@ class DescriptionRendererHookStringTag extends DescriptionRendererHookBase {
 
 				const {name, source, displayText} = DataUtil.generic.unpackUid(text, "condition");
 
-				if (source.toLowerCase() !== Parser.SRC_PHB.toLowerCase() || !CONFIG.DND5E.conditionTypes[name.toLowerCase()]) return null;
+				if (source.toLowerCase() !== Parser.SRC_PHB.toLowerCase() || !CONFIG.DND5E.conditionTypes || !CONFIG.DND5E.conditionTypes[name.toLowerCase()]) return null;
 
 				return `&Reference[condition=${name}]${displayText && displayText.toLowerCase() !== name.toLowerCase() ? `{${displayText}}` : ""}`;
 			}
@@ -1222,7 +1222,7 @@ class DescriptionRendererHookStringTag extends DescriptionRendererHookBase {
 
 				const {name, source, displayText} = DataUtil.generic.unpackUid(text, "sense");
 
-				if (source.toLowerCase() !== Parser.SRC_PHB.toLowerCase() || !CONFIG.DND5E.rules[name.toLowerCase()]) return null;
+				if (source.toLowerCase() !== Parser.SRC_PHB.toLowerCase() || !CONFIG.DND5E.rules || !CONFIG.DND5E.rules[name.toLowerCase()]) return null;
 
 				return `&Reference[rule=${name}]${displayText && displayText.toLowerCase() !== name.toLowerCase() ? `{${displayText}}` : ""}`;
 			}
@@ -1233,7 +1233,7 @@ class DescriptionRendererHookStringTag extends DescriptionRendererHookBase {
 				const {name, source, displayText} = DataUtil.generic.unpackUid(text, "skill");
 
 				const nameKey = name.replace(/ /g, "");
-				if (source.toLowerCase() !== Parser.SRC_PHB.toLowerCase() || !CONFIG.DND5E.enrichmentLookup.skills[nameKey.toLowerCase()]) return null;
+				if (source.toLowerCase() !== Parser.SRC_PHB.toLowerCase()  || !CONFIG.DND5E.enrichmentLookup || !CONFIG.DND5E.enrichmentLookup.skills[nameKey.toLowerCase()]) return null;
 
 				const ptDisplay = (displayText && displayText.toLowerCase() !== name.toLowerCase())
 					? `{${displayText}}`
@@ -1259,7 +1259,7 @@ class DescriptionRendererHookStringTag extends DescriptionRendererHookBase {
 				const displayTextKey = displayText?.replace(/ /g, "");
 
 				for (const nameKey of nameKeys) {
-					if (!CONFIG.DND5E.rules[nameKey.toLowerCase()]) continue;
+					if (!CONFIG.DND5E.rules ||!CONFIG.DND5E.rules[nameKey.toLowerCase()]) continue;
 
 					const ptDisplay = (displayTextKey && nameKey === displayTextKey)
 						? displayTextKey === displayText ? "" : `{${displayText}}`

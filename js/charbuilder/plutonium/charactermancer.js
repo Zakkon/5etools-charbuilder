@@ -9592,7 +9592,7 @@ Charactermancer_StartingEquipment.ComponentDefault = class extends Charactermanc
                 const items = form.data.equipmentItemEntries;
                 for(let it of items){
                     const itemUid = (it.item.name + "|" + it.item.source).toLowerCase();
-                    System5e.addToInventory(CharacterBuilder.instance._actor, it.item);
+                    System5e.addToInventory(CharacterBuilder.instance._actor, it.item, new Item5e(itemUid, it.quantity));
                 }
                 this._state["defaultItemPulse"] = !this._state["defaultItemPulse"];
             }
@@ -10234,7 +10234,7 @@ Charactermancer_StartingEquipment.ComponentGold = class extends Charactermancer_
                     isIgnoreCost: opts.isIgnoreCost,
                 },
             });
-            System5e.addToInventory(this._actor, item);//new Item5e(itemUid, opts.quantity, collectionId));
+            System5e.addToInventory(this._actor, item, new Item5e(itemUid, opts.quantity, collectionId));
         }
 
         if (opts.isTriggerUpdate) { this._triggerCollectionUpdate("itemPurchases"); }

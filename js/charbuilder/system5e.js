@@ -150,12 +150,8 @@ class System5e{
         return JSON.stringify(schema.system);
     }
 
-    static async addToInventory(actor, item){
-
-        //Do a conversion here
-        const tester = new ImportTester();
-        const result = await tester.runTest(item);
-        actor.character.system.inventory.items.push(item);
+    static async addToInventory(actor, item, item5e){
+        actor.character.system.inventory.items.push(item5e);
         console.log("num items", actor.character.system.inventory.items.length);
     }
     static createUniqueID(){

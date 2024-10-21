@@ -997,9 +997,9 @@ class ConfigConsts {
 						name: "Use Enrichers",
 						help: `If enabled, importers will make use of dnd5e-specific custom enrichers when rendering content. For example, damage rolls may be rendered as "[[/damage ...]]" instead of "[[/r ...]]", changing the on-click behaviour.`,
 						default: {
-														[ConfigConsts.C_IMPORT_ENRICHERS_AUTO_CONVERT__CONDITION]: true,
+														[ConfigConsts.C_IMPORT_ENRICHERS_AUTO_CONVERT__CONDITION]: false, //tempfix
 							[ConfigConsts.C_IMPORT_ENRICHERS_AUTO_CONVERT__DICE]: true,
-							[ConfigConsts.C_IMPORT_ENRICHERS_AUTO_CONVERT__RULE]: true,
+							[ConfigConsts.C_IMPORT_ENRICHERS_AUTO_CONVERT__RULE]: false, //Tempfix
 							[ConfigConsts.C_IMPORT_ENRICHERS_AUTO_CONVERT__SENSE]: true,
 							[ConfigConsts.C_IMPORT_ENRICHERS_AUTO_CONVERT__SKILL]: true,
 							[ConfigConsts.C_IMPORT_ENRICHERS_AUTO_CONVERT__DC]: true,
@@ -3863,7 +3863,6 @@ class Config {
     }
     const out = (Config._CONFIG[namespace] || {})[prop];
     if(namespace == "import" && prop == "enrichersAutoConvert"){
-      console.log("CONFIG", Config._CONFIG);
     }
     return this._get_getValidValue(namespace, prop, out);
   }
@@ -4236,7 +4235,10 @@ class CONFIG{
     static DND5E = {
         attunementTypes: {
             NONE: "none"
-        }
+        },
+		conditionTypes:{
+
+		}
     }
     
 }
@@ -4244,7 +4246,8 @@ class CONST {
     //These are all from FVTT
     static USER_ROLES = {NONE : 0, PLAYER : 1, TRUSTED : 2, ASSISTANT : 3, GAMEMASTER : 4};
     static DOCUMENT_OWNERSHIP_LEVELS = {INHERIT: 0, NONE: 1, LIMITED: 2, OBSERVER: 3, OWNER: 4};
-    static TOKEN_DISPOSITIONS = {SECRET: 0, HOSTILE: 1, NEUTRAL: 2, FRIENDLY: 3}
+    static TOKEN_DISPOSITIONS = {SECRET: 0, HOSTILE: 1, NEUTRAL: 2, FRIENDLY: 3};
+	static ACTIVE_EFFECT_MODES = {CUSTOM: 0, MULTIPLY: 1, ADD: 2, DOWNGRADE: 3, UPGRADE: 4, OVERRIDE: 5};
 }
 class foundry {
     static utils = {

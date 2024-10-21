@@ -85,7 +85,7 @@ class SourceManager {
     //Get entities such as classes, races, backgrounds using the source ids
     const {content, cacheKeys} = await SourceManager._getOutputEntities(sourceInfo.sourceIds, sourceInfo.uploadedFileMetas, sourceInfo.customUrls, true);
     //Then perform some post processing
-    const postProcessedData = SourceManager._postProcessAllSelectedData(content);
+    const postProcessedData = await SourceManager._postProcessAllSelectedData(content);
     const mergedData = postProcessedData;
     //Make sure that the data always has an array for classes, races, feats, etc, even if none were provided by the sources
     SourceManager._DATA_PROPS_EXPECTED.forEach(propExpected => mergedData[propExpected] = mergedData[propExpected] || []);
@@ -101,7 +101,7 @@ class SourceManager {
    * @returns {{class:{}[], background:{}[], classFeature:{}[], race:{}[], monster:{}[], item:{}[]
    * , spell:{}[], subclassFeature:{}[], feat:{}[], optionalFeature:{}[], foundryClass:{}[]}}
    */
-  static _postProcessAllSelectedData(data) {
+  static async _postProcessAllSelectedData(data) {
 
     data = ImportListClass.Utils.getDedupedData({allContentMerged: data});
 
@@ -111,6 +111,9 @@ class SourceManager {
     Charactermancer_Feature_Util.addFauxOptionalFeatureEntries(data, data.optionalfeature);
 
     Charactermancer_Class_Util.addFauxOptionalFeatureFeatures(data.class, data.optionalfeature);
+
+    await SourceManager.plutoniumConvertData(data);
+
     return data;
   }
 
@@ -348,6 +351,20 @@ Renderer.spell.populateBrewLookup(await BrewUtil2.pGetBrewProcessed(), {isForce:
     //if(!!s._isExistingPrereleaseBrew){out._isExistingPrereleaseBrew = s._isExistingPrereleaseBrew;}
     //if(!!sourceId.cacheKey){out.cacheKey = sourceId.cacheKey;}
     return out;
+  }
+
+  static async plutoniumConvertData(data){
+    console.log("DATA IN", data);
+    const tester = new ImportTester();
+    for(let i = 0; i < data.item.length; ++i){
+      const item = data.item[i];
+      if(item == null){continue;}
+      if(item.type == "M"){
+        let result = await tester.runTest(item);
+        //console.log(result.name);
+        data.item[i].system = result.system;
+      }
+    }
   }
 }
 class SETTINGS{
