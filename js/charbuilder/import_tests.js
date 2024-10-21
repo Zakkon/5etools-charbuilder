@@ -13,22 +13,29 @@ class ImportTester{
         const isUseImporter = true;
         const pFnImport = null;
         //const actor = item.parent;
-        const actor = {};
+        const actor = null;
 
         if (isUseImporter) {
             //const actorMultiImportHelper = new ActorMultiImportHelper({actor});
-            const imp = new ImportListItem({actor});
-            await imp.pInit();
+			//First, we have to create an ImportListItem, which sadly does contain some UI elements, but whatever
+            const imp = new ImportListItem({actor}); //If actor exists, the item will be imported unto the actor. If none exists, it will go to a generic directory
+            await imp.pInit(); //Initialize the importer
 
             if (pFnImport) await pFnImport({ent, imp, flags});
-            else await imp.pImportEntry(ent, {filterValues: flags.filterValues});
+            else {
+				//This is what we want. Tell the importlist to import ent (an obj in 5etools schema)
+				const summary = await imp.pImportEntry(ent, {filterValues: flags.filterValues, isDataOnly:true});
+				console.log("SUMMARY", summary);
+
+			}
 
 
 
             //await actorMultiImportHelper.pRepairMissingConsumes();
 
-            const msg = fnGetSuccessMessage ? fnGetSuccessMessage({ent, flags}) : `Imported "${ent.name}" via ${importerName} Importer`;
-            ui.notifications.info(msg);
+            //const msg = fnGetSuccessMessage ? fnGetSuccessMessage({ent, flags}) : `Imported "${ent.name}" via ${importerName} Importer`;
+			console.log("IMPORTED", ent);
+            //ui.notifications.info(msg);
             return;
         }
     }
@@ -648,7 +655,73 @@ static _getCacheKeyPart (str) {
     return IntegrationBabele.getOriginalName(doc);
 }
 }
+class CompendiumCacheUtil {
+	static getCompendiumsFromConfigValue (idArr) {
+		if (!idArr?.length) return [];
 
+		idArr = idArr
+			.filter(Boolean)
+			.map(it => it.trim().toLowerCase());
+
+		return idArr
+			.map(it => game.packs.find(x => x.collection.toLowerCase() === it))
+			.filter(Boolean);
+	}
+
+	static getAdditionalDataCompendiums ({entityType}) {
+		switch (entityType) {
+			case "spell": return this.getCompendiumsFromConfigValue(Config.get("importSpell", "additionalDataCompendium"));
+			case "monster": return this.getCompendiumsFromConfigValue(Config.get("importCreature", "additionalDataCompendium"));
+			case "item": return this.getCompendiumsFromConfigValue(Config.get("importItem", "additionalDataCompendium"));
+			case "class": return this.getCompendiumsFromConfigValue(Config.get("importClass", "additionalDataCompendiumClasses"));
+			case "subclass": return this.getCompendiumsFromConfigValue(Config.get("importClass", "additionalDataCompendiumSubclasses"));
+			case "classFeature": return this.getCompendiumsFromConfigValue(Config.get("importClass", "additionalDataCompendiumFeatures"));
+			case "subclassFeature": return this.getCompendiumsFromConfigValue(Config.get("importClass", "additionalDataCompendiumFeatures"));
+			case "optionalfeature": return this.getCompendiumsFromConfigValue(Config.get("importOptionalFeature", "additionalDataCompendium"));
+			case "race": return this.getCompendiumsFromConfigValue(Config.get("importRace", "additionalDataCompendium"));
+			case "raceFeature": return this.getCompendiumsFromConfigValue(Config.get("importRaceFeature", "additionalDataCompendiumFeatures"));
+			case "monsterFeature": return this.getCompendiumsFromConfigValue(Config.get("importCreature", "additionalDataCompendiumFeatures"));
+			case "background": return this.getCompendiumsFromConfigValue(Config.get("importBackground", "additionalDataCompendium"));
+			case "backgroundFeature": return this.getCompendiumsFromConfigValue(Config.get("importBackground", "additionalDataCompendiumFeatures"));
+			case "table": return this.getCompendiumsFromConfigValue(Config.get("importTable", "additionalDataCompendium"));
+			case "feat": return this.getCompendiumsFromConfigValue(Config.get("importFeat", "additionalDataCompendium"));
+			default: return null;
+		}
+	}
+
+	static getReplacementDataCompendiums ({entityType}) {
+		switch (entityType) {
+			case "spell": return this.getCompendiumsFromConfigValue(Config.get("importSpell", "replacementDataCompendium"));
+			case "item": return this.getCompendiumsFromConfigValue(Config.get("importItem", "replacementDataCompendium"));
+			default: return null;
+		}
+	}
+
+	static getActorItemImageCompendiums ({entityType}) {
+		switch (entityType) {
+			case "monsterFeature": return this.getCompendiumsFromConfigValue(Config.get("importCreature", "additionalDataCompendium"));
+			default: return null;
+		}
+	}
+
+	
+		static async pGetCompendiumData (compendium, {isContent = false, taskRunner = null} = {}) {
+				isContent = isContent || UtilCompat.isBabeleActive();
+
+						const maxTimeSecs = 10;
+		const taskRunnerLineMeta = taskRunner ? taskRunner.addLogLine(`Caching compendium &quot;<i>${compendium.metadata.label.qq()}</i>&quot;...`) : null;
+		const compendiumData = await Promise.race([
+			isContent ? compendium.getDocuments() : compendium.getIndex(),
+			MiscUtil.pDelay(maxTimeSecs * 1000, null),
+		]);
+		if (taskRunner) taskRunner.addLogLine(`Cached compendium &quot;<i>${compendium.metadata.label.qq()}</i>&quot;.`, {linkedLogLineMeta: taskRunnerLineMeta});
+		if (!compendiumData) {
+			console.warn(...LGT, `Loading of ${compendium?.metadata?.system}.${compendium?.metadata?.name} took more than ${maxTimeSecs} seconds! This usually means the compendium is inaccessible. Cancelling compendium load.`);
+			return [];
+		}
+		return compendiumData;
+	}
+}
 class CompendiumCacheKeyProviderGeneric extends CompendiumCacheKeyProviderBase {
 _deepKeys = ["name"];
 
@@ -820,13 +893,17 @@ class ImportEntryManager {
 		this._taskRunner = importOpts?.taskRunner;
 	}
 
+ /**
+  * @returns {Promise<ImportSummary>}
+  */
 	async pImportEntry () {
+		//Print a log line saying we are starting the import
 		const taskRunnerLineMeta = this._pImportEntry_doUpdateTaskRunner_preImport();
 
 		try {
 			const importSummary = await this._pImportEntry_pDoImport();
 			this._pImportEntry_doUpdateTaskRunner_postImport_success({importSummary, taskRunnerLineMeta});
-			UtilHooks.callAll(UtilHooks.HK_IMPORT_COMPLETE, importSummary);
+			//UtilHooks.callAll(UtilHooks.HK_IMPORT_COMPLETE, importSummary);
 			return importSummary;
 		} catch (e) {
 			this._pImportEntry_doUpdateTaskRunner_postImport_failure({taskRunnerLineMeta, e});
@@ -835,6 +912,7 @@ class ImportEntryManager {
 	}
 
 	async _pImportEntry_pDoImport () {
+		//Tell instance (an ImportList of some kind) to do the importing
 		return this._instance._pImportEntry(this._ent, this._importOpts, this._dataOpts);
 	}
 
@@ -887,7 +965,7 @@ static _addPlugins ({actorId = null, tagHashItemIdMap = null, isTagHashItemIdMap
     const hkStrBasic = new DescriptionRendererHookStringBasic({configCache});
     const hkStrFont = new DescriptionRendererHookStringFont({configCache});
     const hkDice = new DescriptionRendererHookDice({configCache});
-    const hkImgUrlPostProcess = new DescriptionRendererHookImgUrlPostProcess({configCache});
+    //const hkImgUrlPostProcess = new DescriptionRendererHookImgUrlPostProcess({configCache});
 
     Renderer.get().addPlugin("link_attributesHover", hkLinkAttributesHover.boundHook);
     Renderer.get().addPlugin("string_preprocess", hkStrPreprocess.boundHook);
@@ -895,8 +973,8 @@ static _addPlugins ({actorId = null, tagHashItemIdMap = null, isTagHashItemIdMap
             Renderer.get().addPlugin("string_tag", hkStringTag.boundHook);
     Renderer.get().addPlugin("dice", hkDice.boundHook);
     if (Config.get("import", "isSaveImagesToServer")) {
-        Renderer.get().addPlugin("image_urlPostProcess", hkImgUrlPostProcess.boundHook);
-        Renderer.get().addPlugin("image_urlThumbnailPostProcess", hkImgUrlPostProcess.boundHook);
+        //Renderer.get().addPlugin("image_urlPostProcess", hkImgUrlPostProcess.boundHook);
+        //Renderer.get().addPlugin("image_urlThumbnailPostProcess", hkImgUrlPostProcess.boundHook);
     }
 
     return {
@@ -906,7 +984,7 @@ static _addPlugins ({actorId = null, tagHashItemIdMap = null, isTagHashItemIdMap
         hkStrBasic,
         hkStrFont,
         hkDice,
-        hkImgUrlPostProcess,
+        //hkImgUrlPostProcess,
     };
 }
 
@@ -926,8 +1004,8 @@ static _removePlugins (hooks) {
     Renderer.get().removePlugin("string_@font", hkStrFont.boundHook);
             Renderer.get().removePlugin("string_tag", hkStringTag.boundHook);
     Renderer.get().removePlugin("dice", hkDice.boundHook);
-    Renderer.get().removePlugin("image_urlPostProcess", hkImgUrlPostProcess.boundHook);
-    Renderer.get().removePlugin("image_urlThumbnailPostProcess", hkImgUrlPostProcess.boundHook);
+    //Renderer.get().removePlugin("image_urlPostProcess", hkImgUrlPostProcess.boundHook);
+    //Renderer.get().removePlugin("image_urlThumbnailPostProcess", hkImgUrlPostProcess.boundHook);
 }
 
 static async pGetWithDescriptionPlugins (pFn, {actorId = null, tagHashItemIdMap = null, isTagHashItemIdMapSelf = false} = {}) {
@@ -995,4 +1073,833 @@ constructor ({configCache}) {
 get boundHook () {
     return (this._boundHook ||= this.hook.bind(this));
 }
+}
+class DescriptionRendererHookLinkAttributesHover extends DescriptionRendererHookBase {
+	hook (commonArgs, {input: {entry, procHash}}) {
+		const page = entry.href.hover.page;
+		const source = entry.href.hover.source;
+		const hash = procHash;
+		const preloadId = entry.href.hover.preloadId;
+		return {
+			attributesHoverReplace: [
+				`data-plut-hover="${true}" data-plut-hover-page="${page.qq()}" data-plut-hover-source="${source.qq()}" data-plut-hover-hash="${hash.qq()}" ${preloadId ? `data-plut-hover-preload-id="${preloadId.qq()}"` : ""}`,
+			],
+		};
+	}
+}
+
+class DescriptionRendererHookStringPreprocess extends DescriptionRendererHookBase {
+	hook (commonArgs, {input: str}) {
+		str = this._hook_dc({str: str}) ?? str;
+		str = this._hook_damage({str: str}) ?? str;
+		return str;
+	}
+
+	
+		static _RE_DC = new RegExp(`{@dc (?<dc>\\d+)} (?<abil>${Object.values(Parser.ATB_ABV_TO_FULL).join("|")})\\b`, "g");
+
+	_hook_dc ({str}) {
+		if (!this._configCache.import.enrichersAutoConvert[ConfigConsts.C_IMPORT_ENRICHERS_AUTO_CONVERT__DC]) return null;
+
+		return str
+			.replace(this.constructor._RE_DC, (...m) => {
+				return `[[/save ability=${m.last().abil.toLowerCase()} dc=${m.last().dc}]]`;
+			})
+		;
+	}
+
+	
+					static _RE_DAMAGE = new RegExp(`(?<tagOpen>\\(?{@damage [^}|]+)(?<tagClose>}\\)?) (?<dmgType>${Parser.DMG_TYPES.join("|")})(?<suffix> damage)\\b`, "gi");
+
+	_hook_damage ({str}) {
+		if (!this._configCache.import.enrichersAutoConvert[ConfigConsts.C_IMPORT_ENRICHERS_AUTO_CONVERT__DICE]) return null;
+
+		return str
+			.replace(this.constructor._RE_DAMAGE, (...m) => {
+				const {tagOpen, tagClose, dmgType, suffix} = m.last();
+				return `${tagOpen}|||${dmgType}${tagClose}${suffix}`;
+			})
+		;
+	}
+}
+
+class DescriptionRendererHookStringTag extends DescriptionRendererHookBase {
+	constructor ({actorId = null, tagHashItemIdMap = null, isTagHashItemIdMapSelf = false, ...rest}) {
+		super({...rest});
+		this._actorId = actorId;
+		this._tagHashItemIdMap = tagHashItemIdMap;
+		this._isTagHashItemIdMapSelf = isTagHashItemIdMapSelf;
+	}
+
+	hook (commonArgs, {input: {tag, text}}) {
+		const inn = `{${tag} ${text}}`;
+		const itemId = this._pGetWithDescriptionPlugins_getTagItemId({tag, text});
+		const out = this._getConvertedTagLinkString(inn, {itemId});
+		if (inn === out) return null; 		return out;
+	}
+
+		_pGetWithDescriptionPlugins_getTagItemId ({tag, text}) {
+		const tagName = tag.slice(1); 		if (!this._tagHashItemIdMap?.[tagName]) return null;
+		const defaultSource = Renderer.tag.TAG_LOOKUP[tagName]?.defaultSource;
+		if (!defaultSource) return null;
+		const page = Renderer.tag.getPage(tagName);
+		if (!page) return null;
+		const hashBuilder = UrlUtil.URL_TO_HASH_BUILDER[page];
+		if (!hashBuilder) return null;
+		let [name, source] = text.split("|");
+		source = source || defaultSource;
+		const hash = hashBuilder({name, source});
+		return this._tagHashItemIdMap?.[tagName]?.[hash];
+	}
+
+	_getConvertedTagLinkString (str, {itemId} = {}) {
+		this.constructor._initLinkTagMetas();
+
+		for (const {tag, re} of this.constructor._LINK_TAG_METAS_REPLACE) str = str.replace(re, (...m) => this._replaceEntityLinks_getReplacement({tag, text: m.last().text, itemId}));
+
+				if (this._configCache.import.isRenderLinksAsTags) {
+			for (const {tag, re} of this.constructor._LINK_TAG_METAS_REMOVE) str = str.replace(re, (...m) => this._replaceEntityLinks_getRemoved({tag, text: m.last().text}));
+		}
+
+		return str;
+	}
+
+	static _LINK_TAGS_TO_REMOVE = new Set([
+		"quickref", 	]);
+	static _LINK_TAG_METAS_REPLACE = null;
+	static _LINK_TAG_METAS_REMOVE = null;
+
+	static _initLinkTagMetas () {
+		this._LINK_TAG_METAS_REPLACE ||= this._LINK_TAG_METAS_REPLACE = Renderer.tag.TAGS.filter(it => it.defaultSource)
+			.map(it => it.tagName)
+			.map(tag => ({tag, re: this._getConvertedTagLinkString_getRegex({tag})}));
+
+		this._LINK_TAG_METAS_REMOVE ||= Renderer.tag.TAGS.filter(it => it.defaultSource)
+			.map(it => it.tagName)
+			.filter(tag => this._LINK_TAGS_TO_REMOVE.has(tag))
+			.map(tag => ({tag, re: this._getConvertedTagLinkString_getRegex({tag})}));
+	}
+
+	static _getConvertedTagLinkString_getRegex ({tag}) {
+		return RegExp(`^{@${tag} (?<text>[^}]+)}$`, "g");
+	}
+
+	_replaceEntityLinks_getReplacement ({tag, text, itemId}) {
+		if (this._actorId && itemId) {
+			const [, , displayText] = text.split("|");
+
+																		if (this._isTagHashItemIdMapSelf) {
+				return `@UUID[.${itemId}]${displayText ? `{${displayText}}` : ""}`;
+			}
+
+			return `@UUID[Actor.${this._actorId}.Item.${itemId}]${displayText ? `{${displayText}}` : ""}`;
+		}
+
+		const asEnricher = this._replaceEntityLinks_getReplacement_enricher({tag, text});
+		if (asEnricher) return asEnricher;
+
+		if (
+						this.constructor._LINK_TAGS_TO_REMOVE.has(tag)
+						|| !this._configCache.import.isRenderLinksAsTags
+		) return `{@${tag} ${text}}`;
+
+		return `@${tag}[${text}]`;
+	}
+
+	_replaceEntityLinks_getReplacement_enricher ({tag, text}) {
+		if (!this._configCache.import.enrichersAutoConvert) return null;
+
+		switch (tag) {
+			case "condition": {
+				if (!this._configCache.import.enrichersAutoConvert[ConfigConsts.C_IMPORT_ENRICHERS_AUTO_CONVERT__CONDITION]) return null;
+
+				const {name, source, displayText} = DataUtil.generic.unpackUid(text, "condition");
+
+				if (source.toLowerCase() !== Parser.SRC_PHB.toLowerCase() || !CONFIG.DND5E.conditionTypes[name.toLowerCase()]) return null;
+
+				return `&Reference[condition=${name}]${displayText && displayText.toLowerCase() !== name.toLowerCase() ? `{${displayText}}` : ""}`;
+			}
+
+			case "sense": {
+				if (!this._configCache.import.enrichersAutoConvert[ConfigConsts.C_IMPORT_ENRICHERS_AUTO_CONVERT__SENSE]) return null;
+
+				const {name, source, displayText} = DataUtil.generic.unpackUid(text, "sense");
+
+				if (source.toLowerCase() !== Parser.SRC_PHB.toLowerCase() || !CONFIG.DND5E.rules[name.toLowerCase()]) return null;
+
+				return `&Reference[rule=${name}]${displayText && displayText.toLowerCase() !== name.toLowerCase() ? `{${displayText}}` : ""}`;
+			}
+
+			case "skill": {
+				if (!this._configCache.import.enrichersAutoConvert[ConfigConsts.C_IMPORT_ENRICHERS_AUTO_CONVERT__SKILL]) return null;
+
+				const {name, source, displayText} = DataUtil.generic.unpackUid(text, "skill");
+
+				const nameKey = name.replace(/ /g, "");
+				if (source.toLowerCase() !== Parser.SRC_PHB.toLowerCase() || !CONFIG.DND5E.enrichmentLookup.skills[nameKey.toLowerCase()]) return null;
+
+				const ptDisplay = (displayText && displayText.toLowerCase() !== name.toLowerCase())
+					? `{${displayText}}`
+					: nameKey.toLowerCase() !== name.toLowerCase()
+						? `{${name}}`
+						: "";
+
+				return `&Reference[skill=${nameKey}]${ptDisplay}`;
+			}
+
+			case "quickref": {
+				if (!this._configCache.import.enrichersAutoConvert[ConfigConsts.C_IMPORT_ENRICHERS_AUTO_CONVERT__RULE]) return null;
+
+				const {name, displayText} = DataUtil.quickreference.unpackUid(text);
+
+								const nameKeys = [
+					displayText,
+					name,
+				]
+					.filter(Boolean)
+					.map(it => it.replace(/ /g, ""));
+
+				const displayTextKey = displayText?.replace(/ /g, "");
+
+				for (const nameKey of nameKeys) {
+					if (!CONFIG.DND5E.rules[nameKey.toLowerCase()]) continue;
+
+					const ptDisplay = (displayTextKey && nameKey === displayTextKey)
+						? displayTextKey === displayText ? "" : `{${displayText}}`
+						: (displayTextKey && displayTextKey.toLowerCase() !== nameKey.toLowerCase())
+							? `{${displayText}}`
+							: nameKey.toLowerCase() !== name.toLowerCase()
+								? `{${name}}`
+								: "";
+
+					return `&Reference[rule=${nameKey}]${ptDisplay}`;
+				}
+
+				return null;
+			}
+		}
+
+		return null;
+	}
+
+	_replaceEntityLinks_getRemoved ({tag, text}) {
+		return Renderer.stripTags(`{@${tag} ${text}}`);
+	}
+
+		async _pReplaceEntityLinks_pReplace ({str, re, tag}) {
+		let m;
+		while ((m = re.exec(str))) {
+			const prefix = str.slice(0, m.index);
+			const suffix = str.slice(re.lastIndex);
+			const replacement = this._replaceEntityLinks_getReplacement({tag, m});
+			str = `${prefix}${replacement}${suffix}`;
+			re.lastIndex = prefix.length + replacement.length;
+		}
+		return str;
+	}
+
+	
+		renderStringRecursive (str, textStack) {
+		const tagSplit = Renderer.splitByTags(str);
+		const len = tagSplit.length;
+		for (let i = 0; i < len; ++i) {
+			const s = tagSplit[i];
+			if (!s) continue;
+
+						if (s.startsWith("{@")) {
+				const converted = this._getConvertedTagLinkString(s);
+
+				if (converted !== s) {
+					textStack[0] += (converted);
+					continue;
+				}
+
+				textStack[0] += s.slice(0, 1);
+				this.renderStringRecursive(s.slice(1, -1), textStack);
+				textStack[0] += s.slice(-1);
+
+				continue;
+			}
+
+			textStack[0] += s;
+		}
+	}
+}
+class DescriptionRendererHookStringBasic extends DescriptionRendererHookBase {
+	hook (commonArgs, {input: str}) {
+		str = this._hook_ability({str}) || str;
+		return str;
+	}
+
+	static _RE_ABILITY = new RegExp(`\\b(?<abil>${Object.values(Parser.ATB_ABV_TO_FULL).join("|")})\\b`, "g");
+
+	_hook_ability ({str}) {
+		if (!this._configCache.import.enrichersAutoConvert[ConfigConsts.C_IMPORT_ENRICHERS_AUTO_CONVERT__ABILITY]) return null;
+
+		return str
+			.replace(this.constructor._RE_ABILITY, (...m) => {
+				return `&Reference[ability=${m.last().abil}]`;
+			})
+		;
+	}
+}
+class DescriptionRendererHookStringFont extends DescriptionRendererHookBase {
+	static _INTERNAL_FONTS = {
+		"HPPHumblescratch": `${SharedConsts.MODULE_LOCATION}/fonts/hpphumblescratch-webfont.woff2`,
+	};
+
+	hook (commonArgs, {input: {tag, text}}) {
+		if (!game.user.isGM) return;
+
+		const [, fontFamily] = Renderer.splitTagByPipe(text);
+
+		if (this.constructor._DESCRIPTION_FONTS_TRACKED[fontFamily]) return;
+		this.constructor._DESCRIPTION_FONTS_TRACKED[fontFamily] = true;
+
+		if (FontConfig.getAvailableFontChoices()[fontFamily]) return;
+
+		if (!this._configCache.import.isAutoAddAdditionalFonts) {
+			ui.notifications.warn(`The "${fontFamily}" font, used by recently-rendered content, is not available in your game. You may need to manually add it via the "Additional Fonts" setting, or text using the "${fontFamily}" font may not display correctly.`);
+		}
+
+		const url = this.constructor._INTERNAL_FONTS[fontFamily]
+			|| PrereleaseUtil.getMetaLookup("fonts")?.[fontFamily]
+			|| BrewUtil2.getMetaLookup("fonts")?.[fontFamily];
+
+		if (!url) return void ui.notifications.warn(`Failed to load font "${fontFamily}". You may need to manually add it via the "Additional Fonts" setting, or text using the "${fontFamily}" font may not display correctly.`);
+
+		this.constructor._pDoLoadAdditionalFont(fontFamily, url).then(null);
+	}
+
+	static _DESCRIPTION_FONTS_TRACKED = {};
+	static _HAS_NOTIFIED_FONTS_RELOAD = false;
+
+	static async _pDoLoadAdditionalFont (family, url) {
+		const hasNotified = this._HAS_NOTIFIED_FONTS_RELOAD;
+		this._HAS_NOTIFIED_FONTS_RELOAD = true;
+
+				const definitions = game.settings.get("core", FontConfig.SETTING);
+		definitions[family] ??= {editor: true, fonts: []};
+		const definition = definitions[family];
+		definition.fonts.push({urls: [url], weight: 400, style: "normal"});
+		await game.settings.set("core", FontConfig.SETTING, definitions);
+		await FontConfig.loadFont(family, definition);
+		
+		if (hasNotified) return;
+
+		ChatNotificationHandlers.getHandler("ReloadFonts").pDoPostChatMessage();
+	}
+}
+class DescriptionRendererHookDice extends DescriptionRendererHookBase {
+	hook (commonArgs, {input: entry}) {
+		const cpy = MiscUtil.copyFast(entry);
+		const toDisplay = Renderer.getEntryDiceDisplayText(entry);
+
+		if (typeof cpy.toRoll !== "string") {
+						cpy.toRoll = Renderer.legacyDiceToString(cpy.toRoll);
+		}
+
+						if (cpy.prompt) {
+			const minAdditionalDiceLevel = Math.min(...Object.keys(cpy.prompt.options)
+				.map(it => Number(it))
+				.filter(it => cpy.prompt.options[it]));
+			cpy.toRoll = cpy.prompt.options[minAdditionalDiceLevel];
+		}
+
+		const toRollClean = UtilDataConverter.getCleanDiceString(cpy.toRoll);
+
+		if (this._configCache.import.isRendererDiceDisabled) {
+			return {
+				rendered: toDisplay || toRollClean,
+			};
+		}
+
+		const ptDisplay = toRollClean.toLowerCase().trim() !== toDisplay.toLowerCase().trim() ? `{${toDisplay}}` : "";
+
+		if (cpy.autoRoll) {
+			return {
+				rendered: `[[${toRollClean}]]${ptDisplay}`,
+			};
+		}
+
+		if (this._configCache.import.enrichersAutoConvert[ConfigConsts.C_IMPORT_ENRICHERS_AUTO_CONVERT__DICE] && entry.subType === "damage") {
+						return {
+				rendered: `[[/damage ${toRollClean}${cpy.damageType ? ` type=${cpy.damageType}` : ""}]]${ptDisplay}`,
+			};
+		}
+
+		return {
+			rendered: `[[/r ${toRollClean}]]${ptDisplay}`,
+		};
+	}
+}
+class UtilFoundryId {
+	static getIdObj ({id = null} = {}) {
+		if (id == null) id = Math.random().toString(16).slice(2); //foundry.utils.randomID();
+		return {
+			_id: id, 			id, 		};
+	}
+
+	
+	static mutCopyDocId (docSource, docTarget) {
+		docTarget.id = docSource.id;
+		docTarget._id = docSource._id;
+	}
+}
+class UtilApplications {
+	static async $pGetAddAppLoadingOverlay ($appHtml) {
+		if (!$appHtml) return null;
+		$appHtml.css("position", "relative");
+		const $out = $(`<div class="veapp-loading__wrp-outer"><i>Loading...</i></div>`).focus().appendTo($appHtml);
+				await MiscUtil.pDelay(5);
+		return $out;
+	}
+
+		static pGetConfirmation (opts) {
+		opts = opts || {};
+
+		return new Promise(resolve => {
+			new Dialog({
+				title: opts.title,
+				content: opts.content,
+				buttons: {
+					yes: {
+						icon: `<i class="fas fa-fw ${opts.faIcon}"></i>`,
+						label: opts.confirmText,
+						callback: () => resolve(true),
+					},
+					no: {
+						icon: `<i class="fas fa-fw fa-times"></i>`,
+						label: opts.dismissText || "Cancel",
+						callback: () => resolve(false),
+					},
+				},
+				default: "yes",
+			}).render(true);
+		});
+	}
+
+	static getCleanEntityName (name) {
+				return name || " ";
+	}
+
+	static getFolderList (folderType) {
+		const sortFolders = (a, b) => SortUtil.ascSort(a.sort, b.sort);
+
+		const raw = CONFIG.Folder.collection.instance.contents
+			.filter(it => it.type === folderType)
+			.sort(sortFolders);
+		if (!raw.length) return raw;
+
+		const maxDepth = Math.max(...raw.map(it => it.depth));
+
+		const out = raw.filter(it => it.depth === 1);
+		if (out.length === raw.length) return out;
+
+		for (let i = 2; i < maxDepth + 1; ++i) {
+			const atDepth = raw.filter(it => it.depth === i).sort(sortFolders).reverse();
+			atDepth.forEach(it => {
+				const ixParent = out.findIndex(parent => parent.id === it.folder?.id);
+				if (~ixParent) out.splice(ixParent + 1, 0, it);
+			});
+		}
+
+		return out;
+	}
+
+	static bringToFront (app) {
+				if (!app._element) return;
+
+				if (typeof _maxZ === "undefined") window._maxZ = 100;
+
+				if (Object.keys(ui.windows).length === 0) _maxZ = 100;
+		app._element.css({zIndex: Math.min(++_maxZ, Consts.Z_INDEX_MAX_FOUNDRY)});
+	}
+
+	
+	static setApplicationTitle (app, title) {
+		app.options.title = title;
+		UtilApplications.$getAppElement(app).find(`.window-title`).text(app.title);
+	}
+
+	static getDataName (data) {
+		return data?.actor?.name || data?.document?.name;
+	}
+
+	static getAppName (app) {
+		return app.actor?.name || app.document?.name;
+	}
+
+			static async pGetImportCompApplicationFormData (opts) {
+		let resolve, reject;
+		const promise = new Promise((resolve_, reject_) => {
+			resolve = resolve_; reject = reject_;
+		});
+
+		const ptrPRender = {_: null};
+
+		const app = new class TempApplication extends Application {
+			constructor () {
+				super({
+					title: opts.comp.modalTitle,
+					template: `${SharedConsts.MODULE_LOCATION}/template/_Generic.hbs`,
+					width: opts.width != null ? opts.width : 480,
+					height: opts.height != null ? opts.height : 640,
+					resizable: true,
+				});
+			}
+
+			async close (...args) {
+				await super.close(...args);
+				resolve(null);
+			}
+
+			activateListeners (html) {
+				const $btnOk = $(`<button class="ve-btn ve-btn-primary mr-2">OK</button>`)
+					.click(async () => {
+						const formData = await opts.comp.pGetFormData();
+
+						if (opts.fnGetInvalidMeta) {
+							const invalidMeta = opts.fnGetInvalidMeta(formData);
+							if (invalidMeta) return ui.notifications[invalidMeta.type](invalidMeta.message);
+						}
+
+						resolve(formData);
+						return this.close();
+					});
+				const $btnCancel = $(`<button class="ve-btn ve-btn-default">Cancel</button>`)
+					.click(() => {
+						resolve(null); return this.close();
+					});
+				const $btnSkip = opts.isUnskippable ? null : $(`<button class="ve-btn ve-btn-default ml-3">Skip</button>`)
+					.click(() => {
+						resolve(VeCt.SYM_UI_SKIP); return this.close();
+					});
+
+				if (opts.comp.pRender) ptrPRender._ = opts.comp.pRender(html);
+				else opts.comp.render(html);
+				$$`<div class="ve-flex-v-center ve-flex-h-right no-shrink pb-1 pt-1 px-1 mt-auto mr-3">${$btnOk}${$btnCancel}${$btnSkip}</div>`.appendTo(html);
+			}
+		}();
+
+		opts.comp.app = app;
+		await app.render(true);
+
+		if (opts.isAutoResize) this.autoResizeApplication(app, {ptrPRender});
+
+		return promise;
+	}
+	
+			static async pGetShowApplicationModal (
+		{
+			title,
+			cbClose,
+
+			isWidth100,
+			isHeight100,
+
+			isMaxWidth640p,
+			isMinHeight0,
+
+			isIndestructible,
+			isClosed,
+		},
+	) {
+		let hasClosed = false;
+
+		let resolveModal;
+		const pResolveModal = new Promise(resolve => { resolveModal = resolve; });
+
+		const app = new class TempApplication extends MixinHidableApplication(Application) {
+			constructor () {
+				super({
+					title: title || " ",
+					template: `${SharedConsts.MODULE_LOCATION}/template/_Generic.hbs`,
+					width: isWidth100
+						? Util.getMaxWindowWidth(1170)
+						: isMaxWidth640p
+							? 640
+							: 480,
+					height: isHeight100
+						? Util.getMaxWindowHeight()
+						: isMinHeight0
+							? 100
+							: 640,
+					resizable: true,
+				});
+			}
+
+			async _closeNoSubmit () {
+				return super.close();
+			}
+
+			async close (...args) {
+				await pHandleCloseClick(false);
+				return super.close(...args);
+			}
+
+			async activateListeners (...args) {
+				super.activateListeners(...args);
+				out.$modal = out.$modalInner = this.element.find(`.ve-window`);
+				hasClosed = false;
+			}
+		}();
+
+		if (isIndestructible) app.isClosable = false;
+
+		const pHandleCloseClick = async (isDataEntered, ...args) => {
+						if (!isIndestructible && hasClosed) return;
+
+			hasClosed = true;
+
+			if (cbClose) await cbClose(isDataEntered, ...args);
+			if (!isIndestructible) resolveModal([isDataEntered, ...args]);
+
+			await app._closeNoSubmit();
+		};
+
+		const out = {
+			$modal: null,
+			$modalInner: null,
+			doClose: pHandleCloseClick,
+			doAutoResize: () => this.autoResizeApplicationExisting(app),
+			pGetResolved: () => pResolveModal,
+			doOpen: () => app._render(true),
+			doTeardown: () => app._pDoHardClose(),
+		};
+
+		await app._render(true);
+		if (isClosed) app._doSoftClose();
+
+		return out;
+	}
+
+	/**
+	 * 
+	 * Resize an app based on the content that is currently visible inside it.
+	 * @param app The app to resize.
+	 * @param ptrPRender Pointer to a promise which will resolve when the app is rendered.
+	 */
+	static autoResizeApplication (app, {ptrPRender} = {}) {
+		Hooks.once("renderApplication", async _app => {
+			if (_app !== app) return;
+			if (ptrPRender?._) await ptrPRender._;
+
+			this.autoResizeApplicationExisting(app);
+		});
+	}
+
+	static autoResizeApplicationExisting (app) {
+				const centerPrev = app.position.top + app.position.height / 2;
+
+				const pos = app.setPosition({
+			width: app.position.width, 			height: "auto",
+		});
+
+				const center = pos.top + pos.height / 2;
+		app.setPosition({
+			width: app.position.width,
+			height: app.position.height,
+			top: app.position.top + (centerPrev - center),
+		});
+	}
+
+		static _FORCE_RENDER_APP_TIME_LIMIT_MS = 7_500;
+
+		static async pForceRenderApp (app, renderForce = true, renderOpts) {
+		let resolve;
+		let isResolved = false;
+		const p = new Promise((resolve_) => { resolve = resolve_; });
+
+		Hooks.once(`render${app.constructor.name}`, async (_app, $html, data) => {
+			if (_app !== app) return;
+			resolve({app, $html, data});
+			isResolved = true;
+		});
+
+		app.render(renderForce, renderOpts);
+
+		return Promise.race([
+			p,
+			MiscUtil.pDelay(this._FORCE_RENDER_APP_TIME_LIMIT_MS)
+				.then(() => {
+					if (!isResolved) console.warn(...LGT, `Failed to render "${app?.constructor?.name}" app in ${this._FORCE_RENDER_APP_TIME_LIMIT_MS}ms!`);
+				}),
+		]);
+	}
+
+	static isClosed (app) { return app._state < Application.RENDER_STATES.NONE; }
+
+	/**
+	 * 
+	 * Auto-convert non-jQuery app elements, as some modules use bare DOM elements.
+	 * @param app
+	 */
+	static $getAppElement (app) {
+		if (!app?.element) return null;
+		if (app.element instanceof jQuery) return app.element;
+		return $(app.element);
+	}
+
+	static pAwaitAppClose (app) {
+		return new Promise(resolve => {
+			const fnOnClose = (closedApp) => {
+				if (app.appId !== closedApp.appId) return;
+				Hooks.off("closeApplication", fnOnClose);
+				resolve(closedApp);
+			};
+			Hooks.on("closeApplication", fnOnClose);
+		});
+	}
+
+	static getOpenAppsSortedByZindex ({isFilterInvalid = false} = {}) {
+		return Object.entries(ui.windows)
+			.map(([appId, app]) => {
+				const zIndex = Number((((UtilApplications.$getAppElement(app)[0] || {}).style || {})["z-index"] || -1));
+
+				if (isNaN(zIndex) || !~zIndex) {
+					if (Util.isDebug()) console.warn(`Could not determine z-index for app ${appId}`);
+					if (isFilterInvalid) return null;
+				}
+
+				return {
+					appId,
+					app,
+					zIndex: isNaN(zIndex) ? -1 : zIndex,
+				};
+			})
+			.filter(Boolean)
+			.sort((a, b) => SortUtil.ascSort(a.zIndex, b.zIndex))
+			.map(({app}) => app);
+	}
+}
+class DuplicateMeta {
+	constructor ({mode, existing}) {
+		this.mode = mode;
+		this.existing = existing;
+
+				this.isSkip = mode === ConfigConsts.C_IMPORT_DEDUPE_MODE_SKIP && existing != null;
+		this.isOverwrite = mode === ConfigConsts.C_IMPORT_DEDUPE_MODE_OVERWRITE && existing != null;
+			}
+}
+
+class ImportSummary {
+		constructor (
+		{
+			imported,
+			status,
+			entity = null,
+		},
+	) {
+		if (!status) throw new Error(`No "status" provided!`);
+
+		this._imported = imported;
+		this._status = status;
+		this._entity = entity;
+	}
+
+	get imported () { return this._imported; }
+	get status () { return this._status; }
+	get entity () { return this._entity; }
+
+	static cancelled ({entity = null} = {}) { return new this({status: ConstsTaskRunner.TASK_EXIT_CANCELLED, entity}); }
+	static failed ({entity = null} = {}) { return new this({status: ConstsTaskRunner.TASK_EXIT_FAILED, entity}); }
+	static completedStub ({entity = null} = {}) { return new this({imported: [], status: ConstsTaskRunner.TASK_EXIT_COMPLETE, entity}); }
+
+	getPrimaryDocument () {
+		const primaryImportedDocument = this.getPrimaryImportedDocument();
+		if (!primaryImportedDocument) return null;
+		return primaryImportedDocument.getPrimaryDocument();
+	}
+
+	getPrimaryImportedDocument () {
+		return this.imported?.[0] || null;
+	}
+
+	
+		static NOTIFICATION_LEVEL_INFO = "info";
+	static NOTIFICATION_LEVEL_WARNING = "warn";
+	static NOTIFICATION_LEVEL_ERROR = "error";
+
+		getNotificationMeta () {
+		const firstDoc = this.getPrimaryDocument();
+
+		const name = this.imported?.[0]?.name
+			|| firstDoc?.name
+			|| this._entity?.name
+			|| "(Unnamed Entity)";
+
+		if (this.status === ConstsTaskRunner.TASK_EXIT_CANCELLED) return {message: `Import of "${name}" cancelled.`, level: this.constructor.NOTIFICATION_LEVEL_WARNING};
+		if (this.status === ConstsTaskRunner.TASK_EXIT_SKIPPED_DUPLICATE) return {message: `Import of "${name}" was skipped (duplicate found).`, level: this.constructor.NOTIFICATION_LEVEL_WARNING};
+		if (this.status === ConstsTaskRunner.TASK_EXIT_SKIPPED_OTHER) return {message: `Import of "${name}" was skipped.`, level: this.constructor.NOTIFICATION_LEVEL_WARNING};
+		if (this.status === ConstsTaskRunner.TASK_EXIT_FAILED) return {message: `Failed to import "${name}"! ${VeCt.STR_SEE_CONSOLE}`, level: this.constructor.NOTIFICATION_LEVEL_ERROR};
+
+		if (this.imported?.[0]?.actor) {
+			return {message: `Imported "${name}" to actor "${this.imported?.[0]?.actor.name}".`, level: this.constructor.NOTIFICATION_LEVEL_INFO};
+		}
+
+		const folderPath = HelpersFolderPath.getFolderPath(firstDoc);
+		if (folderPath) {
+			const folderType = firstDoc?.folder?.type;
+			return {message: `Imported "${name}" to ${folderType} folder "${folderPath}".`, level: this.constructor.NOTIFICATION_LEVEL_INFO};
+		}
+
+		if (firstDoc?.pack) {
+			const pack = game.packs.get(firstDoc.pack);
+			return {message: `Imported "${name}" to ${pack.metadata.type} compendium "${pack.metadata.label}".`, level: this.constructor.NOTIFICATION_LEVEL_INFO};
+		}
+
+		return {message: `Imported "${name}".`, level: this.constructor.NOTIFICATION_LEVEL_INFO};
+	}
+
+	doNotification () {
+		const meta = this.getNotificationMeta();
+		switch (meta.level) {
+			case this.constructor.NOTIFICATION_LEVEL_INFO: return ui.notifications.info(meta.message);
+			case this.constructor.NOTIFICATION_LEVEL_WARNING: return ui.notifications.warn(meta.message);
+			case this.constructor.NOTIFICATION_LEVEL_ERROR: return ui.notifications.error(meta.message);
+			default: throw new Error(`Unhandled level "${meta.level}"!`);
+		}
+	}
+
+	
+	isFailed () { return this.status === ConstsTaskRunner.TASK_EXIT_FAILED; }
+}
+
+class ImportedDocument {
+		constructor (
+		{
+			name = null,
+			isExisting = false,
+			document = null,
+			actor = null,
+			embeddedDocument = null,
+			pack = null,
+		},
+	) {
+		if (document && embeddedDocument) throw new Error(`Only one of "document" and "embeddedDocument" may be specified!`);
+		if (actor && pack) throw new Error(`Only one of "actor" and "pack" may be specified!`);
+
+		this.name = name;
+		this.isExisting = isExisting;
+		this.document = document;
+		this.actor = actor;
+		this.embeddedDocument = embeddedDocument;
+		this.pack = pack;
+	}
+
+	getPrimaryDocument () {
+		return this.embeddedDocument
+			|| this.document;
+	}
+}
+class ConstsTaskRunner {
+	static TASK_EXIT_COMPLETE = Symbol("taskExitComplete");
+	static TASK_EXIT_CANCELLED = Symbol("taskExitCancelled");
+	static TASK_EXIT_SKIPPED_DUPLICATE = Symbol("taskExitSkippedDuplicate");
+	static TASK_EXIT_SKIPPED_OTHER = Symbol("taskExitSkippedOther");
+	static TASK_EXIT_COMPLETE_UPDATE_OVERWRITE = Symbol("taskExitCompleteOverwrite");
+	static TASK_EXIT_COMPLETE_UPDATE_OVERWRITE_DUPLICATE = Symbol("taskExitCompleteOverwriteDuplicate");
+	static TASK_EXIT_FAILED = Symbol("taskExitCompleteFailed");
+	static TASK_EXIT_COMPLETE_DATA_ONLY = Symbol("taskExitCompleteDataOnly");
 }

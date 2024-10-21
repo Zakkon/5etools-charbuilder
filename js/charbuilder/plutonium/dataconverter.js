@@ -1241,7 +1241,7 @@ class DataConverterItem extends DataConverter {
 		const additionalFlags = await this._SideDataInterface.pGetFlagsSideLoaded(item, {actorType: opts.actorType});
 
 		//const img = await this._ImageFetcher.pGetSaveImagePath(item, {fluff: await Renderer.item.pGetFluff(item), propCompendium: "item", foundryType, taskRunner: opts.taskRunner});
-
+		const img = null;
 		const systemBase = {
 			source: UtilDocumentSource.getSourceObjectFromEntity(item),
 			description: {value: await DataConverterItem._getItemItem_pGetItemDescription(item), chat: ""},

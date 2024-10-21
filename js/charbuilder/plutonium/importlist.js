@@ -1208,52 +1208,71 @@ _handleFilterChange () {
 }
 
 
+  /**
+   * Create a wrapper for our own _pImportEntry
+   * @param {any} ent An item in 5etools schema
+   * @param {ImportOpts} importOpts
+   * @param {any} dataOpts={}
+   * @returns {Promise<ImportSummary>}
+   */
   async pImportEntry (ent, importOpts, dataOpts = {}) {
-  return new ImportEntryManager({
-    instance: this,
-    ent,
-    importOpts,
-    dataOpts,
-  }).pImportEntry();
+    return new ImportEntryManager({
+      instance: this, //Mark us as the instance running the import
+      ent,
+      importOpts,
+      dataOpts,
+    }).pImportEntry();
 }
 
 
+  /**
+   * @param {any} ent An item in 5etools schema
+   * @param {ImportOpts} importOpts
+   * @param {any} dataOpts
+   * @returns {Promise<ImportSummary>}
+   */
   async _pImportEntry (ent, importOpts, dataOpts) {
-  importOpts ||= new ImportOpts();
+    importOpts ||= new ImportOpts(); //Create a fresh importOpts if none exists
 
-  console.log(...LGT, `Importing ${this._titleSearch} "${ent.name}" (from "${Parser.sourceJsonToAbv(ent.source)}")`);
+    console.log(...LGT, `Importing ${this._titleSearch} "${ent.name}" (from "${Parser.sourceJsonToAbv(ent.source)}")`);
 
-  if (this.constructor._DataConverter.isStubEntity(ent)) return ImportSummary.completedStub({entity: ent});
+    //Check if any class that inherits us wants to treat this entity as a stub
+    if (this.constructor._DataConverter.isStubEntity(ent)) return ImportSummary.completedStub({entity: ent});
 
-  ent = await this._pGetCustomizedEntity({ent});
+    //if ent._fvttCustomizerState is set, we can apply customization to the entity
+    ent = await this._pGetCustomizedEntity({ent});
 
-  Renderer.get().setFirstSection(true).resetHeaderIndex();
+    Renderer.get().setFirstSection(true).resetHeaderIndex();
 
-  await this._pImportEntry_preImport({ent, importOpts, dataOpts});
+    //Start actual pre-import (overridden by classes that inherit us)
+    //This is probably related to pre-release content and homebrew material only
+    await this._pImportEntry_preImport({ent, importOpts, dataOpts});
 
-  if (importOpts.isDataOnly) {
-    return new ImportSummary({
-      status: ConstsTaskRunner.TASK_EXIT_COMPLETE_DATA_ONLY,
-      imported: [
-        new ImportedDocument({
-          document: await this.constructor._DataConverter.pGetDocumentJson(
-            ent,
-            {
-              actor: this._actor,
-              taskRunner: importOpts.taskRunner,
-              actorMultiImportHelper: importOpts.actorMultiImportHelper,
-            },
-          ),
-          actor: this._actor,
-        }),
-      ],
-      entity: ent,
-    });
-  }
+    if (importOpts.isDataOnly) {
+      return new ImportSummary({
+        status: ConstsTaskRunner.TASK_EXIT_COMPLETE_DATA_ONLY,
+        imported: [
+          new ImportedDocument({
+            document: await this.constructor._DataConverter.pGetDocumentJson(
+              ent,
+              {
+                actor: this._actor,
+                taskRunner: importOpts.taskRunner,
+                actorMultiImportHelper: importOpts.actorMultiImportHelper,
+              },
+            ),
+            actor: this._actor,
+          }),
+        ],
+        entity: ent,
+      });
+    }
 
-  if (importOpts.isTemp) return this._pImportEntry_pImportToDirectoryGeneric(ent, importOpts, dataOpts);
-  if (this._actor) return this._pImportEntry_pImportToActor(ent, importOpts, dataOpts);
-  return this._pImportEntry_pImportToDirectoryGeneric(ent, importOpts, dataOpts);
+    if (importOpts.isTemp) return this._pImportEntry_pImportToDirectoryGeneric(ent, importOpts, dataOpts);
+    //Try to import it onto an actor, if actor was provided
+    if (this._actor) return this._pImportEntry_pImportToActor(ent, importOpts, dataOpts);
+    //Just import it to a directory
+    return this._pImportEntry_pImportToDirectoryGeneric(ent, importOpts, dataOpts);
 }
 
 async _pGetCustomizedEntity ({ent}) {
@@ -1646,11 +1665,21 @@ _pImportEntry_pDoUpdateExisting_maintainImg ({duplicateMeta, docData}) {
   if (prevImg != null) docData.img = prevImg;
 }
 
-async _pImportEntry_pImportToDirectoryGeneric (toImport, importOpts, dataOpts = {}, {docData = null, isSkipDuplicateHandling = false} = {}) {
+/**
+ * Import an entity to a directory
+ * @param {any} toImport an entity in 5etools schema
+ * @param {{filterValues:any, isAddDefaultOwnershipFromConfig:boolean, defaultOwnership:any, userOwnership:any, isTemp:boolean}} importOpts
+ * @param {any} dataOpts
+ * @param {{name:string}} docData existing doc data. If null, we will import
+ * @param {boolean} isSkipDuplicateHandling
+ * @returns {any}
+ */
+async _pImportEntry_pImportToDirectoryGeneric (toImport, importOpts, dataOpts = {}, {docData = null, isSkipDuplicateHandling = /*false*/ true /*TEMPFIX*/} = {}) {
   docData = docData || await this._pImportEntry_pImportToDirectoryGeneric_pGetImportableData(
     toImport,
     {
-      isAddDataFlags: true, 				filterValues: importOpts.filterValues,
+      isAddDataFlags: true,
+      filterValues: importOpts.filterValues,
       ...dataOpts,
       isAddDefaultOwnershipFromConfig: importOpts.isAddDefaultOwnershipFromConfig ?? true,
       defaultOwnership: importOpts.defaultOwnership,
@@ -1659,15 +1688,16 @@ async _pImportEntry_pImportToDirectoryGeneric (toImport, importOpts, dataOpts = 
     importOpts,
   );
 
-      const duplicateMeta = isSkipDuplicateHandling
-    ? null
-    : this._getDuplicateMeta({
+  //See if a duplicate already exists
+  const duplicateMeta = isSkipDuplicateHandling ? null : this._getDuplicateMeta({
       name: docData.name,
       sourceIdentifier: UtilDocumentSource.getDocumentSourceIdentifierString({doc: docData}),
       flags: this._getDuplicateCheckFlags(docData),
       importOpts,
       entity: toImport,
-    });
+  });
+
+  //If duplicate exists, we might wanna skip, and not import it
   if (duplicateMeta?.isSkip) {
     return new ImportSummary({
       status: ConstsTaskRunner.TASK_EXIT_SKIPPED_DUPLICATE,
@@ -1681,6 +1711,10 @@ async _pImportEntry_pImportToDirectoryGeneric (toImport, importOpts, dataOpts = 
     });
   }
 
+  
+  console.log("DOC DATA", docData, toImport, importOpts, dataOpts);
+
+  //Defined by foundry. Item, Journal, Scene, Cards, etc
   const Clazz = this._getDocumentClass();
 
   if (importOpts.isTemp) {
@@ -1696,7 +1730,8 @@ async _pImportEntry_pImportToDirectoryGeneric (toImport, importOpts, dataOpts = 
     });
   }
 
-              if (this._pack) {
+  //Try to import the document into a pack
+  if (this._pack) {
     if (duplicateMeta?.isOverwrite) {
       return this._pImportEntry_pDoUpdateExistingPackEntity({
         entity: toImport,
@@ -1706,7 +1741,9 @@ async _pImportEntry_pImportToDirectoryGeneric (toImport, importOpts, dataOpts = 
       });
     }
 
+    //Create a new document, using the foundry class as a template
     const instance = new Clazz(docData);
+     //import the document into the pack
     const imported = await this._pack.importDocument(instance);
 
     await this._pImportEntry_pAddToTargetTableIfRequired([imported], duplicateMeta, importOpts);
@@ -1723,6 +1760,17 @@ async _pImportEntry_pImportToDirectoryGeneric (toImport, importOpts, dataOpts = 
     });
   }
 
+  //Else, just try to import it into a directory
+  return this._pImportEntry_pImportToDocData({
+    duplicateMeta,
+    docData,
+    toImport,
+    isSkipDuplicateHandling,
+    Clazz,
+    importOpts,
+  });
+
+  //Else, just try to import it into a directory
   return this._pImportEntry_pImportToDirectoryGeneric_toDirectory({
     duplicateMeta,
     docData,
@@ -1732,9 +1780,15 @@ async _pImportEntry_pImportToDirectoryGeneric (toImport, importOpts, dataOpts = 
     importOpts,
   });
 }
-
-async _pImportEntry_pImportToDirectoryGeneric_toDirectory (
-  {
+/**
+ * Import an entity to a directory
+ * @param {{duplicateMeta:{isOverwrite:boolean}, docData:{name:string, pages:any, folder:any},
+ * toImport:{any}, isSkipDuplicateHandling:boolean, Clazz:{any},
+ * importOpts:{filterValues:any, isAddDefaultOwnershipFromConfig:boolean, defaultOwnership:any,
+ * userOwnership:any, isTemp:boolean, isBatched:boolean}}}
+ * @returns {ImportSummary}
+ */
+async _pImportEntry_pImportToDirectoryGeneric_toDirectory ({
     duplicateMeta,
     docData,
     toImport,
@@ -1742,8 +1796,8 @@ async _pImportEntry_pImportToDirectoryGeneric_toDirectory (
     Clazz,
     folderType = null,
     importOpts,
-  },
-) {
+}, ) {
+  //Check if we are just doing an overwrite
   if (duplicateMeta?.isOverwrite) {
     return this._pImportEntry_pDoUpdateExistingDirectoryEntity({
       entity: toImport,
@@ -1783,6 +1837,47 @@ async _pImportEntry_pImportToDirectoryGeneric_toDirectory (
     ],
     entity: toImport,
   });
+}
+/**
+ * Import an entity and just return it to us raw, without creating a document for it
+ * @param {{duplicateMeta:{isOverwrite:boolean}, docData:{name:string, pages:any, folder:any},
+* toImport:{any}, isSkipDuplicateHandling:boolean, Clazz:{any},
+* importOpts:{filterValues:any, isAddDefaultOwnershipFromConfig:boolean, defaultOwnership:any,
+* userOwnership:any, isTemp:boolean, isBatched:boolean}}}
+* @returns {ImportSummary}
+*/
+async _pImportEntry_pImportToDocData ({
+   duplicateMeta,
+   docData,
+   toImport,
+   isSkipDuplicateHandling = false,
+   Clazz,
+   folderType = null,
+   importOpts,
+}, ) {
+
+ return new ImportSummary({
+  status: ConstsTaskRunner.TASK_EXIT_COMPLETE,
+  imported: [
+    /* new ImportedDocument({
+      document: imported,
+    }), */
+    docData
+  ],
+  entity: toImport,
+});
+
+ const imported = await UtilDocuments.pCreateDocument(Clazz, docData, {isTemporary: false, isRender: !importOpts.isBatched});
+
+ return new ImportSummary({
+   status: ConstsTaskRunner.TASK_EXIT_COMPLETE,
+   imported: [
+     new ImportedDocument({
+       document: imported,
+     }),
+   ],
+   entity: toImport,
+ });
 }
 
 async _pImportEntry_pImportToDirectoryGeneric_pGetFolderIdMeta (
@@ -2323,7 +2418,7 @@ _pImportEntry_pImportToActor_getExistingCurrencyItem ({itemData = null, isForce 
 _pImportEntry_pImportToActor_getExistingStackableItem ({item, itemData}) {
   if (Config.get("importItem", "inventoryStackingMode") === ConfigConsts.C_ITEM_ATTUNEMENT_NEVER) return null;
 
-      const matchingItem = this._actor.items.contents.find(sheetItem => {
+      const matchingItem = null; /* this._actor.items.contents.find(sheetItem => {
     if (sheetItem.type !== itemData.type) return false;
 
     if (!MiscUtil.isNearStrictlyEqual(sheetItem.system.container, this._container?.id)) return false;
@@ -2336,7 +2431,7 @@ _pImportEntry_pImportToActor_getExistingStackableItem ({item, itemData}) {
 
     return UtilEntityItem.getEntityAliases(item, {isStrict: true})
       .some(entAlias => entAlias.name.toLowerCase().trim() === sheetItem.name.toLowerCase().trim());
-  });
+  }); */
   if (!matchingItem) return null;
 
   if (Config.get("importItem", "inventoryStackingMode") === ConfigConsts.C_ITEM_ATTUNEMENT_ALWAYS) return matchingItem;

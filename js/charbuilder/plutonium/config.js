@@ -17,6 +17,47 @@ class SharedConsts {
 
 //#region ConfigConsts
 class ConfigConsts {
+
+	static _PACK_IDS__SRD_CREATURES = [`${SharedConsts.SYSTEM_ID_DND5E}.monsters`];
+	static _PACK_IDS__SRD_CREATURE_FEATURES = [`${SharedConsts.SYSTEM_ID_DND5E}.monsterfeatures`];
+
+	static _PACK_IDS__SRD_CLASSES = [`${SharedConsts.SYSTEM_ID_DND5E}.classes`];
+	static _PACK_IDS__SRD_SUBCLASSES = [`${SharedConsts.SYSTEM_ID_DND5E}.subclasses`];
+	static _PACK_IDS__SRD_CLASS_FEATURES = [`${SharedConsts.SYSTEM_ID_DND5E}.classfeatures`];
+
+	static _PACK_IDS__SRD_ITEMS = [`${SharedConsts.SYSTEM_ID_DND5E}.items`, `${SharedConsts.SYSTEM_ID_DND5E}.tradegoods`];
+
+	static _PACK_IDS__SRD_SPELLS = [`${SharedConsts.SYSTEM_ID_DND5E}.spells`];
+
+	static _PACK_IDS__SRD_OPTIONALFEATURES = [`${SharedConsts.SYSTEM_ID_DND5E}.classfeatures`];
+
+	static _PACK_IDS__SRD_RACES_AND_RACE_FEATURES = [`${SharedConsts.SYSTEM_ID_DND5E}.races`];
+
+	static _PACK_IDS__SRD_BACKGROUNDS_AND_BACKGROUND_FEATURES = [`${SharedConsts.SYSTEM_ID_DND5E}.backgrounds`];
+
+	static _PACK_IDS__SRD_TABLES = [`${SharedConsts.SYSTEM_ID_DND5E}.tables`];
+	
+		static _PACK_IDS__PaBTSO_CREATURES = [`dnd-phandelver-below.pbso-bestiary`];
+
+	static _PACK_IDS__PaBTSO_ITEMS = [`dnd-phandelver-below.pbso-items`, `dnd-phandelver-below.pbso-player-options`];
+
+	static _PACK_IDS__PaBTSO_BACKGROUNDS_AND_BACKGROUND_FEATURES = [`dnd-phandelver-below.pbso-player-options`];
+	
+		static _PACK_IDS__TCE_CREATURES = [`dnd-tashas-cauldron.tcoe-actors`];
+
+	static _PACK_IDS__TCE_CLASSES = [`dnd-tashas-cauldron.tcoe-character-options`];
+	static _PACK_IDS__TCE_SUBCLASSES = [`dnd-tashas-cauldron.tcoe-character-options`];
+	static _PACK_IDS__TCE_CLASS_FEATURES = [`dnd-tashas-cauldron.tcoe-character-options`];
+
+	static _PACK_IDS__TCE_ITEMS = [`dnd-tashas-cauldron.tcoe-magic-items`];
+
+	static _PACK_IDS__TCE_SPELLS = [`dnd-tashas-cauldron.tcoe-character-options`];
+
+	static _PACK_IDS__TCE_OPTIONALFEATURES = [`dnd-tashas-cauldron.tcoe-character-options`];
+
+	static _PACK_IDS__TCE_FEATS = [`dnd-tashas-cauldron.tcoe-character-options`];
+	
+
   static ["_flushCaches"]() {
     this._DEFAULT_CONFIG = null;
     this._DEFAULT_CONFIG_SORTED = null;
@@ -57,11 +98,11 @@ class ConfigConsts {
     }
     return Object.values(TokenDocument.implementation.getTrackedAttributeChoices(TokenDocument.implementation.getTrackedAttributes(_0x2c6d2c))).flat();
   }
-  static ['_template_getEntityOwnership'](_0x1b27c6) {
-    const _0x2971c8 = MiscUtil.copy(ConfigConsts._TEMPLATE_ENTITY_OWNERSHIP);
-    _0x2971c8.values = Util.Fvtt.getOwnershipEnum();
-    _0x2971c8.help = _0x1b27c6;
-    return _0x2971c8;
+  static ['_template_getEntityOwnership'](helpText) {
+    const ownership = MiscUtil.copy(ConfigConsts._TEMPLATE_ENTITY_OWNERSHIP);
+    ownership.values = Util.Fvtt.getOwnershipEnum();
+    ownership.help = helpText;
+    return ownership;
   }
   static ["_template_getTokenSettings"]({
     actorType: _0x1701bd
@@ -1192,8 +1233,8 @@ class ConfigConsts {
 						default: false,
 						type: "boolean",
 					},
-					...ConfigConsts._template_getTokenSettings({actorType: "npc"}),
-					...ConfigConsts._template_getTokenSettingsDynamicRing(),
+					//...ConfigConsts._template_getTokenSettings({actorType: "npc"}),
+					//...ConfigConsts._template_getTokenSettingsDynamicRing(),
 					itemWeightAndValueSizeScaling: {
 						name: "Item Weight & Value Scaling",
 						help: `The method by which to scale the weights and values of non-standard-sizes items carried by creatures.`,
@@ -1438,8 +1479,8 @@ class ConfigConsts {
 				name: "Import (Objects)",
 				settings: {
 					ownership: ConfigConsts._template_getEntityOwnership(`The default (i.e. used for all players unless a player-specific ownership level is set) ownership for an imported object.`),
-					...ConfigConsts._template_getTokenSettings({actorType: "vehicle"}),
-					...ConfigConsts._template_getTokenSettingsDynamicRing(),
+					//...ConfigConsts._template_getTokenSettings({actorType: "vehicle"}),
+					//...ConfigConsts._template_getTokenSettingsDynamicRing(),
 					isMetricDistance: {
 						name: "Convert Speeds to Metric",
 						help: `Whether or not object speed units should be converted to an approximate metric equivalent (${ConfigConsts._DISP_METRIC_FEET}).`,
@@ -3259,7 +3300,7 @@ class ConfigConsts {
 					},
 				},
 			},
-			integrationQuickInsert: {
+			/* integrationQuickInsert: {
 				name: "Integrations (Quick Insert)",
 				settings: {
 					...ConfigConsts._template_getModuleFauxCompendiumIndexSettings({moduleName: "Quick Insert"}),
@@ -3327,7 +3368,7 @@ class ConfigConsts {
 						isReloadRequired: true,
 					},
 				},
-			},
+			}, */
 		};
 	}
   static _DEFAULT_CONFIG_SORTED = null;
