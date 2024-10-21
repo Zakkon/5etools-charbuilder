@@ -8681,7 +8681,6 @@ class ActorCharactermancerEquipment extends ActorCharactermancerBaseComponent {
             if(!matchedItem){continue;}
             //Add it to list of bought items (it will auto draw from remaining currency)
             
-            console.log("BUY", it);
             compShop.addBoughtItem(it.uid, {quantity:it.quantity, isIgnoreCost:it.isIgnoreCost, collectionId: it.collectionId});
         }
     }
@@ -8701,6 +8700,7 @@ class ActorCharactermancerEquipment extends ActorCharactermancerBaseComponent {
     }
 
     static findItemByUID(itemUid, itemDatas){
+        if(itemUid == "undefined|undefined"){console.error("poop");}
         const matches = itemDatas.filter(it => {
             //Create a uid from the item
             const uid = `${it.name}|${it.source}`.toLowerCase();//UrlUtil.URL_TO_HASH_BUILDER[UrlUtil.PG_ITEMS]({ name:n, source:src });
@@ -10211,8 +10211,7 @@ Charactermancer_StartingEquipment.ComponentGold = class extends Charactermancer_
      * @param {{quantity:number, isTriggerUpdate:boolean, isIgnoreCost:boolean}} opts
      * @returns {any}
      */
-    addBoughtItem(item, opts) {
-        let itemUid = `${item.name}|${item.source}`;
+    addBoughtItem(itemUid, opts) {
         opts = opts || {};
         opts.quantity = opts.quantity === undefined ? 1 : opts.quantity;
         opts.isTriggerUpdate = opts.isTriggerUpdate === undefined ? true : opts.isTriggerUpdate;
@@ -10234,7 +10233,7 @@ Charactermancer_StartingEquipment.ComponentGold = class extends Charactermancer_
                     isIgnoreCost: opts.isIgnoreCost,
                 },
             });
-            System5e.addToInventory(this._actor, item, new Item5e(itemUid, opts.quantity, collectionId));
+            System5e.addToInventory(this._actor, itemUid, new Item5e(itemUid, opts.quantity, collectionId));
         }
 
         if (opts.isTriggerUpdate) { this._triggerCollectionUpdate("itemPurchases"); }

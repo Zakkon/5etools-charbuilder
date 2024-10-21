@@ -356,7 +356,8 @@ Renderer.spell.populateBrewLookup(await BrewUtil2.pGetBrewProcessed(), {isForce:
   static async plutoniumConvertData(data){
     console.log("DATA IN", data);
     const tester = new ImportTester();
-    for(let i = 0; i < data.item.length; ++i){
+    //ITEMS
+    /* for(let i = 0; i < data.item.length; ++i){
       const item = data.item[i];
       if(item == null){continue;}
       if(item.type == "M"){
@@ -364,6 +365,24 @@ Renderer.spell.populateBrewLookup(await BrewUtil2.pGetBrewProcessed(), {isForce:
         //console.log(result.name);
         data.item[i].system = result.system;
       }
+    } */
+
+    //CLASSES
+    /* for(let i = 0; i < data.class.length; ++i){
+      const cls = data.class[i];
+      if(cls == null || cls.name != "Sorcerer" || cls.source != "PHB"){continue;}
+        let result = await tester.runTest2(cls);
+        console.log(result);
+        //data.class[i].system = result.system;
+    } */
+
+    //CLASS FEATURES
+    for(let i = 0; i < data.classFeature.length; ++i){
+      const f = data.classFeature[i];
+      if(f == null || f.className != "Sorcerer" || f.classSource != "PHB"){continue;}
+        let result = await tester.runTest_ClassFeature(f);
+        console.log(result);
+        //data.class[i].system = result.system;
     }
   }
 }

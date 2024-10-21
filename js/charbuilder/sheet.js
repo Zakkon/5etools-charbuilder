@@ -1215,7 +1215,6 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
           const populateInventoryScreen = (result) => {
             $divInventory.empty();
             const createItemDiv = (item, quantity, collectionID) => {
-              console.log("ITEM", item, collectionID);
               const isEquippable = item.armor || item.weapon || item.arrow;
               const isPreChecked = isEquippable && this._meta.equipped[collectionID];
               const chbxEquip = $$`<input type="checkbox">`;
@@ -1627,7 +1626,6 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
       for(let item of this.inventory.items){
           const foundItem = ActorCharactermancerEquipment.findItemByUID(item.uid, itemDatas);
           if(!foundItem){continue;}
-          console.log("INV ITEM", item);
           boughtItems.push({item:foundItem, quantity:item.quantity, collectionId:item.collectionId});
       }
 

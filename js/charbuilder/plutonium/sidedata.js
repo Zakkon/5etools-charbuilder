@@ -110,8 +110,7 @@ class SideDataInterfaceBase {
             ent,
             propOpts
         });
-        if (!opts)
-            return null;
+        if (!opts) return null;
 
         const {propBrew, fnLoadJson, propJson, propsMatch} = opts;
         return this._pGetStarSideLoaded(ent, {

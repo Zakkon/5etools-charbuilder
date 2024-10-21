@@ -4,7 +4,7 @@ class ImportTester{
        /*  this.handleReady().then(() => {
             console.log("Ready done!");
         }); */
-        const flags = this.getFlags(item);
+        const flags = this.getFlags_Item(item);
         let ent = await DataLoader.pCacheAndGet(flags.page, flags.source, flags.hash);
 
         const isUseImporter = true;
@@ -35,7 +35,7 @@ class ImportTester{
             return;
         }
     }
-    getFlags(item){
+    getFlags_Item(item){
         const out = {
             page: UrlUtil.PG_ITEMS,
             source: item.source,
@@ -44,6 +44,94 @@ class ImportTester{
 		};
         return out;
     }
+	async runTest2(cls){
+		/*  this.handleReady().then(() => {
+			 console.log("Ready done!");
+		 }); */
+		 const flags = this.getFlags_Class(cls);
+		 let ent = await DataLoader.pCacheAndGet(flags.page, flags.source, flags.hash);
+ 
+		 const isUseImporter = true;
+		 const pFnImport = null;
+		 //const actor = item.parent;
+		 const actor = null;
+ 
+		 if (isUseImporter) {
+			 //const actorMultiImportHelper = new ActorMultiImportHelper({actor});
+			 //First, we have to create an ImportListItem, which sadly does contain some UI elements, but whatever
+			 const imp = new ImportListClass({actor}); //If actor exists, the item will be imported unto the actor. If none exists, it will go to a generic directory
+			 await imp.pInit(); //Initialize the importer
+ 
+			 if (pFnImport) await pFnImport({ent, imp, flags});
+			 else {
+				 //This is what we want. Tell the importlist to import ent (an obj in 5etools schema)
+				 const summary = await imp.pImportEntry(ent, {filterValues: flags.filterValues, isDataOnly:true});
+				 return summary._imported[0];
+			 }
+ 
+ 
+ 
+			 //await actorMultiImportHelper.pRepairMissingConsumes();
+ 
+			 //const msg = fnGetSuccessMessage ? fnGetSuccessMessage({ent, flags}) : `Imported "${ent.name}" via ${importerName} Importer`;
+			 console.log("IMPORTED", ent);
+			 //ui.notifications.info(msg);
+			 return;
+		 }
+	}
+	getFlags_Class(cls){
+		const out = {
+			page: UrlUtil.PG_CLASSES,
+			source: cls.source,
+			hash: UrlUtil.URL_TO_HASH_BUILDER[UrlUtil.PG_CLASSES](cls),
+			//propDroppable: "spell",
+		};
+		return out;
+	}
+	async runTest_ClassFeature(f){
+		/*  this.handleReady().then(() => {
+			 console.log("Ready done!");
+		 }); */
+		 const flags = this.getFlags_ClassFeature(f);
+		 let ent = await DataLoader.pCacheAndGet(flags.page, flags.source, flags.hash);
+ 
+		 const isUseImporter = true;
+		 const pFnImport = null;
+		 //const actor = item.parent;
+		 const actor = null;
+ 
+		 if (isUseImporter) {
+			 //const actorMultiImportHelper = new ActorMultiImportHelper({actor});
+			 //First, we have to create an ImportListItem, which sadly does contain some UI elements, but whatever
+			 const imp = new ImportListClassSubclassFeature({actor}); //If actor exists, the item will be imported unto the actor. If none exists, it will go to a generic directory
+			 await imp.pInit(); //Initialize the importer
+ 
+			 if (pFnImport) await pFnImport({ent, imp, flags});
+			 else {
+				 //This is what we want. Tell the importlist to import ent (an obj in 5etools schema)
+				 const summary = await imp.pImportEntry(ent, {filterValues: flags.filterValues, isDataOnly:true});
+				 return summary._imported[0];
+			 }
+ 
+ 
+ 
+			 //await actorMultiImportHelper.pRepairMissingConsumes();
+ 
+			 //const msg = fnGetSuccessMessage ? fnGetSuccessMessage({ent, flags}) : `Imported "${ent.name}" via ${importerName} Importer`;
+			 console.log("IMPORTED", ent);
+			 //ui.notifications.info(msg);
+			 return;
+		 }
+	}
+	getFlags_ClassFeature(f){
+		const out = {
+			page: UrlUtil.PG_CLASS_SUBCLASS_FEATURES,
+			source: f.source,
+			hash: UrlUtil.URL_TO_HASH_BUILDER[UrlUtil.PG_CLASS_SUBCLASS_FEATURES](f),
+			//propDroppable: "spell",
+		};
+		return out;
+	}
     async handleReady () {
         /* await Config.pInit();
     
@@ -58,9 +146,9 @@ class ImportTester{
         GameStorage.init();
         SideDataInterfaces.init();
         ImportList.init();
-        ImportListBackground.init();
+        ImportListBackground.init();*/
         ImportListClass.init();
-        ImportListFeat.init(); */
+        //ImportListFeat.init(); 
         ImportListItem.init();
         /* ImportListClassSubclassFeature.init();
         ImportListOptionalfeature.init();
@@ -741,6 +829,41 @@ class CompendiumCacheKeyProviderItem extends CompendiumCacheKeyProviderGeneric {
 			...super.getLookupMetas(ent),
 			...UtilEntityItem.getEntityAliases(ent, {isStrict: this._isStrict}).map(({name}) => ({name})),
 		];
+	}
+}
+class CompendiumCacheKeyProviderClassSubclassFeature extends CompendiumCacheKeyProviderBase {
+	_deepKeys = [
+		"name",
+		"system.requirements",
+	];
+
+	constructor ({subclassNameLookup, ...rest}) {
+		super({...rest});
+		this._subclassNameLookup = subclassNameLookup;
+	}
+
+	getLookupMetas (ent) {
+		if (!ent.name) return [];
+
+		return [
+			{
+				name: ent.name,
+				"system.requirements": this._getAlias_systemRequirements({ent}),
+			},
+			...UtilEntityClassSubclassFeature.getEntityAliases(ent, {isStrict: this._isStrict}).map(aliasMeta => ({
+				name: aliasMeta.name,
+				"system.requirements": this._getAlias_systemRequirements({ent}),
+			})),
+		];
+	}
+
+	_getAlias_systemRequirements ({ent}) {
+		if (ent.subclassShortName) {
+			const subclassName = MiscUtil.get(this._subclassNameLookup, ent.classSource, ent.className, ent.subclassSource, ent.subclassShortName, "name");
+			return `${subclassName || ent.subclassShortName} ${ent.level}`;
+		}
+
+		return `${ent.className} ${ent.level}`;
 	}
 }
 class UtilsFoundryItem {
@@ -1432,7 +1555,7 @@ class DescriptionRendererHookDice extends DescriptionRendererHookBase {
 }
 class UtilFoundryId {
 	static getIdObj ({id = null} = {}) {
-		if (id == null) id = Math.random().toString(16).slice(2); //foundry.utils.randomID();
+		if (id == null) id = foundry.utils.randomID();
 		return {
 			_id: id, 			id, 		};
 	}

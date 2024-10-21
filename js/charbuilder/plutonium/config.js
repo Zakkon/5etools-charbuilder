@@ -4230,18 +4230,6 @@ class ConfigUtilsSettings {
 }
 
 //#endregion
-
-class CONFIG{
-    static DND5E = {
-        attunementTypes: {
-            NONE: "none"
-        },
-		conditionTypes:{
-
-		}
-    }
-    
-}
 class CONST {
     //These are all from FVTT
     static USER_ROLES = {NONE : 0, PLAYER : 1, TRUSTED : 2, ASSISTANT : 3, GAMEMASTER : 4};
@@ -4251,6 +4239,45 @@ class CONST {
 }
 class foundry {
     static utils = {
-        mergeObject: (original, other) => {return Object.assign(original, other);}
+        mergeObject: (original, other) => {return Object.assign(original, other);},
+		randomID: () => {return Math.random().toString(16).slice(2);},
+		getProperty: (obj, path) => {
+    
+			const recursiveSearch = (start, _path) => {
+				const properties = _path.split('.');
+				let current = start;
+				for (let i = 0; i < properties.length; i++) {
+					if (current[properties[i]] === undefined) {
+						return undefined;
+					} else {
+						current = current[properties[i]];
+					}
+				}
+				return current;
+			}
+			let result = recursiveSearch(obj, path);
+			return result;
+		},
+		setProperty: (obj, path, value) => {
+    
+			const recursiveSearch = (start, _path) => {
+				const properties = _path.split('.');
+				let current = start;
+				for (let i = 0; i < properties.length; i++) {
+					if (current[properties[i]] === undefined) {
+						return undefined;
+					}
+					else {
+						if(i+1 >= properties.length){current[properties[i]] = value;}
+						return value;
+						current = current[properties[i]];
+					}
+
+				}
+				return current;
+			}
+			recursiveSearch(obj, path);
+			return;
+		},
     }
 }

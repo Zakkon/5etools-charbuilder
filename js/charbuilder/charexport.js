@@ -409,7 +409,7 @@ class CharacterExportFvtt{
         outEqu.shop = await builder.compEquipment.compEquipmentShopGold.pGetFormData();
         output.equipment = outEqu;
         //#endregion
-        console.log(output);
+        console.log("OUTPUT", output);
         const str = JSON.stringify(output);
         console.log(str);
         navigator.clipboard.writeText(str); //Write to browser clipboard

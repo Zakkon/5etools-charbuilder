@@ -152,7 +152,6 @@ class System5e{
 
     static async addToInventory(actor, item, item5e){
         actor.character.system.inventory.items.push(item5e);
-        console.log("num items", actor.character.system.inventory.items.length);
     }
     static createUniqueID(){
         return Math.random().toString(16).slice(2);

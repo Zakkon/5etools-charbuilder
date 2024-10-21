@@ -27,90 +27,73 @@ class UtilEntityBase {
     }
 }
 class UtilEntityClassSubclassFeature extends UtilEntityBase {
-    static getBrewProp(feature) {
-        const type = this.getEntityType(feature);
-        switch (type) {
-        case "classFeature":
-            return "foundryClassFeature";
-        case "subclassFeature":
-            return "foundrySubclassFeature";
-        default:
-            throw new Error(`Unhandled feature type "${type}"`);
-        }
-    }
+	static getCompendiumCacheKeyProvider ({isStrict = false, subclassNameLookup = null} = {}) {
+		return new CompendiumCacheKeyProviderClassSubclassFeature({isStrict, subclassNameLookup});
+	}
 
-    static getEntityType(feature) {
-        if (feature.subclassShortName)
-            return "subclassFeature";
-        if (feature.className)
-            return "classFeature";
-        return null;
-    }
+	static getBrewProp (feature) {
+		const type = this.getEntityType(feature);
+		switch (type) {
+			case "classFeature": return "foundryClassFeature";
+			case "subclassFeature": return "foundrySubclassFeature";
+			default: throw new Error(`Unhandled feature type "${type}"`);
+		}
+	}
 
-    static getCompendiumAliases(ent, {isStrict=false}={}) {
-        return this.getEntityAliases(ent).map(it=>it.name);
-    }
+	static getEntityType (feature) {
+		if (feature.subclassShortName) return "subclassFeature";
+		if (feature.className) return "classFeature";
+		return null;
+	}
 
-    static _FEATURE_SRD_ALIAS_WITH_CLASSNAME = new Set(["unarmored defense", "channel divinity", "expertise", "land's stride", "timeless body", "spellcasting", ]);
+	
+	static _FEATURE_SRD_ALIAS_WITH_CLASSNAME = new Set([
+		"unarmored defense",
+		"channel divinity",
+		"expertise",
+		"land's stride",
+		"timeless body",
+		"spellcasting",
+	]);
 
-    static getEntityAliases(ent, {isStrict=false}={}) {
-        if (!ent.name)
-            return [];
+	static getEntityAliases (ent, {isStrict = false} = {}) {
+		if (!ent.name) return [];
 
-        const out = [];
+		const out = [];
 
-        const lowName = ent.name.toLowerCase().trim();
+		const lowName = ent.name.toLowerCase().trim();
 
-        const noBrackets = ent.name.replace(/\([^)]+\)/g, "").replace(/\s+/g, " ").trim();
-        if (noBrackets !== ent.name)
-            out.push({
-                ...ent,
-                name: noBrackets
-            });
+		const noBrackets = ent.name
+			.replace(/\([^)]+\)/g, "")
+			.replace(/\s+/g, " ")
+			.trim();
+		if (noBrackets !== ent.name) out.push({...ent, name: noBrackets});
 
-        const splitColon = ent.name.split(":")[0].trim();
-        const isSplitColonName = splitColon !== ent.name;
-        if (isSplitColonName) {
-            out.push({
-                ...ent,
-                name: splitColon
-            });
+		const splitColon = ent.name.split(":")[0].trim();
+		const isSplitColonName = splitColon !== ent.name;
+		if (isSplitColonName) {
+			out.push({...ent, name: splitColon});
 
-            if (this._FEATURE_SRD_ALIAS_WITH_CLASSNAME.has(splitColon.toLowerCase())) {
-                out.push({
-                    ...ent,
-                    name: `${splitColon} (${ent.className})`
-                });
-            }
-        }
+						if (this._FEATURE_SRD_ALIAS_WITH_CLASSNAME.has(splitColon.toLowerCase())) {
+				out.push({...ent, name: `${splitColon} (${ent.className})`});
+			}
+		}
 
-        if (this._FEATURE_SRD_ALIAS_WITH_CLASSNAME.has(lowName)) {
-            out.push({
-                ...ent,
-                name: `${ent.name} (${ent.className})`
-            });
-        }
+		if (this._FEATURE_SRD_ALIAS_WITH_CLASSNAME.has(lowName)) {
+			out.push({...ent, name: `${ent.name} (${ent.className})`});
+		}
 
-        if (lowName.startsWith("mystic arcanum")) {
-            out.push({
-                ...ent,
-                name: `${ent.name} (${ent.className})`
-            });
-        }
+		if (lowName.startsWith("mystic arcanum")) {
+			out.push({...ent, name: `${ent.name} (${ent.className})`});
+		}
 
-        if (!isSplitColonName) {
-            out.push({
-                ...ent,
-                name: `Channel Divinity: ${ent.name}`
-            });
-            out.push({
-                ...ent,
-                name: `Ki: ${ent.name}`
-            });
-        }
+		if (!isSplitColonName) {
+			out.push({...ent, name: `Channel Divinity: ${ent.name}`});
+			out.push({...ent, name: `Ki: ${ent.name}`});
+		}
 
-        return out;
-    }
+		return out;
+	}
 }
 
 class UtilEntityBackground extends UtilEntityBase {
@@ -1003,7 +986,7 @@ UtilActors.LANG_TOOL_PROFS_CUSTOMIZE = [{
     anyTool: 2,
 }, ];
 //#endregion
-
+//#region UtilItems
 class UtilItems {
 	static PROFICIENCY_LEVELS = {
 		AUTO: null,
@@ -1013,3 +996,406 @@ class UtilItems {
 		JACK_OF_ALL_TRADES: 0.5,
 	};
 }
+//#endregion
+//#region UtilAdvancements
+class UtilAdvancements {
+	static _LevelledEmbeddedDocument = class {
+		constructor ({embeddedDocument, level} = {}) {
+			if (level == null) throw new Error(`Level must be defined!`);
+
+			this.embeddedDocument = embeddedDocument;
+			this.level = level;
+
+			this.advancementId = null;
+		}
+	};
+
+		static LevelledEmbeddedDocument_MinLevel0 = class extends this._LevelledEmbeddedDocument {
+		constructor ({level = 0, ...rest}) {
+			super({level, ...rest});
+		}
+	};
+
+		static LevelledEmbeddedDocument_MinLevel1 = class extends this._LevelledEmbeddedDocument {
+		constructor ({level = 1, ...rest}) {
+			super({level, ...rest});
+		}
+	};
+
+	
+		static async pAddItemGrantAdvancementLinks (
+		{
+			actor,
+			parentEmbeddedDocument,
+			childLevelledEmbeddedDocuments,
+		},
+	) {
+		childLevelledEmbeddedDocuments = childLevelledEmbeddedDocuments
+			.filter(importedDoc => importedDoc.embeddedDocument);
+
+		if (!parentEmbeddedDocument || !childLevelledEmbeddedDocuments.length) return;
+
+				const childrenByLevel = {};
+		childLevelledEmbeddedDocuments.forEach(importedDoc => {
+						(childrenByLevel[importedDoc.level] = (childrenByLevel[importedDoc.level] || [])).push(importedDoc);
+		});
+
+		const childIdToBackingUuid = {};
+
+				const newAdvancements = await Object.keys(childrenByLevel)
+			.map(it => Number(it))
+			.sort(SortUtil.ascSort)
+			.pSerialAwaitMap(async level => {
+				const _id = foundry.utils.randomID();
+				const childrenAtLevel = childrenByLevel[level];
+				childrenAtLevel.forEach(child => child.advancementId = _id);
+
+				const backingMetas = await this._pAddItemGrantAdvancementLinks_getEmbedBackingMetas({
+					childrenAtLevel,
+				});
+				backingMetas.forEach(({embeddedDocument, backingUuid}) => childIdToBackingUuid[embeddedDocument.id] = backingUuid);
+
+				return {
+					_id,
+					type: "ItemGrant",
+					level,
+					title: "Features",
+					icon: parentEmbeddedDocument.img,
+																				configuration: {
+						items: backingMetas
+							.map(({backingUuid}) => ({
+								uuid: backingUuid,
+																optional: false,
+							})),
+
+												optional: false,
+
+						spell: {
+							ability: [""],
+							preparation: "",
+							uses: {
+								max: "",
+								per: "",
+							},
+						},
+					},
+										value: {
+						added: childrenAtLevel
+							.mergeMap((importedDoc, i) => ({
+																																								[importedDoc.embeddedDocument.id]: childIdToBackingUuid[importedDoc.embeddedDocument.id] || "",
+							})),
+					},
+				};
+			});
+
+				const existingAdvancement = MiscUtil.copyFast(
+									parentEmbeddedDocument._source?.system?.advancement || [],
+		);
+
+				const advancementToAdd = newAdvancements.filter(newAdv => {
+			const oldAdv = existingAdvancement.find(it => it.type === "ItemGrant" && it.level === newAdv.level);
+			if (!oldAdv) return true;
+
+			if (newAdv?.value?.added) {
+				const tgt = MiscUtil.getOrSet(oldAdv, "value", "added", {});
+				Object.assign(tgt, newAdv.value.added);
+			}
+
+						childrenByLevel[newAdv.level].forEach(child => child.advancementId = oldAdv._id);
+
+			return false;
+		});
+
+		const updatedMetas = await UtilDocuments.pUpdateEmbeddedDocuments(
+			actor,
+			[
+				{
+					_id: parentEmbeddedDocument.id,
+					system: {
+						advancement: [
+							...existingAdvancement,
+							...advancementToAdd,
+						],
+					},
+				},
+			],
+			{
+				ClsEmbed: Item,
+			},
+		);
+		const updatedParentDoc = updatedMetas[0]?.document;
+		if (!updatedParentDoc) return;
+
+				await UtilDocuments.pUpdateEmbeddedDocuments(
+			actor,
+			childLevelledEmbeddedDocuments.map(child => ({
+				_id: child.embeddedDocument.id,
+				flags: {
+					[SharedConsts.SYSTEM_ID_DND5E]: {
+						sourceId: childIdToBackingUuid[child.embeddedDocument.id],
+
+						advancementOrigin: `${updatedParentDoc.id}.${child.advancementId}`,
+					},
+				},
+			})),
+			{
+				ClsEmbed: Item,
+			},
+		);
+	}
+
+	static async _pAddItemGrantAdvancementLinks_getEmbedBackingMetas (
+		{
+			childrenAtLevel,
+		},
+	) {
+		if (!Config.get("import", "isUseAdvancementBackingCompendium")) {
+			return childrenAtLevel
+				.map(importedDoc => ({
+					embeddedDocument: importedDoc.embeddedDocument,
+
+																									backingUuid: `.${importedDoc.embeddedDocument.id}`,
+				}));
+		}
+
+		return childrenAtLevel
+			.pSerialAwaitMap(async importedDoc => {
+				const packItem = await UtilAdvancementsBackingCompendium.pCreateAdvancementBackingItem({
+					item: importedDoc.embeddedDocument,
+				});
+
+				return {
+					embeddedDocument: importedDoc.embeddedDocument,
+					backingUuid: packItem.uuid,
+				};
+			});
+	}
+
+	
+	static getAdvancementAbilityScoreImprovementVrgr () {
+		return {
+			_id: foundry.utils.randomID(),
+			type: "AbilityScoreImprovement",
+			configuration: {
+				points: 3,
+				fixed: Parser.ABIL_ABVS.mergeMap(abv => ({[abv]: 0})),
+				cap: 2,
+			},
+			value: {type: "asi"},
+			level: 0,
+			title: "",
+		};
+	}
+
+	static getAdvancementAbilityScoreImprovement (ability) {
+		if (!ability) return null;
+
+				if (ability.length !== 1) return null;
+
+		const [abil] = ability;
+
+				if (abil.choose?.weighted) return null;
+
+		const keysStatic = Parser.ABIL_ABVS.filter(abv => abil[abv] != null);
+		const isChooseFromAny = abil.choose?.from?.length === (6 - keysStatic.length);
+
+				if (abil.choose && !isChooseFromAny) return null;
+
+				if (abil.choose?.amount && abil.choose?.amount > 1) return null;
+
+		return {
+			_id: foundry.utils.randomID(),
+			type: "AbilityScoreImprovement",
+			configuration: {
+				points: abil.choose?.count ?? 1, 				fixed: Parser.ABIL_ABVS.mergeMap(abv => ({[abv]: abil[abv] ?? 0})),
+				cap: abil.choose ? 1 : 0,
+			},
+			value: {type: "asi"},
+			level: 0,
+			title: "",
+		};
+	}
+
+	
+	static getAdvancementSize (size, {selectedSize = null} = {}) {
+		if (!size) return null;
+
+		const sizes = size
+			.map(sz => UtilActors.VET_SIZE_TO_ABV[sz])
+			.filter(Boolean);
+		if (!sizes.length) return null;
+
+		return {
+			_id: foundry.utils.randomID(),
+			type: "Size",
+			configuration: {
+				hint: "",
+				sizes,
+			},
+			value: {
+				size: UtilActors.VET_SIZE_TO_ABV[selectedSize]
+					? UtilActors.VET_SIZE_TO_ABV[selectedSize]
+					: sizes.length === 1 ? sizes[0] : "",
+			},
+			level: 0,
+			title: "",
+		};
+	}
+
+	
+	static getAdvancementHitPoints ({hpAdvancementValue, isActorItem}) {
+						if (hpAdvancementValue) {
+			return {
+				type: "HitPoints",
+				value: hpAdvancementValue,
+			};
+		}
+
+		if (!isActorItem) {
+									return {type: "HitPoints"};
+		}
+
+		return null;
+	}
+
+	
+		static getAdvancementSaves ({savingThrowProficiencies, classRestriction = null, level = 0}) {
+				if (savingThrowProficiencies?.length !== 1) return null;
+
+		const [savingThrowProficiency] = savingThrowProficiencies;
+
+				if (savingThrowProficiency.choose) return null;
+
+		const saves = Parser.ABIL_ABVS.filter(abv => savingThrowProficiency[abv]);
+		if (!saves.length) return null;
+
+		const grants = saves.map(abv => `saves:${abv}`);
+
+		return {
+			_id: foundry.utils.randomID(),
+			type: "Trait",
+			configuration: {
+				hint: "",
+				mode: "default",
+				allowReplacements: false,
+				grants,
+				choices: [],
+			},
+			level,
+			title: "Saving Throws",
+			classRestriction,
+			value: {
+				chosen: grants,
+			},
+		};
+	}
+
+	
+		static getAdvancementSkills ({skillProficiencies, classRestriction = null, skillsChosenFvtt = null, level = 0}) {
+				if (skillProficiencies?.length !== 1) return null;
+
+		const [skillProficiency] = skillProficiencies;
+
+		const choicesSkills = (skillProficiency.choose?.from || [])
+			.filter(skill => Parser.SKILL_TO_ATB_ABV[skill])
+			.map(skill => Parser._parse_bToA(UtilActors.SKILL_ABV_TO_FULL, skill));
+
+		return {
+			_id: foundry.utils.randomID(),
+			type: "Trait",
+			configuration: {
+				hint: "",
+				mode: "default",
+				allowReplacements: false,
+				grants: Object.entries(skillProficiency)
+					.filter(([k, v]) => Parser.SKILL_TO_ATB_ABV[k] && v)
+					.map(([k]) => k)
+					.map(skill => `skills:${Parser._parse_bToA(UtilActors.SKILL_ABV_TO_FULL, skill)}`),
+				choices: [
+					choicesSkills.length
+						? {
+							count: skillProficiency.choose?.count ?? 1,
+							pool: choicesSkills
+								.map(skill => `skills:${Parser._parse_bToA(UtilActors.SKILL_ABV_TO_FULL, skill)}`),
+						}
+						: null,
+				]
+					.filter(Boolean),
+			},
+			level,
+			title: "Skills",
+			classRestriction,
+			value: skillsChosenFvtt != null
+				? {
+					chosen: skillsChosenFvtt
+						.map(skill => `skills:${skill}`),
+				}
+				: {},
+		};
+	}
+
+	
+	static _getLanguageType (fvttLanguage) {
+		if (CONFIG.DND5E?.languages?.exotic?.children?.[fvttLanguage]) return "exotic";
+		if (CONFIG.DND5E?.languages?.standard?.children?.[fvttLanguage]) return "standard";
+		return "";
+	}
+
+	static _getLanguageAdvancementName (fvttLanguage) {
+		const langType = this._getLanguageType(fvttLanguage);
+
+		return [
+			"languages",
+			langType,
+			fvttLanguage,
+		]
+			.filter(Boolean)
+			.join(":");
+	}
+
+		static getAdvancementLanguages ({languageProficiencies, languagesChosenFvtt = null}) {
+				if (languageProficiencies?.length !== 1) return null;
+
+		const [languageProficiency] = languageProficiencies;
+
+		const choicesLanguage = ["any", "anyStandard", "anyExotic"]
+			.some(prop => languageProficiency[prop])
+			? Object.values(UtilActors.VALID_LANGUAGES)
+			: (languageProficiency.choose?.from || [])
+				.filter(lang => UtilActors.VALID_LANGUAGES[lang])
+				.map(lang => UtilActors.VALID_LANGUAGES[lang]);
+
+		return {
+			_id: foundry.utils.randomID(),
+			type: "Trait",
+			configuration: {
+				hint: "",
+				mode: "default",
+				allowReplacements: false,
+				grants: Object.entries(languageProficiency)
+					.filter(([k, v]) => UtilActors.VALID_LANGUAGES[k] && v)
+					.map(([k]) => k)
+					.map(lang => this._getLanguageAdvancementName(UtilActors.VALID_LANGUAGES[lang])),
+				choices: [
+					choicesLanguage.length
+						? {
+							count: languageProficiency.choose?.count ?? 1,
+							pool: choicesLanguage
+								.map(lang => this._getLanguageAdvancementName(UtilActors.VALID_LANGUAGES[lang])),
+						}
+						: null,
+				]
+					.filter(Boolean),
+			},
+			level: 0,
+			title: "Languages",
+			value: languagesChosenFvtt != null
+				? {
+					chosen: languagesChosenFvtt
+						.map(lang => this._getLanguageAdvancementName(UtilActors.VALID_LANGUAGES[lang])),
+				}
+				: {},
+		};
+	}
+}
+//#endregion
