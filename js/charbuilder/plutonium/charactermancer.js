@@ -8680,6 +8680,8 @@ class ActorCharactermancerEquipment extends ActorCharactermancerBaseComponent {
             let matchedItem = ActorCharactermancerEquipment.findItemByUID(it.uid, compShop.__state.itemDatas.item);
             if(!matchedItem){continue;}
             //Add it to list of bought items (it will auto draw from remaining currency)
+            
+            console.log("BUY", it);
             compShop.addBoughtItem(it.uid, {quantity:it.quantity, isIgnoreCost:it.isIgnoreCost, collectionId: it.collectionId});
         }
     }
@@ -9590,7 +9592,7 @@ Charactermancer_StartingEquipment.ComponentDefault = class extends Charactermanc
                 const items = form.data.equipmentItemEntries;
                 for(let it of items){
                     const itemUid = (it.item.name + "|" + it.item.source).toLowerCase();
-                    System5e.addToInventory(CharacterBuilder.instance._actor, new Item5e(itemUid, it.quantity));
+                    System5e.addToInventory(CharacterBuilder.instance._actor, it.item);
                 }
                 this._state["defaultItemPulse"] = !this._state["defaultItemPulse"];
             }
@@ -10209,7 +10211,8 @@ Charactermancer_StartingEquipment.ComponentGold = class extends Charactermancer_
      * @param {{quantity:number, isTriggerUpdate:boolean, isIgnoreCost:boolean}} opts
      * @returns {any}
      */
-    addBoughtItem(itemUid, opts) {
+    addBoughtItem(item, opts) {
+        let itemUid = `${item.name}|${item.source}`;
         opts = opts || {};
         opts.quantity = opts.quantity === undefined ? 1 : opts.quantity;
         opts.isTriggerUpdate = opts.isTriggerUpdate === undefined ? true : opts.isTriggerUpdate;
@@ -10231,7 +10234,7 @@ Charactermancer_StartingEquipment.ComponentGold = class extends Charactermancer_
                     isIgnoreCost: opts.isIgnoreCost,
                 },
             });
-            System5e.addToInventory(this._actor, new Item5e(itemUid, opts.quantity, collectionId));
+            System5e.addToInventory(this._actor, item);//new Item5e(itemUid, opts.quantity, collectionId));
         }
 
         if (opts.isTriggerUpdate) { this._triggerCollectionUpdate("itemPurchases"); }

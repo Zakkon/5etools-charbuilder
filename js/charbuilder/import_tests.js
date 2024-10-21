@@ -4,11 +4,8 @@ class ImportTester{
        /*  this.handleReady().then(() => {
             console.log("Ready done!");
         }); */
-        console.log("ITEM", item);
         const flags = this.getFlags(item);
-        console.log("FLAGS", flags);
         let ent = await DataLoader.pCacheAndGet(flags.page, flags.source, flags.hash);
-        console.log("ENT", ent);
 
         const isUseImporter = true;
         const pFnImport = null;
@@ -26,7 +23,7 @@ class ImportTester{
 				//This is what we want. Tell the importlist to import ent (an obj in 5etools schema)
 				const summary = await imp.pImportEntry(ent, {filterValues: flags.filterValues, isDataOnly:true});
 				console.log("SUMMARY", summary);
-
+				return summary._imported[0].document;
 			}
 
 

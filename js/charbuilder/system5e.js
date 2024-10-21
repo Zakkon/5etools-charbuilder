@@ -150,7 +150,11 @@ class System5e{
         return JSON.stringify(schema.system);
     }
 
-    static addToInventory(actor, item){
+    static async addToInventory(actor, item){
+
+        //Do a conversion here
+        const tester = new ImportTester();
+        const result = await tester.runTest(item);
         actor.character.system.inventory.items.push(item);
         console.log("num items", actor.character.system.inventory.items.length);
     }
@@ -191,24 +195,5 @@ class Item5e {
     }
     loadItem(fromData){
 
-    }
-}
-class CONFIG{
-    static DND5E = {
-        attunementTypes: {
-            NONE: "none"
-        }
-    }
-    
-}
-class CONST {
-    //These are all from FVTT
-    static USER_ROLES = {NONE : 0, PLAYER : 1, TRUSTED : 2, ASSISTANT : 3, GAMEMASTER : 4};
-    static DOCUMENT_OWNERSHIP_LEVELS = {INHERIT: 0, NONE: 1, LIMITED: 2, OBSERVER: 3, OWNER: 4};
-    static TOKEN_DISPOSITIONS = {SECRET: 0, HOSTILE: 1, NEUTRAL: 2, FRIENDLY: 3}
-}
-class foundry {
-    static utils = {
-        mergeObject: (original, other) => {return Object.assign(original, other);}
     }
 }
