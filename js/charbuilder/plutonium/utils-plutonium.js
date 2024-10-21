@@ -4599,6 +4599,73 @@ class UtilDocumentSource {
     }
 }
 //#endregion
+//#region UtilDocumentItem
+class UtilDocumentItem {
+	static getNameAsIdentifier (name) {
+		return name.slugify({strict: true});
+	}
+
+	static getPrice ({cp}) {
+		const singleCurrency = CurrencyUtil.getAsSingleCurrency({cp});
+		const [denomination, value] = Object.entries(singleCurrency)[0];
+
+		return {
+			value,
+			denomination,
+		};
+	}
+
+	
+	static hasProperty ({item, property}) {
+		if (!item?.system?.properties) return false;
+		if (item.system.properties instanceof Set) return item.system.properties.has(property);
+		if (item.system.properties instanceof Array) return item.system.properties.includes(property);
+		console.error(...LGT, item.system.properties);
+		throw new Error(`Unable to check if item ${item.name} (${item.id}) has property "${property}"!`);
+	}
+
+	
+	static TYPE_WEAPON = "weapon";
+	static TYPE_TOOL = "tool";
+	static TYPE_CONSUMABLE = "consumable";
+	static TYPE_EQUIPMENT = "equipment";
+	static TYPE_CONTAINER = "container";
+	static TYPE_LOOT = "loot";
+
+	static TYPES_ITEM = new Set([
+		this.TYPE_WEAPON,
+		this.TYPE_TOOL,
+		this.TYPE_CONSUMABLE,
+		this.TYPE_EQUIPMENT,
+		this.TYPE_CONTAINER,
+		this.TYPE_LOOT,
+	]);
+
+	static TYPES_ITEM_ORDERED = [
+		this.TYPE_WEAPON,
+		this.TYPE_TOOL,
+		this.TYPE_CONSUMABLE,
+		this.TYPE_EQUIPMENT,
+		this.TYPE_CONTAINER,
+		this.TYPE_LOOT,
+	];
+
+	
+		static getBaseItemOptions ({itemType}) {
+		switch (itemType) {
+			case "equipment": {
+				return Object.keys({
+					...CONFIG.DND5E.armorIds,
+					...CONFIG.DND5E.shieldIds,
+				});
+			}
+			default: {
+				return Object.keys(CONFIG.DND5E[`${itemType}Ids`] || {});
+			}
+		}
+	}
+}
+//#endregion
 //#region UtilGameSettings
 class UtilGameSettings {
     static prePreInit() {
@@ -5235,6 +5302,14 @@ class UtilDataConverter {
     static getNameWithSourcePart(ent, {displayName=null, isActorItem=false}={}) {
         return `${displayName || `${ent.type === "variant" ? "Variant: " : ""}${Renderer.stripTags(UtilEntityGeneric.getName(ent))}`}${!isActorItem && ent.source && Config.get("import", "isAddSourceToName") ? ` (${Parser.sourceJsonToAbv(ent.source)})` : ""}`;
     }
+
+    static getCleanDiceString (diceString) {
+		return diceString
+						.replace(/×/g, "*")
+			.replace(/÷/g, "/")
+						.replace(/#\$.*?\$#/g, "0")
+		;
+	}
 
     static async pGetItemWeaponType(uid) {
         uid = uid.toLowerCase().trim();
@@ -9965,6 +10040,7 @@ class DataConverterFeat extends DataConverterFeature {
 }
 
 
+
 //#endregion
 //#region Util
 class Util {
@@ -10235,7 +10311,643 @@ class UtilCompat {
     ;
 }
 //#endregion
+//#region UtilActiveEffects
+class UtilActiveEffects {
+	static PRIORITY_BASE = 4;
+	static PRIORITY_BONUS = 7;
 
+	static _PATHS_EXTRA__AC = [
+		"system.attributes.ac.base", 		"system.attributes.ac.armor",
+		"system.attributes.ac.dex",
+		"system.attributes.ac.shield",
+		"system.attributes.ac.bonus",
+		"system.attributes.ac.cover",
+	];
+
+	static _AVAIL_EFFECTS_ACTOR_DND5E = [];
+
+	static init () {
+		this._AVAIL_EFFECTS_ACTOR_DND5E.push(
+			new ActiveEffectMeta("system.attributes.prof", CONST.ACTIVE_EFFECT_MODES.OVERRIDE, 1),
+
+			...Object.entries((CONFIG?.DND5E?.characterFlags) || {})
+				.map(([k, meta]) => new ActiveEffectMeta(
+					`flags.${SharedConsts.SYSTEM_ID_DND5E}.${k}`,
+					CONST.ACTIVE_EFFECT_MODES.OVERRIDE,
+					meta.placeholder != null ? MiscUtil.copyFast(meta.placeholder) : meta.type()),
+				),
+
+									...Object.keys((CONFIG?.DND5E?.itemActionTypes) || {})
+				.map(k => [
+					new ActiveEffectMeta(
+						`system.bonuses.${k}.attack`,
+						CONST.ACTIVE_EFFECT_MODES.OVERRIDE,
+						"",
+					),
+					new ActiveEffectMeta(
+						`system.bonuses.${k}.damage`,
+						CONST.ACTIVE_EFFECT_MODES.OVERRIDE,
+						"",
+					),
+				])
+				.flat(),
+			
+												...this._PATHS_EXTRA__AC.map(path => new ActiveEffectMeta(
+				path,
+				CONST.ACTIVE_EFFECT_MODES.OVERRIDE,
+				"",
+			)),
+					);
+	}
+
+		static getAvailableEffects (entity, opts) {
+		opts = opts || {};
+
+		if (game.system.id !== SharedConsts.SYSTEM_ID_DND5E) return [];
+
+		let modelMeta;
+		if (opts.isItemEffect) modelMeta = game.system.dataModels.item;
+		else if (opts.isActorEffect) modelMeta = game.system.dataModels.actor;
+		else throw new Error(`Unhandled effect mode, was neither an item effect nor an actor effect!`);
+
+		const systemSchema = modelMeta.config[entity.type].defineSchema();
+
+		const defaultModel = {};
+		Object.entries(systemSchema)
+			.map(([systemKey, subModel]) => {
+				defaultModel[systemKey] = subModel.getInitialValue();
+			});
+
+		const baseEffects = Object.entries(foundry.utils.flattenObject(defaultModel))
+						.map(([keyPath, defaultVal]) => new ActiveEffectMeta(`system.${keyPath}`, CONST.ACTIVE_EFFECT_MODES.OVERRIDE, defaultVal));
+
+		if (opts.isItemEffect) return baseEffects;
+		return [...baseEffects, ...this._AVAIL_EFFECTS_ACTOR_DND5E]
+			.unique(it => it.path)
+			.sort(SortUtil.ascSortLowerProp.bind(null, "path"));
+	}
+
+		static getAvailableEffectsLookup (entity, opts) {
+		const effects = this.getAvailableEffects(entity, opts);
+		const out = {};
+		effects.forEach(it => out[it.path] = it);
+		return out;
+	}
+
+	static getActiveEffectType (lookup, path) {
+		if (!path) return undefined;
+
+				path = this.getKeyFromCustomKey(path);
+
+		if (!lookup[path]) return undefined;
+		const meta = lookup[path];
+		if (meta.default === undefined) return "undefined";
+		if (meta.default === null) return "null";
+		if (meta.default instanceof Array) return "array";
+		return typeof meta.default;
+	}
+
+	static getExpandedEffects (
+		rawEffects,
+		{actor = null, sheetItem = null, parentName = "", img = null} = {},
+		{isTuples = false} = {},
+	) {
+		if (!rawEffects || !rawEffects.length) return [];
+
+		const tuples = [];
+
+				for (const effectRaw of rawEffects) {
+									const cpyEffectRaw = MiscUtil.copyFast(effectRaw);
+			[
+				"foundryId",
+
+				"name",
+
+				"priority",
+
+				"icon",
+				"img",
+
+				"disabled",
+				"transfer",
+
+				"changes",
+
+				"enchantmentLevelMin",
+				"enchantmentLevelMax",
+				"enchantmentRiderParent",
+
+				"type",
+			]
+				.forEach(prop => delete cpyEffectRaw[prop]);
+
+			const effect = UtilActiveEffects.getGenericEffect({
+				id: effectRaw.foundryId
+										|| (effectRaw.enchantmentRiderParent ? foundry.utils.randomID() : null),
+				name: effectRaw.name ?? parentName,
+				priority: effectRaw?.changes?.length
+					? Math.max(...effectRaw.changes.map(it => UtilActiveEffects.getPriority(UtilActiveEffects.getFoundryMode({mode: it.mode}))))
+					: 0,
+				icon: effectRaw.img ?? img ?? sheetItem?.img ?? actor?.system?.img ?? actor?.system?.prototypeToken?.texture?.src,
+				disabled: !!effectRaw.disabled,
+				transfer: !!effectRaw.transfer,
+			});
+
+			if (actor && sheetItem) effect.origin = `Actor.${actor.id}.Item.${sheetItem.id}`;
+
+			effect.changes = this._getExpandedEffects_getChanges({effect, effectRaw});
+
+			effect.flags = this._getExpandedEffects_getFlags({effect, effectRaw});
+
+						Object.entries(cpyEffectRaw)
+				.filter(([k]) => k !== "flags")
+				.forEach(([k, v]) => {
+					effect[k] = v;
+					delete cpyEffectRaw[k];
+				});
+						if (cpyEffectRaw.flags) effect.flags = foundry.utils.mergeObject(effect.flags || {}, cpyEffectRaw.flags);
+
+			tuples.push({effect, effectRaw});
+		}
+
+				for (const {effect, effectRaw} of tuples) {
+			if (!effectRaw.enchantmentRiderParent) continue;
+
+			const parentTuple = tuples.find(({effect: effectParent}) => effectParent._id === effectRaw.enchantmentRiderParent);
+			if (!parentTuple) {
+				console.warn(...LGT, `Could not find parent effect "${effectRaw.enchantmentRiderParent}" to link in effect "${effectRaw.name || "(Unnamed)"}"!`);
+				continue;
+			}
+
+			MiscUtil.getOrSet(parentTuple.effect, "flags", SharedConsts.SYSTEM_ID_DND5E, "enchantment", "riders", "effect", []).push(effect._id);
+		}
+
+		return isTuples ? tuples : tuples.map(it => it.effect);
+	}
+
+	static _getExpandedEffects_getChanges ({effect, effectRaw}) {
+		const changes = [];
+
+		(effectRaw.changes || []).forEach(rawChange => {
+			const mode = UtilActiveEffects.getFoundryMode(rawChange.mode);
+
+									const key = rawChange.key.replace(/^data\./, "system.");
+
+			changes.push({
+				key,
+				mode,
+				value: rawChange.value,
+				priority: UtilActiveEffects.getPriority({mode, rawPriority: rawChange.priority}),
+			});
+		});
+
+		return changes;
+	}
+
+	static _getExpandedEffects_getFlags ({effect, effectRaw}) {
+		const flags = {};
+
+		if (effectRaw.enchantmentLevelMin) MiscUtil.set(flags, SharedConsts.SYSTEM_ID_DND5E, "enchantment", "level", "min", effectRaw.enchantmentLevelMin);
+		if (effectRaw.enchantmentLevelMax) MiscUtil.set(flags, SharedConsts.SYSTEM_ID_DND5E, "enchantment", "level", "max", effectRaw.enchantmentLevelMax);
+		if (effectRaw.enchantmentRiderParent) MiscUtil.set(flags, SharedConsts.SYSTEM_ID_DND5E, "rider", true);
+		if (effectRaw.type) MiscUtil.set(flags, SharedConsts.SYSTEM_ID_DND5E, "type", effectRaw.type);
+
+		return flags;
+	}
+
+	static getGenericEffect (
+		{
+			id = null,
+
+			name = "",
+			icon = "icons/svg/aura.svg",
+			disabled = false,
+			transfer = true,
+
+			key = "",
+			value = "",
+			mode = CONST.ACTIVE_EFFECT_MODES.OVERRIDE,
+			priority = null,
+
+			durationSeconds = null,
+			durationRounds = null,
+			durationTurns = null,
+
+			changes = null,
+
+			originActor = null,
+			originActorItem = null,
+			originActorId = null,
+			originActorItemId = null,
+
+			flags = null,
+		} = {},
+	) {
+		if (changes && (key || value)) throw new Error(`Generic effect args "key"/"value" and "changes" are mutually exclusive!`);
+
+		const change = key || value ? this.getGenericChange({key, value, mode, priority}) : null;
+
+		flags = flags || {};
+
+		return {
+			_id: id,
+			id,
+			name,
+			icon,
+			changes: changes ?? [change].filter(Boolean),
+			disabled,
+			duration: {
+				startTime: null,
+				seconds: durationSeconds,
+				rounds: durationRounds,
+				turns: durationTurns,
+				startRound: null,
+				startTurn: null,
+			},
+												origin: this._getGenericEffect_getOrigin({
+				originActor,
+				originActorItem,
+				originActorId,
+				originActorItemId,
+			}),
+			transfer,
+			flags,
+		};
+	}
+
+	static _getGenericEffect_getOrigin ({originActor, originActorItem, originActorId, originActorItemId}) {
+		originActorId = originActorId ?? originActor?.id;
+		originActorItemId = originActorItemId ?? originActorItem?.id;
+
+		return originActorId
+			? originActorItemId
+				? `Actor.${originActorId}.Item.${originActorItemId}`
+				: `Actor.${originActorId}`
+			: null;
+	}
+
+	static getGenericChange (
+		{
+			key,
+			value,
+			mode = CONST.ACTIVE_EFFECT_MODES.OVERRIDE,
+			priority = null,
+		},
+	) {
+		if (key == null || value === undefined) throw new Error(`Generic effect change "key" and "value" must be defined!`);
+		return {
+			key,
+			mode,
+			value,
+			priority,
+		};
+	}
+
+	static getCustomKey (key) { return `${SharedConsts.MODULE_ID_FAKE}.${key}`; }
+	static getKeyFromCustomKey (customKey) { return customKey.replace(new RegExp(`${SharedConsts.MODULE_ID_FAKE}\\.`), ""); }
+
+	static getFoundryMode (modeStrOrInt) {
+		if (typeof modeStrOrInt === "number") return modeStrOrInt;
+		const [, out = 0] = Object.entries(CONST.ACTIVE_EFFECT_MODES)
+			.find(([k]) => k.toLowerCase() === `${modeStrOrInt}`.trim().toLowerCase()) || [];
+		return out;
+	}
+
+	static getPriority ({mode, rawPriority = null}) {
+		if (rawPriority != null && !isNaN(rawPriority)) return rawPriority;
+		return mode >= CONST.ACTIVE_EFFECT_MODES.DOWNGRADE ? this.PRIORITY_BASE : this.PRIORITY_BONUS;
+	}
+
+	static _HINTS_DEFAULT_SIDE = {hintTransfer: false, hintDisabled: false};
+	static getDisabledTransferHintsSideData (effectRaw) {
+		const out = MiscUtil.copyFast(this._HINTS_DEFAULT_SIDE);
+		if (effectRaw?.transfer != null) out.hintTransfer = effectRaw.transfer;
+		if (effectRaw?.disabled != null) out.hintDisabled = effectRaw.disabled;
+		return out;
+	}
+
+	
+	static mutEffectsDisabledTransfer (effects, configGroup, opts = {}) {
+		if (!effects) return;
+
+		return effects.map(effect => this.mutEffectDisabledTransfer(effect, configGroup, opts));
+	}
+
+	static mutEffectDisabledTransfer (
+		effect,
+		configGroup,
+		{
+			hintDisabled = null,
+			hintTransfer = null,
+			hintSelfTarget = null,
+		} = {},
+	) {
+		if (!effect) return;
+
+		const disabled = Config.get(configGroup, "setEffectDisabled");
+		switch (disabled) {
+			case ConfigConsts.C_USE_PLUT_VALUE: effect.disabled = hintDisabled != null
+				? hintDisabled
+				: false;
+				break;
+			case ConfigConsts.C_BOOL_DISABLED: effect.disabled = false; break;
+			case ConfigConsts.C_BOOL_ENABLED: effect.disabled = true; break;
+		}
+
+		const transfer = Config.get(configGroup, "setEffectTransfer");
+		switch (transfer) {
+			case ConfigConsts.C_USE_PLUT_VALUE: {
+				if (hintTransfer != null) {
+					effect.transfer = hintTransfer;
+					break;
+				}
+
+												if (effect.statuses?.length) {
+					effect.transfer = false;
+					break;
+				}
+
+				effect.transfer = true;
+
+				break;
+			}
+			case ConfigConsts.C_BOOL_DISABLED: effect.transfer = false; break;
+			case ConfigConsts.C_BOOL_ENABLED: effect.transfer = true; break;
+		}
+
+		if (UtilCompat.isPlutoniumAddonAutomationActive()) {
+			const val = hintTransfer != null ? hintSelfTarget : false;
+			MiscUtil.set(effect, "flags", UtilCompat.MODULE_DAE, "selfTarget", val);
+			MiscUtil.set(effect, "flags", UtilCompat.MODULE_DAE, "selfTargetAlways", val);
+		}
+
+		return effect;
+	}
+
+	
+	static getEffectsMutDedupeId (effects) {
+		if (!effects?.length) return effects;
+
+		const usedDedupeIds = new Set();
+
+		effects
+			.forEach(eff => {
+				const dedupeIdExisting = eff.flags?.[SharedConsts.MODULE_ID]?.dedupeId;
+				if (dedupeIdExisting && !usedDedupeIds.has(dedupeIdExisting)) {
+					usedDedupeIds.add(dedupeIdExisting);
+					return;
+				}
+
+				if (!eff.name) throw new Error(`Effect did not have a name!`);
+
+				const dedupeIdBase = dedupeIdExisting ?? eff.name.slugify({strict: true});
+				if (!usedDedupeIds.has(dedupeIdBase)) {
+					usedDedupeIds.add(dedupeIdBase);
+					MiscUtil.set(eff, "flags", SharedConsts.MODULE_ID, "dedupeId", dedupeIdBase);
+					return;
+				}
+
+				for (let i = 0; i < 99; ++i) {
+					const dedupeId = `${dedupeIdBase}-${i}`;
+					if (!usedDedupeIds.has(dedupeId)) {
+						usedDedupeIds.add(dedupeId);
+						MiscUtil.set(eff, "flags", SharedConsts.MODULE_ID, "dedupeId", dedupeId);
+						return;
+					}
+				}
+
+				throw new Error(`Could not find an available dedupeId for base "${dedupeIdBase}"!`);
+			});
+
+		return effects;
+	}
+}
+//#endregion
+//#region UtilDocuments
+class UtilDocuments {
+	static async pCreateDocument (Clazz, docData, {isRender = true, isKeepId = true, isTemporary = false} = {}) {
+		if (Config.get("misc", "isDebugDocumentOperations")) console.debug(...LGTD, `Creating "${Clazz.metadata.name}" document: ${docData.name || "(Unnamed)"}`, docData);
+
+		docData = foundry.utils.flattenObject(docData);
+
+						const out = await Clazz.create(docData, {renderSheet: false, render: isRender, keepId: isKeepId, temporary: isTemporary});
+
+		if (isTemporary) out._isTempImportedDoc = true;
+
+		return out;
+	}
+
+		static async pUpdateDocument (doc, docUpdate, {isRender = true, isTemporary = false, isDiff = null, isRecursive = null, isNoHook = null} = {}) {
+		if (Config.get("misc", "isDebugDocumentOperations")) console.debug(...LGTD, `Updating "${doc.constructor.metadata.name}" document: ${doc.name || "(Unnamed)"}`, docUpdate);
+
+		docUpdate = foundry.utils.flattenObject(docUpdate);
+
+		if (Config.get("misc", "isSetDocumentOperationsCanaryFlags")) MiscUtil.set(docUpdate, "flags", "canary", "coalmine", Date.now());
+
+				if (this.isTempDocument({doc, isTemporary})) {
+						if (isDiff != null || isRecursive != null || isNoHook != null) {
+								throw new Error(`Extra options ("isDiff", "isRecursive", "isNoHook") in temporary document updates are not supported!`);
+			}
+
+						foundry.utils.mergeObject(doc.system, docUpdate);
+
+						return doc;
+		}
+
+		const opts = {render: isRender};
+		if (isDiff != null) opts.diff = isDiff;
+		if (isRecursive != null) opts.recursive = isRecursive;
+		if (isNoHook != null) opts.noHook = isNoHook;
+
+		return doc.update(docUpdate, opts);
+	}
+
+	static isTempDocument ({isTemporary, doc}) {
+				return isTemporary
+						|| doc?.id == null
+						|| doc?._isTempImportedDoc;
+	}
+
+	static async pCreateEmbeddedDocuments (
+		doc,
+		embedArray,
+		{
+			isTemporary = false,
+			ClsEmbed,
+			isKeepId = true,
+			isKeepEmbeddedIds = true,
+			isRender = true,
+			optionsCreateEmbeddedDocuments = null,
+		},
+	) {
+		if (Config.get("misc", "isDebugDocumentOperations")) console.debug(...LGTD, `Creating ${embedArray?.length || 0} embedded "${ClsEmbed.metadata.name}" document(s): ${(embedArray || []).map(it => it?.name || "(Unnamed)")}`, embedArray);
+
+		if (!embedArray?.length) return [];
+
+		let createdEmbeds;
+
+		if (this.isTempDocument({doc, isTemporary})) {
+						embedArray.forEach(embed => {
+				this._setTempId(embed);
+				(embed.effects || []).forEach(effect => this._setTempId(effect));
+			});
+
+			createdEmbeds = await ClsEmbed.create(embedArray.map(it => foundry.utils.flattenObject(it)), {temporary: true, parent: doc});
+
+			createdEmbeds.forEach(createdEmbed => {
+								doc[ClsEmbed.metadata.collection].set(createdEmbed.id, createdEmbed);
+
+												(createdEmbed.effects || []).forEach(effect => {
+					doc.effects.set(effect.id, effect);
+				});
+			});
+		} else {
+			createdEmbeds = await doc.createEmbeddedDocuments(
+				ClsEmbed.metadata.name,
+				embedArray.map(it => foundry.utils.flattenObject(it)),
+				{
+					...(optionsCreateEmbeddedDocuments || {}),
+					keepId: isKeepId,
+					keepEmbeddedIds: isKeepEmbeddedIds,
+					render: isRender,
+				},
+			);
+		}
+
+		if (embedArray.length !== createdEmbeds.length) throw new Error(`Number of returned items did not match number of input items!`); 		return embedArray.map((raw, i) => new UtilDocuments.ImportedEmbeddedDocument({raw, document: createdEmbeds[i]}));
+	}
+
+	static _setTempId (ent) {
+		if (!ent._id && !ent.id) ent._id = foundry.utils.randomID();
+		if (ent._id && !ent.id) ent.id = ent._id;
+		if (!ent._id && ent.id) ent._id = ent.id;
+	}
+
+	static async pUpdateEmbeddedDocuments (
+		doc,
+		updateArray,
+		{
+			isTemporary = false,
+			ClsEmbed,
+						isRender = true,
+		},
+	) {
+		if (Config.get("misc", "isDebugDocumentOperations")) console.debug(...LGTD, `Updating ${updateArray?.length || 0} embedded "${ClsEmbed.metadata.name}" document(s)`, updateArray);
+
+		if (!updateArray?.length) return [];
+
+		if (Config.get("misc", "isSetDocumentOperationsCanaryFlags")) updateArray.forEach(ud => MiscUtil.set(ud, "flags", "canary", "coalmine", Date.now()));
+
+		const updatedEmbeds = this.isTempDocument({doc, isTemporary})
+			? await this._pUpdateEmbeddedDocuments_temp({
+				doc,
+				updateArray,
+				ClsEmbed,
+				isRender,
+			})
+			: await this._pUpdateEmbeddedDocuments_standard({
+				doc,
+				updateArray,
+				ClsEmbed,
+				isRender,
+			});
+
+		if (updateArray.length !== updatedEmbeds.length) throw new Error(`Number of returned items did not match number of input items!`); 		return updateArray.map((raw, i) => new UtilDocuments.ImportedEmbeddedDocument({raw, document: updatedEmbeds[i], isUpdate: true}));
+	}
+
+	static async _pUpdateEmbeddedDocuments_temp (
+		{
+			doc,
+			updateArray,
+			ClsEmbed,
+			isRender = true,
+		},
+	) {
+		const updateTuples = updateArray.map(update => {
+			if (!update._id) throw new Error(`Update had no "_id"!`);
+			const embed = doc[ClsEmbed.metadata.collection].get(update._id);
+			if (!embed) throw new Error(`${ClsEmbed.metadata.name} with id "${update._id}" not found in parent document!`);
+			return {update, embed};
+		});
+
+		updateTuples.forEach(({update, embed}) => {
+						foundry.utils.mergeObject(embed.system, MiscUtil.copyFast(update));
+
+						Object.keys(embed.system._source)
+				.filter(k => update[k])
+				.forEach(k => foundry.utils.mergeObject(embed.system._source[k], MiscUtil.copyFast(update[k])));
+		});
+
+		return updateTuples.map(it => it.embed);
+	}
+
+	static async _pUpdateEmbeddedDocuments_standard (
+		{
+			doc,
+			updateArray,
+			ClsEmbed,
+			isRender = true,
+		},
+	) {
+		if (Config.get("misc", "isDebugDocumentOperations")) {
+						updateArray.forEach(update => {
+				if (!update._id) throw new Error(`Update had no "_id"!`);
+				const embed = doc[ClsEmbed.metadata.collection].get(update._id);
+				if (!embed) throw new Error(`${ClsEmbed.metadata.name} with id "${update._id}" not found in parent document!`);
+			});
+		}
+
+		let updatedEmbedsRaw;
+		const flatUpdateArray = updateArray.map(it => foundry.utils.flattenObject(it));
+
+						if (UtilCompat.isEffectMacroActive()) {
+			updatedEmbedsRaw = (
+				await flatUpdateArray
+					.pSerialAwaitMap(flatUpdate => {
+						return doc.updateEmbeddedDocuments(
+							ClsEmbed.metadata.name,
+							[flatUpdate],
+							{render: isRender},
+						);
+					})
+			)
+				.flat();
+		} else {
+			updatedEmbedsRaw = await doc.updateEmbeddedDocuments(
+				ClsEmbed.metadata.name,
+				flatUpdateArray,
+				{render: isRender},
+			);
+		}
+
+		if (updateArray.length === updatedEmbedsRaw.length) {
+			return updatedEmbedsRaw;
+		}
+
+				return updateArray.map(({_id}) => updateArray.find(it => it.id === _id) || doc[ClsEmbed.metadata.collection].get(_id));
+	}
+
+	static async pDeleteEmbeddedDocuments (
+		doc,
+		deleteArray,
+		{
+			isTemporary = false,
+			ClsEmbed,
+		},
+	) {
+		if (Config.get("misc", "isDebugDocumentOperations")) console.debug(...LGTD, `Deleting ${deleteArray?.length || 0} embedded "${ClsEmbed.metadata.name}" document(s)`, deleteArray);
+
+		if (!deleteArray?.length) return [];
+
+		if (this.isTempDocument({doc, isTemporary})) {
+			throw new Error(`Deleting embedded documents from a temporary document is not supported! This is a bug!`);
+		} else {
+			await doc.deleteEmbeddedDocuments(ClsEmbed.metadata.name, deleteArray);
+		}
+
+			}
+}
+//#endregion
 //#region UtilHooks
 class UtilHooks {
     static callAll(name, val) {
