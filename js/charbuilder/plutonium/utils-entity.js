@@ -1003,3 +1003,13 @@ UtilActors.LANG_TOOL_PROFS_CUSTOMIZE = [{
     anyTool: 2,
 }, ];
 //#endregion
+
+class UtilItems {
+	static PROFICIENCY_LEVELS = {
+		AUTO: null,
+		NONE: 0,
+		PROFICIENT: 1,
+		EXPERTISE: 2,
+		JACK_OF_ALL_TRADES: 0.5,
+	};
+}

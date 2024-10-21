@@ -392,7 +392,7 @@ class DataConverterItem extends DataConverter {
 		const additionalSystem = await this._SideDataInterface.pGetSystemSideLoaded(item, {systemBase, actorType: opts.actorType});
 		const additionalFlags = await this._SideDataInterface.pGetFlagsSideLoaded(item, {actorType: opts.actorType});
 
-		const img = await this._ImageFetcher.pGetSaveImagePath(item, {fluff: await Renderer.item.pGetFluff(item), propCompendium: "item", foundryType, taskRunner: opts.taskRunner});
+		const img = null; //await this._ImageFetcher.pGetSaveImagePath(item, {fluff: await Renderer.item.pGetFluff(item), propCompendium: "item", foundryType, taskRunner: opts.taskRunner});
 
 		return {
 			...UtilFoundryId.getIdObj(),
@@ -871,7 +871,7 @@ class DataConverterItem extends DataConverter {
 		const {uses, usesPer, usesRecovery} = this._getItemItem_getItemUses(item);
 		const additionalFlags = await this._SideDataInterface.pGetFlagsSideLoaded(item, {actorType: opts.actorType});
 
-		const img = await this._ImageFetcher.pGetSaveImagePath(item, {fluff: await Renderer.item.pGetFluff(item), propCompendium: "item", foundryType, taskRunner: opts.taskRunner});
+		const img = null;//await this._ImageFetcher.pGetSaveImagePath(item, {fluff: await Renderer.item.pGetFluff(item), propCompendium: "item", foundryType, taskRunner: opts.taskRunner});
 
 		const systemBase = {
 			source: UtilDocumentSource.getSourceObjectFromEntity(item),
@@ -952,7 +952,7 @@ class DataConverterItem extends DataConverter {
 
 		const additionalFlags = await this._SideDataInterface.pGetFlagsSideLoaded(item, {actorType: opts.actorType});
 
-		const img = await this._ImageFetcher.pGetSaveImagePath(item, {fluff: await Renderer.item.pGetFluff(item), propCompendium: "item", foundryType, taskRunner: opts.taskRunner});
+		const img = null; //await this._ImageFetcher.pGetSaveImagePath(item, {fluff: await Renderer.item.pGetFluff(item), propCompendium: "item", foundryType, taskRunner: opts.taskRunner});
 
 		const systemBase = {
 			source: UtilDocumentSource.getSourceObjectFromEntity(item),
@@ -1031,7 +1031,7 @@ class DataConverterItem extends DataConverter {
 
 		const additionalFlags = await this._SideDataInterface.pGetFlagsSideLoaded(item, {actorType: opts.actorType});
 
-		const img = await this._ImageFetcher.pGetSaveImagePath(item, {fluff: await Renderer.item.pGetFluff(item), propCompendium: "item", foundryType, taskRunner: opts.taskRunner});
+		const img = null; //await this._ImageFetcher.pGetSaveImagePath(item, {fluff: await Renderer.item.pGetFluff(item), propCompendium: "item", foundryType, taskRunner: opts.taskRunner});
 
 		const systemBase = {
 			source: UtilDocumentSource.getSourceObjectFromEntity(item),
@@ -1113,7 +1113,7 @@ class DataConverterItem extends DataConverter {
 
 		const additionalFlags = await this._SideDataInterface.pGetFlagsSideLoaded(item, {actorType: opts.actorType});
 
-		const img = await this._ImageFetcher.pGetSaveImagePath(item, {fluff: await Renderer.item.pGetFluff(item), propCompendium: "item", foundryType, taskRunner: opts.taskRunner});
+		const img = null; //await this._ImageFetcher.pGetSaveImagePath(item, {fluff: await Renderer.item.pGetFluff(item), propCompendium: "item", foundryType, taskRunner: opts.taskRunner});
 
 		const systemBase = {
 			source: UtilDocumentSource.getSourceObjectFromEntity(item),
@@ -1185,7 +1185,7 @@ class DataConverterItem extends DataConverter {
 
 		const additionalFlags = await this._SideDataInterface.pGetFlagsSideLoaded(item, {actorType: opts.actorType});
 
-		const img = await this._ImageFetcher.pGetSaveImagePath(item, {fluff: await Renderer.item.pGetFluff(item), propCompendium: "item", foundryType, taskRunner: opts.taskRunner});
+		const img = null; //await this._ImageFetcher.pGetSaveImagePath(item, {fluff: await Renderer.item.pGetFluff(item), propCompendium: "item", foundryType, taskRunner: opts.taskRunner});
 
 		const systemBase = {
 			source: UtilDocumentSource.getSourceObjectFromEntity(item),
@@ -1281,6 +1281,18 @@ class DataConverterItem extends DataConverter {
 			},
 			effects: await this._pGetItemEffects(item, img, opts),
 		};
+	}
+
+	static _getWeaponTargetDataDefault ({srdData = null} = {}) {
+		const fromSrd = MiscUtil.get(srdData, "system", "target");
+
+		if (fromSrd?.value || fromSrd?.type) return fromSrd;
+
+		switch (Config.get("import", "weaponTargetDefault")) {
+			case ConfigConsts.C_IMPORT_WEAPON_TARGET_DEFAULT__CREATURE_OR_OBJECT: return {value: 1, units: "", type: "creatureOrObject"};
+			case ConfigConsts.C_IMPORT_WEAPON_TARGET_DEFAULT__CREATURE: return {value: 1, units: "", type: "creature"};
+			default: return {value: 0, units: "", type: ""};
+		}
 	}
 
 	static _pGetItemItem_getAmmoConsumeDetails (item, opts) {
