@@ -9264,9 +9264,10 @@ class ModalFilterEquipment extends ModalFilter {
             //Add an event listener to the button for sending the item right to cart
             filterListItem.data.btnSendToRight.addEventListener("click", evt=>{
                 const isIgnoreCost = evt.ctrlKey;
+                let itemUid = `${it.name}|${it.source}`;
                 //Set quantity to 5 if pressing shift
-                if (evt.shiftKey) { this._compParent.addBoughtItem(it, { quantity: 5, isIgnoreCost });}
-                else { this._compParent.addBoughtItem(it, { isIgnoreCost });}
+                if (evt.shiftKey) { this._compParent.addBoughtItem(itemUid, { quantity: 5, isIgnoreCost });}
+                else { this._compParent.addBoughtItem(itemUid, { isIgnoreCost });}
             });
         });
 
