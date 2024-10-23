@@ -10,6 +10,12 @@ a {
 .flexrow > * {
     flex: 1;
 }
+.flexcol {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+}
+.window-app {position: absolute;}
 .inventory-list {
     flex-grow: 1;
     padding: 0px;
@@ -65,6 +71,10 @@ a {
     font-size: 0.8rem;
     text-align: left;
     align-items: center;
+    
+    /* We also make this a button*/
+    cursor: pointer;
+    flex: auto;
 }
 .item-list .item-name > h4 {
     /* need this to override bootstrap h4*/
@@ -95,4 +105,37 @@ a {
     place-items: center;
     gap: 1ch;
     flex: 0 0 68px;
+}
+.inventory-list .item-summary {
+    flex: 0 0 100%;
+    font-size: 12px;/* var(--font-size-12); */
+    line-height: 16px;
+    padding: 0.25em 0.5em;
+    /* color: var(--dnd5e-color-dark);
+    border-top: 1px solid var(--dnd5e-color-faint); */
+}
+.c5e {background-color: black;}
+.c5e form .frm-grp{
+    clear: both;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    margin: 3px 0;
+    align-items: center;
+}
+.frm-grp label{
+    flex: 2;
+    /* color: var(--dnd5e-color-olive); */
+    font-weight: bold;
+}
+.c5e select {
+    flex: 1;
+    /* font-size: var(--font-size-12); */
+    height: 22px;
+    background: transparent;
+}
+.c5e .details select {
+    height: 24px;
+    border: 1px solid tan;/* var(--dnd5e-color-tan); */
+    background: rgba(0, 0, 0, 0.05);
 }

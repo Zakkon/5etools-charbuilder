@@ -431,6 +431,7 @@ class CharacterBuilder {
     tabs;
     _featureSourceTracker;
     _actor;
+    instance;
     get actor(){return this._actor;}
     static useHeaderTitleAndReturnButton = false;
     static enableSaveToFile = true;

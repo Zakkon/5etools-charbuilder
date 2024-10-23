@@ -151,7 +151,14 @@ class System5e{
     }
 
     static async addToInventory(actor, item, item5e){
+        console.log("Add item", item5e.collectionId);
         actor.character.system.inventory.items.push(item5e);
+    }
+    static getItemByCollectionId(actor, collectionId){
+        for(let it of actor.character.system.inventory.items){
+            if(it.collectionId == collectionId){return it;}
+        }
+        return null;
     }
     static createUniqueID(){
         return Math.random().toString(16).slice(2);
@@ -187,6 +194,22 @@ class Item5e {
         const override = recursiveSearch(this.override, path);
         if(override != null && override != undefined){return override;}
         return result;
+    }
+    setProp(path, value, toOverride=true){
+        const recursiveSearch = (start, _path, value) => {
+            const properties = _path.split('.');
+            let current = start;
+            for (let i = 0; i < properties.length; i++) {
+                if(i+1>=properties.length){current[properties[i]] = value; return value;}
+                if (current[properties[i]] === undefined) { current[properties[i]] = {}; current = current[properties[i]];}
+                else { current = current[properties[i]]; }
+            }
+            return current;
+        }
+        if(toOverride){
+            recursiveSearch(this.override, path, value);
+        }
+        else{recursiveSearch(this, path, value);}
     }
     loadItem(fromData){
 
