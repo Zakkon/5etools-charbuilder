@@ -112,7 +112,7 @@ class SourceManager {
 
     Charactermancer_Class_Util.addFauxOptionalFeatureFeatures(data.class, data.optionalfeature);
 
-    await SourceManager.plutoniumConvertData(data);
+    await SourceManager.plutoniumConvertDataTest(data);
 
     return data;
   }
@@ -353,7 +353,7 @@ Renderer.spell.populateBrewLookup(await BrewUtil2.pGetBrewProcessed(), {isForce:
     return out;
   }
 
-  static async plutoniumConvertData(data){
+  static async plutoniumConvertDataTest(data){
     console.log("DATA IN", data);
     const tester = new ImportTester();
     //ITEMS
@@ -385,6 +385,11 @@ Renderer.spell.populateBrewLookup(await BrewUtil2.pGetBrewProcessed(), {isForce:
         console.log(result);
         //data.class[i].system = result.system;
     }
+  }
+  static async plutoniumConvertData(data){
+    const tester = new ImportTester();
+    let result = await tester.runTest(data);
+    return result;
   }
 }
 class SETTINGS{
@@ -856,6 +861,14 @@ class CharacterBuilder {
   
       document.body.removeChild(element);
   }
+
+  //#region Helper Functions
+  static getItemByUid(itemUid){
+    const itemDatas = CharacterBuilder.instance._data.item;
+    const foundItem = ActorCharactermancerEquipment.findItemByUID(itemUid, itemDatas);
+    return foundItem;
+  }
+  //#endregion
 }
 /**A wrapper for a div that contains components. Only used by CharacterBuilder */
 class CharacterBuilderPanel {

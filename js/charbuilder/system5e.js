@@ -94,8 +94,13 @@ class System5e{
         console.log(formula);
     }
 
-    static extendSchema_Character(character, state=null){
-        let system = {
+    /**
+     * @param {Character} character
+     * @param {System} system
+     * @returns {Character}
+     */
+    static extendSchema_Character(character, system=null){
+        let newSystem = {
             inventory: {
                 items:[],
                 currency:{}
@@ -103,10 +108,17 @@ class System5e{
             override: {
             },
         }
-        if(state != null){ //Just load from existing state
-            Object.assign(system, System5e.loadSchemaExtension(character, state));
+        if(system != null){ //Just load from existing system if one was specified
+            newSystem = System5e.loadSchemaExtension(character, system);
+            newSystem.inventory.items ??= [];
+            for(let i = 0; i < newSystem.inventory.items.length; ++i){
+                newSystem.inventory.items[i] =
+                    Item5e.recast(newSystem.inventory.items[i]);
+            }
+            newSystem.inventory.currency ??= {};
+            newSystem.override ??= {};
         }
-        character.system = system;
+        character.system = newSystem;
         return character;
     }
     static extendSchema_Item(item, state=null){
@@ -143,8 +155,9 @@ class System5e{
     static loadSchemaExtension(schema, state){
         if(typeof(state) === "String"){state = JSON.parse(state);}
         console.log("LOADED STATE", state);
-        schema.system = state;
-        return schema;
+        return state;
+        //schema.system = state;
+        //return schema;
     }
     static serializeSchemaExtension(schema){
         return JSON.stringify(schema.system);
@@ -154,8 +167,18 @@ class System5e{
         console.log("Add item", item5e.collectionId);
         actor.character.system.inventory.items.push(item5e);
     }
-    static getItemByCollectionId(actor, collectionId){
+    /**
+     * Get an Item5e using the collection id. Item must already be in actor's inventory
+     * @param {string} collectionId
+     * @param {Actor} actor
+     * @returns {Item5e}
+     */
+    static getItemByCollectionId(collectionId, actor=null){
+        if(!actor){actor = CharacterBuilder.instance._actor;}
+        console.log("get item", actor.character.system.inventory.items.length);
         for(let it of actor.character.system.inventory.items){
+            console.log("AD", it);
+            //To get the functions on the Item5e object, we need to recast it
             if(it.collectionId == collectionId){return it;}
         }
         return null;
@@ -173,29 +196,26 @@ class Item5e {
         this.collectionId = collectionId? collectionId : System5e.createUniqueID();
         this.override = {};
     }
-    prop(path){
-    
-        const recursiveSearch = (start, _path) => {
-            const properties = _path.split('.');
-            let current = start;
-            for (let i = 0; i < properties.length; i++) {
-                if (current[properties[i]] === undefined) {
-                    return undefined;
-                } else {
-                    current = current[properties[i]];
-                }
-            }
-            return current;
-        }
-        let result = recursiveSearch(this, path);
-       
-    
-        //Try to get an override (if present)
-        const override = recursiveSearch(this.override, path);
-        if(override != null && override != undefined){return override;}
-        return result;
+    static recast(item5e){
+        let i = new Item5e();
+        item5e && Object.assign(i, item5e);
+        return i;
     }
+    get itemData(){return CharacterBuilder.getItemByUid(this.uid);}
+    prop(path){return Item5e.getp(this, path);}
     setProp(path, value, toOverride=true){
+        Item5e.setp(this, path, value, toOverride);
+    }
+    async importSystemData(){
+        //First, check if system data isn't already imported
+        //TODO: after system data is imported, cache the UID in character builder, and just do string matching instead
+        let existingData = CharacterBuilder.getItemByUid(this.uid);
+        if(existingData.system){return;}
+        //No system data exists, go ahead and import
+        let imported = await SourceManager.plutoniumConvertData(existingData);
+        existingData.system = imported.system;
+    }
+    static setp(item, path, value, toOverride=true){
         const recursiveSearch = (start, _path, value) => {
             const properties = _path.split('.');
             let current = start;
@@ -207,11 +227,36 @@ class Item5e {
             return current;
         }
         if(toOverride){
-            recursiveSearch(this.override, path, value);
+            recursiveSearch(item.override, path, value);
         }
-        else{recursiveSearch(this, path, value);}
+        else{recursiveSearch(item.itemData, path, value);}
     }
-    loadItem(fromData){
-
+    /**
+     * @param {Item|Item5e} item
+     * @param {string} path
+     * @returns {any}
+     */
+    static getp(item, path){
+        const recursiveSearch = (start, _path) => {
+            const properties = _path.split('.');
+            let current = start;
+            if(current == undefined){return undefined;}
+            for (let i = 0; i < properties.length; i++) {
+                if (current[properties[i]] === undefined) {
+                    return undefined;
+                } else {
+                    current = current[properties[i]];
+                }
+            }
+            return current;
+        }
+        let result = recursiveSearch(item.itemData, path);
+       
+    
+        //Try to get an override (if present)
+        const override = recursiveSearch(item.override, path);
+        console.log("it", item.override, override);
+        if(override != null && override != undefined){return override;}
+        return result;
     }
 }

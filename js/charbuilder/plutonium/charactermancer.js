@@ -9592,7 +9592,12 @@ Charactermancer_StartingEquipment.ComponentDefault = class extends Charactermanc
                 const items = form.data.equipmentItemEntries;
                 for(let it of items){
                     const itemUid = (it.item.name + "|" + it.item.source).toLowerCase();
-                    System5e.addToInventory(CharacterBuilder.instance._actor, it.item, new Item5e(itemUid, it.quantity));
+                    //Try to get existing item5e
+                    console.log("COLID", this.collectionId);
+                    let item5e = System5e.getItemByCollectionId(this.collectionId);
+                    if(!item5e){item5e = new Item5e(itemUid, it.quantity, this.collectionId);}
+                    await item5e.importSystemData();
+                    System5e.addToInventory(CharacterBuilder.instance._actor, it.item, item5e);
                 }
                 this._state["defaultItemPulse"] = !this._state["defaultItemPulse"];
             }
@@ -10233,7 +10238,17 @@ Charactermancer_StartingEquipment.ComponentGold = class extends Charactermancer_
                     isIgnoreCost: opts.isIgnoreCost,
                 },
             });
-            System5e.addToInventory(this._actor, itemUid, new Item5e(itemUid, opts.quantity, collectionId));
+            //Try to see if this item already exists in the character inventory
+            let item5e = System5e.getItemByCollectionId(collectionId);
+            if(!item5e){
+                //If it doesnt, create a new item5e, import system data, then add to inventory
+                item5e = new Item5e(itemUid, opts.quantity, collectionId);
+                item5e.importSystemData().then(System5e.addToInventory(this._actor, itemUid, item5e));
+            }
+            else{
+                //If it does, just import system data, no need to re-add it to the inventory
+                item5e.importSystemData();
+            }
         }
 
         if (opts.isTriggerUpdate) { this._triggerCollectionUpdate("itemPurchases"); }
