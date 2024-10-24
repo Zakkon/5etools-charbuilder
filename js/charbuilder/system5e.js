@@ -167,6 +167,20 @@ class System5e{
         console.log("Add item", item5e.collectionId);
         actor.character.system.inventory.items.push(item5e);
     }
+    static __hooks = {};
+    static hkItemUpdated(collectionID){
+       //Fire hook
+       System5e._fireHook("state", "item_update", collectionID);
+    }
+    static _fireHook(hookProp, prop, value){
+        if (this.__hooks[hookProp] && this.__hooks[hookProp][prop]) this.__hooks[hookProp][prop].forEach(hook => hook(prop, value, value/* prevValue */));
+    }
+    static addHookBase(prop, hook){
+        ProxyBase._addHook_to(System5e.__hooks, "state", prop, hook);
+    }
+    static removeHookBase(prop, hook){
+
+    }
     /**
      * Get an Item5e using the collection id. Item must already be in actor's inventory
      * @param {string} collectionId
@@ -175,9 +189,7 @@ class System5e{
      */
     static getItemByCollectionId(collectionId, actor=null){
         if(!actor){actor = CharacterBuilder.instance._actor;}
-        console.log("get item", actor.character.system.inventory.items.length);
         for(let it of actor.character.system.inventory.items){
-            console.log("AD", it);
             //To get the functions on the Item5e object, we need to recast it
             if(it.collectionId == collectionId){return it;}
         }
@@ -255,7 +267,6 @@ class Item5e {
     
         //Try to get an override (if present)
         const override = recursiveSearch(item.override, path);
-        console.log("it", item.override, override);
         if(override != null && override != undefined){return override;}
         return result;
     }

@@ -14,6 +14,15 @@ DND5E.weaponTypes = {
   improv: "Improvised",
   siege: "Siege Weapon"
 };
+DND5E.rarities = {
+  common: "Common",
+  uncommon: "Uncommon",
+  rare: "Rare",
+  veryRare: "Very Rare",
+  legendary: "Legendary",
+  artifact: "Artifact",
+};
+
 
 
 CONFIG = {DND5E: DND5E};

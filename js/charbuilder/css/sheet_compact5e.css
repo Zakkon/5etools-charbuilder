@@ -16,6 +16,12 @@ a {
     flex-wrap: nowrap;
 }
 .window-app {position: absolute;}
+.c5e.window-app{
+    background: rgba(255, 255, 255, 1);
+}
+.ve-night-mode .c5e.window-app{
+    background-color: #1c1c1c !important;
+}
 .inventory-list {
     flex-grow: 1;
     padding: 0px;
@@ -114,7 +120,6 @@ a {
     /* color: var(--dnd5e-color-dark);
     border-top: 1px solid var(--dnd5e-color-faint); */
 }
-.c5e {background-color: black;}
 .c5e form .frm-grp{
     clear: both;
     display: flex;

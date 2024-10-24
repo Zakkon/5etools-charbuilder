@@ -193,6 +193,12 @@ class C5e_InventoryItem {
         let html = this._template({item:item, collectionId: collectionId, ctx:ctx, weightUnit:C5e_InventoryItem._weightUnit});
         this.element = $$`${html}`;
 
+        System5e.addHookBase("item_update", (p, collectionId) => {
+            if(collectionId != this.collectionId){return;}
+            let item5e = System5e.getItemByCollectionId(this.collectionId);
+            this.element.find(`.item-name > h4`).text(item5e.prop("name"));
+        });
+
         return this.element;
     }
     addTo(category){
@@ -266,6 +272,7 @@ class C5e_InventoryItemSummary {
 class C5e_EditWindow {
     collectionId;
     itemUid;
+    element;
     constructor(itemUid, collectionId){
         
         this.collectionId = collectionId;
@@ -286,21 +293,30 @@ class C5e_EditWindow {
             </form>
         </section>
         </div>`;
+        this.element = window;
         $("body").append(window);
+
+        System5e.addHookBase("item_update", (p, collectionId) => {
+            if(collectionId != this.collectionId) { return; }
+            let item5e = System5e.getItemByCollectionId(this.collectionId);
+            this.element.find(`li[name="item_type"]`).text(DND5E.weaponTypes[item5e.prop("system.type.value")]);
+        });
     }
 
     /**
      * @param {Item} item5e
      * @returns {any}
      */
-    header(item5e){
+    header(item5e, item_type){
         const img_src = "";
+        const inputName = this.inputText("name", item5e, "Item Name");
+        const selector_rarity = this.selector("system.rarity", DND5E.rarities, item5e);
         //<img class="profile" src="${img_src}" data-tooltip="${item.name}" data-edit="img">
         const header = $$`<header class="sheet-header flexrow">
 
         <div class="header-details flexrow">
             <h1 class="charname">
-                <input name="name" type="text" value="${item5e.prop("name")}" placeholder="Item Name">
+                ${inputName}
             </h1>
 
             <div class="item-subtitle">
@@ -319,17 +335,9 @@ class C5e_EditWindow {
             </div>
 
             <ul class="summary flexrow">
-                <li>${item5e.prop("system.type.value")}</li>
+                <li name="item_type">${DND5E.weaponTypes[item5e.prop("system.type.value")]}</li>
                 <li>
-                    <select name="system.rarity">
-                        <option value="" selected=""></option>
-                        <option value="common">common</option>
-                        <option value="uncommon">uncommon</option>
-                        <option value="rare">rare</option>
-                        <option value="veryRare">very rare</option>
-                        <option value="legendary">legendary</option>
-                        <option value="artifact">artifact</option>
-                    </select>
+                    ${selector_rarity}
                 </li>
                 <li>
                      <span>${item5e.source}</span>
@@ -343,13 +351,23 @@ class C5e_EditWindow {
     return header;
     }
 
-    form_group(label, property, values, item5e){
-        
+    inputText(property, item5e, placeholder){
+        const input = $$`<input name="${property}" type="text" value="${item5e.prop(property)}" placeholder="${placeholder}"></input>`;
+        input.on("change", (e) => {
+            let val = e.target.value;
+            //Set the value to the item's override
+            let item5e = System5e.getItemByCollectionId(this.collectionId);
+            item5e.setProp(property, val);
+            //Fire a hook to alert other UI that this item has changed
+            System5e.hkItemUpdated(this.collectionId);
+        });
+        return input;
+    }
+    selector(property, values, item5e){
         const s = $$`<select name="${property}"></select>`;
         for(let key in values){
             let val = values[key];
             let isSelected = item5e.prop(property) == key;
-            if(isSelected){console.log(key);}
             $$`<option value="${key}" ${isSelected? "selected" : ""}>${val}</option>`.appendTo(s);
         }
 
@@ -359,17 +377,34 @@ class C5e_EditWindow {
             //Set the value to the item's override
             let item5e = System5e.getItemByCollectionId(this.collectionId);
             item5e.setProp(property, val);
+            System5e.hkItemUpdated(this.collectionId);
         });
-        return $$`<div class="frm-grp">
+        return s;
+    }
+    form_group(label, content=[]){
+        let grp = $$`<div class="frm-grp">
         <label>${label}</label>
-        ${s}
         </div>`;
+        for(let c of content){grp.append(c);}
+        return grp;
     }
     tab_details(item5e){
         const options = DND5E.weaponTypes;
         const tab_details = $$`<div class="tab details active" data-tab="details">
-            ${this.form_group("Weapon Type", "system.type.value", options, item5e)}
+            ${this.form_group("Weapon Type", [this.selector("system.type.value", options, item5e)])}
+            ${this.form_group("Activation", 
+                [this.inputText("system.activation.cost", item5e, "Activation Cost"),
+                this.selector("system.activation.type", ["Action", "Reaction", "Bonus Action"], item5e)]
+            )}
+            ${this.form_group("Condition", [this.inputText("system.activation.condition", item5e, "")])}
+            ${this.form_group("Range", [this.inputText("system.range.min", item5e, "Min"), this.inputText("system.range.max", item5e, "Max"),
+                this.selector("system.range.units", ["ft"], item5e)
+            ])}
+            ${this.form_group("ActionType", [this.selector("system.actionType", ["mwak", "rwak"], item5e)])}
+            </div>
         </div>`;
+
+        console.log(CharacterBuilder.getItemByUid(item5e.uid));
         return tab_details;
     }
     
