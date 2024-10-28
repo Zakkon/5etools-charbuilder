@@ -207,6 +207,25 @@ class Item5e {
         this.quantity = quantity;
         this.collectionId = collectionId? collectionId : System5e.createUniqueID();
         this.override = {};
+
+        return new Proxy(this, {
+            get: (target, prop) => {
+                if (prop === 'system') {
+                    return new Proxy(/* target.system */target.itemData.system, {
+                        get: (systemTarget, systemProp) => {
+                            const overrideValue = target.override[systemProp];//arget.getNestedProperty(target.override, systemProp);
+                            const systemValue = systemTarget[systemProp];
+                            console.log(systemProp, systemValue, overrideValue)
+                            return overrideValue !== null && overrideValue !== undefined ? overrideValue : systemValue;
+                        }
+                    });
+                }
+                return target[prop];
+            }
+        })
+    }
+    getNestedProperty(obj, path) {
+        return path.split('.').reduce((acc, part) => acc && acc[part], obj);
     }
     static recast(item5e){
         let i = new Item5e();

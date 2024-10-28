@@ -389,6 +389,7 @@ class C5e_EditWindow {
         return grp;
     }
     tab_details(item5e){
+
         const options = DND5E.weaponTypes;
         const tab_details = $$`<div class="tab details active" data-tab="details">
             ${this.form_group("Weapon Type", [this.selector("system.type.value", options, item5e)])}
@@ -404,7 +405,13 @@ class C5e_EditWindow {
             </div>
         </div>`;
 
-        console.log(CharacterBuilder.getItemByUid(item5e.uid));
+
+        let temp = new LoadTemplate(tab_details, "item-activation", item5e);
+        item5e.config = {};
+        item5e.config.abilityActivationTypes = DND5E.abilityActivationTypes;
+        console.log("act", item5e.system.activation);
+        temp.create();
+
         return tab_details;
     }
     
