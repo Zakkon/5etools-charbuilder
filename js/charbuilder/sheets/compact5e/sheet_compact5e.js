@@ -409,7 +409,10 @@ class C5e_EditWindow {
         let temp = new LoadTemplate(tab_details, "item-activation", item5e);
         item5e.config = {};
         item5e.config.abilityActivationTypes = DND5E.abilityActivationTypes;
-        console.log("act", item5e.system.activation);
+        item5e.config.movementUnits = DND5E.movementUnits;
+        item5e.config.individualTargetTypes = DND5E.individualTargetTypes
+        item5e.config.areaTargetTypes = DND5E.areaTargetTypes;
+        console.log("act", item5e.config.individualTargetTypes);
         temp.create();
 
         return tab_details;

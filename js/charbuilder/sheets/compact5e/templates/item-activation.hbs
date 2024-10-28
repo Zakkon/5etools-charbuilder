@@ -2,12 +2,46 @@
 <div class="form-group input-select">
     <label>Activation Cost</label>
     <div class="form-fields">
-       {{!--  {{#if (and system.activation.type (not isCostlessAction))}}
+       {{#if (and system.activation.type (not isCostlessAction))}}
             <input type="number" step="any" name="system.activation.cost"
                    value="{{system.activation.cost}}" placeholder="&mdash;">
-        {{/if}} --}}
+        {{/if}}
         <select name="system.activation.type" data-tooltip="DND5E.ItemActivationType">
             {{selectOptions config.abilityActivationTypes selected=system.activation.type blank=""}}
         </select>
     </div>
 </div>
+{{#if system.activation.type}}
+{{!-- Activation Condition --}}
+<div class="form-group">
+    <label>Activation Condition</label>
+    <div class="form-fields">
+        <input type="text" name="system.activation.condition" value="{{system.activation.condition}}">
+    </div>
+</div>
+
+{{!-- Ability Target --}}
+<div class="form-group input-select-select">
+    <label>Target</label>
+    <div class="form-fields">
+        {{#if system.hasScalarTarget}}
+            <input type="text" name="system.target.value" value="{{source.target.value}}"
+                   placeholder="&mdash;" data-formula-editor>
+        {{/if}}
+        {{#if system.hasAreaTarget}}
+            <select name="system.target.units" data-tooltip="DND5E.TargetUnits">
+                {{selectOptions config.movementUnits selected=system.target.units blank=""}}
+            </select>
+        {{/if}}
+        <select name="system.target.type" data-tooltip="DND5E.TargetType">
+            {{#select system.target.type}}
+                 <option value="">None</option>
+                 <optgroup label="Target Type Individual">
+                     {{selectOptions config.individualTargetTypes}}
+                 </optgroup>
+                 
+            {{/select}}
+        </select>
+    </div>
+</div>
+{{/if}}

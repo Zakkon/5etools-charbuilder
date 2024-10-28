@@ -191,3 +191,35 @@ a {
     /* border-top: var(--dnd5e-border-groove); */
     border-bottom: none;
 }
+
+form .form-group, form .form-group-stacked {
+    clear: both;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    margin: 3px 0;
+    align-items: center;
+}
+form .form-group > *{
+    flex: 3;
+}
+form .form-group label{
+    flex: 2;
+    color: var(--dnd5e-color-olive);
+    font-weight: bold;
+}
+form .form-group .form-fields{
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 4px;
+}
+form .form-group .form-fields > * {
+    flex: 1;
+    margin: 0 3px 0 0;
+}
+form .details .form-group.input-select select{
+    flex: 1.8;
+}

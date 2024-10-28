@@ -26,7 +26,8 @@ LoadTemplate.prototype.create = function(callback){
         if (req.readyState == 4 && req.status == 200){
             //Compile HB template, add data (if defined) and place in parent element.
             var compiled = Handlebars.compile(req.response);
-            var text = compiled(that.data, {allowProtoMethodsByDefault: true});
+            var text = compiled(that.data, {allowProtoPropertiesByDefault:true,
+                allowedProtoMethodsByDefault:true});
             console.log("text", text);
             //that.el.innerHTML = text;
             that.el.html(text);

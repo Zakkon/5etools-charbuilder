@@ -110,7 +110,7 @@ class System5e{
         }
         if(system != null){ //Just load from existing system if one was specified
             newSystem = System5e.loadSchemaExtension(character, system);
-            newSystem.inventory.items ??= [];
+            newSystem.inventory.items ??= []; //Make sure items isnt null
             for(let i = 0; i < newSystem.inventory.items.length; ++i){
                 newSystem.inventory.items[i] =
                     Item5e.recast(newSystem.inventory.items[i]);
@@ -207,11 +207,13 @@ class Item5e {
         this.quantity = quantity;
         this.collectionId = collectionId? collectionId : System5e.createUniqueID();
         this.override = {};
+        this.system = CharacterBuilder.getItemByUid(this.uid).system; //TEMPFIX
+        console.log("SYS", this.system);
 
         return new Proxy(this, {
             get: (target, prop) => {
                 if (prop === 'system') {
-                    return new Proxy(/* target.system */target.itemData.system, {
+                    return new Proxy(target.system, {
                         get: (systemTarget, systemProp) => {
                             const overrideValue = target.override[systemProp];//arget.getNestedProperty(target.override, systemProp);
                             const systemValue = systemTarget[systemProp];
@@ -228,7 +230,7 @@ class Item5e {
         return path.split('.').reduce((acc, part) => acc && acc[part], obj);
     }
     static recast(item5e){
-        let i = new Item5e();
+        let i = new Item5e(item5e.uid, item5e.quantity, item5e.collectionId);
         item5e && Object.assign(i, item5e);
         return i;
     }
@@ -237,6 +239,7 @@ class Item5e {
     setProp(path, value, toOverride=true){
         Item5e.setp(this, path, value, toOverride);
     }
+    get isCostlessAction(){return false;/* this.system.activation?.type in DND5E.staticAbilityActivationTypes; */}
     async importSystemData(){
         //First, check if system data isn't already imported
         //TODO: after system data is imported, cache the UID in character builder, and just do string matching instead
@@ -245,6 +248,8 @@ class Item5e {
         //No system data exists, go ahead and import
         let imported = await SourceManager.plutoniumConvertData(existingData);
         existingData.system = imported.system;
+        this.system = imported.system; //TEMPFIX
+        console.log("SYS2", this.system.activation.type);
     }
     static setp(item, path, value, toOverride=true){
         const recursiveSearch = (start, _path, value) => {
