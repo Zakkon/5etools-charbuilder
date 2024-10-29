@@ -281,9 +281,11 @@ class C5e_EditWindow {
 
     render(){
         const item5e = System5e.getItemByCollectionId(this.collectionId);
-        const header = this.header(item5e);
+        const header = this.contentHeader(item5e);
+        const windowHeader = this.windowHeader();
 
         const window = $$`<div class="c5e app window-app" style="z-index: 110; width: 500px; height: 500px; left: 400px; top: 50px;">
+        ${windowHeader}
         <section class="window-content">
             <form class="editable flexcol" autocomplete="off">
                 ${header}
@@ -302,12 +304,26 @@ class C5e_EditWindow {
             this.element.find(`li[name="item_type"]`).text(DND5E.weaponTypes[item5e.prop("system.type.value")]);
         });
     }
+    close(){
+        this.element.remove(); this.element = null;
+    }
+    windowHeader(){
+        const closeBtn = $$`<a class="header-button control"><i class="fas fa-times"></i>Close </a>`;
+        closeBtn.on("click", (e) => {
+            //Close window
+            this.close();
+        });
+        const header = $$`<header class="window-header flexrow draggable resizable">
+        <h4 class="window-title">Edit Item</h4>
+        ${closeBtn}</header>`;
+        return header;
+    }
 
     /**
      * @param {Item} item5e
      * @returns {any}
      */
-    header(item5e, item_type){
+    contentHeader(item5e, item_type){
         const img_src = "";
         const inputName = this.inputText("name", item5e, "Item Name");
         const selector_rarity = this.selector("system.rarity", DND5E.rarities, item5e);

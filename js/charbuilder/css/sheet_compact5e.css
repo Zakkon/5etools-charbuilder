@@ -15,10 +15,30 @@ a {
     flex-direction: column;
     flex-wrap: nowrap;
 }
+/* WINDOW APP */
 .window-app {position: absolute;}
+.window-app .window-header{
+    flex: 0 0 30px;
+    overflow: hidden;
+    padding: 0 8px;
+    line-height: 30px;
+    border-bottom: 1px solid var(--color-border-dark);
+}
+.window-app .window-header .window-title {
+    margin: 0;
+    word-break: break-all;
+}
+.window-app .window-header a{
+    flex: none;
+    margin: 0 0 0 8px;
+}
+.window-app .window-header i[class^=fa]{
+    margin-right: 3px;
+}
 .c5e.window-app{
     background: rgba(255, 255, 255, 1);
-}
+} 
+
 .ve-night-mode .c5e.window-app{
     background-color: #1c1c1c !important;
 }
