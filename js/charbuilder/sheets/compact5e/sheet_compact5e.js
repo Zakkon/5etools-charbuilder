@@ -446,7 +446,8 @@ class C5e_EditWindow {
     setProp(prop, value){
         //Set the value to the item's override
         let item5e = System5e.getItemByCollectionId(this.collectionId);
-        //console.log("changing ", prop, "to", value);
+        if(typeof(value) == "string" && (value).toLowerCase() === "none"){value = null;}
+        console.log("changing ", prop, "to", value);
         item5e.setProp(prop, value);
         //Fire a hook to alert other UI that this item has changed
         System5e.hkItemUpdated(this.collectionId);
