@@ -28,7 +28,6 @@ LoadTemplate.prototype.create = function(callback){
             var compiled = Handlebars.compile(req.response);
             var text = compiled(that.data, {allowProtoPropertiesByDefault:true,
                 allowedProtoMethodsByDefault:true});
-            console.log("text", text);
             //that.el.innerHTML = text;
             that.el.html(text);
 

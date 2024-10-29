@@ -208,16 +208,15 @@ class Item5e {
         this.collectionId = collectionId? collectionId : System5e.createUniqueID();
         this.override = {};
         this.system = CharacterBuilder.getItemByUid(this.uid).system; //TEMPFIX
-        console.log("SYS", this.system);
 
         return new Proxy(this, {
             get: (target, prop) => {
                 if (prop === 'system') {
                     return new Proxy(target.system, {
                         get: (systemTarget, systemProp) => {
-                            const overrideValue = target.override[systemProp];//arget.getNestedProperty(target.override, systemProp);
+                            const overrideValue = target.override[systemProp];//target.getNestedProperty(target.override, systemProp);
                             const systemValue = systemTarget[systemProp];
-                            console.log(systemProp, systemValue, overrideValue)
+                            //console.log(systemProp, systemValue,">", overrideValue);
                             return overrideValue !== null && overrideValue !== undefined ? overrideValue : systemValue;
                         }
                     });
@@ -234,12 +233,16 @@ class Item5e {
         item5e && Object.assign(i, item5e);
         return i;
     }
+    get config(){return DND5E;}
     get itemData(){return CharacterBuilder.getItemByUid(this.uid);}
     prop(path){return Item5e.getp(this, path);}
     setProp(path, value, toOverride=true){
         Item5e.setp(this, path, value, toOverride);
     }
+    /* DND 5E BOOLEANS */
     get isCostlessAction(){return false;/* this.system.activation?.type in DND5E.staticAbilityActivationTypes; */}
+    get isCrewed(){return this.system.activation?.type === "crew";}
+    get isFormulaRecharge(){ !!DND5E.limitedUsePeriods[this.system.uses?.per]?.formula;}
     async importSystemData(){
         //First, check if system data isn't already imported
         //TODO: after system data is imported, cache the UID in character builder, and just do string matching instead
@@ -249,7 +252,6 @@ class Item5e {
         let imported = await SourceManager.plutoniumConvertData(existingData);
         existingData.system = imported.system;
         this.system = imported.system; //TEMPFIX
-        console.log("SYS2", this.system.activation.type);
     }
     static setp(item, path, value, toOverride=true){
         const recursiveSearch = (start, _path, value) => {
@@ -263,7 +265,10 @@ class Item5e {
             return current;
         }
         if(toOverride){
-            recursiveSearch(item.override, path, value);
+            //Cut away the "system." part of the path (since we don't want system *inside* overwrite)
+            let path2 = path;
+            if(path2.startsWith("system.")){path2 = path.slice(("system.").length);}
+            recursiveSearch(item.override, path2, value);
         }
         else{recursiveSearch(item.itemData, path, value);}
     }

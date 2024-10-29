@@ -122,6 +122,72 @@ DND5E.areaTargetTypes = {
     sizes: ["length", "thickness", "height"]
   }
 };
+DND5E.rangeTypes = {
+  self: "DND5E.DistSelf",
+  touch: "DND5E.DistTouch",
+  spec: "DND5E.Special",
+  any: "DND5E.DistAny"
+};
+DND5E.abilityConsumptionTypes = {
+  ammo: "DND5E.ConsumeAmmunition",
+  attribute: "DND5E.ConsumeAttribute",
+  hitDice: "DND5E.ConsumeHitDice",
+  material: "DND5E.ConsumeMaterial",
+  charges: "DND5E.ConsumeCharges"
+};
+DND5E.limitedUsePeriods = {
+  lr: {
+    label: "DND5E.UsesPeriods.Lr",
+    abbreviation: "DND5E.UsesPeriods.LrAbbreviation"
+  },
+  sr: {
+    label: "DND5E.UsesPeriods.Sr",
+    abbreviation: "DND5E.UsesPeriods.SrAbbreviation"
+  },
+  day: {
+    label: "DND5E.UsesPeriods.Day",
+    abbreviation: "DND5E.UsesPeriods.DayAbbreviation"
+  },
+  charges: {
+    label: "DND5E.UsesPeriods.Charges",
+    abbreviation: "DND5E.UsesPeriods.ChargesAbbreviation",
+    formula: true,
+    deprecated: true
+  },
+  dawn: {
+    label: "DND5E.UsesPeriods.Dawn",
+    abbreviation: "DND5E.UsesPeriods.DawnAbbreviation",
+    formula: true
+  },
+  dusk: {
+    label: "DND5E.UsesPeriods.Dusk",
+    abbreviation: "DND5E.UsesPeriods.DuskAbbreviation",
+    formula: true
+  }
+};
+DND5E.scalarTimePeriods = {
+  turn: "DND5E.TimeTurn",
+  round: "DND5E.TimeRound",
+  minute: "DND5E.TimeMinute",
+  hour: "DND5E.TimeHour",
+  day: "DND5E.TimeDay",
+  month: "DND5E.TimeMonth",
+  year: "DND5E.TimeYear"
+};
+DND5E.permanentTimePeriods = {
+  disp: "DND5E.TimeDisp",
+  dstr: "DND5E.TimeDispTrig",
+  perm: "DND5E.TimePerm"
+};
+DND5E.specialTimePeriods = {
+  inst: "DND5E.TimeInst",
+  spec: "DND5E.Special"
+};
+DND5E.timePeriods = {
+  ...DND5E.specialTimePeriods,
+  ...DND5E.permanentTimePeriods,
+  ...DND5E.scalarTimePeriods
+};
 
 
 CONFIG = {DND5E: DND5E};

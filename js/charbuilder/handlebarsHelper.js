@@ -25,6 +25,9 @@ class HandlebarsHelper{
             var bool2 = (value2 === 'true' || value2 == true);
             return (bool1 && bool2).toString();
         });
+        Handlebars.registerHelper('eq', function (value1, value2) {
+            return value1 === value2;
+        });
         Handlebars.registerHelper('select', function (value, options) {
             return options.fn(this)
               .split('\n')
@@ -38,10 +41,10 @@ class HandlebarsHelper{
             let str = "";
             let opts = HandlebarsHelper.getAttributes(options);
             //Blank option
-            str += `<option value="${opts.blank}" ${(!opts.selected)?"selected":""}></option>`;
-            console.log("CHOICES", choices, options);
+            if(opts.blank != null){str += `<option value="${opts.blank}" ${(!opts.selected)?"selected":""}></option>`;}
             for(const [key, value] of Object.entries(choices)){
-                str += `<option ${(!!opts.selected && opts.selected == key)?"selected":""}>${value}</option>`;
+                let lbl = typeof(value) == "object"? value.label : value;
+                str += `<option value="${key}"${(!!opts.selected && opts.selected == key)?"selected":""}>${lbl}</option>`;
             }
             let result = new Handlebars.SafeString(str);
             return result;

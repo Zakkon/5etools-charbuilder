@@ -78,6 +78,21 @@ class C5e_Inventory{
         this.summary.adaptTo(itemUi);
     }
 
+    //#region Editing
+    static _editedCollectionUids = [];
+    static tryOpenEditWindow(itemUid, collectionId){
+        if(C5e_Inventory._editedCollectionUids.includes(collectionId)){return;}
+        C5e_Inventory._editedCollectionUids.push(collectionId);
+        let window = new C5e_EditWindow(itemUid, collectionId);
+        window.render();
+    }
+    static closeEditWindow(window, collectionId){
+        if(!C5e_Inventory._editedCollectionUids.includes(collectionId)){return;}
+        C5e_Inventory._editedCollectionUids.splice(C5e_Inventory._editedCollectionUids.indexOf(collectionId), 1);
+        window.close();
+    }
+    //#endregion
+
 }
 class C5e_InventoryCategory {
     header;
@@ -219,8 +234,7 @@ class C5e_InventoryItem {
                 this.element.remove();
             }
             else if(action == "itemEdit"){
-                let w = new C5e_EditWindow(this.itemUid, this.collectionId);
-                w.render();
+                C5e_Inventory.tryOpenEditWindow(this.itemUid, this.collectionId);
             }
             //console.log("Button clicked", action, itemID, targ);
         });
@@ -273,6 +287,7 @@ class C5e_EditWindow {
     collectionId;
     itemUid;
     element;
+    tab_details;
     constructor(itemUid, collectionId){
         
         this.collectionId = collectionId;
@@ -280,9 +295,10 @@ class C5e_EditWindow {
     }
 
     render(){
-        const item5e = System5e.getItemByCollectionId(this.collectionId);
+        let item5e = System5e.getItemByCollectionId(this.collectionId);
         const header = this.contentHeader(item5e);
         const windowHeader = this.windowHeader();
+        let tab_details = $$`<div class="tab details active" data-tab="details"></div>`;
 
         const window = $$`<div class="c5e app window-app" style="z-index: 110; width: 500px; height: 500px; left: 400px; top: 50px;">
         ${windowHeader}
@@ -290,7 +306,7 @@ class C5e_EditWindow {
             <form class="editable flexcol" autocomplete="off">
                 ${header}
                 <section class="sheet-body">
-                ${this.tab_details(item5e)}
+                ${tab_details}
                 </section>
             </form>
         </section>
@@ -300,18 +316,22 @@ class C5e_EditWindow {
 
         System5e.addHookBase("item_update", (p, collectionId) => {
             if(collectionId != this.collectionId) { return; }
+            if(!this.element){return;}
             let item5e = System5e.getItemByCollectionId(this.collectionId);
-            this.element.find(`li[name="item_type"]`).text(DND5E.weaponTypes[item5e.prop("system.type.value")]);
+            this.renderDetails(tab_details, item5e);
         });
+
+        this.renderDetails(tab_details, item5e);
     }
     close(){
+        //Fire one last item_update? (incase we clicked on close instead of clicking elsewhere, which normally triggers input fields "change" events)
         this.element.remove(); this.element = null;
     }
     windowHeader(){
         const closeBtn = $$`<a class="header-button control"><i class="fas fa-times"></i>Close </a>`;
         closeBtn.on("click", (e) => {
             //Close window
-            this.close();
+            C5e_Inventory.closeEditWindow(this, this.collectionId);
         });
         const header = $$`<header class="window-header flexrow draggable resizable">
         <h4 class="window-title">Edit Item</h4>
@@ -370,12 +390,7 @@ class C5e_EditWindow {
     inputText(property, item5e, placeholder){
         const input = $$`<input name="${property}" type="text" value="${item5e.prop(property)}" placeholder="${placeholder}"></input>`;
         input.on("change", (e) => {
-            let val = e.target.value;
-            //Set the value to the item's override
-            let item5e = System5e.getItemByCollectionId(this.collectionId);
-            item5e.setProp(property, val);
-            //Fire a hook to alert other UI that this item has changed
-            System5e.hkItemUpdated(this.collectionId);
+            this.setProp(property, e.target.value);
         });
         return input;
     }
@@ -404,34 +419,37 @@ class C5e_EditWindow {
         for(let c of content){grp.append(c);}
         return grp;
     }
-    tab_details(item5e){
+    renderDetails(tab, item5e){
 
-        const options = DND5E.weaponTypes;
-        const tab_details = $$`<div class="tab details active" data-tab="details">
-            ${this.form_group("Weapon Type", [this.selector("system.type.value", options, item5e)])}
-            ${this.form_group("Activation", 
-                [this.inputText("system.activation.cost", item5e, "Activation Cost"),
-                this.selector("system.activation.type", ["Action", "Reaction", "Bonus Action"], item5e)]
-            )}
-            ${this.form_group("Condition", [this.inputText("system.activation.condition", item5e, "")])}
-            ${this.form_group("Range", [this.inputText("system.range.min", item5e, "Min"), this.inputText("system.range.max", item5e, "Max"),
-                this.selector("system.range.units", ["ft"], item5e)
-            ])}
-            ${this.form_group("ActionType", [this.selector("system.actionType", ["mwak", "rwak"], item5e)])}
-            </div>
-        </div>`;
+        let temp = new LoadTemplate(tab, "item-activation", item5e);
+        temp.create(()=>{
+            //Setup event listeners
 
-
-        let temp = new LoadTemplate(tab_details, "item-activation", item5e);
-        item5e.config = {};
-        item5e.config.abilityActivationTypes = DND5E.abilityActivationTypes;
-        item5e.config.movementUnits = DND5E.movementUnits;
-        item5e.config.individualTargetTypes = DND5E.individualTargetTypes
-        item5e.config.areaTargetTypes = DND5E.areaTargetTypes;
-        console.log("act", item5e.config.individualTargetTypes);
-        temp.create();
-
-        return tab_details;
+            //Input
+            for(let el of tab.find("input")){
+                //Make sure it has a "name" attribute
+                if(!el.name){continue;}
+                $(el).on("change", (e) => {
+                    this.setProp(el.name, e.target.value);
+                });
+            }
+            //Select
+            for(let el of tab.find("select")){
+                //Make sure it has a "name" attribute
+                if(!el.name){continue;}
+                $(el).on("change", (e) => {
+                    this.setProp(el.name, e.target.value);
+                });
+            }
+        });
+    }
+    setProp(prop, value){
+        //Set the value to the item's override
+        let item5e = System5e.getItemByCollectionId(this.collectionId);
+        //console.log("changing ", prop, "to", value);
+        item5e.setProp(prop, value);
+        //Fire a hook to alert other UI that this item has changed
+        System5e.hkItemUpdated(this.collectionId);
     }
     
     getItemByID(itemUid){
