@@ -383,6 +383,14 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
               
               for(let f of d.cls.classFeatures){
                 classFeaturesText = tryPrintClassFeature(f, classFeaturesText, d.cls, bannedFeatureNames);
+
+                if(f.hash.includes("rage_barbarian_phb_1_")){
+                  ClassFeature5e.verifySystemData(f.hash, d.cls.name, d.cls.source).then(() => {
+                    let featureItem = new ClassFeature5e(f.hash, d.cls.name, d.cls.source);
+                    ActorCharactermancerSheet.c5e_inventory.addItem("weapons", featureItem, 1, featureItem.collectionId);
+                  });
+                }
+                
               }
               if(classFeaturesText.length > 0){
                 $$`<div><b>${d.cls.name} Class Features:</b></div>`.appendTo($divClassFeatures);

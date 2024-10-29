@@ -199,6 +199,7 @@ class C5e_InventoryItem {
      * @returns {any}
      */
     render(item, quantity, collectionId){
+        
         this.collectionId = collectionId;
         this.itemUid = collectionId.split("__")[0];
         //Create context
@@ -282,7 +283,6 @@ class C5e_InventoryItemSummary {
         return foundItem;
     }
 }
-
 class C5e_EditWindow {
     collectionId;
     itemUid;

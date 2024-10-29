@@ -387,9 +387,9 @@ Renderer.spell.populateBrewLookup(await BrewUtil2.pGetBrewProcessed(), {isForce:
         //data.class[i].system = result.system;
     }
   }
-  static async plutoniumConvertData(data){
+  static async plutoniumConvertData(data, type){
     const tester = new ImportTester();
-    let result = await tester.runTest(data);
+    let result = await tester.runTest(data, type);
     return result;
   }
 }
@@ -868,6 +868,34 @@ class CharacterBuilder {
     const itemDatas = CharacterBuilder.instance._data.item;
     const foundItem = ActorCharactermancerEquipment.findItemByUID(itemUid, itemDatas);
     return foundItem;
+  }
+  static getClassFeatureByUid(hash, className, classSource){
+    const cls = CharacterBuilder.getClassByNameSource(className, classSource);
+    //if(hash == "undefined|undefined"){console.error("poop");} 
+    const matches = cls.classFeatures.filter(f => {
+        return f.hash == hash;
+    });
+    if(matches.length > 1){throw new Error("Not supposed to return more than one result", hash);}
+    else if(matches.length < 1){
+        console.error("Could not find a match to class feature", hash, "among the class features of ", cls.name + "|" + cls.source, ". Did you forget to load a source?");
+    }
+    return matches[0];
+  }
+  static getClassByNameSource(className, classSource){
+    const classDatas = CharacterBuilder.instance._data.class;
+    const classUid = `${className}|${classSource}`.toLowerCase();
+    if(classUid == "undefined|undefined"){console.error("Undefined class name and source");} 
+    const matches = classDatas.filter(cls => {
+        //Create a uid from the item
+        const uid = `${cls.name}|${cls.source}`.toLowerCase();//UrlUtil.URL_TO_HASH_BUILDER[UrlUtil.PG_ITEMS]({ name:n, source:src });
+        //then try to match it
+        return classUid == uid;
+    });
+    if(matches.length > 1){throw new Error("Not supposed to return more than one result", classUid);}
+    else if(matches.length < 1){
+        console.error("Could not find a match to class", classUid, "among our loaded classes. Did you forget to load a source?");
+    }
+    return matches[0];
   }
   //#endregion
 }

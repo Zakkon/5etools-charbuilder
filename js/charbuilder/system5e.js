@@ -199,59 +199,16 @@ class System5e{
         return Math.random().toString(16).slice(2);
     }
 }
-class Item5e {
+class Entity5e {
     override;
-    constructor(itemUid, quantity=1, collectionId=null){
-        this.uid = itemUid;
-        this.type = "item";
-        this.quantity = quantity;
-        this.collectionId = collectionId? collectionId : System5e.createUniqueID();
+    constructor(){
         this.override = {};
-        this.system = CharacterBuilder.getItemByUid(this.uid).system; //TEMPFIX
-
-        return new Proxy(this, {
-            get: (target, prop) => {
-                if (prop === 'system') {
-                    return new Proxy(target.system, {
-                        get: (systemTarget, systemProp) => {
-                            const overrideValue = target.override[systemProp];//target.getNestedProperty(target.override, systemProp);
-                            const systemValue = systemTarget[systemProp];
-                            //console.log(systemProp, systemValue,">", overrideValue);
-                            return overrideValue !== null && overrideValue !== undefined ? overrideValue : systemValue;
-                        }
-                    });
-                }
-                return target[prop];
-            }
-        })
     }
-    getNestedProperty(obj, path) {
-        return path.split('.').reduce((acc, part) => acc && acc[part], obj);
-    }
-    static recast(item5e){
-        let i = new Item5e(item5e.uid, item5e.quantity, item5e.collectionId);
-        item5e && Object.assign(i, item5e);
-        return i;
-    }
+    
     get config(){return DND5E;}
-    get itemData(){return CharacterBuilder.getItemByUid(this.uid);}
-    prop(path){return Item5e.getp(this, path);}
+    prop(path){return Entity5e.getp(this, path);}
     setProp(path, value, toOverride=true){
-        Item5e.setp(this, path, value, toOverride);
-    }
-    /* DND 5E BOOLEANS */
-    get isCostlessAction(){return false;/* this.system.activation?.type in DND5E.staticAbilityActivationTypes; */}
-    get isCrewed(){return this.system.activation?.type === "crew";}
-    get isFormulaRecharge(){ !!DND5E.limitedUsePeriods[this.system.uses?.per]?.formula;}
-    async importSystemData(){
-        //First, check if system data isn't already imported
-        //TODO: after system data is imported, cache the UID in character builder, and just do string matching instead
-        let existingData = CharacterBuilder.getItemByUid(this.uid);
-        if(existingData.system){return;}
-        //No system data exists, go ahead and import
-        let imported = await SourceManager.plutoniumConvertData(existingData);
-        existingData.system = imported.system;
-        this.system = imported.system; //TEMPFIX
+        Entity5e.setp(this, path, value, toOverride);
     }
     static setp(item, path, value, toOverride=true){
         const recursiveSearch = (start, _path, value) => {
@@ -298,5 +255,103 @@ class Item5e {
         const override = recursiveSearch(item.override, path);
         if(override != null && override != undefined){return override;}
         return result;
+    }
+}
+class Item5e extends Entity5e{
+    constructor(itemUid, quantity=1, collectionId=null){
+        super();
+        this.uid = itemUid;
+        this.type = "item";
+        this.quantity = quantity;
+        this.collectionId = collectionId? collectionId : System5e.createUniqueID();
+        this.system = CharacterBuilder.getItemByUid(this.uid).system; //TEMPFIX
+
+        return new Proxy(this, {
+            get: (target, prop) => {
+                if (prop === 'system') {
+                    return new Proxy(target.system, {
+                        get: (systemTarget, systemProp) => {
+                            const overrideValue = target.override[systemProp];//target.getNestedProperty(target.override, systemProp);
+                            const systemValue = systemTarget[systemProp];
+                            //console.log(systemProp, systemValue,">", overrideValue);
+                            return overrideValue !== null && overrideValue !== undefined ? overrideValue : systemValue;
+                        }
+                    });
+                }
+                return target[prop];
+            }
+        });
+    }
+    getNestedProperty(obj, path) {
+        return path.split('.').reduce((acc, part) => acc && acc[part], obj);
+    }
+    static recast(item5e){
+        let i = new Item5e(item5e.uid, item5e.quantity, item5e.collectionId);
+        item5e && Object.assign(i, item5e);
+        return i;
+    }
+    get itemData(){return CharacterBuilder.getItemByUid(this.uid);}
+    /* DND 5E BOOLEANS */
+    get isCostlessAction(){return false;/* this.system.activation?.type in DND5E.staticAbilityActivationTypes; */}
+    get isCrewed(){return this.system.activation?.type === "crew";}
+    get isFormulaRecharge(){ !!DND5E.limitedUsePeriods[this.system.uses?.per]?.formula;}
+    async importSystemData(){
+        //First, check if system data isn't already imported
+        //TODO: after system data is imported, cache the UID in character builder, and just do string matching instead
+        let existingData = CharacterBuilder.getItemByUid(this.uid);
+        if(existingData.system){return;}
+        //No system data exists, go ahead and import
+        let imported = await SourceManager.plutoniumConvertData(existingData, "item");
+        existingData.system = imported.system;
+        this.system = imported.system; //TEMPFIX
+    }
+    
+}
+class ClassFeature5e extends Entity5e{
+    constructor(hash, className, classSource, collectionId=null){
+        super();
+        this.hash = hash;
+        this.type = "classFeature";
+        this.className = className;
+        this.classSource = classSource;
+        this.collectionId = collectionId? collectionId : System5e.createUniqueID();
+        let feature = CharacterBuilder.getClassFeatureByUid(hash, className, classSource);
+        this.system = feature.system; //TEMPFIX
+        this.name = feature.name;
+
+        return new Proxy(this, {
+            get: (target, prop) => {
+                if (prop === 'system') {
+                    console.log("TARGET", target, this.system);
+                    return new Proxy(target.system, {
+                        get: (systemTarget, systemProp) => {
+                            const overrideValue = target.override[systemProp];//target.getNestedProperty(target.override, systemProp);
+                            const systemValue = systemTarget[systemProp];
+                            //console.log(systemProp, systemValue,">", overrideValue);
+                            return overrideValue !== null && overrideValue !== undefined ? overrideValue : systemValue;
+                        }
+                    });
+                }
+                return target[prop];
+            }
+        });
+    }
+
+    async importSystemData(){
+        //First, check if system data isn't already imported
+        //TODO: after system data is imported, cache the UID in character builder, and just do string matching instead
+        let existingData = CharacterBuilder.getClassFeatureByUid(this.hash, this.className, this.classSource);
+        if(existingData.system){this.system = existingData.system; return;}
+        //No system data exists, go ahead and import
+        let imported = await SourceManager.plutoniumConvertData(existingData, "classFeature");
+        existingData.system = imported.system;
+        this.system = imported.system; //TEMPFIX
+    }
+    static async verifySystemData(hash, className, classSource){
+        let existingData = CharacterBuilder.getClassFeatureByUid(hash, className, classSource);
+        if(existingData.system){return;}
+        //No system data exists, go ahead and import
+        let imported = await SourceManager.plutoniumConvertData(existingData, "classFeature");
+        existingData.system = imported.system;
     }
 }

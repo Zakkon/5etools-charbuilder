@@ -1,10 +1,10 @@
 class ImportTester{
 
-    async runTest(item){
+    async runTest(item, type){
        /*  this.handleReady().then(() => {
             console.log("Ready done!");
         }); */
-        const flags = this.getFlags_Item(item);
+        const flags = (type=="item")? this.getFlags_Item(item) : this._getClassSubclassFeatureFlags(item);
         let ent = await DataLoader.pCacheAndGet(flags.page, flags.source, flags.hash);
 
         const isUseImporter = true;
@@ -12,14 +12,16 @@ class ImportTester{
         //const actor = item.parent;
         const actor = null;
 
+
         if (isUseImporter) {
             //const actorMultiImportHelper = new ActorMultiImportHelper({actor});
 			//First, we have to create an ImportListItem, which sadly does contain some UI elements, but whatever
-            const imp = new ImportListItem({actor}); //If actor exists, the item will be imported unto the actor. If none exists, it will go to a generic directory
+            const imp = type == "item"? new ImportListItem({actor}) : new ImportListClassSubclassFeature({actor}); //If actor exists, the item will be imported unto the actor. If none exists, it will go to a generic directory
             await imp.pInit(); //Initialize the importer
 
             if (pFnImport) await pFnImport({ent, imp, flags});
             else {
+				
 				//This is what we want. Tell the importlist to import ent (an obj in 5etools schema)
 				const summary = await imp.pImportEntry(ent, {filterValues: flags.filterValues, isDataOnly:true});
 				return summary._imported[0].document;
@@ -30,7 +32,6 @@ class ImportTester{
             //await actorMultiImportHelper.pRepairMissingConsumes();
 
             //const msg = fnGetSuccessMessage ? fnGetSuccessMessage({ent, flags}) : `Imported "${ent.name}" via ${importerName} Importer`;
-			console.log("IMPORTED", ent);
             //ui.notifications.info(msg);
             return;
         }
@@ -44,6 +45,33 @@ class ImportTester{
 		};
         return out;
     }
+	_getClassSubclassFeatureFlags (feature, type, opts) {
+		opts = opts || {};
+
+		const out = {
+			page: UrlUtil.PG_CLASS_SUBCLASS_FEATURES,
+			source: feature.source,
+			hash: feature.hash,//UrlUtil.URL_TO_HASH_BUILDER[UrlUtil.PG_CLASS_SUBCLASS_FEATURES](feature),
+		};
+
+		/* const prop = UtilEntityClassSubclassFeature.getEntityType(feature);
+
+		const out = {
+			[SharedConsts.MODULE_ID]: {
+				page: prop,
+				source: feature.source,
+				hash: UrlUtil.URL_TO_HASH_BUILDER[prop](feature),
+			},
+		}; */
+
+		/* if (opts.isAddDataFlags) {
+			out[SharedConsts.MODULE_ID].propDroppable = prop;
+			out[SharedConsts.MODULE_ID].filterValues = opts.filterValues;
+		} */
+
+		return out;
+	}
+
 	async runTest2(cls){
 		/*  this.handleReady().then(() => {
 			 console.log("Ready done!");
