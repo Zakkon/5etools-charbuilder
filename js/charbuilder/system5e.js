@@ -210,7 +210,7 @@ class Entity5e {
     setProp(path, value, toOverride=true){
         Entity5e.setp(this, path, value, toOverride);
     }
-    static setp(item, path, value, toOverride=true){
+    static setp(item, path, value, toOverride=false){ //DEBUG: turning off overrides for now
         const recursiveSearch = (start, _path, value) => {
             const properties = _path.split('.');
             let current = start;
