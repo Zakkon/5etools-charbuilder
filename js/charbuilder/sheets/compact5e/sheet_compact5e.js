@@ -168,6 +168,7 @@ class C5e_InventoryItem {
         </div>`;
         const itemControls = `
         <div class="item-controls">
+        
             <a class="item-control item-action" data-action="equip" title="Equip">
                 <i class="fas fa-shield-alt"></i>
             </a>
@@ -208,6 +209,7 @@ class C5e_InventoryItem {
         let ctx = {totalWeight:totalWeight};
         let html = this._template({item:item, collectionId: collectionId, ctx:ctx, weightUnit:C5e_InventoryItem._weightUnit});
         this.element = $$`${html}`;
+        if(item.type == "classFeature"){this.element.find(`[data-action="equip"]`).css("display", "none");}
 
         System5e.addHookBase("item_update", (p, collectionId) => {
             if(collectionId != this.collectionId){return;}
@@ -302,7 +304,7 @@ class C5e_EditWindow {
         const windowHeader = this.windowHeader();
         let tab_details = $$`<div class="tab details active" data-tab="details"></div>`;
 
-        const window = $$`<div class="c5e app window-app" style="z-index: 110; width: 500px; height: 500px; left: 400px; top: 50px;">
+        const window = $$`<div class="c5e app window-app sheet item" style="z-index: 110; width: 550px; height: 500px; left: 400px; top: 50px;">
         ${windowHeader}
         <section class="window-content">
             <form class="editable flexcol" autocomplete="off">
@@ -442,6 +444,33 @@ class C5e_EditWindow {
                     //Make sure it has a "name" attribute
                     if(!el.name){continue;}
                     $(el).on("change", (e) => {
+                        this.setProp(el.name, e.target.value);
+                    });
+                }
+            });
+        }
+        else if(item5e.type == "classFeature"){
+            console.log(item5e.system.uses);
+            console.log(item5e.system.activation.type);
+            let temp = new LoadTemplate(tab, "feat-details", item5e);
+            temp.create(()=>{
+                //Setup event listeners
+
+                //Input
+                for(let el of tab.find("input")){
+                    //Make sure it has a "name" attribute
+                    if(!el.name){continue;}
+                    $(el).on("change", (e) => {
+                        console.log("setprop", el.name, e.target.value);
+                        this.setProp(el.name, e.target.value);
+                    });
+                }
+                //Select
+                for(let el of tab.find("select")){
+                    //Make sure it has a "name" attribute
+                    if(!el.name){continue;}
+                    $(el).on("change", (e) => {
+                        console.log("setprop", el.name, e.target.value);
                         this.setProp(el.name, e.target.value);
                     });
                 }

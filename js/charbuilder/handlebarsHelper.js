@@ -26,7 +26,11 @@ class HandlebarsHelper{
             return (bool1 && bool2).toString();
         });
         Handlebars.registerHelper('eq', function (value1, value2) {
+            console.log("EQ", value1, value2);
             return value1 === value2;
+        });
+        Handlebars.registerHelper('checked', function (value) {
+            return (value === 'true' || value == true)? `checked` : "";
         });
         Handlebars.registerHelper('select', function (value, options) {
             return options.fn(this)
@@ -50,4 +54,30 @@ class HandlebarsHelper{
             return result;
         });
     }
+
+    static registerPartials(){
+
+        const fetch = function(partialName, path){
+            const folderPath = 'js/charbuilder/sheets/compact5e/templates/';
+            var req = new XMLHttpRequest();
+        
+            // Define parameters for request.
+            req.open('get', folderPath + path + '.hbs', true);
+        
+            // Wait for request to complete.
+            req.onreadystatechange = function(){
+                if (req.readyState == 4 && req.status == 200){
+                    Handlebars.registerPartial(partialName, req.response);
+                }
+            };
+        
+            // Send request.
+            req.send();
+        };
+
+        fetch("dnd5e.item-activation", "item-activation");
+        fetch("dnd5e.item-action", "item-action");
+    }
+    
+
 }

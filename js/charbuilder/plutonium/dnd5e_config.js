@@ -188,6 +188,87 @@ DND5E.timePeriods = {
   ...DND5E.permanentTimePeriods,
   ...DND5E.scalarTimePeriods
 };
-
+DND5E.itemActionTypes = {
+  mwak: "DND5E.ActionMWAK",
+  rwak: "DND5E.ActionRWAK",
+  msak: "DND5E.ActionMSAK",
+  rsak: "DND5E.ActionRSAK",
+  abil: "DND5E.ActionAbil",
+  save: "DND5E.ActionSave",
+  ench: "DND5E.ActionEnch",
+  summ: "DND5E.ActionSumm",
+  heal: "DND5E.ActionHeal",
+  util: "DND5E.ActionUtil",
+  other: "DND5E.ActionOther"
+};
+DND5E.abilities = {
+  str: {
+    label: "DND5E.AbilityStr",
+    abbreviation: "DND5E.AbilityStrAbbr",
+    type: "physical",
+    fullKey: "strength",
+    reference: "Compendium.dnd5e.rules.JournalEntry.NizgRXLNUqtdlC1s.JournalEntryPage.nUPv6C66Ur64BIUH",
+    icon: "systems/dnd5e/icons/svg/abilities/strength.svg"
+  },
+  dex: {
+    label: "DND5E.AbilityDex",
+    abbreviation: "DND5E.AbilityDexAbbr",
+    type: "physical",
+    fullKey: "dexterity",
+    reference: "Compendium.dnd5e.rules.JournalEntry.NizgRXLNUqtdlC1s.JournalEntryPage.ER8CKDUWLsFXuARJ",
+    icon: "systems/dnd5e/icons/svg/abilities/dexterity.svg"
+  },
+  con: {
+    label: "DND5E.AbilityCon",
+    abbreviation: "DND5E.AbilityConAbbr",
+    type: "physical",
+    fullKey: "constitution",
+    reference: "Compendium.dnd5e.rules.JournalEntry.NizgRXLNUqtdlC1s.JournalEntryPage.MpA4jnwD17Q0RPg7",
+    icon: "systems/dnd5e/icons/svg/abilities/constitution.svg"
+  },
+  int: {
+    label: "DND5E.AbilityInt",
+    abbreviation: "DND5E.AbilityIntAbbr",
+    type: "mental",
+    fullKey: "intelligence",
+    reference: "Compendium.dnd5e.rules.JournalEntry.NizgRXLNUqtdlC1s.JournalEntryPage.WzWWcTIppki35YvF",
+    icon: "systems/dnd5e/icons/svg/abilities/intelligence.svg",
+    defaults: { vehicle: 0 }
+  },
+  wis: {
+    label: "DND5E.AbilityWis",
+    abbreviation: "DND5E.AbilityWisAbbr",
+    type: "mental",
+    fullKey: "wisdom",
+    reference: "Compendium.dnd5e.rules.JournalEntry.NizgRXLNUqtdlC1s.JournalEntryPage.v3IPyTtqvXqN934s",
+    icon: "systems/dnd5e/icons/svg/abilities/wisdom.svg",
+    defaults: { vehicle: 0 }
+  },
+  cha: {
+    label: "DND5E.AbilityCha",
+    abbreviation: "DND5E.AbilityChaAbbr",
+    type: "mental",
+    fullKey: "charisma",
+    reference: "Compendium.dnd5e.rules.JournalEntry.NizgRXLNUqtdlC1s.JournalEntryPage.9FyghudYFV5QJOuG",
+    icon: "systems/dnd5e/icons/svg/abilities/charisma.svg",
+    defaults: { vehicle: 0 }
+  },
+  hon: {
+    label: "DND5E.AbilityHon",
+    abbreviation: "DND5E.AbilityHonAbbr",
+    type: "mental",
+    fullKey: "honor",
+    defaults: { npc: "cha", vehicle: 0 },
+    improvement: false
+  },
+  san: {
+    label: "DND5E.AbilitySan",
+    abbreviation: "DND5E.AbilitySanAbbr",
+    type: "mental",
+    fullKey: "sanity",
+    defaults: { npc: "wis", vehicle: 0 },
+    improvement: false
+  }
+};
 
 CONFIG = {DND5E: DND5E};

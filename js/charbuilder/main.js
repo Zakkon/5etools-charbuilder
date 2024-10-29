@@ -28,6 +28,7 @@ async function handleInit(){
   Config.prePreInit(); //Important
   Vetools.doMonkeyPatchPostConfig(); //Makes roll buttons work
   HandlebarsHelper.registerHelpers();
+  HandlebarsHelper.registerPartials();
 
   //We need this to be true, since BrewUtil freaks out otherwise and tries to grab json from a url that is 404
   Object.defineProperty(globalThis, "IS_DEPLOYED", {

@@ -1,0 +1,25 @@
+{{!-- Action Type --}}
+<div class="form-group select">
+    <label>Action Type</label>
+    <select name="system.actionType">
+        {{ selectOptions config.itemActionTypes selected=system.actionType blank="" }}
+    </select>
+</div>
+{{#if system.actionType}}
+
+{{!-- Ability Modifier --}}
+<div class="form-group select">
+    <label>Ability Modifier</label>
+    <select name="system.ability">
+        {{#select system.ability}}
+        <option value="">Default</option>
+        <option value="none">None</option>
+        <optgroup label="Ability">
+            {{#each config.abilities as |ability a|}}
+            <option value="{{a}}">{{ability.label}}</option>
+            {{/each}}
+        </optgroup>
+        {{/select}}
+    </select>
+</div>
+{{/if}}

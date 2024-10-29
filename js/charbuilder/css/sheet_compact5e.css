@@ -14,9 +14,25 @@ a {
     display: flex;
     flex-direction: column;
     flex-wrap: nowrap;
+    justify-content: flex-start;
 }
 /* WINDOW APP */
-.window-app {position: absolute;}
+.window-app {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    position: absolute;
+    background: rgba(255, 255, 255, 1);
+    position: absolute;
+    box-shadow: 0 0 20px var(--color-shadow-dark);
+    padding: 0;
+    z-index: var(--z-index-window);
+}
+.ve-night-mode .window-app{
+    /* background-color: #1c1c1c !important; */
+    background-color: #3f3737 !important;
+}
 .window-app .window-header{
     flex: 0 0 30px;
     overflow: hidden;
@@ -35,13 +51,27 @@ a {
 .window-app .window-header i[class^=fa]{
     margin-right: 3px;
 }
-.c5e.window-app{
-    background: rgba(255, 255, 255, 1);
-} 
 
-.ve-night-mode .c5e.window-app{
-    background-color: #1c1c1c !important;
+.window-app .window-content{
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    background: url(../ui/parchment.jpg) repeat;
+    padding: 8px;
+    color: var(--color-text-dark-primary);
+    overflow-y: auto;
+    overflow-x: hidden;
 }
+.window-app .window-content > * {
+    flex: 1;
+}
+.window-content .tab{
+    height: 100%;
+    overflow-y: auto;
+}
+
+
 .inventory-list {
     flex-grow: 1;
     padding: 0px;
@@ -127,8 +157,8 @@ a {
 }
 .items-list .item-controls{
     display: flex;
-    place-content: center;
-    place-items: center;
+    place-content: end;
+    place-items: end;
     gap: 1ch;
     flex: 0 0 68px;
 }
@@ -153,9 +183,40 @@ a {
     /* color: var(--dnd5e-color-olive); */
     font-weight: bold;
 }
+/* SHEET GENERIC */
+.sheet {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+}
+.sheet > * {
+    flex: 1;
+}
+.c5e.sheet.item {
+    min-height: 400px;
+    max-height: 95%;
+    min-width: 480px;
+}
+/* SHEET WINDOW */
+.c5e.sheet .window-content{
+    font-size: 13px;
+    padding: 5px;
+}
+.c5e.sheet .window-content form{
+    height: 100%;
+    overflow: hidden;
+}
+.c5e.sheet span.sep{
+    margin: 0 1px;
+    display: inline;
+    position: relative;
+    color: var(--dnd5e-color-tan);
+}
 .c5e select {
     flex: 1;
     /* font-size: var(--font-size-12); */
+    font-size: 12px;
     height: 22px;
     background: transparent;
 }
@@ -164,6 +225,8 @@ a {
     border: 1px solid tan;/* var(--dnd5e-color-tan); */
     background: rgba(0, 0, 0, 0.05);
 }
+/* SHEET HEADER */
+
 
 .c5e .sheet-header h1 {
     flex: 1;
@@ -211,6 +274,18 @@ a {
     /* border-top: var(--dnd5e-border-groove); */
     border-bottom: none;
 }
+/* SHEET BODY */
+.c5e.item .sheet-body .tab{
+    padding: 0 5px;
+    overflow: hidden auto;
+}
+.c5e.sheet .sheet-body{
+    flex: 1;
+    overflow: hidden;
+}
+.c5e.sheet.item .sheet-body{
+    overflow: hidden;
+}
 
 form .form-group, form .form-group-stacked {
     clear: both;
@@ -251,6 +326,6 @@ form .details .form-group span{
     line-height: 24px;
 }
 form .details .form-group.uses-per span, form .details .form-group.consumption span{
-    flex: 0 0 16px;
+    flex: 0 0 18px;
     margin: 0 4px 0 0;
 }

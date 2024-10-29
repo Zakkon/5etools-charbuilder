@@ -318,6 +318,7 @@ class ClassFeature5e extends Entity5e{
         let feature = CharacterBuilder.getClassFeatureByUid(hash, className, classSource);
         this.system = feature.system; //TEMPFIX
         this.name = feature.name;
+        this.properties = {concentration:{label:"Concentration", selected:true}};
 
         return new Proxy(this, {
             get: (target, prop) => {
