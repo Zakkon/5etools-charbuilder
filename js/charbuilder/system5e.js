@@ -322,7 +322,6 @@ class ClassFeature5e extends Entity5e{
         return new Proxy(this, {
             get: (target, prop) => {
                 if (prop === 'system') {
-                    console.log("TARGET", target, this.system);
                     return new Proxy(target.system, {
                         get: (systemTarget, systemProp) => {
                             const overrideValue = target.override[systemProp];//target.getNestedProperty(target.override, systemProp);
@@ -336,6 +335,7 @@ class ClassFeature5e extends Entity5e{
             }
         });
     }
+    get itemData(){return this;}
 
     async importSystemData(){
         //First, check if system data isn't already imported

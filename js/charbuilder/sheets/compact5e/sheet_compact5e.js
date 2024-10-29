@@ -80,10 +80,10 @@ class C5e_Inventory{
 
     //#region Editing
     static _editedCollectionUids = [];
-    static tryOpenEditWindow(itemUid, collectionId){
+    static tryOpenEditWindow(itemUid, type, collectionId){
         if(C5e_Inventory._editedCollectionUids.includes(collectionId)){return;}
         C5e_Inventory._editedCollectionUids.push(collectionId);
-        let window = new C5e_EditWindow(itemUid, collectionId);
+        let window = new C5e_EditWindow(itemUid, type, collectionId);
         window.render();
     }
     static closeEditWindow(window, collectionId){
@@ -235,7 +235,7 @@ class C5e_InventoryItem {
                 this.element.remove();
             }
             else if(action == "itemEdit"){
-                C5e_Inventory.tryOpenEditWindow(this.itemUid, this.collectionId);
+                C5e_Inventory.tryOpenEditWindow(this.itemUid, this.type, this.collectionId);
             }
             //console.log("Button clicked", action, itemID, targ);
         });
@@ -286,12 +286,14 @@ class C5e_InventoryItemSummary {
 class C5e_EditWindow {
     collectionId;
     itemUid;
+    type;
     element;
     tab_details;
-    constructor(itemUid, collectionId){
+    constructor(itemUid, type, collectionId){
         
         this.collectionId = collectionId;
         this.itemUid = itemUid;
+        this.type = type;
     }
 
     render(){
@@ -345,6 +347,7 @@ class C5e_EditWindow {
      */
     contentHeader(item5e, item_type){
         const img_src = "";
+        console.log("ITEM5e", item5e.prop("name"));
         const inputName = this.inputText("name", item5e, "Item Name");
         const selector_rarity = this.selector("system.rarity", DND5E.rarities, item5e);
         //<img class="profile" src="${img_src}" data-tooltip="${item.name}" data-edit="img">
@@ -421,27 +424,29 @@ class C5e_EditWindow {
     }
     renderDetails(tab, item5e){
 
-        let temp = new LoadTemplate(tab, "item-activation", item5e);
-        temp.create(()=>{
-            //Setup event listeners
+        if(item5e.type == "item"){
+            let temp = new LoadTemplate(tab, "item-activation", item5e);
+            temp.create(()=>{
+                //Setup event listeners
 
-            //Input
-            for(let el of tab.find("input")){
-                //Make sure it has a "name" attribute
-                if(!el.name){continue;}
-                $(el).on("change", (e) => {
-                    this.setProp(el.name, e.target.value);
-                });
-            }
-            //Select
-            for(let el of tab.find("select")){
-                //Make sure it has a "name" attribute
-                if(!el.name){continue;}
-                $(el).on("change", (e) => {
-                    this.setProp(el.name, e.target.value);
-                });
-            }
-        });
+                //Input
+                for(let el of tab.find("input")){
+                    //Make sure it has a "name" attribute
+                    if(!el.name){continue;}
+                    $(el).on("change", (e) => {
+                        this.setProp(el.name, e.target.value);
+                    });
+                }
+                //Select
+                for(let el of tab.find("select")){
+                    //Make sure it has a "name" attribute
+                    if(!el.name){continue;}
+                    $(el).on("change", (e) => {
+                        this.setProp(el.name, e.target.value);
+                    });
+                }
+            });
+        }
     }
     setProp(prop, value){
         //Set the value to the item's override

@@ -387,6 +387,7 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
                 if(f.hash.includes("rage_barbarian_phb_1_")){
                   ClassFeature5e.verifySystemData(f.hash, d.cls.name, d.cls.source).then(() => {
                     let featureItem = new ClassFeature5e(f.hash, d.cls.name, d.cls.source);
+                    System5e.addToInventory(this._actor, featureItem.hash, featureItem);
                     ActorCharactermancerSheet.c5e_inventory.addItem("weapons", featureItem, 1, featureItem.collectionId);
                   });
                 }
