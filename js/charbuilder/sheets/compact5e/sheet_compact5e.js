@@ -239,6 +239,13 @@ class C5e_InventoryItem {
             else if(action == "itemEdit"){
                 C5e_Inventory.tryOpenEditWindow(this.itemUid, this.type, this.collectionId);
             }
+            else if(action == "equip"){
+                $(gp).removeClass("equipped");
+                //If equip, add class again
+                let item = this.getItem();
+                item.equipped = !item.equipped;
+                if(item.equipped){$(gp).addClass("equipped");}
+            }
             //console.log("Button clicked", action, itemID, targ);
         });
         this.element.find(".item-name").on("click", (e) => {
@@ -251,6 +258,9 @@ class C5e_InventoryItem {
     }
     toggleSummary(active){
         this.summaryActive = active;
+    }
+    getItem(){
+        return System5e.getItemByCollectionId(this.collectionId);
     }
 }
 class C5e_InventoryItemSummary {

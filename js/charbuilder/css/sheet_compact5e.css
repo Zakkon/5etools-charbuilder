@@ -119,6 +119,10 @@ a {
     padding: 0 2px;
     border-bottom: 1px solid grey;/* var(--dnd5e-color-faint); */
 }
+.item-list .item.equipped {
+    
+    background: linear-gradient(to right,rgba(50, 205, 50, 0.18),transparent 120%);
+}
 .item-list .item-name {
     flex: 1;
     margin: 0;
