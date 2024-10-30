@@ -1,3 +1,6 @@
+:root{
+    --tertiary-text: grey;
+}
 a {
     cursor: pointer;
 }
@@ -121,7 +124,7 @@ a {
 }
 .item-list .item.equipped {
     
-    background: linear-gradient(to right,rgba(50, 205, 50, 0.18),transparent 120%);
+    background: linear-gradient(to right,rgba(50, 205, 50, 0.1),transparent 120%);
 }
 .item-list .item-name {
     flex: 1;
@@ -149,6 +152,7 @@ a {
     word-break: break-word;
     white-space: nowrap;
     overflow: hidden;
+    color: white !important;
 }
 .items-list .item > :not(.item-summary):not(:first-child){
     /* font-size: 12px; */
@@ -157,6 +161,15 @@ a {
     /* display: flex; */
     place-content: center;
     line-height: normal;
+}
+.items-list .item-controls a{
+    color: var(--tertiary-text);
+}
+.ve-night-mode .items-list .item.equipped .item-controls a[data-action="equip"]{
+    color: #e0e0e0;
+}
+.items-list .item.equipped .item-controls a[data-action="equip"]{
+    color: #252525;
 }
 .items-list .item .item-uses input {
     width: 24px;
