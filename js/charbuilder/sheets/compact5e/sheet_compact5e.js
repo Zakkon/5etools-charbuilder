@@ -155,7 +155,7 @@ class C5e_InventoryItem {
         </div>`;
         const itemCharges = `
         <div class="item-detail item-uses">
-            {{#if ctx.hasUses }}
+            {{#if item.system.uses.per }}
                 <input type="text" value="{{item.system.uses.value}}" placeholder="0" />
                 / {{item.system.uses.max}}
             {{/if}}
@@ -163,7 +163,7 @@ class C5e_InventoryItem {
         const itemAction = `
         <div class="item-detail item-action">
             {{#if item.system.activation.type }}
-                {{item.labels.activation}}
+                {{item.system.activation.type}}
             {{/if}}
         </div>`;
         const itemControls = `
@@ -259,15 +259,17 @@ class C5e_InventoryItemSummary {
     constructor(parent){}
     adaptTo(itemUi){
         if(this.element){this.close();}
-        let item = this.getItemByID(itemUi.itemUid);
+        let item = //this.getItemByID(itemUi.itemUid);
+        System5e.getItemByCollectionId(itemUi.collectionId);
         if(!item){console.error("could not find item with itemUid", itemUi.itemUid); return;}
         this.element = $$`<div class="item-summary"></div>`;
         for(let e of item.entries){
             let entry = $$`<p>${e}</p>`;
             this.element.append(entry);
         }
+        console.log("item", item);
         //const properties = $$`<div class="item-properties"></div>`;
-        let item5e = System5e.getItemByCollectionId(CharacterBuilder.instance.actor, itemUi.collectionId);
+        let item5e = System5e.getItemByCollectionId(itemUi.collectionId);
         //item5e.setProp("system.type.value", "simpleR");
         let overwriteVal = item5e.prop("system.type.value");
         console.log("PROP", overwriteVal);
@@ -450,8 +452,6 @@ class C5e_EditWindow {
             });
         }
         else if(item5e.type == "classFeature"){
-            console.log(item5e.system.uses);
-            console.log(item5e.system.activation.type);
             let temp = new LoadTemplate(tab, "feat-details", item5e);
             temp.create(()=>{
                 //Setup event listeners
@@ -479,10 +479,9 @@ class C5e_EditWindow {
     }
     setProp(prop, value){
         //Set the value to the item's override
-        let item5e = System5e.getItemByCollectionId(this.collectionId);
+        let entity = System5e.getItemByCollectionId(this.collectionId);
         if(typeof(value) == "string" && (value).toLowerCase() === "none"){value = null;}
-        console.log("changing ", prop, "to", value);
-        item5e.setProp(prop, value);
+        entity.setProp(prop, value);
         //Fire a hook to alert other UI that this item has changed
         System5e.hkItemUpdated(this.collectionId);
     }

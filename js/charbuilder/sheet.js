@@ -385,6 +385,10 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
                 classFeaturesText = tryPrintClassFeature(f, classFeaturesText, d.cls, bannedFeatureNames);
 
                 if(f.hash.includes("rage_barbarian_phb_1_")){
+                  console.log("try add to inventory");
+                  //Check if inventory already has an object with this hash
+                  //if(System5e.getItemsByProp("hash", f.hash).length > 0){continue;}
+                  console.log("try add to inventory 2");
                   ClassFeature5e.verifySystemData(f.hash, d.cls.name, d.cls.source).then(() => {
                     let featureItem = new ClassFeature5e(f.hash, d.cls.name, d.cls.source);
                     System5e.addToInventory(this._actor, featureItem.hash, featureItem);
@@ -1643,6 +1647,7 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
 
       //Test, using actor inventory instead
       for(let item of this.inventory.items){
+          if(item.type != "item"){continue;}
           const foundItem = ActorCharactermancerEquipment.findItemByUID(item.uid, itemDatas);
           if(!foundItem){continue;}
           boughtItems.push({item:foundItem, quantity:item.quantity, collectionId:item.collectionId});

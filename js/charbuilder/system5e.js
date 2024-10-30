@@ -112,8 +112,7 @@ class System5e{
             newSystem = System5e.loadSchemaExtension(character, system);
             newSystem.inventory.items ??= []; //Make sure items isnt null
             for(let i = 0; i < newSystem.inventory.items.length; ++i){
-                newSystem.inventory.items[i] =
-                    Item5e.recast(newSystem.inventory.items[i]);
+                newSystem.inventory.items[i] = Item5e.recast(newSystem.inventory.items[i]);
             }
             newSystem.inventory.currency ??= {};
             newSystem.override ??= {};
@@ -164,7 +163,7 @@ class System5e{
     }
 
     static async addToInventory(actor, item, item5e){
-        console.log("Add item", item5e.collectionId);
+        console.error("Add item", item5e.name, item5e.collectionId);
         actor.character.system.inventory.items.push(item5e);
     }
     static __hooks = {};
@@ -195,11 +194,21 @@ class System5e{
         }
         return null;
     }
+    static getItemsByProp(property, value, actor=null){
+        if(!actor){actor = CharacterBuilder.instance._actor;}
+        let ar = [];
+        for(let it of actor.character.system.inventory.items){
+            //To get the functions on the Item5e object, we need to recast it
+            if(it[property] == value){ar.push(it);}
+        }
+        return ar;
+    }
     static createUniqueID(){
         return Math.random().toString(16).slice(2);
     }
 }
 class Entity5e {
+    static use_overrides = false;
     override;
     constructor(){
         this.override = {};
@@ -207,10 +216,13 @@ class Entity5e {
     
     get config(){return DND5E;}
     prop(path){return Entity5e.getp(this, path);}
-    setProp(path, value, toOverride=true){
+    setProp(path, value, toOverride=Entity5e.use_overrides){
         Entity5e.setp(this, path, value, toOverride);
+        if(path == "system.uses.per"){
+            Entity5e.setp(this, "system.hasLimitedUses", system.uses.per != null, toOverride);
+        }
     }
-    static setp(item, path, value, toOverride=false){ //DEBUG: turning off overrides for now
+    static setp(obj, path, value, toOverride=Entity5e.use_overrides, defaultSystem="system", overrideSystem="override"){ //DEBUG: turning off overrides for now
         const recursiveSearch = (start, _path, value) => {
             const properties = _path.split('.');
             let current = start;
@@ -224,17 +236,18 @@ class Entity5e {
         if(toOverride){
             //Cut away the "system." part of the path (since we don't want system *inside* overwrite)
             let path2 = path;
-            if(path2.startsWith("system.")){path2 = path.slice(("system.").length);}
-            recursiveSearch(item.override, path2, value);
+            const firstProp = defaultSystem + ".";
+            if(path2.startsWith(firstProp)){path2 = path.slice((firstProp).length);}
+            recursiveSearch(obj[overrideSystem], path2, value);
         }
-        else{recursiveSearch(item.itemData, path, value);}
+        else{recursiveSearch(obj, path, value);}
     }
     /**
-     * @param {Item|Item5e} item
+     * @param {Item|Item5e} obj
      * @param {string} path
      * @returns {any}
      */
-    static getp(item, path){
+    static getp(obj, path, defaultSystem = "system", overrideSystem="override"){
         const recursiveSearch = (start, _path) => {
             const properties = _path.split('.');
             let current = start;
@@ -248,13 +261,22 @@ class Entity5e {
             }
             return current;
         }
-        let result = recursiveSearch(item.itemData, path);
+        
        
-    
         //Try to get an override (if present)
-        const override = recursiveSearch(item.override, path);
-        if(override != null && override != undefined){return override;}
-        return result;
+        //Cut away the "system." part of the path (since we don't want system *inside* overwrite)
+        let path2 = path;
+        const firstProp = defaultSystem + ".";
+        if(path2.startsWith(firstProp)){path2 = path.slice((firstProp).length);}
+        const override = Entity5e.use_overrides? recursiveSearch(obj[overrideSystem], path2, value) : null;
+        
+        return override != null? override : recursiveSearch(obj, path);
+    }
+
+    stringifyEntries(){
+        for(let i = 0; i < this.entries.length; ++i){
+            
+        }
     }
 }
 class Item5e extends Entity5e{
@@ -264,7 +286,11 @@ class Item5e extends Entity5e{
         this.type = "item";
         this.quantity = quantity;
         this.collectionId = collectionId? collectionId : System5e.createUniqueID();
-        this.system = CharacterBuilder.getItemByUid(this.uid).system; //TEMPFIX
+        const original = CharacterBuilder.getItemByUid(this.uid);
+        this.system = structuredClone(original.system);
+        this.entries = structuredClone(original.entries);
+
+        if(!Entity5e.use_overrides){return this;}
 
         return new Proxy(this, {
             get: (target, prop) => {
@@ -285,10 +311,15 @@ class Item5e extends Entity5e{
     getNestedProperty(obj, path) {
         return path.split('.').reduce((acc, part) => acc && acc[part], obj);
     }
-    static recast(item5e){
-        let i = new Item5e(item5e.uid, item5e.quantity, item5e.collectionId);
-        item5e && Object.assign(i, item5e);
-        return i;
+    static recast(inputObj){
+        console.log("TYPE", inputObj);
+        let entity = null;
+        if(inputObj.type == "item"){entity = new Item5e(inputObj.uid, inputObj.quantity, inputObj.collectionId);}
+        else if(inputObj.type == "classFeature"){
+            entity = new ClassFeature5e(inputObj.uid, inputObj.className, inputObj.classSource, inputObj.collectionId);
+        }
+        inputObj && Object.assign(entity, inputObj);
+        return entity;
     }
     get itemData(){return CharacterBuilder.getItemByUid(this.uid);}
     /* DND 5E BOOLEANS */
@@ -310,15 +341,21 @@ class Item5e extends Entity5e{
 class ClassFeature5e extends Entity5e{
     constructor(hash, className, classSource, collectionId=null){
         super();
-        this.hash = hash;
+        this.uid = hash;
         this.type = "classFeature";
         this.className = className;
         this.classSource = classSource;
         this.collectionId = collectionId? collectionId : System5e.createUniqueID();
-        let feature = CharacterBuilder.getClassFeatureByUid(hash, className, classSource);
-        this.system = feature.system; //TEMPFIX
-        this.name = feature.name;
+        const original = CharacterBuilder.getClassFeatureByUid(hash, className, classSource);
+        if(!original){console.error("Failed to load feature using hash", hash, className, classSource);}
+        this.name = original.name;
+        this.system = structuredClone(original.system);
+        //this.entries = structuredClone(CharacterBuilder.getClassFeatureEntries(original.name, original.source));
+        let entr = []; for(let l of original.loadeds){for(let e of l.entity.entries){entr.push(e);}} this.entries = entr;
+        const classDatas = CharacterBuilder.instance._data; console.log(classDatas, original, this.entries);
         this.properties = {concentration:{label:"Concentration", selected:true}};
+
+        if(!Entity5e.use_overrides){return this;}
 
         return new Proxy(this, {
             get: (target, prop) => {
@@ -337,6 +374,7 @@ class ClassFeature5e extends Entity5e{
         });
     }
     get itemData(){return this;}
+    get hash(){return this.uid;}
 
     async importSystemData(){
         //First, check if system data isn't already imported

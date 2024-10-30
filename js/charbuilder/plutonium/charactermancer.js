@@ -8700,7 +8700,7 @@ class ActorCharactermancerEquipment extends ActorCharactermancerBaseComponent {
     }
 
     static findItemByUID(itemUid, itemDatas){
-        if(itemUid == "undefined|undefined"){console.error("poop");}
+        if(itemUid == "undefined|undefined" || itemUid == undefined){console.error("Undefined itemUid provided!"); return null;}
         const matches = itemDatas.filter(it => {
             //Create a uid from the item
             const uid = `${it.name}|${it.source}`.toLowerCase();//UrlUtil.URL_TO_HASH_BUILDER[UrlUtil.PG_ITEMS]({ name:n, source:src });

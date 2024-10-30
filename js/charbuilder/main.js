@@ -882,6 +882,20 @@ class CharacterBuilder {
     }
     return matches[0];
   }
+  static getClassFeatureEntries(name, source){
+    const featureDatas = CharacterBuilder.instance._data.classFeature;
+    const hash = `${name}_${source}`.toLowerCase();
+    if(hash == "undefined_undefined"){console.error("Undefined class name and source");} 
+    const matches = featureDatas.filter(f => {
+        const h = `${f.name}_${f.source}`.toLowerCase();
+        return h == hash;
+    });
+    if(matches.length > 1){throw new Error("Not supposed to return more than one result", hash);}
+    else if(matches.length < 1){
+        console.error("Could not find a match to class", hash, "among our loaded classes. Did you forget to load a source?");
+    }
+    return matches[0]?.entries;
+  }
   static getClassByNameSource(className, classSource){
     const classDatas = CharacterBuilder.instance._data.class;
     const classUid = `${className}|${classSource}`.toLowerCase();

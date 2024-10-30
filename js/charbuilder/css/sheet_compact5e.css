@@ -146,7 +146,18 @@ a {
     white-space: nowrap;
     overflow: hidden;
 }
-
+.items-list .item > :not(.item-summary):not(:first-child){
+    /* font-size: 12px; */
+    color: var(--tertiary-text);
+    text-align: center;
+    /* display: flex; */
+    place-content: center;
+    line-height: normal;
+}
+.items-list .item .item-uses input {
+    width: 24px;
+    text-align: center;
+}
 .items-list .item-weight {
     flex: 0 0 60px;
     /* border-inline-start: 1px solid var(--dnd5e-color-faint);
@@ -226,8 +237,6 @@ a {
     background: rgba(0, 0, 0, 0.05);
 }
 /* SHEET HEADER */
-
-
 .c5e .sheet-header h1 {
     flex: 1;
     border-bottom: none;
