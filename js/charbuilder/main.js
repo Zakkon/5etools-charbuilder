@@ -912,6 +912,24 @@ class CharacterBuilder {
     }
     return matches[0];
   }
+  static getSpellByUid(uid, name, source){
+    const fnBuildUid = (sp) => {return UrlUtil.URL_TO_HASH_BUILDER[UrlUtil.PG_SPELLS](sp);}
+    if(!uid){uid = fnBuildUid({name:name, source:source});}
+    return CharacterBuilder._runDatasMatch("spell", uid, fnBuildUid);
+  }
+  static _runDatasMatch(prop, uid, fnBuildUid){
+    uid = uid.toLowerCase();
+    const datas = CharacterBuilder.instance._data[prop];
+    const matches = datas.filter(sp => {
+        let uid2 = fnBuildUid(sp).toLowerCase();
+        return uid == uid2;
+    });
+    if(matches.length > 1){console.log("Matches:",matches); throw new Error("Not supposed to return more than one result", uid);}
+    else if(matches.length < 1){
+        console.error("Could not find a match to spell", uid, "among our loaded spells. Did you forget to load a source?");
+    }
+    return matches[0];
+  }
   //#endregion
 }
 /**A wrapper for a div that contains components. Only used by CharacterBuilder */

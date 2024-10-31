@@ -162,7 +162,7 @@ class System5e{
         return JSON.stringify(schema.system);
     }
 
-    static async addToInventory(actor, item, item5e){
+    static async addToInventory(actor, item5e){
         console.error("Add item", item5e.name, item5e.collectionId);
         actor.character.system.inventory.items.push(item5e);
     }
@@ -393,4 +393,52 @@ class ClassFeature5e extends Entity5e{
         let imported = await SourceManager.plutoniumConvertData(existingData, "classFeature");
         existingData.system = imported.system;
     }
+}
+class Spell5e extends Entity5e{
+    constructor(spellUid, collectionId=null){
+        super();
+        this.uid = spellUid;
+        this.type = "spell";
+        this.collectionId = collectionId? collectionId : System5e.createUniqueID();
+        const original = CharacterBuilder.getSpellByUid(this.uid);
+        this.name = original.name;
+        this.system = structuredClone(original.system);
+        this.entries = structuredClone(original.entries);
+
+        if(!Entity5e.use_overrides){return this;}
+
+        return new Proxy(this, {
+            get: (target, prop) => {
+                if (prop === 'system') {
+                    return new Proxy(target.system, {
+                        get: (systemTarget, systemProp) => {
+                            const overrideValue = target.override[systemProp];//target.getNestedProperty(target.override, systemProp);
+                            const systemValue = systemTarget[systemProp];
+                            //console.log(systemProp, systemValue,">", overrideValue);
+                            return overrideValue !== null && overrideValue !== undefined ? overrideValue : systemValue;
+                        }
+                    });
+                }
+                return target[prop];
+            }
+        });
+    }
+
+    async importSystemData(){
+        //First, check if system data isn't already imported
+        //TODO: after system data is imported, cache the UID in character builder, and just do string matching instead
+        let existingData = CharacterBuilder.getSpellByUid(this.uid);
+        if(existingData.system){this.system = existingData.system; return;}
+        //No system data exists, go ahead and import
+        let imported = await SourceManager.plutoniumConvertData(existingData, "spell");
+        existingData.system = imported.system;
+        this.system = imported.system; //TEMPFIX
+    }
+    /* static async verifySystemData(hash, className, classSource){
+        let existingData = CharacterBuilder.getSpellByUid(hash, className, classSource);
+        if(existingData.system){return;}
+        //No system data exists, go ahead and import
+        let imported = await SourceManager.plutoniumConvertData(existingData, "spell");
+        existingData.system = imported.system;
+    } */
 }

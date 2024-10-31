@@ -5442,3 +5442,922 @@ DataConverterItem._ITEM_NAME_TO_TOOL_ID_KEY = {
 };
 
 DataConverterItem.FLAG_TYPE__CURRENCY = "currency";
+
+class DataConverterSpell extends DataConverter {
+	static _configGroup = "importSpell";
+
+	static _SideDataInterface = SideDataInterfaceSpell;
+	/* static _ImageFetcher = ImageFetcherSpell; */
+
+	static _getConfigKeyIsSpellPoints (opts) {
+		if (opts.isActorItemNpc) return Config.getSpellPointsKey({actorType: "npc"});
+		return Config.getSpellPointsKey({actorType: opts.actor?.type});
+	}
+
+	static isAllowSpellPoints (spellLevel, opts) {
+		return opts.target == null
+			&& opts.vetConsumes == null
+			&& spellLevel !== 0
+			&& Config.get("importSpell", this._getConfigKeyIsSpellPoints(opts)) !== ConfigConsts.C_SPELL_POINTS_MODE__DISABLED;
+	}
+
+	static _PassiveEntryParseStateSpell = class extends this._PassiveEntryParseState {
+		constructor ({entry, img}, opts) {
+			super({entry, img}, opts);
+
+			let {
+				school,
+				materials,
+				preparationMode,
+				isPrepared,
+
+				ability,
+			} = opts;
+
+			this.school = school;
+			this.materials = materials;
+
+			this.preparationMode = preparationMode;
+			this.isPrepared = isPrepared;
+
+			if (ability !== undefined) this.saveScaling = ability;
+
+			this.isCustomDamageParts = false; 		}
+	};
+
+		static async pGetDocumentJson (spell, opts) {
+		opts = opts || {};
+
+		Renderer.get().setFirstSection(true).resetHeaderIndex();
+
+		const state = new this._PassiveEntryParseStateSpell({entry: spell}, opts);
+		await state.pInit({isSkipDescription: true, isSkipImg: true});
+
+		const srdData = await CompendiumCache.pGetAdditionalDataDoc("spell", spell, {isSrdOnly: true, taskRunner: opts.taskRunner});
+
+		const {name: translatedName, description: translatedDescription, flags: translatedFlags} = this._getTranslationMeta({
+			translationData: this._getTranslationData({srdData}),
+			name: UtilApplications.getCleanEntityName(`${UtilDataConverter.getNameWithSourcePart(spell, {isActorItem: opts.isActorItem})}${opts.nameSuffix || ""}`),
+			description: await this._pGetDescription(spell),
+		});
+
+		const entriesStr = JSON.stringify(spell.entries);
+
+		this._pGetSpellItem_mutPreparationMode({spell, opts, state});
+		this._pGetSpellItem_mutActionType({spell, opts, entriesStr, state});
+		this._pGetSpellItem_mutSchool({spell, opts, state});
+		this._pGetSpellItem_mutMaterials({spell, opts, state});
+		this._pGetSpellItem_mutDuration({spell, opts, state});
+		this._pGetSpellItem_mutRangeTarget({spell, opts, state});
+		this._pGetSpellItem_mutDamageAndFormula({spell, opts, entriesStr, srdData, state});
+		this._pGetSpellItem_mutSave({spell, opts, state});
+		this._pGetSpellItem_mutConsumes({spell, opts, state});
+		this._pGetSpellItem_mutActivation({spell, opts, state});
+		this._pGetSpellItem_mutProperties({spell, opts, state});
+
+		/* const img = await this._ImageFetcher.pGetSaveImagePath(
+			spell,
+			{
+				propCompendium: "spell",
+				isAllowCustom: !spell.srd || Config.get("importSpell", "isUseCustomSrdIcons"),
+				taskRunner: opts.taskRunner,
+			},
+		); */
+		const img = null;
+		this._pGetSpellItem_mut_srdData({spell, opts, srdData, state});
+
+		const systemBase = {
+			source: UtilDocumentSource.getSourceObjectFromEntity(spell),
+			description: {value: translatedDescription, chat: ""},
+
+			actionType: state.actionType,
+			level: this._pGetSpellItem_getLevel(spell),
+			school: state.school,
+			properties: state.properties,
+			materials: {
+				value: state.materials,
+				consumed: !!MiscUtil.get(spell, "components", "m", "consume"),
+				cost: Math.round((MiscUtil.get(spell, "components", "m", "cost") || 0) / 100),
+				supply: 0,
+			},
+			target: {
+				value: state.targetValue,
+				units: state.targetUnits,
+				type: state.targetType,
+				prompt: state.targetPrompt,
+			},
+			range: {value: state.rangeShort, units: state.rangeUnits, long: state.rangeLong},
+			activation: {
+				type: state.activationType,
+				cost: state.activationCost,
+				condition: state.activationCondition,
+			},
+			duration: {
+				value: state.durationValue,
+				units: state.durationUnit,
+			},
+			damage: {
+				parts: state.damageParts,
+				versatile: "",
+			},
+			scaling: {
+				mode: state.cantripScaling ? "cantrip" : state.scaling ? "level" : "none",
+				formula: state.cantripScaling || state.scaling || "",
+			},
+			save: {ability: state.saveAbility, dc: null, scaling: state.saveScaling},
+			ability: state.ability,
+			uses: {
+				value: state.usesValue,
+				max: state.usesMax,
+				per: state.usesPer,
+			},
+			attack: {bonus: null},
+			chatFlavor: "",
+			critical: {threshold: null, damage: ""},
+			formula: state.formula,
+			preparation: {
+				mode: state.preparationMode,
+				prepared: !!state.isPrepared,
+			},
+			consume: {
+				type: state.consumeType,
+				target: state.consumeTarget,
+				amount: state.consumeAmount,
+				scale: state.consumeScale,
+			},
+			sourceClass: opts.parentClassName ? UtilDocumentItem.getNameAsIdentifier(opts.parentClassName) : null,
+		};
+
+		const additionalSystem = await this._SideDataInterface.pGetSystemSideLoaded(spell, {targetUnits: state.targetUnits, systemBase});
+		const additionalFlags = await this._SideDataInterface.pGetFlagsSideLoaded(spell);
+
+		const out = {
+			...UtilFoundryId.getIdObj({id: state.id}),
+			name: translatedName,
+			type: "spell",
+			system: foundry.utils.mergeObject(
+				systemBase,
+				(additionalSystem || {}),
+			),
+			img,
+			ownership: {default: 0},
+			flags: foundry.utils.mergeObject(
+				{
+					...translatedFlags,
+					...this._getSpellFlags(spell, opts),
+				},
+				additionalFlags,
+			),
+			effects: await this._pGetSpellEffects(spell, srdData, img),
+		};
+
+		this._pGetSpellItem_mut_summonData(out);
+
+		this._mutApplyDocOwnership(out, opts);
+
+				const replacementMeta = await CompendiumCache.gGetReplacementDataDocMeta("spell", spell);
+		if (replacementMeta) {
+			const {docData: replacementData, uuid: replacementUuid} = replacementMeta;
+
+			[
+				["id"],
+				["_id"],
+				["system", "preparation"],
+				["system", "uses"],
+				["system", "consume"],
+				["system", "ability"],
+				["system", "save", "scaling"],
+				["ownership"],
+				["flags", SharedConsts.MODULE_ID],
+			].forEach(path => {
+				MiscUtil.getThenSetCopy(out, replacementData, ...path);
+			});
+
+			IntegrationItemLinking.setFlags({replacementData, replacementUuid});
+
+			return replacementData;
+		}
+		
+		return out;
+	}
+
+	static _pGetSpellItem_mutPreparationMode ({spell, opts, state}) {
+				if (
+			Config.get("importSpell", this._getConfigKeyIsSpellPoints(opts)) === ConfigConsts.C_SPELL_POINTS_MODE__ENABLED
+			&& spell.level !== 0
+			&& (!state.preparationMode || state.preparationMode === "prepared" || state.preparationMode === "always")
+		) {
+			state.preparationMode = "atwill";
+		}
+
+		if (state.preparationMode === undefined) state.preparationMode = "prepared";
+				if (spell.level === 0) state.preparationMode = "always";
+
+		if (state.isPrepared === undefined) state.isPrepared = spell.level === 0;
+	}
+
+	static _pGetSpellItem_mutActionType ({spell, opts, entriesStr, state}) {
+		const actionType = this._pGetSpellItem_getActionType({spell, entriesStr});
+
+		if (state.actionType === undefined) state.actionType = actionType || "util";
+	}
+
+	static _pGetSpellItem_getActionType ({spell, entriesStr}) {
+		if (spell.spellAttack?.includes("M")) return "msak";
+		if (spell.spellAttack?.includes("R")) return "rsak";
+		if (spell.miscTags?.includes("HL")) return "heal";
+		if (spell.savingThrow?.length) return "save";
+		if (spell.summonsCreature?.length || spell.miscTags?.includes("SMN")) return "summ";
+
+		if (entriesStr.toLowerCase().includes("melee spell attack")) return "msak";
+		if (entriesStr.toLowerCase().includes("ranged spell attack")) return "rsak";
+	}
+
+	static _pGetSpellItem_mutSchool ({spell, opts, state}) {
+		state.school = UtilActors.VET_SPELL_SCHOOL_TO_ABV[spell.school] || "";
+	}
+
+	static _pGetSpellItem_mutMaterials ({spell, opts, state}) {
+		state.materials = spell.components?.m
+			? spell.components.m !== true
+				? `${spell.components.m.text || spell.components.m}`
+				: ""
+			: "";
+	}
+
+	static _pGetSpellItem_mutDuration ({spell, opts, state}) {
+		let durationValue = 0;
+		let durationUnit = "";
+		const duration0 = spell.duration[0];
+		switch (duration0.type) {
+			case "instant": durationUnit = "inst"; break;
+			case "timed": {
+				switch (duration0.duration.type) {
+					case "turn": durationUnit = "turn"; durationValue = duration0.duration.amount; break;
+					case "round": durationUnit = "round"; durationValue = duration0.duration.amount; break;
+					case "minute": durationUnit = "minute"; durationValue = duration0.duration.amount; break;
+					case "hour": durationUnit = "hour"; durationValue = duration0.duration.amount; break;
+					case "day": durationUnit = "day"; durationValue = duration0.duration.amount; break;
+					case "week": durationUnit = "day"; durationValue = duration0.duration.amount * 7; break;
+					case "month": durationUnit = "month"; durationValue = duration0.duration.amount; break;
+					case "year": durationUnit = "year"; durationValue = duration0.duration.amount; break;
+				}
+				break;
+			}
+			case "permanent": durationUnit = "perm"; break;
+			case "special": durationUnit = "spec"; break;
+		}
+
+		if (state.durationValue === undefined) state.durationValue = durationValue;
+		if (state.durationUnit === undefined) state.durationUnit = durationUnit;
+	}
+
+	static _pGetSpellItem_mutRangeTarget ({spell, opts, state}) {
+		if (state.targetPrompt === undefined) state.targetPrompt = !!Config.get(this._configGroup, "isTargetTemplatePrompt");
+
+		let rangeShort = 0;
+		let rangeUnits = "";
+		let targetValue = 0;
+		let targetUnits = "";
+		let targetType = "";
+		switch (spell.range.type) {
+			case Parser.RNG_SPECIAL: rangeUnits = "spec"; break;
+			case Parser.RNG_POINT: {
+				const dist = spell.range.distance;
+				switch (dist.type) {
+					case Parser.RNG_SELF: {
+						targetUnits = "self";
+						targetType = "self";
+						rangeUnits = "self";
+						break;
+					}
+					case Parser.RNG_UNLIMITED:
+					case Parser.RNG_UNLIMITED_SAME_PLANE:
+					case Parser.RNG_SIGHT:
+					case Parser.RNG_SPECIAL: {
+						targetUnits = "spec";
+						rangeUnits = "spec";
+						break;
+					}
+					case Parser.RNG_TOUCH: {
+						targetUnits = "touch";
+						rangeUnits = "touch";
+						break;
+					}
+					case Parser.UNT_YARDS: {
+						rangeShort = Config.getMetricNumberDistance({configGroup: "importSpell", originalValue: dist.amount, originalUnit: Parser.UNT_YARDS});
+						rangeUnits = Config.getMetricUnitDistance({configGroup: "importSpell", originalUnit: Parser.UNT_YARDS});
+						break;
+					}
+					case Parser.UNT_MILES: {
+						rangeShort = Config.getMetricNumberDistance({configGroup: "importSpell", originalValue: dist.amount, originalUnit: Parser.UNT_MILES});
+						rangeUnits = Config.getMetricUnitDistance({configGroup: "importSpell", originalUnit: Parser.UNT_MILES});
+						break;
+					}
+					case Parser.UNT_FEET:
+					default: {
+						rangeShort = Config.getMetricNumberDistance({configGroup: "importSpell", originalValue: dist.amount, originalUnit: Parser.UNT_FEET});
+						rangeUnits = Config.getMetricUnitDistance({configGroup: "importSpell", originalUnit: Parser.UNT_FEET});
+						break;
+					}
+				}
+				break;
+			}
+			case Parser.RNG_LINE:
+			case Parser.RNG_CUBE:
+			case Parser.RNG_CONE:
+			case Parser.RNG_RADIUS:
+			case Parser.RNG_SPHERE:
+			case Parser.RNG_HEMISPHERE:
+			case Parser.RNG_CYLINDER: {
+				targetValue = Config.getMetricNumberDistance({configGroup: "importSpell", originalValue: spell.range.distance.amount, originalUnit: spell.range.distance.type});
+
+				targetUnits = Config.getMetricUnitDistance({configGroup: "importSpell", originalUnit: spell.range.distance.type});
+
+				if (spell.range.type === Parser.RNG_HEMISPHERE) targetType = "sphere";
+				else targetType = spell.range.type; 			}
+		}
+
+		state.rangeShort = rangeShort;
+		state.rangeUnits = rangeUnits;
+
+		state.targetValue = targetValue;
+		state.targetUnits = targetUnits;
+		state.targetType = targetType;
+	}
+
+	static _pGetSpellItem_mutDamageAndFormula ({spell, opts, entriesStr, srdData, state}) {
+		const {damageParts, cantripScaling, scaling} = this._pGetSpellItem_mutDamageAndFormula_getInitialParse({spell, opts, entriesStr, srdData, state});
+
+		let formula = "";
+				if (!damageParts.length && !state.isCustomDamageParts && !MiscUtil.get(srdData, "system", "damage", "parts")) {
+			entriesStr.replace(this._getReDiceYourSpellcastingMod(), (...m) => {
+				const [, dicePart, modPart] = m;
+
+				formula = dicePart;
+				if (modPart) formula = `${formula} + @mod`;
+			});
+		}
+
+		if (state.damageParts === undefined) state.damageParts = damageParts;
+		if (state.cantripScaling === undefined) state.cantripScaling = cantripScaling;
+		if (state.scaling === undefined) state.scaling = scaling;
+
+		if (state.formula === undefined) state.formula = formula;
+	}
+
+	static _pGetSpellItem_mutDamageAndFormula_getInitialParse ({spell, opts, entriesStr, srdData, state}) {
+				if (spell.scalingLevelDice) return this._pGetSpellItem_mutDamageAndFormula_cantripScalingLevelDice({spell, opts, entriesStr, srdData, state});
+
+		return this._pGetSpellItem_mutDamageAndFormula_other({spell, opts, entriesStr, srdData, state});
+	}
+
+	static _pGetSpellItem_mutDamageAndFormula_cantripScalingLevelDice ({spell, opts, entriesStr, srdData, state}) {
+		const damageParts = [];
+
+		const scalingLevelDice = [spell.scalingLevelDice].flat(); 
+		const getLowestKey = scaling => Math.min(...Object.keys(scaling).map(k => Number(k)));
+		const reDamageType = new RegExp(`(${UtilActors.VALID_DAMAGE_TYPES.join("|")})`, "i");
+
+		damageParts.push(
+			...scalingLevelDice
+				.map(scl => {
+					const lowKey = getLowestKey(scl.scaling);
+					const lowDice = scl.scaling[lowKey];
+
+					const mDamageType = reDamageType.exec(scl.label || "");
+
+					return [
+						(lowDice || "").replace(/{{spellcasting_mod}}/g, "@mod"),
+						mDamageType ? mDamageType[1].toLowerCase() : null,
+					];
+				})
+				.filter(Boolean),
+		);
+
+				const firstScaling = scalingLevelDice[0];
+		const lowKey = getLowestKey(firstScaling.scaling);
+		const cantripScaling = firstScaling.scaling[lowKey].replace(/{{spellcasting_mod}}/g, "@mod");
+
+		return {
+			damageParts,
+			cantripScaling,
+			scaling: null,
+		};
+	}
+
+	static _pGetSpellItem_mutDamageAndFormula_other ({spell, opts, entriesStr, srdData, state}) {
+		const damageParts = [];
+		let scaling = null;
+
+		let damageTuples = []; 
+		const {strsMain} = this._pGetSpellItem_getPartitionedStrings({spell});
+
+		if (spell.damageInflict?.length) {
+			this._pGetSpellItem_parseAndAddDamage(strsMain, damageTuples);
+		}
+
+		if (spell.miscTags?.some(str => str === "HL")) {
+			const healingTuple = ["", "healing"];
+
+						entriesStr
+				.replace(this._getReDiceYourSpellcastingMod(), (...m) => {
+					const [, dicePart, modPart] = m;
+
+					healingTuple[0] = dicePart;
+					if (modPart) healingTuple[0] = `${healingTuple[0]} + @mod`;
+				})
+								.replace(/\bregains 1 hit point\b/, () => {
+					if (healingTuple[0]) return;
+					healingTuple[0] = "1";
+				})
+			;
+
+			damageTuples.push(healingTuple);
+		}
+
+		const metaHigherLevel = this._pGetSpellItem_getHigherLevelMeta({spell, opts, damageTuples, isCustomDamageParts: state.isCustomDamageParts, scaling, preparationMode: state.preparationMode});
+		if (metaHigherLevel) {
+			damageTuples = metaHigherLevel.damageTuples;
+			state.isCustomDamageParts = metaHigherLevel.isCustomDamageParts;
+			scaling = metaHigherLevel.scaling;
+		}
+
+				if (!damageTuples.length) this._pGetSpellItem_parseAndAddDamage(strsMain, damageTuples, {isRelaxedTagChecking: true});
+
+		damageParts.push(...damageTuples);
+
+		return {
+			damageParts,
+			cantripScaling: this._pGetSpellItem_mutDamageAndFormula_other_getCantripScaling({spell, opts, entriesStr, srdData, state}),
+			scaling,
+		};
+	}
+
+	static _pGetSpellItem_mutDamageAndFormula_other_getCantripScaling ({spell, opts, entriesStr, srdData, state}) {
+		if (spell.level !== 0) return null;
+
+		const {strsMain, strCantripScaling} = this._pGetSpellItem_getPartitionedStrings({spell});
+		if (!strCantripScaling) return null;
+
+		const diceTiers = [];
+
+				strCantripScaling.replace(
+						/\({@(?:damage|dice) (?<mainDice>[^}]+)}(?: and {@(?:damage|dice) (?<otherDice>[^}]+)})?\)/g, (...m) => diceTiers.push(m.last().mainDice),
+		);
+
+		const reOutsideBrackets = /(?:^|[^(]){@(?:damage|dice) (?<dice>[^}]+)}(?:[^)]|$)/;
+
+				if (diceTiers.length === 2) {
+			const mInitialDice = reOutsideBrackets.exec(strCantripScaling);
+			if (!mInitialDice) return null;
+			diceTiers.unshift(mInitialDice.groups.dice);
+		}
+
+				if (diceTiers.length !== 3) return null;
+
+				const baseVal = reOutsideBrackets.exec(strsMain.join("\n"));
+		if (baseVal) return baseVal.groups.dice;
+
+				return diceTiers[0];
+	}
+
+		static _pGetSpellItem_getPartitionedStrings ({spell}) {
+		const walker = MiscUtil.getWalker({isBreakOnReturn: true, isNoModification: true, keyBlocklist: MiscUtil.GENERIC_WALKER_ENTRIES_KEY_BLOCKLIST});
+
+		const strsMain = [];
+		let strCantripScaling = null;
+		walker.walk(
+			spell.entries,
+			{
+				string: (str) => {
+					if (
+						!/\bwhen you reach 5th level\b/i.test(str)
+						&& !/\bAt 5th level,/i.test(str)
+					) {
+						strsMain.push(str);
+						return;
+					}
+					strCantripScaling = str;
+					return true;
+				},
+			},
+		);
+
+		return {
+			strsMain,
+			strCantripScaling,
+		};
+	}
+
+	static _pGetSpellItem_mutSave ({spell, opts, state}) {
+		if (spell.savingThrow?.length) {
+			state.saveAbility = spell.savingThrow[0].substring(0, 3).toLowerCase();
+		}
+
+		if (state.saveScaling === undefined) state.saveScaling = "spell";
+	}
+
+	static _pGetSpellItem_mutConsumes ({spell, opts, state}) {
+		if (this._pGetSpellItem_mutConsumes_vetConsumes({spell, opts, state})) return;
+
+		if (!this.isAllowSpellPoints(spell.level, opts)) return;
+
+		const resource = Config.getSpellPointsResource({isValueKey: true});
+		const consumeAmount = Parser.spLevelToSpellPoints(spell.level);
+
+		if (resource === ConfigConsts.C_SPELL_POINTS_RESOURCE__SHEET_ITEM) {
+			if (state.consumeType === undefined) state.consumeType = "charges";
+			if (state.consumeAmount === undefined) state.consumeAmount = consumeAmount;
+			if (state.consumeTarget === undefined) state.consumeTarget = opts.spellPointsItemId;
+			return;
+		}
+
+		if (state.consumeType === undefined) state.consumeType = "attribute";
+		if (state.consumeAmount === undefined) state.consumeAmount = consumeAmount;
+		if (state.consumeTarget === undefined) state.consumeTarget = resource;
+
+					}
+
+	static _pGetSpellItem_mutConsumes_vetConsumes ({spell, opts, state}) {
+		if (!opts.vetConsumes) return false;
+
+		const entFaux = {
+			name: spell.name,
+			source: spell.source,
+			consumes: opts.vetConsumes,
+		};
+
+		const consumeMeta = UtilDataConverter.getConsumeMeta({
+			ent: entFaux,
+			actor: opts.actor,
+		});
+
+		if (!consumeMeta.isConsumes) return true;
+
+		if (consumeMeta.isFound) {
+			state.consumeType = consumeMeta.consume.type;
+			state.consumeAmount = consumeMeta.consume.amount;
+			state.consumeTarget = consumeMeta.consume.target;
+			return true;
+		}
+
+		opts.actorMultiImportHelper?.addMissingConsumes({
+			ent: entFaux,
+			id: state.id,
+		});
+
+		return true;
+	}
+
+	static _pGetSpellItem_getLevel (spell) {
+		if (!isNaN(spell.level) && spell.level >= 0 && spell.level <= 9) return Math.round(spell.level);
+		if (!isNaN(spell.level)) return Math.clamped(Math.round(spell.level), 0, 9);
+		return 0;
+	}
+
+	static _pGetSpellItem_mutActivation ({spell, opts, state}) {
+		state.activationType = state.activationType || spell.time[0]?.unit;
+		state.activationCost = state.activationCost || spell.time[0]?.number;
+		state.activationCondition = state.activationCondition || Renderer.stripTags(spell.time[0]?.condition || "");
+
+		if (!UtilCompat.isMidiQolActive() || state.activationType !== "reaction" || !state.activationCondition) return null;
+
+		state.activationType = "reactionmanual";
+
+		state.activationCondition
+			.replace(/\bwhich you take when you take (?:[^?!.]+ )?damage\b/i, () => {
+				state.activationType = "reactiondamage";
+				return "";
+			})
+			.replace(/\bin response to being damaged\b/i, () => {
+				state.activationType = "reactiondamage";
+				return "";
+			})
+
+			.replace(/\bwhen you are hit\b/i, () => {
+				state.activationType = "reaction";
+				return "";
+			})
+			.replace(/\b(?:succeeds on|makes) an attack roll\b/i, () => {
+				state.activationType = "reaction";
+				return "";
+			})
+		;
+	}
+
+	static _pGetSpellItem_mutProperties ({spell, opts, state}) {
+		if (state.properties !== undefined) return;
+
+		state.properties = [];
+
+		if (spell.components && spell.components.v) state.properties.push("vocal");
+		if (spell.components && spell.components.s) state.properties.push("somatic");
+		if (spell.components && spell.components.m) state.properties.push("material");
+		if (spell.meta && spell.meta.ritual) state.properties.push("ritual");
+		if (MiscUtil.get(spell, "duration", "0", "concentration")) state.properties.push("concentration");
+	}
+
+		static _pGetSpellItem_mut_srdData ({spell, opts, srdData, state}) {
+		if (!srdData) return;
+
+		state.targetValue = Config.getMetricNumberDistance({configGroup: "importSpell", originalValue: MiscUtil.get(srdData, "system", "target", "value"), originalUnit: MiscUtil.get(srdData, "system", "target", "units")}) || state.targetValue;
+		state.targetUnits = Config.getMetricUnitDistance({configGroup: "importSpell", originalUnit: MiscUtil.get(srdData, "system", "target", "units")}) || state.targetUnits;
+		state.targetType = MiscUtil.get(srdData, "system", "target", "type") || state.targetType;
+		if (!state.isCustomDamageParts) state.damageParts = MiscUtil.get(srdData, "system", "damage", "parts") || state.damageParts;
+		if (!state.cantripScaling && !state.scaling) state.scaling = MiscUtil.get(srdData, "system", "scaling", "formula");
+	}
+
+	static _pGetSpellItem_mut_summonData (docData) {
+		this._pGetSpellItem_mut_summonBonuses(docData);
+		this._pGetSpellItem_mut_summonProfiles(docData);
+	}
+
+	static _pGetSpellItem_mut_summonBonuses (docData) {
+		const summonBonuses = foundry.utils.getProperty(docData, "system.summons.bonuses");
+		if (!summonBonuses) return;
+
+				["ac", "attackDamage", "hd", "healing", "hp", "saveDamage"]
+			.forEach(prop => summonBonuses[prop] ||= "");
+	}
+
+	static _pGetSpellItem_mut_summonProfiles (docData) {
+		const summonProfiles = foundry.utils.getProperty(docData, "system.summons.profiles");
+		if (!summonProfiles) return;
+
+				if (!Config.get("importSpell", "isAddSummonsProfiles")) {
+			const ixsToRemove = summonProfiles
+				.map((profile, ix) => {
+					const uuid = profile?.uuid?.trim();
+					if (!uuid) return null;
+
+					if (UtilUuid.isCustomUuid(uuid)) return ix;
+
+					return null;
+				})
+				.filter(ix => ix != null);
+
+			ixsToRemove.reverse().forEach(ix => summonProfiles.splice(ix, 1));
+		}
+
+				summonProfiles.forEach(profile => profile._id ||= foundry.utils.randomID());
+	}
+
+	static _getSpellFlags (
+		spell,
+		{
+			parentClassName,
+			parentClassSource,
+			parentSubclassName,
+			parentSubclassSource,
+		} = {},
+	) {
+		const out = {
+			[SharedConsts.MODULE_ID]: {
+				page: UrlUtil.PG_SPELLS,
+				source: spell.source,
+				hash: UrlUtil.URL_TO_HASH_BUILDER[UrlUtil.PG_SPELLS](spell),
+				propDroppable: "spell",
+			},
+		};
+
+		if (parentClassName || parentClassSource || parentSubclassName || parentSubclassSource) {
+			out[SharedConsts.MODULE_ID].parentClassName = parentClassName;
+			out[SharedConsts.MODULE_ID].parentClassSource = parentClassSource;
+			out[SharedConsts.MODULE_ID].parentSubclassName = parentSubclassName;
+			out[SharedConsts.MODULE_ID].parentSubclassSource = parentSubclassSource;
+
+			const identParentCls = UtilDocumentItem.getNameAsIdentifier(parentClassName);
+
+						out[UtilCompat.MODULE_TIDY5E_SHEET] = {
+								parentClass: [
+					"artificer",
+					"barbarian",
+					"bard",
+					"cleric",
+					"druid",
+					"fighter",
+					"monk",
+					"paladin",
+					"ranger",
+					"rogue",
+					"sorcerer",
+					"warlock",
+					"wizard",
+				].includes(identParentCls) ? identParentCls : "custom",
+			};
+			
+			if (UtilCompat.isModuleMulticlassSpellbookFilterActive()) {
+				out[UtilCompat.MODULE_MULTICLASS_SPELLBOOK_FILTER] = {parentClass: identParentCls};
+			}
+		}
+
+				if (UtilCompat.isPlutoniumAddonAutomationActive()) {
+			MiscUtil.set(out, "midiProperties", "magicdam", true);
+			MiscUtil.set(out, "midiProperties", "magiceffect", true);
+		}
+
+		return out;
+	}
+
+	static async _pGetSpellEffects (spell, srdData, img) {
+		const out = [];
+
+		const effectsSrd = await this._SideDataInterface.pIsIgnoreSrdEffectsSideLoaded(spell) ? [] : MiscUtil.copyFast(srdData?.effects || []);
+		effectsSrd.forEach(effect => effect.icon = img);
+		UtilActiveEffects.mutEffectsDisabledTransfer(effectsSrd, "importSpell", {hintTransfer: false, hintDisabled: false});
+		out.push(...effectsSrd);
+
+		if (await this.pHasSpellSideLoadedEffects(null, spell)) {
+			const effectsSideTuples = await this.pGetSpellItemEffectTuples(null, spell, null, {img});
+			effectsSideTuples.forEach(({effect, effectRaw}) => UtilActiveEffects.mutEffectDisabledTransfer(effect, "importSpell", UtilActiveEffects.getDisabledTransferHintsSideData(effectRaw)));
+			out.push(...effectsSideTuples.map(it => it.effect));
+		}
+
+		await this._pGetSpellEffects_pMutAutomationFallback({out, spell, img});
+
+		return UtilActiveEffects.getEffectsMutDedupeId(out);
+	}
+
+		static async _pGetSpellEffects_pMutAutomationFallback ({out, spell, img}) {
+		if (out.length || !UtilCompat.isPlutoniumAddonAutomationActive() || !spell.conditionInflict?.length) return;
+
+		const sideData = await this._SideDataInterface.pGetSideLoaded(spell);
+		if (sideData?.effects != null) return;
+
+		out.push(
+			...spell.conditionInflict
+				.map(condName => UtilAutomationConvenientEffects.getConvenientEffect({effectName: condName.toTitleCase(), img}))
+				.filter(Boolean),
+		);
+	}
+
+		static _pGetSpellItem_parseAndAddDamage (strsMain, damageTuples, {isRelaxedTagChecking = false} = {}) {
+				const rePtTag = isRelaxedTagChecking ? `(?:damage|dice)` : "damage";
+		const re = new RegExp(`{@${rePtTag} (?<dice>[^}]+)} (?:(?<type>[^ ]+)(, [^ ]+)*(,? or [^ ]+)? )?damage`, "gi");
+
+		strsMain
+			.forEach(str => {
+				str.replace(re, (...m) => {
+															damageTuples.push([
+						m.last().dice,
+												m.last().type || "",
+					]);
+				});
+			});
+	}
+
+	static _getReDiceYourSpellcastingMod () {
+				return /{@dice ([^}]+)}(\s*\+\s*your\s+spellcasting\s+ability\s+modifier)?/i;
+	}
+
+	static _pGetSpellItem_getHigherLevelMeta (
+		{
+			spell,
+			opts,
+			damageTuples,
+			isCustomDamageParts,
+			scaling,
+			preparationMode,
+		},
+	) {
+		if (!spell.entriesHigherLevel) return;
+
+		const out = {
+			damageTuples: MiscUtil.copyFast(damageTuples),
+			isCustomDamageParts,
+			scaling,
+		};
+
+		const reHigherLevel = /{@(?:scaledice|scaledamage) ([^}]+)}/gi;
+		const resAdditionalNumber = [
+			/\badditional (?<addPerLevel>\d+) for each (?:slot )?level\b/gi,
+			/\bincreases by (?<addPerLevel>\d+) for each (?:slot )?level\b/gi,
+		];
+
+		let fnStr = null;
+
+				const ixsScaled = new Set(); 
+		const fnStrInnate = str => {
+			str
+				.replace(reHigherLevel, (...m) => {
+					const [base] = m[1].split("|").map(it => it.trim());
+
+					const [tag, text] = Renderer.splitFirstSpace(m[0].slice(1, -1));
+					const scaleOptions = Renderer.parseScaleDice(tag, text);
+
+					const ixDamageTuple = out.damageTuples.findIndex(it => (it[0] || "").trim().toLowerCase() === base.toLowerCase());
+					if (!ixsScaled.has(ixDamageTuple) && ~ixDamageTuple) {
+						const diceAtLevel = scaleOptions?.prompt?.options?.[opts.castAtLevel];
+						if (diceAtLevel) {
+							ixsScaled.add(ixDamageTuple);
+							out.damageTuples[ixDamageTuple][0] += `+ ${diceAtLevel}`;
+							out.isCustomDamageParts = true;
+						}
+					}
+				});
+
+			resAdditionalNumber.forEach(re => {
+				str
+					.replace(re, (...m) => {
+						if (!out.damageTuples.length) return;
+
+						const toAdd = opts.castAtLevel * Number(m.last().addPerLevel);
+												out.damageTuples[0][0] += `+ ${toAdd}`;
+						out.isCustomDamageParts = true;
+					});
+			});
+		};
+		
+								const fnStrStandard = str => {
+			if (out.scaling) return;
+
+			str
+				.replace(reHigherLevel, (...m) => {
+					if (out.scaling) return;
+
+					const [, progression, addPerProgress] = m[1].split("|");
+
+					const progressionParse = MiscUtil.parseNumberRange(progression, 1, 9);
+					const [p1, p2] = [...progressionParse].sort(SortUtil.ascSort);
+					const baseLevel = Math.min(...progressionParse);
+
+					
+					out.scaling = addPerProgress;
+				});
+
+			resAdditionalNumber.forEach(re => {
+				str
+					.replace(re, (...m) => {
+						if (out.scaling) return;
+
+												out.scaling = `(@item.level - ${spell.level}) * ${m.last().addPerLevel}`;
+					});
+			});
+		};
+		
+						if (opts.castAtLevel != null && opts.castAtLevel !== spell.level && out.damageTuples.length && preparationMode === "innate") {
+			fnStr = fnStrInnate;
+		} else {
+			fnStr = fnStrStandard;
+		}
+
+		MiscUtil.getWalker({isNoModification: true})
+			.walk(
+				spell.entriesHigherLevel,
+				{
+					string: str => fnStr(str),
+				},
+			);
+
+		return out;
+	}
+
+	static _pGetDescription (spell) {
+		if (!Config.get("importSpell", "isImportDescription")) return "";
+
+		return DescriptionRenderer.pGetWithDescriptionPlugins(async () => {
+			const entries = await DataConverter.pGetEntryDescription(spell);
+			const entriesHigherLevel = spell.entriesHigherLevel
+				? await DataConverter.pGetEntryDescription(spell, {prop: "entriesHigherLevel"})
+				: "";
+
+			const stackPts = [entries, entriesHigherLevel];
+
+			if (Config.get("importSpell", "isIncludeClassesInDescription")) {
+				const fromClassList = Renderer.spell.getCombinedClasses(spell, "fromClassList");
+				if (fromClassList?.length) {
+					const [current] = Parser.spClassesToCurrentAndLegacy(fromClassList);
+					stackPts.push(`<div><span class="bold">Classes: </span>${Parser.spMainClassesToFull(current, {isTextOnly: true})}</div>`);
+				}
+			}
+
+			return stackPts.filter(Boolean).join("");
+		});
+	}
+
+	static getActorSpell (actor, name, source) {
+		if (!name || !source) return null;
+		return actor.items && actor.items.find(it =>
+			(it.name || "").toLowerCase() === name.toLowerCase()
+			&& (
+				!Config.get("import", "isStrictMatching")
+				|| (UtilDocumentSource.getDocumentSource(it).source || "").toLowerCase() === source.toLowerCase()
+			),
+		);
+	}
+
+	static async pSetSpellItemIsPrepared (item, isPrepared) {
+		if (!item) return;
+		await UtilDocuments.pUpdateDocument(item, {system: {preparation: {prepared: isPrepared}}});
+	}
+
+	static async pHasSpellSideLoadedEffects (actor, spell) {
+		return (await this._SideDataInterface.pGetEffectsRawSideLoaded(spell))?.length > 0;
+	}
+
+	static async pGetSpellItemEffectTuples (actor, spell, sheetItem, {img} = {}) {
+		const effectsRaw = await this._SideDataInterface.pGetEffectsRawSideLoaded(spell);
+		return UtilActiveEffects.getExpandedEffects(effectsRaw || [], {actor, sheetItem, parentName: spell.name, img}, {isTuples: true});
+	}
+}

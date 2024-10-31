@@ -4,7 +4,10 @@ class ImportTester{
        /*  this.handleReady().then(() => {
             console.log("Ready done!");
         }); */
-        const flags = (type=="item")? this.getFlags_Item(item) : this._getClassSubclassFeatureFlags(item);
+        let flags = null;
+		if(type == "classFeature"){flags = this._getClassSubclassFeatureFlags(item);}
+		else if(type == "spell"){flags = this._getSpellFlags(item);}
+		else{flags = this.getFlags_Item(item);}
         let ent = await DataLoader.pCacheAndGet(flags.page, flags.source, flags.hash);
 
         const isUseImporter = true;
@@ -16,7 +19,11 @@ class ImportTester{
         if (isUseImporter) {
             //const actorMultiImportHelper = new ActorMultiImportHelper({actor});
 			//First, we have to create an ImportListItem, which sadly does contain some UI elements, but whatever
-            const imp = type == "item"? new ImportListItem({actor}) : new ImportListClassSubclassFeature({actor}); //If actor exists, the item will be imported unto the actor. If none exists, it will go to a generic directory
+			//If actor exists, the item will be imported unto the actor. If none exists, it will go to a generic directory
+            let imp = null;
+			if(type == "classFeature"){imp = new ImportListClassSubclassFeature({actor}); }
+			else if(type == "spell"){imp = new ImportListSpell({actor}); }
+			else {imp = new ImportListItem({actor}); }
             await imp.pInit(); //Initialize the importer
 
             if (pFnImport) await pFnImport({ent, imp, flags});
@@ -71,7 +78,62 @@ class ImportTester{
 
 		return out;
 	}
+	_getSpellFlags (
+		spell,
+		{
+			parentClassName,
+			parentClassSource,
+			parentSubclassName,
+			parentSubclassSource,
+		} = {},
+	) {
+		const out = {
+			/* [SharedConsts.MODULE_ID]: { */
+				page: UrlUtil.PG_SPELLS,
+				source: spell.source,
+				hash: UrlUtil.URL_TO_HASH_BUILDER[UrlUtil.PG_SPELLS](spell),
+				propDroppable: "spell",
+			/* }, */
+		};
 
+		/* if (parentClassName || parentClassSource || parentSubclassName || parentSubclassSource) {
+			out[SharedConsts.MODULE_ID].parentClassName = parentClassName;
+			out[SharedConsts.MODULE_ID].parentClassSource = parentClassSource;
+			out[SharedConsts.MODULE_ID].parentSubclassName = parentSubclassName;
+			out[SharedConsts.MODULE_ID].parentSubclassSource = parentSubclassSource;
+
+			const identParentCls = UtilDocumentItem.getNameAsIdentifier(parentClassName);
+
+			out[UtilCompat.MODULE_TIDY5E_SHEET] = {
+				parentClass: [
+					"artificer",
+					"barbarian",
+					"bard",
+					"cleric",
+					"druid",
+					"fighter",
+					"monk",
+					"paladin",
+					"ranger",
+					"rogue",
+					"sorcerer",
+					"warlock",
+					"wizard",
+				].includes(identParentCls) ? identParentCls : "custom",
+			};
+			
+			if (UtilCompat.isModuleMulticlassSpellbookFilterActive()) {
+				out[UtilCompat.MODULE_MULTICLASS_SPELLBOOK_FILTER] = {parentClass: identParentCls};
+			}
+		}
+
+		if (UtilCompat.isPlutoniumAddonAutomationActive()) {
+			MiscUtil.set(out, "midiProperties", "magicdam", true);
+			MiscUtil.set(out, "midiProperties", "magiceffect", true);
+		} */
+
+		return out;
+	}
 	async runTest2(cls){
 		/*  this.handleReady().then(() => {
 			 console.log("Ready done!");

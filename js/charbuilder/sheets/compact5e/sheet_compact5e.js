@@ -127,6 +127,7 @@ class C5e_InventoryCategory {
     }
     clear(){
         $(`.item-list[data-category-id="${this.categoryId}"] > *`).remove();
+        console.log("cleared");
     }
     addTo(element){
         this.header.appendTo(element);
@@ -194,7 +195,7 @@ class C5e_InventoryItem {
         this._template = Handlebars.compile(itemElement);
     }
     /**
-     * @param {Item} item
+     * @param {Item5e} item
      * @param {number} quantity
      * @param {string} collectionID
      * @returns {any}
@@ -205,6 +206,7 @@ class C5e_InventoryItem {
         this.itemUid = collectionId.split("__")[0];
         //Create context
         let totalWeight = item.weight * quantity;
+        console.log("NEW ITEM RENDER", item);
         
         let ctx = {totalWeight:totalWeight};
         let html = this._template({item:item, collectionId: collectionId, ctx:ctx, weightUnit:C5e_InventoryItem._weightUnit});

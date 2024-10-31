@@ -2887,6 +2887,32 @@ class DataSourceClassSubclassFeatureOfficialAll extends DataSourceGenericOfficia
 		return Vetools.pGetClassSubclassFeatures();
 	}
 }
+class DataSourceSpellOfficialAll extends DataSourceGenericOfficialAllSpecial {
+	get _cacheKey () { return "5etools-spells"; }
+
+	async _pGet () {
+		return Vetools.pGetAllSpells();
+	}
+}
+
+class DataSourceSpellOfficialSingle extends DataSourceSpecial {
+	constructor ({source}) {
+		super(
+			{
+				filterTypes: DataSourceUtil.getSourceFilterTypes(source),
+				source: source,
+			},
+		);
+		this._source = source;
+	}
+
+	get _cacheKey () { return `5etools-spells-${this._source}`; }
+
+	async _pGet () {
+		return DataUtil.spell.pLoadSingleSource(this._source);
+	}
+}
+
 //#endregion
 //#region DataPipelineConfig
 class DataPipelineConfig {
@@ -3131,6 +3157,22 @@ class DataPipelinesListClassSubclassFeature extends DataPipelinesListGeneric {
 
 	
 	static get NAME () { return "Class/Subclass Feature"; }
+}
+class DataPipelineConfigSpell extends DataPipelineConfig {
+	_DIRS_HOMEBREW = ["spell"];
+
+	_ClsDataSourceOfficialAll = DataSourceSpellOfficialAll;
+	_ClsDataSourceOfficial = DataSourceSpellOfficialSingle;
+}
+const CONFIG_SPELL = new DataPipelineConfigSpell();
+class DataPipelinesListSpell extends DataPipelinesListGeneric {
+	static _ = ImplementationRegistryDataPipelinesList.get().register(this);
+
+	static _CONFIG = CONFIG_SPELL;
+
+	static async _pGetPipelinesOfficialSources () {
+		return Object.keys(await DataUtil.spell.pLoadIndex());
+	}
 }
 //#endregion
 
@@ -6582,3 +6624,389 @@ var ImportListClassSubclassFeature$1 = /*#__PURE__*/Object.freeze({
     ImportListClassSubclassFeature: ImportListClassSubclassFeature
 });
 //#endregion
+
+class ImportListSpell extends ImportList {
+	static get ID () { return "spells"; }
+	static get DISPLAY_NAME_TYPE_PLURAL () { return "Spells"; }
+	static get PROPS () { return ["spell"]; }
+
+	static _ = ImplementationRegistryImportList.get().register(this);
+
+	_titleSearch = "spell";
+	_sidebarTab = "items";
+	_gameProp = "items";
+	_defaultFolderPath = ["Spells"];
+	_pageFilter = new PageFilterSpells();
+	_page = UrlUtil.PG_SPELLS;
+	_isPreviewable = true;
+	_configGroup = "importSpell";
+	_fnListSort = PageFilterSpells.sortSpells;
+	_pFnGetFluff = Renderer.spell.pGetFluff.bind(Renderer.spell);
+/* 	_ClsCustomizer = ImportCustomizerSpell; */
+	static _DataConverter = DataConverterSpell;
+	static _DataPipelinesList = DataPipelinesListSpell;
+
+	async pPreRender (...args) {
+		await super.pPreRender(...args);
+
+						Renderer.spell.populatePrereleaseLookup(await PrereleaseUtil.pGetBrewProcessed(), {isForce: true});
+		Renderer.spell.populateBrewLookup(await BrewUtil2.pGetBrewProcessed(), {isForce: true});
+
+		this._content.forEach(sp => {
+			Renderer.spell.uninitBrewSources(sp);
+			Renderer.spell.initBrewSources(sp);
+		});
+	}
+
+	getFolderPathMeta () {
+		return {
+			...super.getFolderPathMeta(),
+			level: {
+				label: "Level",
+				getter: it => `${Parser.spLevelToFull(it.level)}${it.level ? " level" : ""}`,
+			},
+			school: {
+				label: "School",
+				getter: it => Parser.spSchoolAndSubschoolsAbvsToFull(it.school, it.subschools),
+			},
+			spellPoints: {
+				label: "Spell Points",
+				getter: it => {
+					const sp = (() => {
+						switch (it.level) {
+							case 1: return 2;
+							case 2: return 3;
+							case 3: return 5;
+							case 4: return 6;
+							case 5: return 7;
+							case 6: return 8;
+							case 7: return 10;
+							case 8: return 11;
+							case 9: return 13;
+							case 0:
+							default: return 0;
+						}
+					})();
+					return `${sp} Spell Points`;
+				},
+			},
+		};
+	}
+
+	async _pPostRenderOrShow () {
+		await super._pPostRenderOrShow();
+
+		if (!this._actor) return;
+
+		if (!Config.get("importSpell", "isFilterOnOpen")) return;
+
+		const currentValues = this._pageFilter.filterBox.getValues();
+		const classNameLookup = Object.keys(currentValues.Class).filter(k => !k.startsWith("_")).mergeMap(it => ({[it.toLowerCase()]: it}));
+
+						const cacheClassSubclassData = {};
+		const subclassSheetItems = this._actor.items.filter(it => it.type === "subclass");
+		const classMetas = (await this._actor.items
+			.filter(it => it.type === "class")
+			.filter(it => classNameLookup[it.name.toLowerCase().trim()])
+			.pSerialAwaitMap(sheetItem => UtilDataConverter.pGetClassItemClassAndSubclass({sheetItem, subclassSheetItems, cache: cacheClassSubclassData})))
+			.filter(it => it.matchingClasses?.length);
+
+		if (!classMetas.length) {
+			this._pageFilter.filterBox.setFromValues({
+				"Class": {},
+				"Subclass": {},
+			});
+			this._handleFilterChange();
+			return;
+		}
+
+		if (classMetas.some(it => it.matchingSubclasses?.length)) {
+			this._pageFilter.filterBox.setFromValues({
+				"Class": classMetas.map(it => it.matchingClasses.map(it => it.name)).flat().mergeMap(it => ({[it]: 1})),
+				"Subclass": classMetas.map(it => it.matchingSubclasses.map(it => `${it.className}: ${it.shortName}`)).flat().mergeMap(it => ({[it]: 1})),
+			});
+			this._handleFilterChange();
+			return;
+		}
+
+		this._pageFilter.filterBox.setFromValues({
+			"Class": classMetas.map(it => it.matchingClasses.map(it => it.name)).flat().mergeMap(it => ({[it]: 1})),
+			"Subclass": {},
+		});
+		this._handleFilterChange();
+	}
+
+	_renderInner_getListSyntax () {
+		return new ListSyntaxSpells({
+			fnGetDataList: () => this._content,
+			pFnGetFluff: this._pFnGetFluff,
+		}).build();
+	}
+
+	_colWidthName = "3-2";
+	_colWidthSource = 1;
+
+	_getData_cols_other () {
+		return [
+			{
+				name: "Level",
+				width: 1,
+				field: "level",
+				rowClassName: "ve-text-center",
+			},
+			{
+				name: "Time",
+				width: 2,
+				field: "time",
+				rowClassName: "ve-text-center",
+			},
+			{
+				name: "School",
+				width: 1,
+				field: "school",
+				titleProp: "schoolLong",
+				displayProp: "schoolShort",
+				classNameProp: "schoolClassName",
+				rowClassName: "ve-text-center",
+			},
+			{
+				name: "C.",
+				width: "0-3",
+				field: "concentration",
+				rowClassName: "ve-text-center",
+				title: "Concentration",
+			},
+			{
+				name: "Range",
+				width: "2-5",
+				field: "range",
+				rowClassName: "ve-text-right",
+			},
+		];
+	}
+
+	_getData_row_mutGetAdditionalValues ({it, ix}) {
+		it._l_time = PageFilterSpells.getTblTimeStr(it.time[0]);
+		it._l_school = Parser.spSchoolAbvToFull(it.school, it.subschools);
+
+		return {
+			level: UtilEntitySpell.getListDisplayLevel(it),
+			time: it._l_time,
+			range: Parser.spRangeToFull(it.range),
+
+			school: it.school,
+			schoolShort: Parser.spSchoolAndSubschoolsAbvsShort(it.school, it.subschools),
+			schoolLong: it._l_school,
+			schoolClassName: `sp__school-${it.school}`,
+
+			concentration: it._isConc ? "×" : "",
+		};
+	}
+
+	getData () {
+		return {
+			...super.getData(),
+			buttonsAdditional: [
+				{
+					name: "btn-run-mods",
+					text: "Customize and Import...",
+				},
+			],
+		};
+	}
+
+	_renderInner_absorbListItems_fnGetValues (it) {
+		return {
+			...super._renderInner_absorbListItems_fnGetValues(it),
+			level: it.level,
+			time: it._l_time,
+			normalisedTime: it._normalisedTime,
+			normalisedRange: it._normalisedRange,
+			school: it._l_school,
+			concentration: it._isConc,
+		};
+	}
+
+	async _pImportEntry_pImportToActor (spell, importOpts) {
+		const isScrollImport = this.constructor._isSpellScrollImport(spell, importOpts);
+		const isTattooImport = this.constructor._isSpellwroughtTattooImport(spell, importOpts);
+		const isAllowSpellPoints = this._isAllowSpellPoints({spell, importOpts, isScrollImport});
+		if (isAllowSpellPoints) await this._pAddActorSpellPointsSlotsEffect({importOpts});
+		const spellPointsItemId = isAllowSpellPoints ? await this._pGetActorSpellPointsItemId() : null;
+
+		const spellData = await DataConverterSpell.pGetDocumentJson(
+			spell,
+			{
+				actor: this._actor,
+				...(importOpts.opts_pGetSpellItem
+					|| (await UtilActors.pGetActorSpellItemOpts({actor: this._actor, isAllowAutoDetectPreparationMode: true}))),
+				spellPointsItemId,
+				taskRunner: importOpts.taskRunner,
+				actorMultiImportHelper: importOpts.actorMultiImportHelper,
+			},
+		);
+
+		let embeddedDocument;
+		if (isScrollImport) {
+			const scrollData = await this.constructor._pGetSpellScrollData(spell, spellData);
+			const importedMetas = await UtilDocuments.pCreateEmbeddedDocuments(
+				this._actor,
+				[scrollData],
+				{ClsEmbed: Item, isRender: !importOpts.isBatched},
+			);
+			embeddedDocument = importedMetas[0]?.document;
+		} else if (isTattooImport) {
+			const scrollData = await this.constructor._pGetSpellwroughtTattooData(spell, spellData);
+			const importedMetas = await UtilDocuments.pCreateEmbeddedDocuments(
+				this._actor,
+				[scrollData],
+				{ClsEmbed: Item, isRender: !importOpts.isBatched},
+			);
+			embeddedDocument = importedMetas[0]?.document;
+		} else {
+			const importedMetas = await UtilDocuments.pCreateEmbeddedDocuments(
+				this._actor,
+				[spellData],
+				{ClsEmbed: Item, isRender: !importOpts.isBatched},
+			);
+			embeddedDocument = importedMetas[0]?.document;
+		}
+
+		await this._pImportEntry_pImportToActor_pAddSubEntities({ent: spell, importOpts});
+
+		if (this._actor.isToken) this._actor.sheet.render();
+
+		return new ImportSummary({
+			status: ConstsTaskRunner.TASK_EXIT_COMPLETE,
+			imported: [
+				new ImportedDocument({
+					name: spell.name,
+					actor: this._actor,
+					embeddedDocument,
+				}),
+			],
+			entity: spell,
+		});
+	}
+
+	_isAllowSpellPoints ({spell, importOpts, isScrollImport}) {
+		if (isScrollImport) return false;
+		return DataConverterSpell.isAllowSpellPoints(spell.level, {actor: this._actor, ...importOpts?.opts_pGetSpellItem || {}});
+	}
+
+	async _pAddActorSpellPointsSlotsEffect ({importOpts}) {
+		if (!this._actor) throw new Error(`Only applicable when importing to an actor!`);
+		if (Config.get("importSpell", Config.getSpellPointsKey({actorType: this._actor?.type})) !== ConfigConsts.C_SPELL_POINTS_MODE__ENABLED_AND_UNLIMITED_SLOTS) return;
+		await UtilActors.pGetCreateActorSpellPointsSlotsEffect({actor: this._actor, isTemporary: importOpts.isTemp, isRender: !importOpts.isBatched});
+	}
+
+	async _pGetActorSpellPointsItemId () {
+		if (!this._actor) throw new Error(`Only applicable when importing to an actor!`);
+		const spellPointsItem = await UtilActors.pGetCreateActorSpellPointsItem({actor: this._actor});
+		return spellPointsItem?.id;
+	}
+
+	async _pImportEntry_pImportToDirectoryGeneric_pGetImportableData (ent, getItemOpts, importOpts) {
+		const spellData = await super._pImportEntry_pImportToDirectoryGeneric_pGetImportableData(
+			ent,
+			{
+				...UtilActors.getSpellItemItemOpts(),
+				...getItemOpts,
+			},
+			importOpts,
+		);
+
+		if (this.constructor._isSpellScrollImport(ent, importOpts)) return this.constructor._pGetSpellScrollData(ent, spellData);
+		if (this.constructor._isSpellwroughtTattooImport(ent, importOpts)) return this.constructor._pGetSpellwroughtTattooData(ent, spellData);
+		return spellData;
+	}
+
+	static _isSpellScrollImport (spell, importOpts) { return spell._foundryIsSpellScroll || importOpts.isSpellScroll; }
+	static _isSpellwroughtTattooImport (spell, importOpts) { return spell._foundryIsSpellTattoo || importOpts.isSpellwroughtTattoo; }
+
+		static _SPELL_SCROLL_PRICE__XGE_SHARED_CAMPAIGN = {
+		"0": 25,
+		"1": 75,
+		"2": 150,
+		"3": 300,
+		"4": 500,
+		"5": 1000,
+	};
+
+		static _SPELL_SCROLL_PRICE__XGE_DOWNTIME_SCRIBING = {
+		"0": 15,
+		"1": 25,
+		"2": 250,
+		"3": 500,
+		"4": 2500,
+		"5": 5000,
+		"6": 15000,
+		"7": 25000,
+		"8": 50000,
+		"9": 250000,
+	};
+
+	static async _pGetSpellScrollData (spell, spellData) {
+				spellData.data = spellData.system;
+
+		const scrollData = await CONFIG.Item.documentClass.createScrollFromSpell(spellData, {}, {dialog: false});
+		const out = scrollData.toObject();
+
+		switch (Config.get("importSpell", "spellScrollPriceMode")) {
+			case ConfigConsts.C_SPELL_SCROLL_PRICE_MODE__SMIP: break; 			case ConfigConsts.C_SPELL_SCROLL_PRICE_MODE__NO_PRICE: {
+				foundry.utils.setProperty(out, "system.price.value", null);
+				break;
+			}
+			case ConfigConsts.C_SPELL_SCROLL_PRICE_MODE__XGE_SHARED_CAMPAIGN: {
+				foundry.utils.setProperty(out, "system.price.value", this._SPELL_SCROLL_PRICE__XGE_SHARED_CAMPAIGN[spell.level] || null);
+				break;
+			}
+			case ConfigConsts.C_SPELL_SCROLL_PRICE_MODE__XGE_DOWNTIME_SCRIBING: {
+				foundry.utils.setProperty(out, "system.price.value", this._SPELL_SCROLL_PRICE__XGE_DOWNTIME_SCRIBING[spell.level] || null);
+				break;
+			}
+			case ConfigConsts.C_SPELL_SCROLL_PRICE_MODE__CUSTOM: {
+				const customProgression = Config.get("importSpell", "spellScrollPricesCustom")
+					.split(",")
+					.map(it => it.trim())
+					.filter(Boolean)
+					.map(it => {
+						if (!isNaN(it)) return Number(it);
+						return null;
+					});
+
+				foundry.utils.setProperty(out, "system.price.value", customProgression[spell.level] || null);
+
+				break;
+			}
+		}
+
+		return out;
+	}
+
+		static async _pGetSpellwroughtTattooData (spell, spellData) {
+				const tattoo = new Item.implementation({
+			name: game.i18n.format("TCOE.Tattoo.SpellwroughtName", {name: spellData.name}),
+			type: "dnd-tashas-cauldron.tattoo",
+			system: {level: spellData.system.level, type: {value: "spellwrought"}},
+		});
+
+		const tattooData = MiscUtil.copyFast(spellData);
+
+				delete tattooData.system.level;
+		delete tattooData.name;
+		delete tattooData.type;
+		delete tattooData.folder;
+		delete tattooData.sort;
+
+				tattooData.system.uses = {value: 1, max: 1, per: "charges"};
+		tattooData.system.properties.push("mgc");
+
+		return tattoo.clone(tattooData, {save: false, renderSheet: false, coerce: true});
+	}
+}
+
+var ImportListSpell$1 = /*#__PURE__*/Object.freeze({
+    __proto__: null,
+    ImportListSpell: ImportListSpell
+});

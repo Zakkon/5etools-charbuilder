@@ -612,6 +612,31 @@ var SideDataInterfaceItem$1 = /*#__PURE__*/Object.freeze({
     SideDataInterfaceItem: SideDataInterfaceItem
 });
 
+class SideDataInterfaceSpell extends SideDataInterfaceBase {
+	static _SIDE_LOAD_OPTS = {
+		propBrew: "foundrySpell",
+		fnLoadJson: Vetools.pGetSpellSideData,
+		propJson: "spell",
+	};
+
+	static async pGetSystemSideLoaded (spell, opts) {
+		const out = await super.pGetSystemSideLoaded(spell, opts);
+		if (!out) return out;
+
+		const {targetUnits} = opts || {};
+
+				if (out["target.value"]) out["target.value"] = Config.getMetricNumberDistance({configGroup: "importSpell", originalValue: out["target.value"], originalUnit: out["target.units"] || targetUnits});
+		if (out["target.units"]) out["target.units"] = Config.getMetricUnitDistance({configGroup: "importSpell", originalUnit: out["target.units"] || targetUnits});
+
+		return out;
+	}
+}
+
+var SideDataInterfaceSpell$1 = /*#__PURE__*/Object.freeze({
+    __proto__: null,
+    SideDataInterfaceSpell: SideDataInterfaceSpell
+});
+
 class SideDataInterfaces {
     static init() {
         SideDataInterfaceClass.init();

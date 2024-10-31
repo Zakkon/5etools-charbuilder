@@ -391,8 +391,19 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
                   console.log("try add to inventory 2");
                   ClassFeature5e.verifySystemData(f.hash, d.cls.name, d.cls.source).then(() => {
                     let featureItem = new ClassFeature5e(f.hash, d.cls.name, d.cls.source);
-                    System5e.addToInventory(this._actor, featureItem.hash, featureItem);
+                    System5e.addToInventory(this._actor, featureItem);
                     ActorCharactermancerSheet.c5e_inventory.addItem("weapons", featureItem, 1, featureItem.collectionId);
+                  });
+
+                  //TEST
+                  //just invent a spell
+                  let sp = CharacterBuilder.getSpellByUid(null, "Aid", "PHB");
+                  console.log("SPELL", sp);
+                  //console.log("HASH", UrlUtil.URL_TO_HASH_BUILDER[UrlUtil.PG_SPELLS](sp));
+                  let spell5e = new Spell5e(UrlUtil.URL_TO_HASH_BUILDER[UrlUtil.PG_SPELLS](sp));
+                  spell5e.importSystemData().then(()=>{
+                    System5e.addToInventory(this._actor, spell5e),
+                    ActorCharactermancerSheet.c5e_inventory.addItem("weapons", spell5e, 1, spell5e.collectionId)
                   });
                 }
                 
@@ -1162,6 +1173,7 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
             //printSpellsFromFeats(spellsByFeat);
           });
 
+          
           
 
           hkCalcAttacks(); //Calculate attacks as well, since it displays cantrip attacks
