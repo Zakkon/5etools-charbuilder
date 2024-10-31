@@ -54,7 +54,6 @@ a {
 .window-app .window-header i[class^=fa]{
     margin-right: 3px;
 }
-
 .window-app .window-content{
     display: flex;
     flex-direction: column;
@@ -72,6 +71,22 @@ a {
 .window-content .tab{
     height: 100%;
     overflow-y: auto;
+}
+.window-app .window-resizable-handle{
+    width: 20px;
+    height: 20px;
+    position: absolute;
+    bottom: -1px;
+    right: 0;
+    background: #444;
+    padding: 2px;
+    border: 1px solid var(--color-border-dark-1);
+    border-radius: 4px 0 0 0;
+    overflow: hidden;
+}
+.ve-night-mode .window-app .window-resizable-handle{background: rgb(43, 43, 43);}
+.window-app .window-resizable-handle i.fas {
+    transform: rotate(45deg);
 }
 
 

@@ -40,7 +40,6 @@ class HandlebarsHelper{
             let opts = HandlebarsHelper.getAttributes(options);
             for(const [key, val] of Object.entries(opts)){wrapper += ` ${key}="${val}"`;}
             wrapper += "></input>";
-            console.log("WRAP", wrapper);
             return new Handlebars.SafeString(wrapper);
         });
         Handlebars.registerHelper('select', function (value, options) {
