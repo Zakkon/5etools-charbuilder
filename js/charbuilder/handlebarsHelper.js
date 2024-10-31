@@ -32,6 +32,9 @@ class HandlebarsHelper{
         Handlebars.registerHelper('checked', function (value) {
             return (value === 'true' || value == true)? `checked` : "";
         });
+        Handlebars.registerHelper('localize', function (value) {
+            return value;
+        });
         Handlebars.registerHelper('select', function (value, options) {
             return options.fn(this)
               .split('\n')
@@ -46,10 +49,13 @@ class HandlebarsHelper{
             let opts = HandlebarsHelper.getAttributes(options);
             //Blank option
             if(opts.blank != null){str += `<option value="${opts.blank}" ${(!opts.selected)?"selected":""}></option>`;}
-            for(const [key, value] of Object.entries(choices)){
-                let lbl = typeof(value) == "object"? value.label : value;
-                str += `<option value="${key}"${(!!opts.selected && opts.selected == key)?"selected":""}>${lbl}</option>`;
+            if(choices != null){
+                for(const [key, value] of Object.entries(choices)){
+                    let lbl = typeof(value) == "object"? value.label : value;
+                    str += `<option value="${key}"${(!!opts.selected && opts.selected == key)?"selected":""}>${lbl}</option>`;
+                }
             }
+            
             let result = new Handlebars.SafeString(str);
             return result;
         });

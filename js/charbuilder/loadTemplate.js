@@ -61,3 +61,28 @@ LoadTemplate.prototype.createAndWait = function(callback){
     // Send request.
     req.send();
 };
+
+LoadTemplate.prototype.createAndCompile = function(callback){
+    var req = new XMLHttpRequest();
+    var that = this;
+
+    // Define parameters for request.
+    req.open('get', this.folderPath + this.tempName + '.hbs', true);
+
+    // Wait for request to complete.
+    req.onreadystatechange = function(){
+        if (req.readyState == 4 && req.status == 200){
+           //Compile HB template, add data (if defined) and place in parent element.
+           var compiled = Handlebars.compile(req.response);
+           var text = compiled(that.data, {allowProtoPropertiesByDefault:true,
+               allowedProtoMethodsByDefault:true});
+
+           // Execute callback function
+           if(callback){callback(text);}
+        }
+    };
+
+    // Send request.
+    req.send();
+};
+

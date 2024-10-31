@@ -278,6 +278,19 @@ class Entity5e {
             
         }
     }
+
+    
+    get hasAttack() {
+        console.log("SYSTEM", this.system);
+        return ["mwak", "rwak", "msak", "rsak"].includes(this.system.actionType);
+    }
+    get hasDamage() {
+        return this.system.actionType && (this.system.damage.parts.length > 0);
+      }
+    get isHealing() {
+        return (this.system.actionType === "heal") && this.hasDamage;
+    }
+    
 }
 class Item5e extends Entity5e{
     constructor(itemUid, quantity=1, collectionId=null){
@@ -289,6 +302,7 @@ class Item5e extends Entity5e{
         const original = CharacterBuilder.getItemByUid(this.uid);
         this.system = structuredClone(original.system);
         this.entries = structuredClone(original.entries);
+        this.properties = {};
 
         if(!Entity5e.use_overrides){return this;}
 

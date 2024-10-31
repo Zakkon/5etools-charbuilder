@@ -23,3 +23,100 @@
     </select>
 </div>
 {{/if}}
+
+{{#if hasAttack}}
+{{!-- Attack Roll Bonus --}}
+<div class="form-group">
+    <label>Attack Roll Bonus</label>
+    <div class="form-fields">
+        <input type="text" name="system.attack.bonus" value="{{system.attack.bonus}}" data-formula-editor>
+        <label class="checkbox" data-tooltip="DND5E.ItemAttackFlatHint">
+          <input type="checkbox" name="system.attack.flat" {{checked system.attack.flat}}>
+          Item Attack Flat
+        </label>
+    </div>
+</div>
+
+{{!-- Critical Hit Threshold --}}
+<div class="form-group">
+    <label>Critical Hit Threshold</label>
+    <div class="form-fields">
+        {{!-- {{numberInput system.critical.threshold name="system.critical.threshold" placeholder="20" max=20 min=1 step=1}} --}}
+    </div>
+</div>
+
+{{!-- Critical Hit Damage --}}
+<div class="form-group">
+    <label>Critical Hit Damage</label>
+    <div class="form-fields">
+        <input type="text" name="system.critical.damage" value="{{system.critical.damage}}">
+    </div>
+</div>
+{{/if}}
+
+{{!-- Damage Formula --}}
+<h4 class="damage-header">
+    {{#unless isHealing}}Damage{{ else }}Healing{{/unless}}
+    Formula
+    <a class="damage-control add-damage"><i class="fas fa-plus"></i></a>
+</h4>
+<ol class="damage-parts form-group"></ol>
+    {{#each system.damage.parts as |part i| }}
+    <li class="damage-part flexrow" data-damage-part="{{i}}">
+        <input type="text" name="system.damage.parts.{{i}}.0" value="{{lookup this "0"}}" data-formula-editor/>
+        <select name="system.damage.parts.{{i}}.1">
+            {{#select (lookup this "1")}}
+                <option value="">None</option>
+                <optgroup label="Damage">
+                    {{selectOptions @root.config.damageTypes labelAttr="label"}}
+                </optgroup>
+                <optgroup label="Healing">
+                    {{selectOptions @root.config.healingTypes labelAttr="label"}}
+                </optgroup>
+            {{/select}}
+        </select>
+        <a class="damage-control delete-damage"><i class="fas fa-minus"></i></a>
+    </li>
+    {{/each}}
+</ol>
+
+{{!-- Versatile Damage --}}
+{{#if system.damage.parts.length }}
+<div class="form-group">
+    <label>Versatile Damage</label>
+    <div class="form-fields">
+        <input type="text" name="system.damage.versatile" value="{{system.damage.versatile}}"
+               placeholder="Formula" data-formula-editor>
+    </div>
+</div>
+{{/if}}
+
+{{!-- Other Formula --}}
+<div class="form-group">
+    <label>Other Formula</label>
+    <div class="form-fields">
+        <input type="text" name="system.formula" value="{{system.formula}}"
+               placeholder="Formula" data-formula-editor>
+    </div>
+</div>
+
+{{!-- Saving Throw --}}
+<div class="form-group input-select">
+    <label>Action Save</label>
+    <div class="form-fields">
+        <select name="system.save.ability">
+            {{selectOptions config.abilities selected=system.save.ability labelAttr="label" blank=""}}
+        </select>
+        <span>Vs. DC</span>
+        <input type="number" step="any" name="system.save.dc"
+            value="{{#if system.save.dc}}{{system.save.dc}}{{/if}}"
+            placeholder="DC" {{#unless isFlatDC}}disabled{{/unless}}>
+        <select name="system.save.scaling">
+            {{#select system.save.scaling}}
+                <option value="spell">Spellcasting</option>
+                {{selectOptions config.abilities labelAttr="label"}}
+                <option value="flat">Flat</option>
+            {{/select}}
+        </select>
+    </div>
+</div>

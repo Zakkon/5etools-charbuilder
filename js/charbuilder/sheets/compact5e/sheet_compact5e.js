@@ -316,7 +316,20 @@ class C5e_EditWindow {
         let item5e = System5e.getItemByCollectionId(this.collectionId);
         const header = this.contentHeader(item5e);
         const windowHeader = this.windowHeader();
+        let window_content = $$`<section class = "window-content"></section>`
+        let window2 = $$`<div class="c5e app window-app sheet item flexcol" style="z-index: 110; width: 550px; height: 500px; left: 400px; top: 50px;">${window_content}</div>`;
+        this.element = window2;
+        $("body").append(this.element);
         let tab_details = $$`<div class="tab details active" data-tab="details"></div>`;
+
+        item5e.cssClass = "c5e app window-app sheet item";
+        item5e.concealDetails = false;//!game.user.isGM && (this.document.system.identified === false)
+        let contentTemplate = new LoadTemplate(window_content, "weapon", item5e);
+        contentTemplate.create(()=>{
+            
+        });
+        return;
+
 
         const window = $$`<div class="c5e app window-app sheet item" style="z-index: 110; width: 550px; height: 500px; left: 400px; top: 50px;">
         ${windowHeader}
@@ -441,7 +454,7 @@ class C5e_EditWindow {
     renderDetails(tab, item5e){
 
         if(item5e.type == "item"){
-            let temp = new LoadTemplate(tab, "item-activation", item5e);
+            let temp = new LoadTemplate(tab, "weapon-details", item5e);
             temp.create(()=>{
                 //Setup event listeners
 

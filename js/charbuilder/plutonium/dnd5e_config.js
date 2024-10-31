@@ -270,5 +270,85 @@ DND5E.abilities = {
     improvement: false
   }
 };
+DND5E.damageTypes = {
+  acid: {
+    label: "DND5E.DamageAcid",
+    icon: "systems/dnd5e/icons/svg/damage/acid.svg",
+    reference: "Compendium.dnd5e.rules.JournalEntry.NizgRXLNUqtdlC1s.JournalEntryPage.IQhbKRPe1vCPdh8v"
+  },
+  bludgeoning: {
+    label: "DND5E.DamageBludgeoning",
+    icon: "systems/dnd5e/icons/svg/damage/bludgeoning.svg",
+    isPhysical: true,
+    reference: "Compendium.dnd5e.rules.JournalEntry.NizgRXLNUqtdlC1s.JournalEntryPage.39LFrlef94JIYO8m"
+  },
+  cold: {
+    label: "DND5E.DamageCold",
+    icon: "systems/dnd5e/icons/svg/damage/cold.svg",
+    reference: "Compendium.dnd5e.rules.JournalEntry.NizgRXLNUqtdlC1s.JournalEntryPage.4xsFUooHDEdfhw6g"
+  },
+  fire: {
+    label: "DND5E.DamageFire",
+    icon: "systems/dnd5e/icons/svg/damage/fire.svg",
+    reference: "Compendium.dnd5e.rules.JournalEntry.NizgRXLNUqtdlC1s.JournalEntryPage.f1S66aQJi4PmOng6"
+  },
+  force: {
+    label: "DND5E.DamageForce",
+    icon: "systems/dnd5e/icons/svg/damage/force.svg",
+    reference: "Compendium.dnd5e.rules.JournalEntry.NizgRXLNUqtdlC1s.JournalEntryPage.eFTWzngD8dKWQuUR"
+  },
+  lightning: {
+    label: "DND5E.DamageLightning",
+    icon: "systems/dnd5e/icons/svg/damage/lightning.svg",
+    reference: "Compendium.dnd5e.rules.JournalEntry.NizgRXLNUqtdlC1s.JournalEntryPage.9SaxFJ9bM3SutaMC"
+  },
+  necrotic: {
+    label: "DND5E.DamageNecrotic",
+    icon: "systems/dnd5e/icons/svg/damage/necrotic.svg",
+    reference: "Compendium.dnd5e.rules.JournalEntry.NizgRXLNUqtdlC1s.JournalEntryPage.klOVUV5G1U7iaKoG"
+  },
+  piercing: {
+    label: "DND5E.DamagePiercing",
+    icon: "systems/dnd5e/icons/svg/damage/piercing.svg",
+    isPhysical: true,
+    reference: "Compendium.dnd5e.rules.JournalEntry.NizgRXLNUqtdlC1s.JournalEntryPage.95agSnEGTdAmKhyC"
+  },
+  poison: {
+    label: "DND5E.DamagePoison",
+    icon: "systems/dnd5e/icons/svg/statuses/poisoned.svg",
+    reference: "Compendium.dnd5e.rules.JournalEntry.NizgRXLNUqtdlC1s.JournalEntryPage.k5wOYXdWPzcWwds1"
+  },
+  psychic: {
+    label: "DND5E.DamagePsychic",
+    icon: "systems/dnd5e/icons/svg/damage/psychic.svg",
+    reference: "Compendium.dnd5e.rules.JournalEntry.NizgRXLNUqtdlC1s.JournalEntryPage.YIKbDv4zYqbE5teJ"
+  },
+  radiant: {
+    label: "DND5E.DamageRadiant",
+    icon: "systems/dnd5e/icons/svg/damage/radiant.svg",
+    reference: "Compendium.dnd5e.rules.JournalEntry.NizgRXLNUqtdlC1s.JournalEntryPage.5tcK9buXWDOw8yHH"
+  },
+  slashing: {
+    label: "DND5E.DamageSlashing",
+    icon: "systems/dnd5e/icons/svg/damage/slashing.svg",
+    isPhysical: true,
+    reference: "Compendium.dnd5e.rules.JournalEntry.NizgRXLNUqtdlC1s.JournalEntryPage.sz2XKQ5lgsdPEJOa"
+  },
+  thunder: {
+    label: "DND5E.DamageThunder",
+    icon: "systems/dnd5e/icons/svg/damage/thunder.svg",
+    reference: "Compendium.dnd5e.rules.JournalEntry.NizgRXLNUqtdlC1s.JournalEntryPage.iqsmMHk7FSpiNkQy"
+  }
+};
+DND5E.healingTypes = {
+  healing: {
+    label: "DND5E.Healing",
+    icon: "systems/dnd5e/icons/svg/damage/healing.svg"
+  },
+  temphp: {
+    label: "DND5E.HealingTemp",
+    icon: "systems/dnd5e/icons/svg/damage/temphp.svg"
+  }
+};
 
 CONFIG = {DND5E: DND5E};
