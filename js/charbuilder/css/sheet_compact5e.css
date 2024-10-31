@@ -152,6 +152,9 @@ a {
     word-break: break-word;
     white-space: nowrap;
     overflow: hidden;
+    color: black !important;
+}
+.ve-night-mode .items-list .item-detail {
     color: white !important;
 }
 .items-list .item > :not(.item-summary):not(:first-child){
@@ -159,7 +162,7 @@ a {
     color: var(--tertiary-text);
     text-align: center;
     /* display: flex; */
-    place-content: center;
+    /* place-content: center; */
     line-height: normal;
 }
 .items-list .item-controls a{
