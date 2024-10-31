@@ -206,7 +206,6 @@ class C5e_InventoryItem {
         this.itemUid = collectionId.split("__")[0];
         //Create context
         let totalWeight = item.weight * quantity;
-        console.log("NEW ITEM RENDER", item);
         
         let ctx = {totalWeight:totalWeight};
         let html = this._template({item:item, collectionId: collectionId, ctx:ctx, weightUnit:C5e_InventoryItem._weightUnit});
@@ -314,45 +313,21 @@ class C5e_EditWindow {
 
     render(){
         let item5e = System5e.getItemByCollectionId(this.collectionId);
-        const header = this.contentHeader(item5e);
         const windowHeader = this.windowHeader();
         let window_content = $$`<section class = "window-content"></section>`
-        let window2 = $$`<div class="c5e app window-app sheet item flexcol" style="z-index: 110; width: 550px; height: 500px; left: 400px; top: 50px;">${window_content}</div>`;
+        let window2 = $$`<div class="c5e app window-app sheet item" style="z-index: 110; width: 550px; height: 500px; left: 400px; top: 50px;">${windowHeader}${window_content}</div>`;
         this.element = window2;
         $("body").append(this.element);
-        let tab_details = $$`<div class="tab details active" data-tab="details"></div>`;
 
-        item5e.cssClass = "c5e app window-app sheet item";
+        let templateName = "weapon";
+        if(item5e.type == "classFeature"){templateName = "feat";}
+
+        item5e.cssClass = "editable";
         item5e.concealDetails = false;//!game.user.isGM && (this.document.system.identified === false)
-        let contentTemplate = new LoadTemplate(window_content, "weapon", item5e);
+        let contentTemplate = new LoadTemplate(window_content, templateName, item5e);
         contentTemplate.create(()=>{
-            
+            this.setupListeners(window_content);
         });
-        return;
-
-
-        const window = $$`<div class="c5e app window-app sheet item" style="z-index: 110; width: 550px; height: 500px; left: 400px; top: 50px;">
-        ${windowHeader}
-        <section class="window-content">
-            <form class="editable flexcol" autocomplete="off">
-                ${header}
-                <section class="sheet-body">
-                ${tab_details}
-                </section>
-            </form>
-        </section>
-        </div>`;
-        this.element = window;
-        $("body").append(window);
-
-        System5e.addHookBase("item_update", (p, collectionId) => {
-            if(collectionId != this.collectionId) { return; }
-            if(!this.element){return;}
-            let item5e = System5e.getItemByCollectionId(this.collectionId);
-            this.renderDetails(tab_details, item5e);
-        });
-
-        this.renderDetails(tab_details, item5e);
     }
     close(){
         //Fire one last item_update? (incase we clicked on close instead of clicking elsewhere, which normally triggers input fields "change" events)
@@ -499,6 +474,26 @@ class C5e_EditWindow {
                         this.setProp(el.name, e.target.value);
                     });
                 }
+            });
+        }
+    }
+    setupListeners(windowContent){
+        //Input
+        for(let el of windowContent.find("input")){
+            //Make sure it has a "name" attribute
+            if(!el.name){continue;}
+            $(el).on("change", (e) => {
+                console.log("setprop", el.name, e.target.value);
+                this.setProp(el.name, e.target.value);
+            });
+        }
+        //Select
+        for(let el of windowContent.find("select")){
+            //Make sure it has a "name" attribute
+            if(!el.name){continue;}
+            $(el).on("change", (e) => {
+                console.log("setprop", el.name, e.target.value);
+                this.setProp(el.name, e.target.value);
             });
         }
     }

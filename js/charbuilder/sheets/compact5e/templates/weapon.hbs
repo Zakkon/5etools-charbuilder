@@ -60,7 +60,7 @@
     <nav class="sheet-navigation tabs" data-group="primary">
         <a class="item active" data-tab="description">{{ localize "DND5E.Description" }}</a>
         <a class="item" data-tab="details">{{ localize "DND5E.Details" }}</a>
-        <a class="item" data-tab="effects">{{ localize "DND5E.Effects" }}</a>
+        {{!-- <a class="item" data-tab="effects">{{ localize "DND5E.Effects" }}</a> --}}
     </nav>
 
     {{!-- Item Sheet Body --}}
@@ -121,7 +121,7 @@
             <div class="form-group">
                 <label>{{localize 'DND5E.ArmorClass'}}</label>
                 <div class="form-fields">
-                   {{!--  {{numberInput system.armor.value name="system.armor.value"}} --}}
+                    {{numberInput system.armor.value name="system.armor.value"}}
                 </div>
             </div>
 
@@ -132,7 +132,7 @@
             <div class="form-group">
                 <label>{{ localize "DND5E.MagicalBonus" }}</label>
                 <div class="form-fields">
-                   {{!--  {{ numberInput system.magicalBonus name="system.magicalBonus" min="0" step="1" placeholder="0" }} --}}
+                    {{ numberInput system.magicalBonus name="system.magicalBonus" min="0" step="1" placeholder="0" }}
                 </div>
             </div>
             {{/if}}

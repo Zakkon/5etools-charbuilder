@@ -302,6 +302,7 @@ class Item5e extends Entity5e{
         const original = CharacterBuilder.getItemByUid(this.uid);
         this.system = structuredClone(original.system);
         this.entries = structuredClone(original.entries);
+        this.name = original.name;
         this.properties = {};
 
         if(!Entity5e.use_overrides){return this;}

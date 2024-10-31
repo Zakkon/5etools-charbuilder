@@ -35,6 +35,14 @@ class HandlebarsHelper{
         Handlebars.registerHelper('localize', function (value) {
             return value;
         });
+        Handlebars.registerHelper('numberInput', function (value, options) {
+            let wrapper = `<input type="number" value${value != null? `="${value}"` : ""}`;
+            let opts = HandlebarsHelper.getAttributes(options);
+            for(const [key, val] of Object.entries(opts)){wrapper += ` ${key}="${val}"`;}
+            wrapper += "></input>";
+            console.log("WRAP", wrapper);
+            return new Handlebars.SafeString(wrapper);
+        });
         Handlebars.registerHelper('select', function (value, options) {
             return options.fn(this)
               .split('\n')
