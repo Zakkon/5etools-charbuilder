@@ -332,6 +332,7 @@ class Item5e extends Entity5e{
         else if(inputObj.type == "classFeature"){
             entity = new ClassFeature5e(inputObj.uid, inputObj.className, inputObj.classSource, inputObj.collectionId);
         }
+        else if(inputObj.type == "spell"){return null;}
         inputObj && Object.assign(entity, inputObj);
         return entity;
     }

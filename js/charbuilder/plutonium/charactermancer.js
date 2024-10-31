@@ -9597,7 +9597,7 @@ Charactermancer_StartingEquipment.ComponentDefault = class extends Charactermanc
                     let item5e = System5e.getItemByCollectionId(this.collectionId);
                     if(!item5e){item5e = new Item5e(itemUid, it.quantity, this.collectionId);}
                     await item5e.importSystemData();
-                    System5e.addToInventory(CharacterBuilder.instance._actor, it.item, item5e);
+                    System5e.addToInventory(CharacterBuilder.instance._actor, item5e);
                 }
                 this._state["defaultItemPulse"] = !this._state["defaultItemPulse"];
             }
@@ -10243,7 +10243,7 @@ Charactermancer_StartingEquipment.ComponentGold = class extends Charactermancer_
             if(!item5e){
                 //If it doesnt, create a new item5e, import system data, then add to inventory
                 item5e = new Item5e(itemUid, opts.quantity, collectionId);
-                item5e.importSystemData().then(System5e.addToInventory(this._actor, itemUid, item5e));
+                item5e.importSystemData().then(System5e.addToInventory(this._actor, item5e));
             }
             else{
                 //If it does, just import system data, no need to re-add it to the inventory

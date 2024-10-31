@@ -397,14 +397,14 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
 
                   //TEST
                   //just invent a spell
-                  let sp = CharacterBuilder.getSpellByUid(null, "Aid", "PHB");
+                 /*  let sp = CharacterBuilder.getSpellByUid(null, "Aid", "PHB");
                   console.log("SPELL", sp);
                   //console.log("HASH", UrlUtil.URL_TO_HASH_BUILDER[UrlUtil.PG_SPELLS](sp));
                   let spell5e = new Spell5e(UrlUtil.URL_TO_HASH_BUILDER[UrlUtil.PG_SPELLS](sp));
                   spell5e.importSystemData().then(()=>{
                     System5e.addToInventory(this._actor, spell5e),
                     ActorCharactermancerSheet.c5e_inventory.addItem("weapons", spell5e, 1, spell5e.collectionId)
-                  });
+                  }); */
                 }
                 
               }
