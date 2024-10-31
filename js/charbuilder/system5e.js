@@ -162,9 +162,32 @@ class System5e{
         return JSON.stringify(schema.system);
     }
 
-    static async addToInventory(actor, item5e){
-        console.error("Add item", item5e.name, item5e.collectionId);
-        actor.character.system.inventory.items.push(item5e);
+    static async addToInventory(actor, entity5e){
+        console.error("Add item", entity5e.name, entity5e.collectionId);
+        actor.character.system.inventory.items.push(entity5e);
+    }
+    /**
+     * Try to get an existing item from the inventory
+     * @param {Actor} actor
+     * @param {string} itemType
+     * @param {any} matchData
+     * @param {string} collectionId If this is provided, it will be used during matching instead of matchData
+     * @returns {Entity5e}
+     */
+    static getFromInventory(itemType, matchData, collectionId, actor=null){
+        if(!actor){actor = CharacterBuilder.instance._actor;}
+        for(let it of actor.character.system.inventory.items){
+            //To get the functions on the Item5e object, we need to recast it
+            if(!it.type != itemType){continue;}
+            if(collectionId!= null){if(it.collectionId == collectionId){return it;}continue;}
+            if(itemType == "classFeature" && ent.hash == matchData){return it;}
+            else if(itemType == "item" && ent.uid == matchData){return it;}
+        }
+        return null;
+    }
+    static getInventoryItems(actor=null){
+        if(!actor){actor = CharacterBuilder.instance._actor;}
+        return actor.character.system.inventory.items;
     }
     static __hooks = {};
     static hkItemUpdated(collectionID){
@@ -194,6 +217,13 @@ class System5e{
         }
         return null;
     }
+    /**
+     * Returns any items in the inventory matching the value of property
+     * @param {string} property
+     * @param {any} value
+     * @param {Actor} actor=null
+     * @returns {Entity5e[]}
+     */
     static getItemsByProp(property, value, actor=null){
         if(!actor){actor = CharacterBuilder.instance._actor;}
         let ar = [];
@@ -281,7 +311,6 @@ class Entity5e {
 
     
     get hasAttack() {
-        console.log("SYSTEM", this.system);
         return ["mwak", "rwak", "msak", "rsak"].includes(this.system.actionType);
     }
     get hasDamage() {
@@ -327,7 +356,6 @@ class Item5e extends Entity5e{
         return path.split('.').reduce((acc, part) => acc && acc[part], obj);
     }
     static recast(inputObj){
-        console.log("TYPE", inputObj);
         let entity = null;
         if(inputObj.type == "item"){entity = new Item5e(inputObj.uid, inputObj.quantity, inputObj.collectionId);}
         else if(inputObj.type == "classFeature"){
@@ -368,7 +396,7 @@ class ClassFeature5e extends Entity5e{
         this.system = structuredClone(original.system);
         //this.entries = structuredClone(CharacterBuilder.getClassFeatureEntries(original.name, original.source));
         let entr = []; for(let l of original.loadeds){for(let e of l.entity.entries){entr.push(e);}} this.entries = entr;
-        const classDatas = CharacterBuilder.instance._data; console.log(classDatas, original, this.entries);
+        const classDatas = CharacterBuilder.instance._data;
         this.properties = {concentration:{label:"Concentration", selected:true}};
 
         if(!Entity5e.use_overrides){return this;}

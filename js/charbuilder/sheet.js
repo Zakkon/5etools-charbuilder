@@ -383,29 +383,29 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
               
               for(let f of d.cls.classFeatures){
                 classFeaturesText = tryPrintClassFeature(f, classFeaturesText, d.cls, bannedFeatureNames);
+                //See if we are high enough level for this feature
+                if(f.level > d.targetLevel){continue;}
+                //if(!f.hash.includes("rage_barbarian_phb_1_")){continue;}
 
-                if(f.hash.includes("rage_barbarian_phb_1_")){
-                  console.log("try add to inventory");
-                  //Check if inventory already has an object with this hash
-                  //if(System5e.getItemsByProp("hash", f.hash).length > 0){continue;}
-                  console.log("try add to inventory 2");
-                  ClassFeature5e.verifySystemData(f.hash, d.cls.name, d.cls.source).then(() => {
-                    let featureItem = new ClassFeature5e(f.hash, d.cls.name, d.cls.source);
-                    System5e.addToInventory(this._actor, featureItem);
-                    ActorCharactermancerSheet.c5e_inventory.addItem("weapons", featureItem, 1, featureItem.collectionId);
-                  });
+                //Try adding this class feature to the inventory
+                //Check if inventory already has an object with this hash
+                if(System5e.getItemsByProp("hash", f.hash).length > 0){ console.log(`item ${f.name} already exists`); continue;}
+                ClassFeature5e.verifySystemData(f.hash, d.cls.name, d.cls.source).then(() => {
+                  let featureItem = new ClassFeature5e(f.hash, d.cls.name, d.cls.source);
+                  System5e.addToInventory(this._actor, featureItem);
+                  ActorCharactermancerSheet.c5e_inventory.rebuildUi();
+                });
 
-                  //TEST
-                  //just invent a spell
-                 /*  let sp = CharacterBuilder.getSpellByUid(null, "Aid", "PHB");
-                  console.log("SPELL", sp);
-                  //console.log("HASH", UrlUtil.URL_TO_HASH_BUILDER[UrlUtil.PG_SPELLS](sp));
-                  let spell5e = new Spell5e(UrlUtil.URL_TO_HASH_BUILDER[UrlUtil.PG_SPELLS](sp));
-                  spell5e.importSystemData().then(()=>{
-                    System5e.addToInventory(this._actor, spell5e),
-                    ActorCharactermancerSheet.c5e_inventory.addItem("weapons", spell5e, 1, spell5e.collectionId)
-                  }); */
-                }
+                //TEST
+                //just invent a spell
+                /*  let sp = CharacterBuilder.getSpellByUid(null, "Aid", "PHB");
+                console.log("SPELL", sp);
+                //console.log("HASH", UrlUtil.URL_TO_HASH_BUILDER[UrlUtil.PG_SPELLS](sp));
+                let spell5e = new Spell5e(UrlUtil.URL_TO_HASH_BUILDER[UrlUtil.PG_SPELLS](sp));
+                spell5e.importSystemData().then(()=>{
+                  System5e.addToInventory(this._actor, spell5e),
+                  ActorCharactermancerSheet.c5e_inventory.addItem("weapons", spell5e, 1, spell5e.collectionId)
+                }); */
                 
               }
               if(classFeaturesText.length > 0){
@@ -1244,7 +1244,6 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
 
           const populateInventoryScreen = (result) => {
             $divInventory.empty();
-            ActorCharactermancerSheet.c5e_inventory.clearCategories();
             const createItemDiv = (item, quantity, collectionID) => {
               const isEquippable = item.armor || item.weapon || item.arrow;
               const isPreChecked = isEquippable && this._meta.equipped[collectionID];
@@ -1261,7 +1260,9 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
                 <div class="ct-inventory-item__weight"><span>${item.weight | "0"}</span></div>
               </div>`.appendTo($divInventory);
 
-              ActorCharactermancerSheet.c5e_inventory.addItem("weapons", item, quantity, collectionID);
+              //Delete this?
+              console.error("add to inventory?");
+              //ActorCharactermancerSheet.c5e_inventory.addItem("weapons", item, quantity, collectionID);
             }
             for(let it of result.startingItems){
               let div = createItemDiv(it.item, it.quantity, it.collectionId);
@@ -1270,6 +1271,8 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
               //let div = createItemDiv(it.item, it.quantity);
               createItemDiv(it.item, it.quantity, it.collectionId);
             }
+
+            ActorCharactermancerSheet.c5e_inventory.rebuildUi();
           }
 
           this._getOurItems().then(result => {

@@ -61,9 +61,15 @@ class C5e_Inventory{
         category_weapons.addTo(this.rootElement);
     }
     addItem(categoryId, item, quantity, collectionId){
-        const c = this.getCategory(categoryId);
-        let e = this.createItemElement(item, quantity, collectionId);
-        e.addTo(c);
+        this.rebuildUi();
+    }
+    rebuildUi(){
+        this.clearCategories();
+        const c = this.getCategory("weapons");
+        for(let entity of System5e.getInventoryItems()){
+            let e = this.createItemElement(entity, entity.quantity, entity.collectionId);
+            e.addTo(c);
+        }
     }
     getCategory(categoryId){
         return this.categories[categoryId];
@@ -127,7 +133,6 @@ class C5e_InventoryCategory {
     }
     clear(){
         $(`.item-list[data-category-id="${this.categoryId}"] > *`).remove();
-        console.log("cleared");
     }
     addTo(element){
         this.header.appendTo(element);
