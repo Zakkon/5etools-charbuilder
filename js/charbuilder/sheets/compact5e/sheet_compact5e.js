@@ -96,7 +96,7 @@ class C5e_Inventory{
         if(info.targetLevel == undefined){info.targetLevel = 1;} //Not sure why this appears to be undefined upon first time user picks a class
         this._myClasses.push(info);
         console.log("Added class", info.cls.name);
-        this.handleClassLevelChange(info, 0, info.targetLevel);
+        this._handleClassLevelChange(info, 0, info.targetLevel);
     }
     removeClass(info){
         //This is not really secure, as one may in theory have multiple instances of the same class on oneself, but it will do for now
@@ -114,7 +114,7 @@ class C5e_Inventory{
             }
         }
         console.log("removing class", hash);
-        this.handleClassLevelChange(toRemove, toRemove.targetLevel, 0);
+        this._handleClassLevelChange(toRemove, toRemove.targetLevel, 0);
     }
     getActiveClasses(){
 
@@ -173,20 +173,25 @@ class C5e_Inventory{
         }
         
     }
-    handleClassLevelChange(info, from, to){
+    /**
+     * @param {{cls:Class}} info
+     * @param {number} from
+     * @param {number} to
+     */
+    _handleClassLevelChange(info, from, to){
         if(to == from){return;}
         const upgrade = to > from;
         if(upgrade){
             let itemsToVerify = [];
             for(let i = from+1; i <= to; ++i){
-                let items = this.addClassFeaturesForLevel(info, i, true); //Make sure to tell the function to return the list of items to verify
-                itemsToVerify = itemsToVerify.concat(items);
+                //Get unverified class features, combine them into an array, then verify them later
+                itemsToVerify = itemsToVerify.concat(this._getUnverifiedClassFeaturesForLevel(info, i, true));
             }
-            //Once we have a list of all the items to verify, begin verifying them
+            
             //Quickly create collecitonIds for the items we are verifying. Those ids will be given to the items
             for(let i = 0; i < itemsToVerify.length; ++i){itemsToVerify[i].collectionId = System5e.createUniqueID();}
-            console.log("Items to verify", itemsToVerify);
-            //Verify them, and rebuild the inventory list ui afterwards
+
+            //Once we have a list of all the items to verify, begin verifying them
             this._awaitClassFeatureVerification(itemsToVerify).then(()=>{
                 //Now we need to go in and make sure the features that were created are tied to our class
                 //We can find the features using the collectionIds we created earlier
@@ -197,7 +202,7 @@ class C5e_Inventory{
                     let m = matches[0];
                     //Now we can give that feature some info tying it to our class
                     m.dependsOnType = "class";
-                    m.dependsOn = `${info.cls.name}|${info.cls.source}`.toLowerCase();
+                    m.dependsOn = `${info.cls.name}_${info.cls.source}_${fItem.entity.level}`.toLowerCase();
                 }
                 console.log("try rebuild ui");
                 ActorCharactermancerSheet.c5e_inventory.rebuildUi();
@@ -205,11 +210,16 @@ class C5e_Inventory{
         }
         else{
             for(let i = from; i > to; --i){
-                this.removeClassFeaturesForLevel(info, i);
+                this._removeClassFeaturesForLevel(info, i);
             }
         }
     }
-    addClassFeaturesForLevel(info, level, returnItems = false){
+    /**
+     * Returns unverified class features from the class and level provided
+     * @param {{cls:{classFeatures:{level:number, hash:string, name:string}}}} info
+     * @param {number} level
+     */
+    _getUnverifiedClassFeaturesForLevel(info, level){
         let itemsToVerify = [];
         for(let f of info.cls.classFeatures){
             if(f.level != level){continue;}
@@ -219,23 +229,14 @@ class C5e_Inventory{
             //Instead of verifying features async right now, store the features in an array and verify them together as a promise
             itemsToVerify.push({entity:f, cls:info.cls});
         }
-        if(returnItems){return itemsToVerify;}
-
-        //Verify them, and rebuild the inventory list ui afterwards
-        this._awaitClassFeatureVerification(itemsToVerify).then(()=>{
-        console.log("try rebuild ui");
-        ActorCharactermancerSheet.c5e_inventory.rebuildUi();
-        });
+        return itemsToVerify;
     }
-    removeClassFeaturesForLevel(info, level){
+    _removeClassFeaturesForLevel(info, level){
         
         let matches = System5e.getItemsByProps([{property: "dependsOnType", value: "class"},
-            {property: "dependsOn", value: `${info.cls.name}|${info.cls.source}`.toLowerCase()}]);
-            
-        console.log("removing matches", matches, CharacterBuilder.instance._actor.character.system.inventory.items);
+            {property: "dependsOn", value: `${info.cls.name}_${info.cls.source}_${level}`.toLowerCase()}]);
         for(let m of matches){
-            console.log("REMOVE CLASS FEATURE", m);
-            System5e.removeFromInventory( CharacterBuilder.instance._actor, m.collectionId);
+            System5e.removeFromInventory(CharacterBuilder.instance._actor, m.collectionId);
         }
     }
     async _awaitClassFeatureVerification(itemsToVerify){
