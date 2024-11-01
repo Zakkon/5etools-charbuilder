@@ -17,23 +17,12 @@ class C5e_Inventory{
         var template = Handlebars.compile(text);
         return template(data);
     }
-    /**
-     * @param {{item:Item, quantity:number, collectionId:string}[]} items
-     * @returns {any}
-     */
-    createItemElements(items){
-        let elements = [];
-
-        for(let item of items){
-            elements.push(this.createItemElement(item.item, item.quantity, item.collectionId));
-        }
-        return elements;
-    }
-    createItemElement(item, quantity, collectionId){
+    createItemElement(item, quantity, collectionId, category){
+        this.elementsInCreation++;
+        console.log("start creating", item.name);
         if(quantity == null){quantity = 1;}
-        let element = new C5e_InventoryItem(this);
-        element.render(item, quantity, collectionId);
-        return element;
+        let element = new C5e_InventoryItem(this, item, quantity, collectionId, category);
+        element.render().then(el=>{element.addTo(category); this.elementsInCreation--; console.log("end creating", item.name);});
     }
     static setupListeners(){
         $(`.item-controls .item-action`).on("click", function(e) {
@@ -63,18 +52,20 @@ class C5e_Inventory{
     addItem(categoryId, item, quantity, collectionId){
         this.rebuildUi();
     }
+    elementsInCreation = 0;
     rebuildUi(){
+        if(this.elementsInCreation>0){console.log(this.elementsInCreation, "elements still being created"); return;}
         this.clearCategories();
         const c = this.getCategory("weapons");
         for(let entity of System5e.getInventoryItems()){
-            let e = this.createItemElement(entity, entity.quantity, entity.collectionId);
-            e.addTo(c);
+            this.createItemElement(entity, entity.quantity, entity.collectionId, c);
         }
     }
     getCategory(categoryId){
         return this.categories[categoryId];
     }
     clearCategories(){
+        console.error("clear categories");
         for(let c in this.categories){
             this.getCategory(c).clear();
         }
@@ -148,82 +139,40 @@ class C5e_InventoryItem {
     summary;
     summaryOn;
     static _weightUnit = "lbs.";
-    constructor(parent){
+    constructor(parent, item, quantity, collectionId, category){
         this.parent = parent;
-        //Create inventory item template
-        const itemWeight = `
-        <div class="item-detail item-weight">
-            {{#if ctx.totalWeight}}
-                <div class="item-detail">
-                {{ ctx.totalWeight }} {{ @root.weightUnit }}
-                </div>
-            {{/if}}
-        </div>`;
-        const itemCharges = `
-        <div class="item-detail item-uses">
-            {{#if item.system.uses.per }}
-                <input type="text" value="{{item.system.uses.value}}" placeholder="0" />
-                / {{item.system.uses.max}}
-            {{/if}}
-        </div>`;
-        const itemAction = `
-        <div class="item-detail item-action">
-            {{#if item.system.activation.type }}
-                {{item.system.activation.type}}
-            {{/if}}
-        </div>`;
-        const itemControls = `
-        <div class="item-controls">
-        
-            <a class="item-control item-action" data-action="equip" title="Equip">
-                <i class="fas fa-shield-alt"></i>
-            </a>
-            <a class="item-control item-action" data-action="itemEdit">
-                <i class="fas fa-edit"></i>
-            </a>
-            <a class="item-control item-action" data-action="itemDelete">
-                <i class="fas fa-trash"></i>
-            </a>
-        </div>`;
-
-        const itemElement = `
-        <li class="item flexrow" data-item-id="{{collectionId}}">
-            <div class="item-name flexrow">
-                <h4 class="item-action" data-action="expand">{{item.name~}}
-                {{#if ctx.isStack}} ({{item.system.quantity}}){{/if}}</h4>
-            </div>
-            ${itemWeight}
-            ${itemCharges}
-            ${itemAction}
-            ${itemControls}
-        </li>`;
-        this._template = Handlebars.compile(itemElement);
-    }
-    /**
-     * @param {Item5e} item
-     * @param {number} quantity
-     * @param {string} collectionID
-     * @returns {any}
-     */
-    render(item, quantity, collectionId){
-        
+        this.category = category;
+        this.item = item;
+        this.quantity = quantity;
         this.collectionId = collectionId;
         this.itemUid = collectionId.split("__")[0];
-        //Create context
-        let totalWeight = item.weight * quantity;
-        
-        let ctx = {totalWeight:totalWeight};
-        let html = this._template({item:item, collectionId: collectionId, ctx:ctx, weightUnit:C5e_InventoryItem._weightUnit});
-        this.element = $$`${html}`;
-        if(item.type == "classFeature"){this.element.find(`[data-action="equip"]`).css("display", "none");}
 
         System5e.addHookBase("item_update", (p, collectionId) => {
             if(collectionId != this.collectionId){return;}
             let item5e = System5e.getItemByCollectionId(this.collectionId);
-            this.element.find(`.item-name > h4`).text(item5e.prop("name"));
+            //this.element.find(`.item-name > h4`).text(item5e.prop("name"));
+            this.render(true);
         });
+    }
+    async render(isRefresh=false){
+        if(!isRefresh){console.error("Create Item Element", this.item.name);}
+        return new Promise((resolve, reject) => {
+            //Create context
+            let totalWeight = this.item.weight * this.quantity;
+            let ctx = {totalWeight:totalWeight};
+            let tmp = new LoadTemplate(null, "inventory-item", {item:this.item, collectionId: this.collectionId, ctx:ctx, weightUnit:C5e_InventoryItem._weightUnit});
+            tmp.createAndCompile((html) => {
+                if(isRefresh){
+                    //Instead of re-creating this element, just overwrite the inner html with the inner html of a brand new temporary element
+                    const tempEl = $$`${html}`;
+                    this.element.html(tempEl.html());
+                }  
+                else{this.element = $$`${html}`;}
 
-        return this.element;
+                if(this.item.type == "classFeature"){this.element.find(`[data-action="equip"]`).css("display", "none");}
+                resolve();
+            });
+        });
     }
     addTo(category){
         this.element.appendTo(category.itemList);
@@ -323,6 +272,7 @@ class C5e_EditWindow {
 
     render(){
         let item5e = System5e.getItemByCollectionId(this.collectionId);
+        console.log(item5e);
         const windowHeader = this.windowHeader();
         let window_content = $$`<section class="window-content"></section>`
         let handle = this.windowDragHandle();

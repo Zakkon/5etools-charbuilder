@@ -269,6 +269,7 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
       //#region Class
       //When class changes, redraw the elements
       const hkClass = () => {
+        console.error("HKCLASS");
           $divClassFeatures.empty();
           $divSubclassFeatures.empty();
           $lblProfBonus.text("+2"); //Default, even for lvl 0 characters
@@ -287,6 +288,7 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
             }
             return null;
           }
+          let itemsToVerify = [];
           //Verify that attributes are still valid
           /* for(let i = this._meta.attributes.length-1; i >= 0; --i){
             const attr = this._meta.attributes[i];
@@ -380,21 +382,25 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
                 }
 
               }
+
+              
               
               for(let f of d.cls.classFeatures){
                 classFeaturesText = tryPrintClassFeature(f, classFeaturesText, d.cls, bannedFeatureNames);
                 //See if we are high enough level for this feature
-                if(f.level > d.targetLevel){continue;}
+                if(f.level > d.targetLevel || d.targetLevel == null){continue;}
+                console.log("level", f.level, d.targetLevel);
                 //if(!f.hash.includes("rage_barbarian_phb_1_")){continue;}
 
                 //Try adding this class feature to the inventory
                 //Check if inventory already has an object with this hash
                 if(System5e.getItemsByProp("hash", f.hash).length > 0){ console.log(`item ${f.name} already exists`); continue;}
-                ClassFeature5e.verifySystemData(f.hash, d.cls.name, d.cls.source).then(() => {
+                //Instead of verifying features async right now, store the features in an array and verify them together as a promise
+                itemsToVerify.push({entity:f, cls:d.cls});
+                /* ClassFeature5e.verifySystemData(f.hash, d.cls.name, d.cls.source).then(() => {
                   let featureItem = new ClassFeature5e(f.hash, d.cls.name, d.cls.source);
                   System5e.addToInventory(this._actor, featureItem);
-                  ActorCharactermancerSheet.c5e_inventory.rebuildUi();
-                });
+                }); */
 
                 //TEST
                 //just invent a spell
@@ -435,6 +441,29 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
               }
           }
           $lblClass.html(textOut);
+
+          const pver = async (itemsToVerify) => {
+            return new Promise(async (resolve, reject) => {
+              for(let fItem of itemsToVerify){
+                if(System5e.getItemsByProp("hash", fItem.entity.hash).length > 0){ continue;}
+                await ClassFeature5e.verifySystemData(fItem.entity.hash, fItem.cls.name, fItem.cls.source);
+                let featureItem = new ClassFeature5e(fItem.entity.hash, fItem.cls.name, fItem.cls.source);
+                System5e.addToInventory(this._actor, featureItem);
+                console.log("Item verified");
+              }
+              console.log("Resolve");
+              resolve();
+            });
+          }
+          //Prepare a promise to verify all the features
+          //let promiseVerifyItems = pver;
+
+          //console.log("promiseVerifyItems", promiseVerifyItems);
+
+          //Verify them, and rebuild the inventory list ui afterwards
+          pver(itemsToVerify).then(()=>{
+            console.log("try rebuild ui"); ActorCharactermancerSheet.c5e_inventory.rebuildUi();
+          });
 
           //Calculate proficiency bonus
           const profBonus = this._getProfBonus(this._parent.compClass);
@@ -1220,6 +1249,7 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
       //#region Equipment (and AC)
       const hkEquipment = () => {
 
+        console.error("HKEQUIPMENT");
         const strScore = this._getAbilityScore("str");
 
           this._calcArmorClass().then(result=>{
@@ -1272,7 +1302,7 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
               createItemDiv(it.item, it.quantity, it.collectionId);
             }
 
-            ActorCharactermancerSheet.c5e_inventory.rebuildUi();
+            //ActorCharactermancerSheet.c5e_inventory.rebuildUi(); //Not doing this anymore, since it conflicts with hkClass too often
           }
 
           this._getOurItems().then(result => {
@@ -1323,6 +1353,13 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
 
           
       }
+      const hkClassChangeStartingItems = () => {
+        //Recalculate starting items
+      }
+      const hkClassChangeAC = () => {
+        //Recalculate AC
+      }
+
       this._parent.compRace.addHookBase("race_ixRace_version", hkEquipment); //needed to refresh race size, which impacts carrying capacity
       this._parent.compRace.addHookBase("pulseSize", hkEquipment); //needed to refresh race size, which impacts carrying capacity
       this._parent.compEquipment._compEquipmentCurrency._addHookBase("cpRolled", hkEquipment);
