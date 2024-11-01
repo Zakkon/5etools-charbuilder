@@ -90,6 +90,169 @@ class C5e_Inventory{
     }
     //#endregion
 
+    //#region Classes
+    _myClasses = [];
+    addClass(info){
+        if(info.targetLevel == undefined){info.targetLevel = 1;} //Not sure why this appears to be undefined upon first time user picks a class
+        this._myClasses.push(info);
+        console.log("Added class", info.cls.name);
+        this.handleClassLevelChange(info, 0, info.targetLevel);
+    }
+    removeClass(info){
+        //This is not really secure, as one may in theory have multiple instances of the same class on oneself, but it will do for now
+        //TODO: compare index of classes to make sure they are the same one
+        const hash = `${info.cls.name}|${info.cls.source}`.toLowerCase();
+        let loopBreaker = false;
+        let toRemove = null;
+        for(let i = 0; i < this._myClasses.length && !loopBreaker; ++i){
+            const c = this._myClasses[i];
+            const hash2 = `${c.cls.name}|${c.cls.source}`.toLowerCase();
+            if(hash == hash2){
+                loopBreaker = true; //End loop
+                toRemove = c;
+                this._myClasses.splice(i, 1); //Remove this from the array
+            }
+        }
+        console.log("removing class", hash);
+        this.handleClassLevelChange(toRemove, toRemove.targetLevel, 0);
+    }
+    getActiveClasses(){
+
+    }
+     /**
+     * @param {{cls:Class, targetLevel:number, propIxClass:string, propIxSubclass:string, isPrimary:boolean, isDeleted}[]} newClasses
+     */
+    matchClassChanges(newClasses){
+        let removed = [];
+        let added = [];
+        let common = [];
+        const oldClasses = this._myClasses;
+        //Check to see if there are missing classes in the new ones
+        for(let old of oldClasses){
+            const hash = `${old.cls.name}|${old.cls.source}`.toLowerCase();
+            const matches = newClasses.filter(c => {
+                const hash2 = `${c.cls.name}|${c.cls.source}`.toLowerCase();
+                return hash == hash2 || c.isDeleted;
+            });
+            if(matches.length < 1){removed.push(old);} //Mark this existing class as being missing in the new ones (it was removed)
+            else{common.push({old: old, new:matches[0]});} //Add this to the common pile, they will be compared later
+        }
+        //Check to see if there are any new classes added
+        for(let newClass of newClasses){
+            const hash = `${newClass.cls.name}|${newClass.cls.source}`.toLowerCase();
+            const matches = oldClasses.filter(c => {
+                const hash2 = `${c.cls.name}|${c.cls.source}`.toLowerCase();
+                return hash == hash2;
+            });
+            if(matches.length < 1 && !newClass.isDeleted){added.push(newClass);} //Mark this existing class as being missing in the new ones (it was removed)
+        }
+
+        //Check to see which of the common classes have been altered by the new one
+        let altered = [];
+
+        return {removed:removed, added:added, altered:altered};
+    }
+    /**
+     * @param {{cls:Class, targetLevel:number, propIxClass:string, propIxSubclass:string, isPrimary:boolean, isDeleted}[]} newClasses
+     */
+    handleClassChanges(newClasses){
+        const {removed, added, altered} = this.matchClassChanges(newClasses);
+
+        //Handle removing classes
+        console.log("classes to remove", removed);
+        for(let c of removed){
+            this.removeClass(c);
+        }
+
+        //Handle adding classes
+        for(let c of added){
+            //For now, just make a new collectionId
+            const colId = System5e.createUniqueID();
+            c.collectionId = colId;
+            this.addClass(c);
+        }
+        
+    }
+    handleClassLevelChange(info, from, to){
+        if(to == from){return;}
+        const upgrade = to > from;
+        if(upgrade){
+            let itemsToVerify = [];
+            for(let i = from+1; i <= to; ++i){
+                let items = this.addClassFeaturesForLevel(info, i, true); //Make sure to tell the function to return the list of items to verify
+                itemsToVerify = itemsToVerify.concat(items);
+            }
+            //Once we have a list of all the items to verify, begin verifying them
+            //Quickly create collecitonIds for the items we are verifying. Those ids will be given to the items
+            for(let i = 0; i < itemsToVerify.length; ++i){itemsToVerify[i].collectionId = System5e.createUniqueID();}
+            console.log("Items to verify", itemsToVerify);
+            //Verify them, and rebuild the inventory list ui afterwards
+            this._awaitClassFeatureVerification(itemsToVerify).then(()=>{
+                //Now we need to go in and make sure the features that were created are tied to our class
+                //We can find the features using the collectionIds we created earlier
+                for(let fItem of itemsToVerify){
+                    //Find the class feature in our inventory
+                    let matches = System5e.getItemsByProps([{property: "collectionId", value: fItem.collectionId}]);
+                    //There should be only one match
+                    let m = matches[0];
+                    //Now we can give that feature some info tying it to our class
+                    m.dependsOnType = "class";
+                    m.dependsOn = `${info.cls.name}|${info.cls.source}`.toLowerCase();
+                }
+                console.log("try rebuild ui");
+                ActorCharactermancerSheet.c5e_inventory.rebuildUi();
+            });
+        }
+        else{
+            for(let i = from; i > to; --i){
+                this.removeClassFeaturesForLevel(info, i);
+            }
+        }
+    }
+    addClassFeaturesForLevel(info, level, returnItems = false){
+        let itemsToVerify = [];
+        for(let f of info.cls.classFeatures){
+            if(f.level != level){continue;}
+            //Try adding this class feature to the inventory
+            //Check if inventory already has an object with this hash
+            if(System5e.getItemsByProp("hash", f.hash).length > 0){ console.log(`item ${f.name} already exists`); continue;}
+            //Instead of verifying features async right now, store the features in an array and verify them together as a promise
+            itemsToVerify.push({entity:f, cls:info.cls});
+        }
+        if(returnItems){return itemsToVerify;}
+
+        //Verify them, and rebuild the inventory list ui afterwards
+        this._awaitClassFeatureVerification(itemsToVerify).then(()=>{
+        console.log("try rebuild ui");
+        ActorCharactermancerSheet.c5e_inventory.rebuildUi();
+        });
+    }
+    removeClassFeaturesForLevel(info, level){
+        
+        let matches = System5e.getItemsByProps([{property: "dependsOnType", value: "class"},
+            {property: "dependsOn", value: `${info.cls.name}|${info.cls.source}`.toLowerCase()}]);
+            
+        console.log("removing matches", matches, CharacterBuilder.instance._actor.character.system.inventory.items);
+        for(let m of matches){
+            console.log("REMOVE CLASS FEATURE", m);
+            System5e.removeFromInventory( CharacterBuilder.instance._actor, m.collectionId);
+        }
+    }
+    async _awaitClassFeatureVerification(itemsToVerify){
+        return new Promise(async (resolve, reject) => {
+            for(let fItem of itemsToVerify){
+              if(System5e.getItemsByProp("hash", fItem.entity.hash).length > 0){ continue;}
+              await ClassFeature5e.verifySystemData(fItem.entity.hash, fItem.cls.name, fItem.cls.source);
+              let featureItem = new ClassFeature5e(fItem.entity.hash, fItem.cls.name, fItem.cls.source, fItem.collectionId);
+              System5e.addToInventory(CharacterBuilder.instance._actor, featureItem);
+              console.log("Item verified");
+            }
+            console.log("Resolve");
+            resolve();
+        });
+    }
+    
+    //#endregion
 }
 class C5e_InventoryCategory {
     header;

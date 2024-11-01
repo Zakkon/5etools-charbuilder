@@ -166,6 +166,11 @@ class System5e{
         console.error("Add item", entity5e.name, entity5e.collectionId);
         actor.character.system.inventory.items.push(entity5e);
     }
+    static async removeFromInventory(actor, collectionId){
+        console.error("Remove item", collectionId);
+        const index = actor.character.system.inventory.items.map(e => e.collectionId).indexOf(collectionId);
+        actor.character.system.inventory.items.splice(index, 1);
+    }
     /**
      * Try to get an existing item from the inventory
      * @param {Actor} actor
@@ -225,11 +230,25 @@ class System5e{
      * @returns {Entity5e[]}
      */
     static getItemsByProp(property, value, actor=null){
+        return System5e.getItemsByProps([{property:property, value:value}], actor);
+    }
+    /**
+     * Returns any items in the inventory matching the value of property
+     * @param {{property:string, value:any}[]} propPairs
+     * @param {Actor} actor=null
+     * @returns {Entity5e[]}
+     */
+    static getItemsByProps(propPairs, actor=null){
         if(!actor){actor = CharacterBuilder.instance._actor;}
         let ar = [];
         for(let it of actor.character.system.inventory.items){
             //To get the functions on the Item5e object, we need to recast it
-            if(it[property] == value){ar.push(it);}
+            let match = true;
+            for(let i = 0; i < propPairs.length && match; ++i){
+                let pv = propPairs[i];
+                if(it[pv.property] != pv.value){match = false;}
+            }
+            if(match){ar.push(it);}
         }
         return ar;
     }

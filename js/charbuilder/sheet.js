@@ -288,6 +288,10 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
             }
             return null;
           }
+
+          //Inform c5e inventory of our class changes
+          ActorCharactermancerSheet.c5e_inventory.handleClassChanges(classData);
+
           let itemsToVerify = [];
           //Verify that attributes are still valid
           /* for(let i = this._meta.attributes.length-1; i >= 0; --i){
@@ -461,9 +465,9 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
           //console.log("promiseVerifyItems", promiseVerifyItems);
 
           //Verify them, and rebuild the inventory list ui afterwards
-          pver(itemsToVerify).then(()=>{
+          /* pver(itemsToVerify).then(()=>{
             console.log("try rebuild ui"); ActorCharactermancerSheet.c5e_inventory.rebuildUi();
-          });
+          }); */
 
           //Calculate proficiency bonus
           const profBonus = this._getProfBonus(this._parent.compClass);
@@ -475,6 +479,8 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
       this._parent.compClass.addHookBase("class_totalLevels", hkClass);
       this._parent.compClass.addHookBase("class_pulseChange", hkClass); //This also senses when subclass is changed
       hkClass();
+
+
       //#endregion
 
       //#region Race

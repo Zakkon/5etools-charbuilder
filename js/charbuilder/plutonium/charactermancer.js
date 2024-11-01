@@ -194,6 +194,7 @@ class ActorCharactermancerClass extends ActorCharactermancerBaseComponent {
             lockRenderFeatureOptionsSelects: lockRenderFeatureOptionsSelects
         } = this.constructor._class_getLocks(ix);
 
+        //Hook for when class is changed
         this._addHookBase(propIxClass, () => this._state.class_pulseChange = !this._state.class_pulseChange);
         //TEMPFIX, add a hook for when subclass is changed. This is so sheets can sense when we change subclass
         this._addHookBase(propIxSubclass, () => this._state.class_pulseChange = !this._state.class_pulseChange);
