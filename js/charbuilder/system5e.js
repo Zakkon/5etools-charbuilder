@@ -217,7 +217,6 @@ class System5e{
     static getItemByCollectionId(collectionId, actor=null){
         if(!actor){actor = CharacterBuilder.instance._actor;}
         for(let it of actor.character.system.inventory.items){
-            //To get the functions on the Item5e object, we need to recast it
             if(it.collectionId == collectionId){return it;}
         }
         return null;

@@ -50,7 +50,7 @@ class HandlebarsHelper{
                 return RegExp(t).test(v) ? v.replace(t, t + ' selected="selected"') : v;
               })
               .join('\n');
-          });
+        });
         Handlebars.registerHelper('selectOptions', function (choices, options) {
             let str = "";
             let opts = HandlebarsHelper.getAttributes(options);
@@ -66,6 +66,8 @@ class HandlebarsHelper{
             let result = new Handlebars.SafeString(str);
             return result;
         });
+        Handlebars.registerHelper("dnd5e-itemContext", HandlebarsHelper.itemContext);
+        Handlebars.registerHelper("dnd5e-dataset", HandlebarsHelper.dataset);
     }
 
     static registerPartials(){
@@ -92,5 +94,40 @@ class HandlebarsHelper{
         fetch("dnd5e.item-action", "item-action");
     }
     
+    /**
+    * A helper that fetch the appropriate item context from root and adds it to the first block parameter.
+    * @param {object} context  Current evaluation context.
+    * @param {object} options  Handlebars options.
+    * @returns {string}
+    */
+    static itemContext(context, options) {
+        if ( arguments.length !== 2 ) throw new Error("#dnd5e-itemContext requires exactly one argument");
+        if ( //foundry.utils.getType(context)
+            typeof(context)
+             === "function" ) context = context.call(this);
+    
+        const ctx = options.data.root.itemContext?.[context.id];
+        if ( !ctx ) {
+            const inverse = options.inverse(this);
+            if ( inverse ) return options.inverse(this);
+        }
+    
+        return options.fn(context, { data: options.data, blockParams: [ctx] });
+    }
 
+     /**
+     * A helper that converts the provided object into a series of `data-` entries.
+     * @param {object} object   Object to convert into dataset entries.
+     * @param {object} options  Handlebars options.
+     * @returns {string}
+     */
+    static dataset(object, options) {
+        const entries = [];
+        for ( let [key, value] of Object.entries(object ?? {}) ) {
+        if ( value === undefined ) continue;
+        key = key.replace(/[A-Z]+(?![a-z])|[A-Z]/g, (a, b) => (b ? "-" : "") + a.toLowerCase());
+        entries.push(`data-${key}="${value}"`);
+        }
+        return new Handlebars.SafeString(entries.join(" "));
+    }
 }

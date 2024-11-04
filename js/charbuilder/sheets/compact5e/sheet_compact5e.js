@@ -48,6 +48,14 @@ class C5e_Inventory{
         this.categories["weapons"] = category_weapons;
         category_weapons.render({label:"Weapons", id:"weapons"});
         category_weapons.addTo(this.rootElement);
+
+        let category_cantrips = new C5e_SpellbookCategory();
+        //this.categories["cantrips"] = category_weapons;
+        //category_weapons.render({label:"Weapons", id:"weapons"});
+        //category_weapons.addTo(this.rootElement);
+
+        this.renderSpellbook();
+        
     }
     addItem(categoryId, item, quantity, collectionId){
         this.rebuildUi();
@@ -254,6 +262,29 @@ class C5e_Inventory{
     }
     
     //#endregion
+
+    //#region Spellbook
+    renderSpellbook(){
+        let fakeData = {spellbook:[
+            {
+                label:"1st Level",
+                usesSlots: true,
+                prop: "spell1",
+                slots: 2,
+                uses: 2,
+                canCreate: false,
+                dataset: {}
+            }
+        ]}
+
+        let temp = new LoadTemplate(null, "parts/spellbook-list", fakeData);
+        temp.createAndCompile((text)=>{
+            const el = $$`${text}`;
+            $("section.flex-column > section").append(el);
+        });
+
+    }
+    //#endregion
 }
 class C5e_InventoryCategory {
     header;
@@ -284,7 +315,6 @@ class C5e_InventoryCategory {
           </li>
         `;
         this.header = $$`${header}`;
-
     }
     clear(){
         $(`.item-list[data-category-id="${this.categoryId}"] > *`).remove();
@@ -547,4 +577,34 @@ class C5e_EditWindow {
         const foundItem = ActorCharactermancerEquipment.findItemByUID(itemUid, itemDatas);
         return foundItem;
     }
+}
+
+class C5e_SpellbookCategory extends C5e_InventoryCategory {
+    render(categoryData){
+        this.categoryId = categoryData.id;
+        this.itemList = $$`<ol class="item-list" data-category-id="${categoryData.id}"></ol>`;
+
+        //Create header template
+        const header = `
+        <li class="items-header spellbook-header flexrow">
+            <span class="item-name flexrow">${categoryData.label}</span>
+        
+            <div class="item-detail item-weight">Weight</div>
+        
+            <div class="item-detail item-uses">Charges</div>
+            <div class="item-detail item-action">Usage</div>
+        
+            <div class="item-controls">
+              <a class="item-control item-action" data-action="create" data-tooltip="itemCreate">
+                <i class="fas fa-plus"></i> Add
+              </a>
+            </div>
+          </li>
+        `;
+        this.header = $$`${header}`;
+
+    }
+}
+class C5e_SpellbookItem {
+
 }
