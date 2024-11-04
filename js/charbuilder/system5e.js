@@ -172,10 +172,10 @@ class System5e{
         actor.character.system.inventory.items.splice(index, 1);
     }
     /**
-     * Try to get an existing item from the inventory
+     * Try to get an existing entiy from the inventory
      * @param {Actor} actor
      * @param {string} itemType
-     * @param {any} matchData
+     * @param {string} matchData should match the uid of the entity
      * @param {string} collectionId If this is provided, it will be used during matching instead of matchData
      * @returns {Entity5e}
      */
@@ -185,12 +185,11 @@ class System5e{
             //To get the functions on the Item5e object, we need to recast it
             if(!it.type != itemType){continue;}
             if(collectionId!= null){if(it.collectionId == collectionId){return it;}continue;}
-            if(itemType == "classFeature" && ent.hash == matchData){return it;}
-            else if(itemType == "item" && ent.uid == matchData){return it;}
+            if(ent.uid == matchData){return it;}
         }
         return null;
     }
-    static getInventoryItems(actor=null){
+    static getInventoryEntities(actor=null){
         if(!actor){actor = CharacterBuilder.instance._actor;}
         return actor.character.system.inventory.items;
     }
@@ -208,13 +207,14 @@ class System5e{
     static removeHookBase(prop, hook){
 
     }
+
     /**
-     * Get an Item5e using the collection id. Item must already be in actor's inventory
+     * Get an Entity5e using the collection id. Item must already be in actor's inventory
      * @param {string} collectionId
      * @param {Actor} actor
-     * @returns {Item5e}
+     * @returns {Entity5e}
      */
-    static getItemByCollectionId(collectionId, actor=null){
+    static getEntityByCollectionId(collectionId, actor=null){
         if(!actor){actor = CharacterBuilder.instance._actor;}
         for(let it of actor.character.system.inventory.items){
             if(it.collectionId == collectionId){return it;}
@@ -228,8 +228,8 @@ class System5e{
      * @param {Actor} actor=null
      * @returns {Entity5e[]}
      */
-    static getItemsByProp(property, value, actor=null){
-        return System5e.getItemsByProps([{property:property, value:value}], actor);
+    static getEntitiesByProp(property, value, actor=null){
+        return System5e.getEntitiesByProps([{property:property, value:value}], actor);
     }
     /**
      * Returns any items in the inventory matching the value of property
@@ -237,7 +237,7 @@ class System5e{
      * @param {Actor} actor=null
      * @returns {Entity5e[]}
      */
-    static getItemsByProps(propPairs, actor=null){
+    static getEntitiesByProps(propPairs, actor=null){
         if(!actor){actor = CharacterBuilder.instance._actor;}
         let ar = [];
         for(let it of actor.character.system.inventory.items){
@@ -264,6 +264,10 @@ class Entity5e {
     
     get config(){return DND5E;}
     prop(path){return Entity5e.getp(this, path);}
+    setDependency(type, key){
+        this.dependsOnType = type.toLowerCase();
+        this.dependsOn = key.toLowerCase();
+    }
     setProp(path, value, toOverride=Entity5e.use_overrides){
         Entity5e.setp(this, path, value, toOverride);
         if(path == "system.uses.per"){
@@ -333,7 +337,7 @@ class Entity5e {
     }
     get hasDamage() {
         return this.system.actionType && (this.system.damage.parts.length > 0);
-      }
+    }
     get isHealing() {
         return (this.system.actionType === "heal") && this.hasDamage;
     }
@@ -369,9 +373,6 @@ class Item5e extends Entity5e{
                 return target[prop];
             }
         });
-    }
-    getNestedProperty(obj, path) {
-        return path.split('.').reduce((acc, part) => acc && acc[part], obj);
     }
     static recast(inputObj){
         let entity = null;

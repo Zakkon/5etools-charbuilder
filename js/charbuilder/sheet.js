@@ -398,7 +398,7 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
 
                 //Try adding this class feature to the inventory
                 //Check if inventory already has an object with this hash
-                if(System5e.getItemsByProp("hash", f.hash).length > 0){ console.log(`item ${f.name} already exists`); continue;}
+                if(System5e.getEntitiesByProp("hash", f.hash).length > 0){ console.log(`item ${f.name} already exists`); continue;}
                 //Instead of verifying features async right now, store the features in an array and verify them together as a promise
                 itemsToVerify.push({entity:f, cls:d.cls});
                 /* ClassFeature5e.verifySystemData(f.hash, d.cls.name, d.cls.source).then(() => {
@@ -445,29 +445,6 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
               }
           }
           $lblClass.html(textOut);
-
-          const pver = async (itemsToVerify) => {
-            return new Promise(async (resolve, reject) => {
-              for(let fItem of itemsToVerify){
-                if(System5e.getItemsByProp("hash", fItem.entity.hash).length > 0){ continue;}
-                await ClassFeature5e.verifySystemData(fItem.entity.hash, fItem.cls.name, fItem.cls.source);
-                let featureItem = new ClassFeature5e(fItem.entity.hash, fItem.cls.name, fItem.cls.source);
-                System5e.addToInventory(this._actor, featureItem);
-                console.log("Item verified");
-              }
-              console.log("Resolve");
-              resolve();
-            });
-          }
-          //Prepare a promise to verify all the features
-          //let promiseVerifyItems = pver;
-
-          //console.log("promiseVerifyItems", promiseVerifyItems);
-
-          //Verify them, and rebuild the inventory list ui afterwards
-          /* pver(itemsToVerify).then(()=>{
-            console.log("try rebuild ui"); ActorCharactermancerSheet.c5e_inventory.rebuildUi();
-          }); */
 
           //Calculate proficiency bonus
           const profBonus = this._getProfBonus(this._parent.compClass);

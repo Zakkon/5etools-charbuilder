@@ -9595,7 +9595,7 @@ Charactermancer_StartingEquipment.ComponentDefault = class extends Charactermanc
                     const itemUid = (it.item.name + "|" + it.item.source).toLowerCase();
                     //Try to get existing item5e
                     console.log("COLID", this.collectionId);
-                    let item5e = System5e.getItemByCollectionId(this.collectionId);
+                    let item5e = System5e.getEntityByCollectionId(this.collectionId);
                     if(!item5e){item5e = new Item5e(itemUid, it.quantity, this.collectionId);}
                     await item5e.importSystemData();
                     System5e.addToInventory(CharacterBuilder.instance._actor, item5e);
@@ -10240,7 +10240,7 @@ Charactermancer_StartingEquipment.ComponentGold = class extends Charactermancer_
                 },
             });
             //Try to see if this item already exists in the character inventory
-            let item5e = System5e.getItemByCollectionId(collectionId);
+            let item5e = System5e.getEntityByCollectionId(collectionId);
             if(!item5e){
                 //If it doesnt, create a new item5e, import system data, then add to inventory
                 item5e = new Item5e(itemUid, opts.quantity, collectionId);

@@ -65,7 +65,7 @@ class C5e_Inventory{
         if(this.elementsInCreation>0){console.log(this.elementsInCreation, "elements still being created"); return;}
         this.clearCategories();
         const c = this.getCategory("weapons");
-        for(let entity of System5e.getInventoryItems()){
+        for(let entity of System5e.getInventoryEntities()){
             this.createItemElement(entity, entity.quantity, entity.collectionId, c);
         }
     }
@@ -121,7 +121,6 @@ class C5e_Inventory{
                 this._myClasses.splice(i, 1); //Remove this from the array
             }
         }
-        console.log("removing class", hash);
         this._handleClassLevelChange(toRemove, toRemove.targetLevel, 0);
     }
     getActiveClasses(){
@@ -205,14 +204,12 @@ class C5e_Inventory{
                 //We can find the features using the collectionIds we created earlier
                 for(let fItem of itemsToVerify){
                     //Find the class feature in our inventory
-                    let matches = System5e.getItemsByProps([{property: "collectionId", value: fItem.collectionId}]);
+                    let matches = System5e.getEntitiesByProps([{property: "collectionId", value: fItem.collectionId}]);
                     //There should be only one match
                     let m = matches[0];
                     //Now we can give that feature some info tying it to our class
-                    m.dependsOnType = "class";
-                    m.dependsOn = `${info.cls.name}_${info.cls.source}_${fItem.entity.level}`.toLowerCase();
+                    m.setDependency("class", C5e_Inventory.dependencyKey_ClassFeature(info.cls, fItem.entity.level));
                 }
-                console.log("try rebuild ui");
                 ActorCharactermancerSheet.c5e_inventory.rebuildUi();
             });
         }
@@ -233,7 +230,7 @@ class C5e_Inventory{
             if(f.level != level){continue;}
             //Try adding this class feature to the inventory
             //Check if inventory already has an object with this hash
-            if(System5e.getItemsByProp("hash", f.hash).length > 0){ console.log(`item ${f.name} already exists`); continue;}
+            if(System5e.getEntitiesByProp("hash", f.hash).length > 0){ console.log(`item ${f.name} already exists`); continue;}
             //Instead of verifying features async right now, store the features in an array and verify them together as a promise
             itemsToVerify.push({entity:f, cls:info.cls});
         }
@@ -241,22 +238,32 @@ class C5e_Inventory{
     }
     _removeClassFeaturesForLevel(info, level){
         
-        let matches = System5e.getItemsByProps([{property: "dependsOnType", value: "class"},
-            {property: "dependsOn", value: `${info.cls.name}_${info.cls.source}_${level}`.toLowerCase()}]);
+        let matches = System5e.getEntitiesByProps([{property: "dependsOnType", value: "class"},
+            {property: "dependsOn", value: C5e_Inventory.dependencyKey_ClassFeature(info.cls, level)}]);
         for(let m of matches){
             System5e.removeFromInventory(CharacterBuilder.instance._actor, m.collectionId);
         }
     }
+    static dependencyKey_ClassFeature(cls, level){
+        return `${cls.name}_${cls.source}_${level}`.toLowerCase();
+    }
+    /**
+     * Verifies the existance of the .system data for the class feature, and imports it if it does not. It then creates a ClassFeature5e and adds it to the inventory
+     * @param {{entity:{hash:string}, cls:{name:string, source:string}, collectionId:string}[]} itemsToVerify
+     */
     async _awaitClassFeatureVerification(itemsToVerify){
         return new Promise(async (resolve, reject) => {
             for(let fItem of itemsToVerify){
-              if(System5e.getItemsByProp("hash", fItem.entity.hash).length > 0){ continue;}
+                //Check if we already have entities with that class feature's hash in our inventory
+                //If so, no need to add it to our inventory, that would be a duplicate
+              if(System5e.getEntitiesByProp("hash", fItem.entity.hash).length > 0){ continue; }
+              //Check if the class feature in our database with that hash has had the .system property imported
+              //If not, it will do the importing
               await ClassFeature5e.verifySystemData(fItem.entity.hash, fItem.cls.name, fItem.cls.source);
+              //Create a new feature item ana add it to the inventory. It will set its .system property using the database
               let featureItem = new ClassFeature5e(fItem.entity.hash, fItem.cls.name, fItem.cls.source, fItem.collectionId);
               System5e.addToInventory(CharacterBuilder.instance._actor, featureItem);
-              console.log("Item verified");
             }
-            console.log("Resolve");
             resolve();
         });
     }
@@ -343,7 +350,7 @@ class C5e_InventoryItem {
 
         System5e.addHookBase("item_update", (p, collectionId) => {
             if(collectionId != this.collectionId){return;}
-            let item5e = System5e.getItemByCollectionId(this.collectionId);
+            let item5e = System5e.getEntityByCollectionId(this.collectionId);
             //this.element.find(`.item-name > h4`).text(item5e.prop("name"));
             this.render(true);
         });
@@ -409,7 +416,7 @@ class C5e_InventoryItem {
         this.summaryActive = active;
     }
     getItem(){
-        return System5e.getItemByCollectionId(this.collectionId);
+        return System5e.getEntityByCollectionId(this.collectionId);
     }
 }
 class C5e_InventoryItemSummary {
@@ -419,7 +426,7 @@ class C5e_InventoryItemSummary {
     adaptTo(itemUi){
         if(this.element){this.close();}
         let item = //this.getItemByID(itemUi.itemUid);
-        System5e.getItemByCollectionId(itemUi.collectionId);
+        System5e.getEntityByCollectionId(itemUi.collectionId);
         if(!item){console.error("could not find item with itemUid", itemUi.itemUid); return;}
         this.element = $$`<div class="item-summary"></div>`;
         for(let e of item.entries){
@@ -428,7 +435,7 @@ class C5e_InventoryItemSummary {
         }
         console.log("item", item);
         //const properties = $$`<div class="item-properties"></div>`;
-        let item5e = System5e.getItemByCollectionId(itemUi.collectionId);
+        let item5e = System5e.getEntityByCollectionId(itemUi.collectionId);
         //item5e.setProp("system.type.value", "simpleR");
         let overwriteVal = item5e.prop("system.type.value");
         console.log("PROP", overwriteVal);
@@ -465,7 +472,7 @@ class C5e_EditWindow {
     }
 
     render(){
-        let item5e = System5e.getItemByCollectionId(this.collectionId);
+        let item5e = System5e.getEntityByCollectionId(this.collectionId);
         console.log(item5e);
         const windowHeader = this.windowHeader();
         let window_content = $$`<section class="window-content"></section>`
@@ -565,7 +572,7 @@ class C5e_EditWindow {
     }
     setProp(prop, value){
         //Set the value to the item's override
-        let entity = System5e.getItemByCollectionId(this.collectionId);
+        let entity = System5e.getEntityByCollectionId(this.collectionId);
         if(typeof(value) == "string" && (value).toLowerCase() === "none"){value = null;}
         entity.setProp(prop, value);
         //Fire a hook to alert other UI that this item has changed
