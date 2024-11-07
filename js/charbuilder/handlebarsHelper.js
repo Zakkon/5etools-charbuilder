@@ -92,6 +92,7 @@ class HandlebarsHelper{
 
         fetch("dnd5e.item-activation", "item-activation");
         fetch("dnd5e.item-action", "item-action");
+        fetch("dnd5e.spellbook-item", "parts/spellbook-item");
     }
     
     /**
@@ -107,8 +108,8 @@ class HandlebarsHelper{
              === "function" ) {context = context.call(this);}
     
         console.log("OPTS", options);
+        console.log("CONTEXT", context);
         const ctx = options.data.root.itemContext?.[context.collectionId];//[context.id];
-        console.log("CTX", ctx, context);
         if ( !ctx ) {
             const inverse = options.inverse(this);
             if ( inverse ) return options.inverse(this);

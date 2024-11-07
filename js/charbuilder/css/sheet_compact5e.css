@@ -223,7 +223,7 @@ a {
 }
 .items-list .item-controls{
     display: flex;
-    place-content: end;
+    place-content: end !important;
     place-items: end;
     gap: 1ch;
     flex: 0 0 68px;

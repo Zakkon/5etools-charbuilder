@@ -251,6 +251,7 @@ class System5e{
     static getEntityByCollectionId(collectionId, actor=null){
         if(!actor){actor = CharacterBuilder.instance._actor;}
         for(let it of actor.character.system.inventory.items){
+            if(it == null){ console.warn("Null entity found in inventory", actor.character.system.inventory.items); continue;}
             if(it.collectionId == collectionId){return it;}
         }
         return null;
