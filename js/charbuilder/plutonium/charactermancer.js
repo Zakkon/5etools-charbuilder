@@ -9990,6 +9990,10 @@ Charactermancer_StartingEquipment.ComponentGold = class extends Charactermancer_
                     renderedMeta.comp._proxyAssignSimple("state", itemPurchase.data, true);
                 },
                 fnGetNew: (itemPurchase)=>{
+
+                    
+                 console.log("ITEM BOUGHT", itemPurchase);
+
                     const comp = BaseComponent.fromObject(itemPurchase.data);
                     comp._addHookAll("state", ()=>{
                         itemPurchase.data = comp.toObject();
@@ -10074,6 +10078,8 @@ Charactermancer_StartingEquipment.ComponentGold = class extends Charactermancer_
         const pHkItemsPurchased = async()=>{
             try {
                 await this._pLock("pHkItemsPurchased");
+
+
                 this._compCurrency.cpSpent = await this._pGetCpSpent();
             } finally {
                 this._unlock("pHkItemsPurchased");
@@ -10239,17 +10245,9 @@ Charactermancer_StartingEquipment.ComponentGold = class extends Charactermancer_
                     isIgnoreCost: opts.isIgnoreCost,
                 },
             });
+            
             //Try to see if this item already exists in the character inventory
-            let item5e = System5e.getEntityByCollectionId(collectionId);
-            if(!item5e){
-                //If it doesnt, create a new item5e, import system data, then add to inventory
-                item5e = new Item5e(itemUid, opts.quantity, collectionId);
-                item5e.importSystemData().then(System5e.addToInventory(this._actor, item5e));
-            }
-            else{
-                //If it does, just import system data, no need to re-add it to the inventory
-                item5e.importSystemData();
-            }
+            System5e.tryAddToInventory_Item(this._actor, collectionId, itemUid, opts.quantity);
         }
 
         if (opts.isTriggerUpdate) { this._triggerCollectionUpdate("itemPurchases"); }

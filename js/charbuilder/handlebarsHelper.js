@@ -104,9 +104,11 @@ class HandlebarsHelper{
         if ( arguments.length !== 2 ) throw new Error("#dnd5e-itemContext requires exactly one argument");
         if ( //foundry.utils.getType(context)
             typeof(context)
-             === "function" ) context = context.call(this);
+             === "function" ) {context = context.call(this);}
     
-        const ctx = options.data.root.itemContext?.[context.id];
+        console.log("OPTS", options);
+        const ctx = options.data.root.itemContext?.[context.collectionId];//[context.id];
+        console.log("CTX", ctx, context);
         if ( !ctx ) {
             const inverse = options.inverse(this);
             if ( inverse ) return options.inverse(this);

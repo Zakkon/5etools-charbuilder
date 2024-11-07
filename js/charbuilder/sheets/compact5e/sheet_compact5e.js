@@ -57,9 +57,7 @@ class C5e_Inventory{
         this.renderSpellbook();
         
     }
-    addItem(categoryId, item, quantity, collectionId){
-        this.rebuildUi();
-    }
+    
     elementsInCreation = 0;
     rebuildUi(){
         if(this.elementsInCreation>0){console.log(this.elementsInCreation, "elements still being created"); return;}
@@ -267,11 +265,27 @@ class C5e_Inventory{
             resolve();
         });
     }
-    
+    //#endregion
+
+    //#region Items
+    addItem(collectionId, item){
+        this.rebuildUi();
+    }
     //#endregion
 
     //#region Spellbook
     renderSpellbook(){
+
+        //Grab a spell
+        let spell = CharacterBuilder.getSpellByUid("aid_phb", "Aid", "PHB");
+        //Import it
+        const spell5e = System5e.tryAddToInventory_Spell(CharacterBuilder.instance.actor, null, "aid_phb").then((result)=>{
+
+            console.log("SPELL5E", result);
+        //Create an itemsContext
+        let itemContext = [];
+        itemContext[result.collectionId] = {labels: {activation:`${result.system.activation.type} hey`}, name:result.name};
+        //let context = {labels:{activation:}}
         let fakeData = {spellbook:[
             {
                 label:"1st Level",
@@ -279,16 +293,20 @@ class C5e_Inventory{
                 prop: "spell1",
                 slots: 2,
                 uses: 2,
-                canCreate: false,
-                dataset: {}
+                canCreate: true,
+                dataset: {},
+                spells: [result],
             }
-        ]}
+        ], itemContext};
 
         let temp = new LoadTemplate(null, "parts/spellbook-list", fakeData);
         temp.createAndCompile((text)=>{
             const el = $$`${text}`;
-            $("section.flex-column > section").append(el);
+            $("#inventory_root").append(el);
         });
+
+        });
+        
 
     }
     //#endregion

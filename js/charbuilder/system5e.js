@@ -162,6 +162,40 @@ class System5e{
         return JSON.stringify(schema.system);
     }
 
+    static async tryAddToInventory_Item(actor, collectionId, itemUid, quantity){
+        //Try to see if this item already exists in the character inventory
+        let item5e = System5e.getEntityByCollectionId(collectionId);
+        if(!item5e){
+            //If it doesnt, create a new item5e, import system data, then add to inventory
+            item5e = new Item5e(itemUid, quantity, collectionId);
+            await item5e.importSystemData();
+            await System5e.addToInventory(actor, item5e);
+            await ActorCharactermancerSheet.c5e_inventory.rebuildUi();
+            return item5e;
+        }
+        else{
+            //If it does, just verify & import system data, no need to re-add it to the inventory
+            await item5e.importSystemData();
+            return item5e;
+        }
+    }
+    static async tryAddToInventory_Spell(actor, collectionId, itemUid, quantity){
+        //Try to see if this item already exists in the character inventory
+        let spell5e = System5e.getEntityByCollectionId(collectionId);
+        if(!spell5e){
+            //If it doesnt, create a new item5e, import system data, then add to inventory
+            spell5e = new Spell5e(itemUid, collectionId);
+            await spell5e.importSystemData();
+            await System5e.addToInventory(actor, spell5e);
+            await ActorCharactermancerSheet.c5e_inventory.rebuildUi();
+            return spell5e;
+        }
+        else{
+            //If it does, just verify & import system data, no need to re-add it to the inventory
+            await spell5e.importSystemData();
+            return spell5e;
+        }
+    }
     static async addToInventory(actor, entity5e){
         console.error("Add item", entity5e.name, entity5e.collectionId);
         actor.character.system.inventory.items.push(entity5e);

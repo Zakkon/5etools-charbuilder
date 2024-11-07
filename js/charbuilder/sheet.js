@@ -68,7 +68,7 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
       const wrapper = $$`<div class="ve-flex-col w-100 h-100 px-1 pt-1 overflow-y-auto ve-grow veapp__bg-foundry"></div>`;
       //const noFeatsWarningLbl = $("<div><i class=\"ve-muted\">No feats are available for your current build.</i><hr class=\"hr-1\"></div>").appendTo(wrapper);
 
-      const sheet = $$`<div></div>`.appendTo(wrapper);
+      const sheet = $$`<div class="c5e sheet actor" ></div>`.appendTo(wrapper);
 
       const $form = $$`<form class="charsheet"></form>`;
       const $lblClass = $$`<label class="lblResult"></label>`;
@@ -239,7 +239,7 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
           </section>
         </section>
       </section>
-      <section class="flex-column">
+      <section class="flex-column"  style="height:100%">
         <section class="sectionRight inventory">
           <div>
             <label class="upperCase lbl-sectionheader">Inventory</label>
@@ -253,7 +253,7 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
             </div>
           </div>
         </section>
-        <section>
+        <section id="inventory_root" class="flex-column" style="height:100%">
         ${$divInventory2}
         </section>
       </section>
