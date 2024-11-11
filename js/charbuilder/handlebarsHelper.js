@@ -34,7 +34,6 @@ class HandlebarsHelper{
             return (bool1 || bool2).toString();
         });
         Handlebars.registerHelper('eq', function (value1, value2) {
-            console.log("EQ", value1, value2);
             return value1 === value2;
         });
         Handlebars.registerHelper('checked', function (value) {
@@ -116,6 +115,7 @@ class HandlebarsHelper{
         fetch("dnd5e.spellbook-item", "parts/spellbook-item");
         fetch("dnd5e.ability-scores", "parts/ability-scores");
         fetch("dnd5e.inventory", "inventory_dnd5e");
+        fetch("dnd5e.actor-spellbook", "parts/actor-spellbook");
     }
     
     /**
@@ -129,9 +129,6 @@ class HandlebarsHelper{
         if ( //foundry.utils.getType(context)
             typeof(context)
              === "function" ) {context = context.call(this);}
-    
-        console.log("OPTS", options);
-        console.log("CONTEXT", context);
         const ctx = options.data.root.itemContext?.[context.collectionId];//[context.id];
         if ( !ctx ) {
             const inverse = options.inverse(this);

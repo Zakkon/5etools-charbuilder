@@ -4,8 +4,8 @@
 a {
     cursor: pointer;
 }
-.dnd5e input[type="text"], .dnd5e input[type="number"], .dnd5e input[type="password"],
-.dnd5e input[type="date"], .dnd5e input[type="time"], .dnd5e input[type="search"]{
+.c5e input[type="text"], .c5e input[type="number"], .c5e input[type="password"],
+.c5e input[type="date"], .c5e input[type="time"], .c5e input[type="search"]{
     width: calc(100% - 2px);
     min-width: 20px;
     /* height: var(--form-field-height); */

@@ -1196,7 +1196,7 @@ h5 {
   text-align: right;
 }
 .c5e.sheet.actor .sheet-header .summary {
-  height: calc(1.5rem + 6px);
+  height: 30px;
   border-bottom: var(--dnd5e-border-groove);
   font-size: var(--font-size-18);
 }

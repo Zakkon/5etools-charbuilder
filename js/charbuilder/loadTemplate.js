@@ -26,10 +26,10 @@ LoadTemplate.prototype.create = function(callback){
         if (req.readyState == 4 && req.status == 200){
             //Compile HB template, add data (if defined) and place in parent element.
             var compiled = Handlebars.compile(req.response);
-            var text = compiled(that.data, {allowProtoPropertiesByDefault:true,
+            var html = compiled(that.data, {allowProtoPropertiesByDefault:true,
                 allowedProtoMethodsByDefault:true});
             //that.el.innerHTML = text;
-            that.el.html(text);
+            that.el.html(html);
 
             // Execute callback function
             if(callback){callback();}
@@ -85,4 +85,43 @@ LoadTemplate.prototype.createAndCompile = function(callback){
     // Send request.
     req.send();
 };
+
+LoadTemplate.prototype.createAsync = async function(){
+
+    var req = new XMLHttpRequest();
+    var that = this;
+
+    // Define parameters for request.
+    req.open('get', this.folderPath + this.tempName + '.hbs', true);
+
+    // Wait for request to complete.
+    req.onreadystatechange = function(){
+        if (req.readyState == 4 && req.status == 200){
+           //Compile HB template, add data (if defined) and place in parent element.
+           var compiled = Handlebars.compile(req.response);
+           var html = compiled(that.data, {allowProtoPropertiesByDefault:true,
+               allowedProtoMethodsByDefault:true});
+
+           // Execute callback function
+           resolve(html);
+        }
+        else{
+            return reject(new Error(req.error));
+        }
+    };
+
+    // Send request.
+    req.send();
+
+    await new Promise((resolve, reject) => {
+        game.socket.emit("template", path, resp => {
+            if ( resp.error ) return reject(new Error(resp.error));
+            const compiled = Handlebars.compile(resp.html);
+            Handlebars.registerPartial(id ?? path, compiled);
+            _templateCache[path] = compiled;
+            console.log(`Foundry VTT | Retrieved and compiled template ${path}`);
+            resolve(compiled);
+        });
+    });
+}
 

@@ -8,12 +8,12 @@
            {{!--  {{> "dnd5e.actor-warnings"}} --}}
 
             <h1 class="charname">
-                <input name="name" type="text" value="{{actor.name}}" placeholder="{{ localize 'DND5E.Name' }}"/>
+                <input name="name" type="text" value="{{actor.name}}" placeholder="Name"/>
             </h1>
 
             <aside class="header-exp flexcol">
                 <div class="charlevel" data-tooltip="{{multiclassLabels}}">
-                    <label>{{ localize "DND5E.Level" }} {{system.details.level}}</label>
+                    <label>Level {{system.details.level}}</label>
                     <span class="levels">{{classLabels}}</span>
                 </div>
 
@@ -36,28 +36,28 @@
                         <span data-tooltip="DND5E.Race">{{system.details.race.name}}</span>
                     {{else}}
                         <input type="text" name="system.details.race" value="{{system.details.race}}"
-                               placeholder="{{ localize 'DND5E.Race' }}">
+                               placeholder="Race">
                     {{/if}}
                 </li>
                 <li class="background">
                     {{#if system.details.background.name}}
                         <span data-tooltip="DND5E.Background">{{system.details.background.name}}</span>
                     {{else}}
-                        <input type="text" name="system.details.background" value="{{system.details.background}}" placeholder="{{ localize 'DND5E.Background' }}"/>
+                        <input type="text" name="system.details.background" value="{{system.details.background}}" placeholder="Background"/>
                     {{/if}}
                 </li>
                 <li class="alignment">
-                    <input type="text" name="system.details.alignment" value="{{system.details.alignment}}" placeholder="{{ localize 'DND5E.Alignment' }}"/>
+                    <input type="text" name="system.details.alignment" value="{{system.details.alignment}}" placeholder="Alignment"/>
                 </li>
                 <li class="proficiency">
-                    <span>{{ localize "DND5E.Proficiency" }} {{labels.proficiency}}</span>
+                    <span>Proficiency {{labels.proficiency}}</span>
                 </li>
             </ul>
 
             {{!-- Header Attributes --}}
             <ul class="attributes flexrow">
                 <li class="attribute health">
-                    <h4 class="attribute-name box-title">{{localize "DND5E.HitPoints"}}</h4>
+                    <h4 class="attribute-name box-title">Hit Points</h4>
                     {{!-- <a class="config-button" data-action="hitPoints" data-tooltip="DND5E.HitPointsConfig">
                         <i class="fas fa-cog"></i>
                     </a> --}}
@@ -82,7 +82,7 @@
                 </li>
 
                 <li class="attribute hit-dice">
-                    <h4 class="attribute-name box-title">{{ localize "DND5E.HitDice" }}</h4>
+                    <h4 class="attribute-name box-title">Hit Dice</h4>
                     <a class="config-button" data-action="hitDice" data-tooltip="DND5E.HitDiceConfig">
                         <i class="fas fa-cog"></i>
                     </a>
@@ -94,13 +94,13 @@
                         </label>
                     </div>
                     <footer class="attribute-footer">
-                        <a class="rest short-rest" data-tooltip="DND5E.ShortRest">{{localize "DND5E.RestS"}}</a>
-                        <a class="rest long-rest" data-tooltip="DND5E.LongRest">{{localize "DND5E.RestL"}}</a>
+                        <a class="rest short-rest" data-tooltip="DND5E.ShortRest">Short Rest</a>
+                        <a class="rest long-rest" data-tooltip="DND5E.LongRest">Long Rest</a>
                     </footer>
                 </li>
 
                 <li class="attribute armor">
-                    <h4 class="attribute-name box-title">{{ localize "DND5E.ArmorClass" }}</h4>
+                    <h4 class="attribute-name box-title">Armor Class</h4>
                     <a class="config-button" data-action="armor" data-tooltip="DND5E.ArmorConfig">
                         <i class="fas fa-cog"></i>
                     </a>
@@ -109,12 +109,12 @@
                         <span>{{system.attributes.ac.value}}</span>
                     </div>
                     <footer class="attribute-footer">
-                        <span class="spell-dc">{{localize "DND5E.SpellDC"}} {{system.attributes.spelldc}}</span>
+                        <span class="spell-dc">Spell DC {{system.attributes.spelldc}}</span>
                     </footer>
                 </li>
 
                 <li class="attribute movement">
-                    <h4 class="attribute-name box-title">{{ localize "DND5E.Movement" }}</h4>
+                    <h4 class="attribute-name box-title">Movement</h4>
                     <a class="config-button" data-action="movement" data-tooltip="DND5E.MovementConfig">
                         <i class="fas fa-cog"></i>
                     </a>
@@ -128,7 +128,7 @@
 
                 <li class="attribute initiative">
                     <h4 class="attribute-name box-title rollable" data-action="rollInitiative">
-                        {{ localize "DND5E.Initiative" }}
+                        Initiative
                     </h4>
                     <a class="config-button" data-action="initiative" data-tooltip="DND5E.InitiativeConfig">
                         <i class="fas fa-cog"></i>
@@ -143,12 +143,12 @@
 
     {{!-- Character Sheet Navigation --}}
     <nav class="sheet-navigation tabs" data-group="primary">
-        <a class="item active" data-tab="attributes">{{ localize "DND5E.Attributes" }}</a>
-        <a class="item" data-tab="inventory">{{ localize "DND5E.Inventory" }}</a>
-        <a class="item" data-tab="features">{{ localize "DND5E.Features" }}</a>
-        <a class="item" data-tab="spellbook">{{ localize "DND5E.Spellbook" }}</a>
-        <a class="item" data-tab="effects">{{ localize "DND5E.Effects" }}</a>
-        <a class="item" data-tab="biography">{{ localize "DND5E.Biography" }}</a>
+        <a class="item active" data-tab="attributes">Attributes</a>
+        <a class="item" data-tab="inventory">Inventory</a>
+        <a class="item" data-tab="features">Features</a>
+        <a class="item" data-tab="spellbook">Spellbook</a>
+        {{!-- <a class="item" data-tab="effects">Effects</a> --}}
+        <a class="item" data-tab="biography">Biography</a>
     </nav>
 
     {{!-- Character Sheet Body --}}
@@ -280,7 +280,7 @@
 
         {{!-- Spellbook Tab --}}
         <div class="tab spellbook flexcol" data-group="primary" data-tab="spellbook">
-           {{!--  {{> "dnd5e.actor-spellbook"}} --}}
+            {{> "dnd5e.actor-spellbook"}}
         </div>
 
         {{!-- Effects Tab --}}

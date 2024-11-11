@@ -379,16 +379,19 @@ class Entity5e {
     
 }
 class Item5e extends Entity5e{
-    constructor(itemUid, quantity=1, collectionId=null){
+    constructor(itemUid, quantity=1, collectionId=null, isCustom=false){
         super();
         this.uid = itemUid;
         this.type = "item";
         this.quantity = quantity;
         this.collectionId = collectionId? collectionId : System5e.createUniqueID();
-        const original = CharacterBuilder.getItemByUid(this.uid);
-        this.system = structuredClone(original.system);
-        this.entries = structuredClone(original.entries);
-        this.name = original.name;
+        this.isCustom = isCustom;
+        if(!isCustom){
+            const original = CharacterBuilder.getItemByUid(this.uid);
+            this.system = structuredClone(original.system);
+            this.entries = structuredClone(original.entries);
+            this.name = original.name;
+        }
         this.properties = {};
 
         if(!Entity5e.use_overrides){return this;}
@@ -493,15 +496,20 @@ class ClassFeature5e extends Entity5e{
     }
 }
 class Spell5e extends Entity5e{
-    constructor(spellUid, collectionId=null){
+    constructor(spellUid, collectionId=null, isCustom=false){
         super();
         this.uid = spellUid;
         this.type = "spell";
         this.collectionId = collectionId? collectionId : System5e.createUniqueID();
-        const original = CharacterBuilder.getSpellByUid(this.uid);
-        this.name = original.name;
-        this.system = structuredClone(original.system);
-        this.entries = structuredClone(original.entries);
+        this.isCustom = isCustom;
+        if(!this.isCustom)
+        {
+            const original = CharacterBuilder.getSpellByUid(this.uid);
+            this.name = original.name;
+            this.system = structuredClone(original.system);
+            this.entries = structuredClone(original.entries);
+        }
+        
 
         if(!Entity5e.use_overrides){return this;}
 

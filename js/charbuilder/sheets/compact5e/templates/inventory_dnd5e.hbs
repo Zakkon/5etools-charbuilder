@@ -43,8 +43,6 @@
     <ol class="items-list inventory-list">
         {{#each sections as |section sid|}}
         <li class="items-header flexrow">
-            {{log section}}
-            {{log section.label}}
             <h3 class="item-name flexrow">{{localize section.label}}</h3>
 
             {{#if section.columns}}
@@ -53,12 +51,12 @@
             {{/each}}
             {{else}}
             {{#if (or @root.isCharacter @root.isContainer)}}
-            <div class="item-detail item-weight">{{localize "DND5E.Weight"}}</div>
+            <div class="item-detail item-weight">Weight</div>
             {{/if}}
-            <div class="item-detail item-quantity">{{localize "DND5E.QuantityAbbr"}}</div>
+            <div class="item-detail item-quantity">Qty.</div>
             {{#unless @root.isContainer}}
-            <div class="item-detail item-uses">{{localize "DND5E.Charges"}}</div>
-            <div class="item-detail item-action">{{localize "DND5E.Usage"}}</div>
+            <div class="item-detail item-uses">Charges</div>
+            <div class="item-detail item-action">Usage</div>
             {{/unless}}
             {{/if}}
 
@@ -67,7 +65,7 @@
                 {{#if section.dataset}}
                 <a class="item-control item-action" data-action="create" data-tooltip="DND5E.ItemCreate"
                    {{#each section.dataset as |v k|}}data-{{k}}="{{v}}"{{/each}}>
-                    <i class="fas fa-plus"></i> {{localize "DND5E.Add"}}
+                    <i class="fas fa-plus"></i> Add
                 </a>
                 {{/if}}
             </div>
@@ -77,6 +75,7 @@
         <ol class="item-list">
             {{#each section.items as |item iid|}}
             {{#dnd5e-itemContext item as |ctx|}}
+                {{log item}}
                 <li class="item flexrow {{section.css}}" data-item-id="{{item.id}}"
                     {{#if section.editableName}}data-item-index="{{iid}}"{{/if}}>
                     <div class="item-name flexrow {{@root.rollableClass}}">
