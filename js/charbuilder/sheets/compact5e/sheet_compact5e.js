@@ -50,11 +50,10 @@ class C5e_Inventory{
         category_weapons.addTo(this.rootElement);
 
         let category_cantrips = new C5e_SpellbookCategory();
-        //this.categories["cantrips"] = category_weapons;
-        //category_weapons.render({label:"Weapons", id:"weapons"});
-        //category_weapons.addTo(this.rootElement);
+        //category_cantrips.render();
 
         this.renderSpellbook();
+        
         
     }
     
@@ -62,8 +61,10 @@ class C5e_Inventory{
     rebuildUi(){
         if(this.elementsInCreation>0){console.log(this.elementsInCreation, "elements still being created"); return;}
         this.clearCategories();
+        this.clearSpellbook();
         const c = this.getCategory("weapons");
         for(let entity of System5e.getInventoryEntities()){
+            if(entity.type == "spell"){ this.createSpellElement(entity); continue;}
             this.createItemElement(entity, entity.quantity, entity.collectionId, c);
         }
     }
@@ -79,6 +80,9 @@ class C5e_Inventory{
 
     expandSummaryOn(itemUi){
         this.summary.adaptTo(itemUi);
+    }
+
+    activateListeners(){
     }
 
     //#region Editing
@@ -274,6 +278,9 @@ class C5e_Inventory{
     //#endregion
 
     //#region Spellbook
+    clearSpellbook(){
+
+    }
     renderSpellbook(){
 
         //Grab a spell
@@ -308,6 +315,22 @@ class C5e_Inventory{
         });
         
 
+    }
+    createSpellElement(spell5e){
+        console.log("SPELL5E", spell5e);
+        //Create an itemsContext
+        let itemContext = [];
+        itemContext[spell5e.collectionId] = {labels: {activation:`${spell5e.system.activation.type} hey`}, name:spell5e.name};
+        //let context = {labels:{activation:}}
+        
+
+
+
+        let temp = new LoadTemplate(null, "parts/spellbook-item", spell5e);
+        temp.createAndCompile((text)=>{
+            const el = $$`${text}`;
+            $("#inventory_root > ").append(el);
+        });
     }
     //#endregion
 }

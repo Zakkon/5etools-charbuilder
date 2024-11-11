@@ -606,6 +606,7 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
             </li>`;
           }
           $sectionAttributeScores.empty();
+
           const ul = $$`<ul></ul>`;
           ul.append(createAbilityScoreElement("Strength", totals.values.str));
           ul.append(createAbilityScoreElement("Dexterity", totals.values.dex));

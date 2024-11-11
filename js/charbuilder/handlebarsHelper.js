@@ -13,6 +13,9 @@ class HandlebarsHelper{
     
     static registerHelpers(){
         
+        Handlebars.registerHelper("log", function(something) {
+            console.log(something);
+          });
         Handlebars.registerHelper('loud', function (aString) {
             return aString.toUpperCase()
         });
@@ -25,12 +28,20 @@ class HandlebarsHelper{
             var bool2 = (value2 === 'true' || value2 == true);
             return (bool1 && bool2).toString();
         });
+        Handlebars.registerHelper('or', function (value1, value2) {
+            var bool1 = (value1 === 'true' || value1 == true);
+            var bool2 = (value2 === 'true' || value2 == true);
+            return (bool1 || bool2).toString();
+        });
         Handlebars.registerHelper('eq', function (value1, value2) {
             console.log("EQ", value1, value2);
             return value1 === value2;
         });
         Handlebars.registerHelper('checked', function (value) {
             return (value === 'true' || value == true)? `checked` : "";
+        });
+        Handlebars.registerHelper('disabled', function (value) {
+            return (value === 'true' || value == true)? `disabled` : "";
         });
         Handlebars.registerHelper('localize', function (value) {
             return value;
@@ -41,6 +52,16 @@ class HandlebarsHelper{
             for(const [key, val] of Object.entries(opts)){wrapper += ` ${key}="${val}"`;}
             wrapper += "></input>";
             return new Handlebars.SafeString(wrapper);
+        });
+        /**
+ * A helper for using Intl.NumberFormat within handlebars.
+ * @param {number} value    The value to format.
+ * @param {object} options  Options forwarded to {@link https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/NumberFormat}
+ * @returns {string}
+ */
+        Handlebars.registerHelper("numberFormat", function (value, options){
+            const formatter = new Intl.NumberFormat("en-IN", options);
+            return formatter.format(value);
         });
         Handlebars.registerHelper('select', function (value, options) {
             return options.fn(this)
@@ -93,6 +114,8 @@ class HandlebarsHelper{
         fetch("dnd5e.item-activation", "item-activation");
         fetch("dnd5e.item-action", "item-action");
         fetch("dnd5e.spellbook-item", "parts/spellbook-item");
+        fetch("dnd5e.ability-scores", "parts/ability-scores");
+        fetch("dnd5e.inventory", "inventory_dnd5e");
     }
     
     /**

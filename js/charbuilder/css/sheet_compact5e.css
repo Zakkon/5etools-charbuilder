@@ -459,3 +459,17 @@ form .details .form-group.uses-per span, form .details .form-group.consumption s
     flex-wrap: nowrap;
     justify-content: space-around;
 }
+
+.tab[data-tab]{
+    display: none;
+}
+.tab[data-tab].active{
+    display: block;
+}
+.tab[data-tab].flexcol.active, .tab[data-tab].flexrow.active{
+    display: flex;
+}
+
+.c5e footer{
+    padding: 0px;
+}
