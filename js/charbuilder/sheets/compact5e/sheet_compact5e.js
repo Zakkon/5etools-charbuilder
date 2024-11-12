@@ -87,11 +87,11 @@ class C5e_Inventory{
 
     //#region Editing
     static _editedCollectionUids = [];
-    static tryOpenEditWindow(itemUid, type, collectionId){
+    static tryOpenEditWindow(actor, item=null, itemUid, type, collectionId){
         if(C5e_Inventory._editedCollectionUids.includes(collectionId)){return;}
         C5e_Inventory._editedCollectionUids.push(collectionId);
-        let window = new C5e_EditWindow(itemUid, type, collectionId);
-        window.render();
+        let window = new C5e_EditWindow(actor, itemUid, type, collectionId);
+        window.render(item);
     }
     static closeEditWindow(window, collectionId){
         if(!C5e_Inventory._editedCollectionUids.includes(collectionId)){return;}
@@ -459,6 +459,8 @@ class C5e_InventoryItem {
     getItem(){
         return System5e.getEntityByCollectionId(this.collectionId);
     }
+
+    
 }
 class C5e_InventoryItemSummary {
     element;
@@ -505,15 +507,17 @@ class C5e_EditWindow {
     zIndex = 110;
     rectLeft = 400;
     rectTop = 50;
-    constructor(itemUid, type, collectionId){
-        
+    constructor(actor, itemUid, type, collectionId){
+        this.actor = actor;
         this.collectionId = collectionId;
         this.itemUid = itemUid;
         this.type = type;
+        this.activeTab = "details";
     }
 
-    render(){
-        let item5e = System5e.getEntityByCollectionId(this.collectionId);
+    render(item5e=null){
+        item5e != null? item5e : this.actor.getItemByCollectionId(this.collectionId);
+        this.item5e = item5e;
         console.log(item5e);
         const windowHeader = this.windowHeader();
         let window_content = $$`<section class="window-content"></section>`
@@ -524,17 +528,40 @@ class C5e_EditWindow {
 
         let templateName = "weapon";
         if(item5e.type == "classFeature"){templateName = "feat";}
+        else if(item5e.type == "spell"){templateName = "spell";}
 
         item5e.cssClass = "editable";
         item5e.concealDetails = false;//!game.user.isGM && (this.document.system.identified === false)
-        let contentTemplate = new LoadTemplate(window_content, templateName, item5e);
+        let contentTemplate = new LoadTemplate(window_content, "parts/edit/" + templateName, item5e);
         contentTemplate.create(()=>{
+            this.navigation_switchTab(this.activeTab);
             this.setupListeners(window_content);
         });
     }
     close(){
         //Fire one last item_update? (incase we clicked on close instead of clicking elsewhere, which normally triggers input fields "change" events)
         this.element.remove(); this.element = null;
+    }
+    navigation_switchTab(activeTabName=null){
+
+        //Choose an open tab name if none was specified
+        if(activeTabName==null){
+            const nav_tabs = this.element.find(".sheet-navigation.tabs > [data-tab]");
+            activeTabName = nav_tabs.eq(0).attr("data-tab");
+        }
+
+        //Disable all tabs
+        let nav_tabs = this.element.find(".sheet-navigation.tabs > [data-tab]");
+        let tabDivs = this.element.find(".sheet-body > .tab");
+        nav_tabs.toggleClass("active", false);
+        tabDivs.toggleClass("active", false);
+        //Enable the specific tab we want open
+        nav_tabs = this.element.find(`.sheet-navigation.tabs > [data-tab="${activeTabName}"]`);
+        tabDivs = this.element.find(`.sheet-body > .tab[data-tab="${activeTabName}"]`);
+        nav_tabs.toggleClass("active", true);
+        tabDivs.toggleClass("active", true);
+
+        this.activeTab = activeTabName;
     }
     windowHeader(){
         const closeBtn = $$`<a class="header-button control"><i class="fas fa-times"></i>Close </a>`;
@@ -613,7 +640,7 @@ class C5e_EditWindow {
     }
     setProp(prop, value){
         //Set the value to the item's override
-        let entity = System5e.getEntityByCollectionId(this.collectionId);
+        let entity = this.item5e;//System5e.getEntityByCollectionId(this.collectionId);
         if(typeof(value) == "string" && (value).toLowerCase() === "none"){value = null;}
         entity.setProp(prop, value);
         //Fire a hook to alert other UI that this item has changed

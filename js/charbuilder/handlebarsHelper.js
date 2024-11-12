@@ -59,7 +59,10 @@ class HandlebarsHelper{
  * @returns {string}
  */
         Handlebars.registerHelper("numberFormat", function (value, options){
-            const formatter = new Intl.NumberFormat("en-IN", options);
+            let opts = HandlebarsHelper.getAttributes(options);
+            if(opts.sign){opts.signDisplay = "always";}
+            if(opts.decimal != null){opts.minimumFractionDigits = opts.decimal;}
+            const formatter = new Intl.NumberFormat("en-IN", opts);
             return formatter.format(value);
         });
         Handlebars.registerHelper('select', function (value, options) {
@@ -110,12 +113,13 @@ class HandlebarsHelper{
             req.send();
         };
 
-        fetch("dnd5e.item-activation", "item-activation");
-        fetch("dnd5e.item-action", "item-action");
+        fetch("dnd5e.item-activation", "parts/edit/item-activation");
+        fetch("dnd5e.item-action", "parts/edit/item-action");
         fetch("dnd5e.spellbook-item", "parts/spellbook-item");
         fetch("dnd5e.ability-scores", "parts/ability-scores");
         fetch("dnd5e.inventory", "inventory_dnd5e");
         fetch("dnd5e.actor-spellbook", "parts/actor-spellbook");
+        fetch("dnd5e.actor-features", "parts/actor-features");
     }
     
     /**

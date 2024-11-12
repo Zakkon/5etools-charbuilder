@@ -7,10 +7,10 @@
         <div class="header-details flexrow">
             <h1 class="charname">
                 {{#if system.identified}}
-                <input name="name" type="text" value="{{name}}" placeholder="{{ localize 'DND5E.ItemName' }}">
+                <input name="name" type="text" value="{{name}}" placeholder="Item Name">
                 {{else}}
                 <input name="system.unidentified.name" type="text" value="{{system.unidentified.name}}"
-                       placeholder="{{ localize 'DND5E.NameUnidentified' }}">
+                       placeholder="Item Unidentified Name">
                 {{/if}}
             </h1>
 

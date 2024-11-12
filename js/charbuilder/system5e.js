@@ -289,6 +289,26 @@ class System5e{
     static createUniqueID(){
         return Math.random().toString(16).slice(2);
     }
+
+    //#region Game Rules
+    static proficiencyMult(baseProf){
+        return baseProf == 0? 0 : baseProf == 1? 1 : baseProf == 2? 0.5 : 2;
+    }
+    static calcAttrMod(abilityScore){
+        let mod = Math.floor((abilityScore-10)/2);
+        return mod;
+    }
+    static calcAttrSave(abilityScore, baseProf, profMod){
+        let mod = System5e.calcAttrMod(abilityScore);
+        mod += profMod * System5e.proficiencyMult(baseProf); //proficiency/expertise bonus
+        return mod;
+    }
+    static calcSkillMod(abilityScore, baseProf, profMod){
+        let mod = System5e.calcAttrMod(abilityScore);
+        mod += profMod * System5e.proficiencyMult(baseProf); //proficiency/expertise bonus
+        return {mod: mod, passive:(10+mod)};
+    }
+    //#endregion
 }
 class Entity5e {
     static use_overrides = false;
@@ -438,6 +458,15 @@ class Item5e extends Entity5e{
         this.system = imported.system; //TEMPFIX
     }
     
+    //Runtime label calculations
+    get labels(){
+        let system = this.system;
+        const activation = `${system.activation.cost ?? 0} ${system.activation.type}`;
+
+        return {
+            activation
+        };
+    }
 }
 class ClassFeature5e extends Entity5e{
     constructor(hash, className, classSource, collectionId=null){
@@ -547,4 +576,26 @@ class Spell5e extends Entity5e{
         let imported = await SourceManager.plutoniumConvertData(existingData, "spell");
         existingData.system = imported.system;
     } */
+
+    //Getter for static config
+    get config(){
+        //return Spell5e._defaultConfig();
+        return CONFIG.DND5E;
+    }
+    static _defaultConfig(){
+        return {
+            spellLevels: [
+                "Cantrip",
+                "1st Level",
+                "2nd Level",
+                "3rd Level",
+                "4th Level",
+                "5th Level",
+                "6th Level",
+                "7th Level",
+                "8th Level",
+                "9th Level",
+            ]
+        }
+    }
 }

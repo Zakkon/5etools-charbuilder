@@ -170,7 +170,7 @@
                         <input type="hidden" name="system.abilities.{{id}}.proficient" value="{{ability.baseProf}}"
                                data-dtype="Number"/>
                         <a class="proficiency-toggle ability-proficiency" data-tooltip="DND5E.Proficiency">
-                            {{{ability.icon}}}
+                            <i class="{{{ability.icon}}}"></i>
                         </a>
                         <span class="ability-save" data-tooltip="DND5E.SavingThrow">
                             {{numberFormat ability.save decimals=0 sign=true}}
@@ -193,7 +193,7 @@
                     <input type="hidden" name="system.skills.{{s}}.value"
                            value="{{skill.baseValue}}" data-dtype="Number">
                     <input type="hidden" name="system.skills.{{s}}.ability" value="{{skill.ability}}">
-                    <a class="proficiency-toggle skill-proficiency" data-tooltip="{{skill.hover}}">{{{skill.icon}}}</a>
+                    <a class="proficiency-toggle skill-proficiency" data-tooltip="{{skill.hover}}"><i class="{{{skill.icon}}}"></i></a>
                     <div class="skill-name-controls">
                       <h4 class="skill-name rollable">{{skill.label}}</h4>
                       <a class="config-button" data-action="skill" data-tooltip="DND5E.SkillConfigure">
@@ -275,7 +275,7 @@
 
         {{!-- Features Tab --}}
         <div class="tab features flexcol" data-group="primary" data-tab="features">
-            {{!-- {{> "dnd5e.actor-features" sections=features}} --}}
+            {{> "dnd5e.actor-features" sections=features}}
         </div>
 
         {{!-- Spellbook Tab --}}
