@@ -599,3 +599,350 @@ class Spell5e extends Entity5e{
         }
     }
 }
+
+class Actor5e {
+    
+    constructor(){
+        this._createFakeCharacterData();
+        this.owner = true;
+    }
+    
+    _createFakeCharacterData(){
+
+        const template = new CharacterTemplate();
+        const schema = template.create();
+        this.system = schema;
+        console.log("schema:", this.system);
+
+        this.system.abilities = {};
+        this.proficiencyModifier = 2;
+
+        
+        
+        const addAbility = (label, abbr, value=10, baseProf=0) => {
+            //baseProf is either 0, 1, or 2 (none, proficient, expertise)
+            const icon = baseProf == 0? "far fa-circle" : "fas fa-check";
+
+            this.system.abilities[abbr] = {label, abbreviation:abbr, value, mod:System5e.calcAttrMod(value),
+                save:System5e.calcAttrSave(value, baseProf, this.proficiencyModifier), baseProf, icon};
+        }
+        addAbility("Strength", "str");
+        addAbility("Dexterity", "dex");
+        addAbility("Constitution", "con");
+        addAbility("Intelligence", "int");
+        addAbility("Wisdom", "wis");
+        addAbility("Charisma", "cha");
+
+        console.log(CONFIG.DND5E);
+
+        this.skills = {};
+        let configSkills = [];
+        const addSkill = (label, abbr, abilAbbr, baseProf=0) => {
+            const icon = baseProf == 0? "far fa-circle" : baseProf == 1? "fas fa-check" : baseProf == 2? "fas fa-adjust" : "fas fa-check-double";
+            const hover = baseProf == 0? "Not Proficient" : baseProf == 1? "Proficient" : baseProf == 2? "Half Proficient" : "Expertise";
+            const baseValue = System5e.proficiencyMult(baseProf);
+            const ability = this.system.abilities[abilAbbr];
+            const value = baseValue >= 1;
+            const {mod, passive} = System5e.calcSkillMod(ability.value, baseProf, this.proficiencyModifier);
+            this.skills[label.toLowerCase()] = {label, value, ability:abilAbbr, baseValue, hover, icon, abbreviation:abilAbbr, total:mod, passive};
+            configSkills.push(label.toLowerCase());
+        }
+        for(const [key, value] of Object.entries(CONFIG.DND5E.skills)){
+            addSkill(value.label, key, value.ability);
+        }
+        
+
+        
+
+        this.hp = {
+            value: 10,
+            max: 20,
+        };
+
+        this.inventory = {
+            weapon: {
+                label: "Weapons",
+                items: [], //item5e[]
+                dataset: {
+                    type: "weapon",
+                }
+            },
+            equipment: {
+                label: "Equipment",
+                dataset: {type:"equipment"},
+                items: []
+            }
+            
+        };
+
+
+        this.spellbook = {
+            innate: {
+                label:"Innate Spellcasting",
+                canCreate:true,
+                level: 1,
+                dataset: {
+                    level: 1,
+                    preparationMode: "innate",
+                    type: "spell",
+                },
+                usesSlots:false,
+                uses:"-", slots:"-",
+                spells:[] //spell5e[]
+            }
+        }
+
+        this.features = {
+            race: {
+                label: "Race",
+                dataset: {type: "race"},
+                items: [],
+            },
+            background: {
+                label: "Background",
+                dataset: {type: "background"},
+                items: [],
+            },
+            class:{
+                label: "Classes",
+                dataset: {type: "class"},
+                items: [],
+            }
+        }
+
+        this.elements = {inventory: "dnd5e-inventory"};
+        this.config = {skills:configSkills};
+
+        
+        this._prepareArmorClass();
+    }
+    
+    createEmbeddedDocuments(embeddedName, data=[], context={}){
+
+        console.log(data);
+        let collection = [];
+        if(embeddedName == "item"){
+            //create item5e
+            for(let d of data){
+                let entity;
+                let identified = false;
+                switch(d.type){
+                    case "spell":
+                        entity = new Spell5e(null, null, true);
+                        entity.properties = {verbal:{selected:true, label:"Verbal"}};
+                        break;
+                    default:
+                        entity = new Item5e(null, 1, null, true);
+                        d.system.identified = true;
+                        break;
+                }
+                entity.system = d.system;
+                entity.name = d.name;
+                entity.type = d.type; //weapon/spell/equipment/etc/etc
+                collection.push(entity);
+            }
+            //Add them to the character
+            this._addEntities(collection);
+        }
+        
+        //then fire events
+        this._onCreateDescendantDocuments(embeddedName, collection);
+    }
+    _onCreateDescendantDocuments(collectionName, documents){
+        if(collectionName == "items"){} //update encumberance
+        //re-render
+        ActorCharactermancerSheet2.instance.render();
+    }
+    _addEntities(items){
+        //just pretend its always the weapons category
+        for(let it of items){
+            console.log(it);
+            switch(it.type){
+                case "spell":
+                    if(it.system.preparationMode=="innate"){this.spellbook[it.system.preparationMode].spells.push(it);}
+                    else{this.spellbook[it.system.level].spells.push(it);}
+                    break;
+
+                case "class":
+                case "background":
+                case "race":
+                    this.features[it.type].items.push(it);
+                    break;
+                default:
+                    this.inventory[it.type].items.push(it);
+                    break;
+            }
+        }
+    }
+
+    async getItemByCollectionId(collectionId){
+        let matches = [];
+        const runMatching = (searchIn) => {
+            matches = matches.concat(searchIn.filter(f => {return f.collectionId == collectionId;}));
+        }
+        //Search item inventory
+        for(let section in this.inventory){ runMatching(this.inventory[section].items);}
+        //Search features
+        for(let section in this.features){ runMatching(this.features[section].items);}
+        //Search spells
+        for(let section in this.spellbook){ runMatching(this.spellbook[section].spells);}
+       
+        if(matches.length > 1){throw new Error("Not supposed to return more than one result", collectionId, this);}
+        else if(matches.length < 1){
+            console.error("Could not find a match to collection id", collectionId, this);
+        }
+        return matches[0];
+    }
+    get itemTypes(){
+        let types = {};
+        for(let [name, section] of Object.entries(this.inventory)){ types[name] = section.items; }
+        for(let [name, section] of Object.entries(this.features)){ types[name] = section.items; }
+        for(let [name, section] of Object.entries(this.spellbook)){ types[name] = section.spells; }
+        return types;
+    }
+    /**
+     * Prepare a data object which defines the data schema used by dice roll commands against this Actor
+     * @param {object} [options]
+     * @param {boolean} [options.deterministic] Whether to force deterministic values for data properties that could be
+     *                                          either a die term or a flat term.
+     */
+    getRollData({ deterministic=false }={}) {
+        let data;
+        if ( this.system.getRollData ) data = this.system.getRollData({ deterministic });
+        else data = this.system;//{...super.getRollData()};
+        //data.flags = {...this.flags};
+        //data.name = this.name;
+        /* data.statuses = {};
+        for ( const status of this.statuses ) {
+        data.statuses[status] = status === "exhaustion" ? this.system.attributes?.exhaustion ?? 1 : 1;
+        } */
+        return data;
+    }
+
+    /**
+   * Prepare a character's AC value from their equipped armor and shield.
+   * Mutates the value of the `system.attributes.ac` object.
+   */
+    _prepareArmorClass() {
+        const ac = this.system.attributes.ac;
+
+        // Apply automatic migrations for older data structures
+        let cfg = CONFIG.DND5E.armorClasses[ac.calc];
+        if ( !cfg ) {
+            ac.calc = "flat";
+            if ( Number.isNumeric(ac.value) ) ac.flat = Number(ac.value);
+            cfg = CONFIG.DND5E.armorClasses.flat;
+        }
+
+        // Identify Equipped Items
+        const armorTypes = new Set(Object.keys(CONFIG.DND5E.armorTypes));
+        const {armors, shields} = this.itemTypes.equipment.reduce((obj, equip) => {
+            if ( !equip.system.equipped || !armorTypes.has(equip.system.type.value) ) return obj;
+            if ( equip.system.type.value === "shield" ) obj.shields.push(equip);
+            else obj.armors.push(equip);
+            return obj;
+        }, {armors: [], shields: []});
+        const rollData = this.getRollData({ deterministic: true });
+
+        // Determine base AC
+        switch ( ac.calc ) {
+
+            // Flat AC (no additional bonuses)
+            case "flat":
+                ac.value = Number(ac.flat);
+                return;
+
+            // Natural AC (includes bonuses)
+            case "natural":
+                ac.base = Number(ac.flat);
+                break;
+
+            default:
+                let formula = ac.calc === "custom" ? ac.formula : cfg.formula;
+                if ( armors.length ) {
+                    if ( armors.length > 1 ) this._preparationWarnings.push({
+                        message: "You are wearing multiple armors!", type: "warning"
+                    });
+                    const armorData = armors[0].system.armor;
+                    const isHeavy = armors[0].system.type.value === "heavy";
+                    ac.armor = armorData.value ?? ac.armor;
+                    ac.dex = isHeavy ? 0 : Math.min(armorData.dex ?? Infinity, this.system.abilities.dex?.mod ?? 0);
+                    ac.equippedArmor = armors[0];
+                }
+                else ac.dex = this.system.abilities.dex?.mod ?? 0;
+                ac.armor = ac.armor ?? CONFIG.DND5E.baseArmorClass;
+
+                rollData.attributes.ac = ac;
+                try {
+                    const replaced = Roll.replaceFormulaData(formula, rollData, {
+                        actor: this, missing: null, property: "ac",//game.i18n.localize("DND5E.ArmorClass")
+                    });
+                    ac.base = replaced ? new Roll(replaced).evaluateSync()/* .total */ : 0;
+                    console.log("BASE", ac.base, replaced);
+                } catch(err) {
+                    /* this._preparationWarnings.push({
+                        message: game.i18n.format("DND5E.WarnBadACFormula", { formula }), link: "armor", type: "error"
+                    }); */
+                    console.error("bad formula", formula, err);
+                    const replaced = Roll.replaceFormulaData(CONFIG.DND5E.armorClasses.default.formula, rollData);
+                    ac.base = new Roll(replaced).evaluateSync().total;
+                }
+                break;
+        }
+
+        // Equipped Shield
+        if ( shields.length ) {
+            if ( shields.length > 1 ) this._preparationWarnings.push({
+                message: game.i18n.localize("DND5E.WarnMultipleShields"), type: "warning"
+            });
+            ac.shield = shields[0].system.armor.value ?? 0;
+            ac.equippedShield = shields[0];
+        }
+
+        // Compute total AC and return
+        ac.min = Roll.simplifyBonus(ac.min, rollData);
+        ac.bonus = Roll.simplifyBonus(ac.bonus, rollData);
+        ac.value = Math.max(ac.min, ac.base + (ac.shield??0) + ac.bonus + (ac.cover??0));
+        console.log("RESULT AC:", ac);
+    }
+    
+    static getProperty(data, term){
+
+    }
+}
+
+class CommonTemplate {
+
+    constructor(){}
+     /**
+   * Merge two schema definitions together as well as possible.
+   * @param {DataSchema} a  First schema that forms the basis for the merge. *Will be mutated.*
+   * @param {DataSchema} b  Second schema that will be merged in, overwriting any non-mergeable properties.
+   * @returns {DataSchema}  Fully merged schema.
+   */
+  static mergeSchema(a, b) {
+    Object.assign(a, b);
+    return a;
+  }
+
+  create(){
+    return {};
+  }
+}
+class CharacterTemplate extends CommonTemplate {
+    constructor(){
+        super();
+    }
+
+    create(){
+        return CommonTemplate.mergeSchema(super.create(), {
+            attributes: {
+                ac: {
+                    flat: 0,
+                    calc: "default",
+                    formula: ""
+                }
+            }
+        })
+    }
+}

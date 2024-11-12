@@ -158,7 +158,7 @@
 
             {{!-- Ability Scores --}}
             <ul class="ability-scores flexrow">
-            {{#each abilities as |ability id|}}
+            {{#each system.abilities as |ability id|}}
                 <li class="ability {{#if ability.proficient}}proficient{{/if}}" data-ability="{{id}}">
                     <h4 class="ability-name box-title rollable">{{ability.label}}</h4>
                     <input type="text" name="system.abilities.{{id}}.value" value="{{ability.value}}"

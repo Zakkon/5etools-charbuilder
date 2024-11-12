@@ -3987,4 +3987,7 @@ DND5E.themes = {
 };
 preLocalize("themes");
 
+DND5E.baseArmorClass = 8;
+DND5E.defaultAbilityScore = 10;
+
 CONFIG = {DND5E: DND5E};
