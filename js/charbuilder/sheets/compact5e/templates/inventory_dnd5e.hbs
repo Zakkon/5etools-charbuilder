@@ -75,8 +75,7 @@
         <ol class="item-list">
             {{#each section.items as |item iid|}}
             {{#dnd5e-itemContext item as |ctx|}}
-                {{log item}}
-                <li class="item flexrow {{section.css}}" data-item-id="{{item.collectionId}}"
+                <li class="item flexrow {{section.css}} {{#if item.canToggle}}{{item.toggleClass}}{{/if}}" data-item-id="{{item.collectionId}}"
                     {{#if section.editableName}}data-item-index="{{iid}}"{{/if}}>
                     <div class="item-name flexrow {{@root.rollableClass}}">
                         {{#if section.editableName}}
@@ -139,7 +138,6 @@
                     </div>
 
                     <div class="item-detail item-action">
-                        {{log item.system.activation.type}}
                         {{#if item.system.activation.type}}
                         {{item.labels.activation}}
                         {{/if}}
@@ -147,11 +145,12 @@
                     {{/unless}}
                     {{/if}}
 
+
                     {{#if @root.owner}}
                     <div class="item-controls flexrow">
-                        {{#if ctx.canToggle}}
-                        <a class="item-control item-action {{ctx.toggleClass}}" data-action="equip"
-                           data-tooltip="{{ctx.toggleTitle}}">
+                        {{#if item.canToggle}}
+                        <a class="item-control item-action {{item.toggleClass}}" data-action="equip"
+                           data-tooltip="{{item.toggleTitle}}">
                             <i class="fas fa-shield-alt"></i>
                         </a>
                         {{/if}}

@@ -162,15 +162,15 @@ class System5e{
         return JSON.stringify(schema.system);
     }
 
-    static async tryAddToInventory_Item(actor, collectionId, itemUid, quantity){
+    static async tryAddToInventory_Item(actor, collectionId, itemUid, quantity, itemType="weapon"){
         //Try to see if this item already exists in the character inventory
-        let item5e = System5e.getEntityByCollectionId(collectionId);
+        let item5e = await actor.getItemByCollectionId(collectionId);
         if(!item5e){
             //If it doesnt, create a new item5e, import system data, then add to inventory
             item5e = new Item5e(itemUid, quantity, collectionId);
             await item5e.importSystemData();
-            await System5e.addToInventory(actor, item5e);
-            await ActorCharactermancerSheet.c5e_inventory.rebuildUi();
+            item5e.type = itemType;
+            actor._addEntities([item5e]);
             return item5e;
         }
         else{
@@ -379,6 +379,13 @@ class Entity5e {
         
         return override != null? override : recursiveSearch(obj, path);
     }
+    update(data){
+        for(let [key, value] of Object.entries(data)){
+            this.setProp(key, value);
+        }
+        //Fire item update
+        System5e.hkItemUpdated(this.collectionId);
+    }
 
     stringifyEntries(){
         for(let i = 0; i < this.entries.length; ++i){
@@ -466,6 +473,21 @@ class Item5e extends Entity5e{
         return {
             activation
         };
+    }
+    get canToggle(){
+        switch(this.type){
+            case "weapon":
+            case "equipment":
+            return true;
+
+            default: return false;
+        }
+    }
+    get toggleClass(){
+        return this.system.equipped? "active" : "";
+    }
+    get toggleTitle(){
+        return this.system.equipped? "Equipped" : "Not Equipped";
     }
 }
 class ClassFeature5e extends Entity5e{
@@ -751,7 +773,6 @@ class Actor5e {
     _addEntities(items){
         //just pretend its always the weapons category
         for(let it of items){
-            console.log(it);
             switch(it.type){
                 case "spell":
                     if(it.system.preparationMode=="innate"){this.spellbook[it.system.preparationMode].spells.push(it);}
@@ -770,7 +791,7 @@ class Actor5e {
         }
     }
 
-    async getItemByCollectionId(collectionId){
+    async getItemByCollectionId(collectionId, errorIfNotFound=false){
         let matches = [];
         const runMatching = (searchIn) => {
             matches = matches.concat(searchIn.filter(f => {return f.collectionId == collectionId;}));
@@ -783,8 +804,9 @@ class Actor5e {
         for(let section in this.spellbook){ runMatching(this.spellbook[section].spells);}
        
         if(matches.length > 1){throw new Error("Not supposed to return more than one result", collectionId, this);}
-        else if(matches.length < 1){
+        else if(matches.length < 1 && errorIfNotFound){
             console.error("Could not find a match to collection id", collectionId, this);
+            return null;
         }
         return matches[0];
     }

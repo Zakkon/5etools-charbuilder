@@ -157,7 +157,7 @@ a {
     padding: 0 2px;
     border-bottom: 1px solid grey;/* var(--dnd5e-color-faint); */
 }
-.item-list .item.equipped {
+.item-list .item.active {
     
     background: linear-gradient(to right,rgba(50, 205, 50, 0.1),transparent 120%);
 }

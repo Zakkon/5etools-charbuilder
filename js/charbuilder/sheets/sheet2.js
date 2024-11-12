@@ -9,8 +9,11 @@ class ActorCharactermancerSheet2 extends ActorCharactermancerSheet {
     constructor(main){
         super(main);
 
-        this.actor = new Actor5e();
-        let inv = new TestInventoryElement(this.actor); this._inv = inv;
+        this.actor = new Actor5e(); //Create a new actor
+        //Let's give the actor some items
+        System5e.tryAddToInventory_Item(this.actor, null, "dagger|phb", 1, "weapon");
+        let inv = new TestInventoryElement(this.actor);
+        this._inv = inv;
     }
     preRender(){
         ActorCharactermancerSheet2.instance = this;
@@ -146,10 +149,14 @@ class TestInventoryElement {
             case "create":
                 //TODO: Make sure we are not a container also
                 return this._onCreate(target);
+            case "delete":
+                return;
             case "edit":
                 //Get the ui object for the entire item
                 C5e_Inventory.tryOpenEditWindow(this.actor, item, item.itemUid, "item", item.collectionId);
                 return;
+            case "equip":
+                return item.update({"system.equipped": !item.system.equipped});
             default: break;
         }
     }

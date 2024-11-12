@@ -134,6 +134,7 @@ class HandlebarsHelper{
             typeof(context)
              === "function" ) {context = context.call(this);}
         const ctx = options.data.root.itemContext?.[context.collectionId];//[context.id];
+        console.log("CONTEXT", ctx, options.data);
         if ( !ctx ) {
             const inverse = options.inverse(this);
             if ( inverse ) return options.inverse(this);
