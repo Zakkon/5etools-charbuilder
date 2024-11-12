@@ -612,19 +612,15 @@ class Actor5e {
         const template = new CharacterTemplate();
         const schema = template.create();
         this.system = schema;
-        console.log("schema:", this.system);
 
         this.system.abilities = {};
-        this.proficiencyModifier = 2;
-
-        
         
         const addAbility = (label, abbr, value=10, baseProf=0) => {
             //baseProf is either 0, 1, or 2 (none, proficient, expertise)
             const icon = baseProf == 0? "far fa-circle" : "fas fa-check";
 
             this.system.abilities[abbr] = {label, abbreviation:abbr, value, mod:System5e.calcAttrMod(value),
-                save:System5e.calcAttrSave(value, baseProf, this.proficiencyModifier), baseProf, icon};
+                save:System5e.calcAttrSave(value, baseProf, this.system.attributes.prof), baseProf, icon};
         }
         addAbility("Strength", "str");
         addAbility("Dexterity", "dex");
@@ -632,8 +628,6 @@ class Actor5e {
         addAbility("Intelligence", "int");
         addAbility("Wisdom", "wis");
         addAbility("Charisma", "cha");
-
-        console.log(CONFIG.DND5E);
 
         this.skills = {};
         let configSkills = [];
@@ -643,16 +637,13 @@ class Actor5e {
             const baseValue = System5e.proficiencyMult(baseProf);
             const ability = this.system.abilities[abilAbbr];
             const value = baseValue >= 1;
-            const {mod, passive} = System5e.calcSkillMod(ability.value, baseProf, this.proficiencyModifier);
+            const {mod, passive} = System5e.calcSkillMod(ability.value, baseProf, this.system.attributes.prof);
             this.skills[label.toLowerCase()] = {label, value, ability:abilAbbr, baseValue, hover, icon, abbreviation:abilAbbr, total:mod, passive};
             configSkills.push(label.toLowerCase());
         }
         for(const [key, value] of Object.entries(CONFIG.DND5E.skills)){
             addSkill(value.label, key, value.ability);
         }
-        
-
-        
 
         this.hp = {
             value: 10,
@@ -674,7 +665,6 @@ class Actor5e {
             }
             
         };
-
 
         this.spellbook = {
             innate: {
@@ -713,8 +703,13 @@ class Actor5e {
         this.elements = {inventory: "dnd5e-inventory"};
         this.config = {skills:configSkills};
 
-        
+
+        let rollData = this.getRollData({deterministic:true});
+        this._prepareAbilities({rollData});
         this._prepareArmorClass();
+        this._prepareInitiative();
+        this._prepareSpellcasting();
+        this.movement = this._getMovementSpeed(this.system, false);
     }
     
     createEmbeddedDocuments(embeddedName, data=[], context={}){
@@ -793,6 +788,9 @@ class Actor5e {
         }
         return matches[0];
     }
+    getFlag(flagCategory, flagName){
+        return false;
+    }
     get itemTypes(){
         let types = {};
         for(let [name, section] of Object.entries(this.inventory)){ types[name] = section.items; }
@@ -819,6 +817,41 @@ class Actor5e {
         return data;
     }
 
+        /**
+     * Prepare modifiers and other values for abilities.
+     * @param {object} [options={}]
+     * @param {object} [options.rollData={}]    Roll data used to calculate bonuses.
+     * @param {object} [options.originalSaves]  Original ability data for transformed actors.
+     */
+    _prepareAbilities({ rollData={}, originalSaves }={}) {
+        //const flags = this.parent.flags.dnd5e ?? {};
+        const prof = this.system.attributes?.prof ?? 0;
+        const checkBonus = Roll.simplifyBonus(this.system.bonuses?.abilities?.check, rollData);
+        const saveBonus = Roll.simplifyBonus(this.system.bonuses?.abilities?.save, rollData);
+        const dcBonus = Roll.simplifyBonus(this.system.bonuses?.spell?.dc, rollData);
+        for ( const [id, abl] of Object.entries(this.system.abilities) ) {
+            if ( this.getFlag("dnd5e", "diamondSoul") ) abl.proficient = 1;  // Diamond Soul is proficient in all saves
+            abl.mod = Math.floor((abl.value - 10) / 2);
+
+            const isRA = this._isRemarkableAthlete(id);
+            abl.checkProf = new Proficiency(prof, (isRA || this.getFlag("dnd5e", "jackOfAllTrades")) ? 0.5 : 0, !isRA);
+            const saveBonusAbl = Roll.simplifyBonus(abl.bonuses?.save, rollData);
+            abl.saveBonus = saveBonusAbl + saveBonus;
+
+            abl.saveProf = new Proficiency(prof, abl.proficient);
+            const checkBonusAbl = Roll.simplifyBonus(abl.bonuses?.check, rollData);
+            abl.checkBonus = checkBonusAbl + checkBonus;
+
+            abl.save = abl.mod + abl.saveBonus;
+            if ( Number.isNumeric(abl.saveProf.term) ) abl.save += abl.saveProf.flat;
+            abl.dc = 8 + abl.mod + prof + dcBonus;
+
+            if ( !Number.isFinite(abl.max) ) abl.max = CONFIG.DND5E.maxAbilityScore;
+
+            // If we merged saves when transforming, take the highest bonus here.
+            /* if ( originalSaves && abl.proficient ) abl.save = Math.max(abl.save, originalSaves[id].save); */
+        }
+    }
     /**
    * Prepare a character's AC value from their equipped armor and shield.
    * Mutates the value of the `system.attributes.ac` object.
@@ -878,7 +911,6 @@ class Actor5e {
                         actor: this, missing: null, property: "ac",//game.i18n.localize("DND5E.ArmorClass")
                     });
                     ac.base = replaced ? new Roll(replaced).evaluateSync()/* .total */ : 0;
-                    console.log("BASE", ac.base, replaced);
                 } catch(err) {
                     /* this._preparationWarnings.push({
                         message: game.i18n.format("DND5E.WarnBadACFormula", { formula }), link: "armor", type: "error"
@@ -903,7 +935,147 @@ class Actor5e {
         ac.min = Roll.simplifyBonus(ac.min, rollData);
         ac.bonus = Roll.simplifyBonus(ac.bonus, rollData);
         ac.value = Math.max(ac.min, ac.base + (ac.shield??0) + ac.bonus + (ac.cover??0));
-        console.log("RESULT AC:", ac);
+    }
+    /**
+   * Prepare the initiative data for an actor.
+   * Mutates the value of the system.attributes.init object.
+   * @param {object} bonusData         Data produced by getRollData to be applied to bonus formulas
+   * @param {number} globalCheckBonus  Global ability check bonus
+   * @protected
+   */
+    _prepareInitiative(bonusData, globalCheckBonus=0) {
+        const init = this.system.attributes.init ??= {};
+        //const flags = this.flags.dnd5e || {};
+
+        // Compute initiative modifier
+        const abilityId = init.ability || CONFIG.DND5E.defaultAbilities.initiative;
+        const ability = this.system.abilities?.[abilityId] || {};
+        init.mod = ability.mod ?? 0;
+
+        // Initiative proficiency
+        const prof = this.system.attributes.prof ?? 0;
+        const joat = this.getFlag("dnd5e", "jackOfAllTrades") && (CONFIG.DND5E.rulesVersion === "legacy");
+        const ra = this._isRemarkableAthlete(abilityId);
+        init.prof = new Proficiency(prof, (joat || ra) ? 0.5 : 0, !ra);
+
+        // Total initiative includes all numeric terms
+        const initBonus = Roll.simplifyBonus(init.bonus, bonusData);
+        const abilityBonus = Roll.simplifyBonus(ability.bonuses?.check, bonusData);
+        init.total = init.mod + initBonus + abilityBonus + globalCheckBonus
+        + (this.getFlag("dnd5e", "initiativeAlert") ? 5 : 0)
+        + (Number.isNumeric(init.prof.term) ? init.prof.flat : 0);
+
+        this.system.attributes.init = init;
+    }
+    /**
+   * Prepare a movement breakdown.
+   * @returns {string}
+   * @protected
+   */
+    _prepareMovementAttribution() {
+        const { movement } = this.system.attributes;
+        const units = movement.units || Object.keys(CONFIG.DND5E.movementUnits)[0];
+        return Object.entries(CONFIG.DND5E.movementTypes).reduce((html, [k, label]) => {
+        const value = movement[k];
+        if ( value || (k === "walk") ) html += `
+            <div class="row">
+            <i class="fas ${k}"></i>
+            <span class="value">${value ?? 0} <span class="units">${units}</span></span>
+            <span class="label">${label}</span>
+            </div>`;
+            return html;
+        }, "");
+    }
+        /**
+     * Prepare data related to the spell-casting capabilities of the Actor.
+     * Mutates the value of the system.spells object.
+     * @protected
+     */
+    _prepareSpellcasting() {
+
+        // Spellcasting DC and modifier
+        const spellcastingAbility = this.system.abilities[this.system.attributes.spellcasting];
+        this.system.attributes.spelldc = spellcastingAbility ? spellcastingAbility.dc : 8 + this.system.attributes.prof;
+        this.system.attributes.spellmod = spellcastingAbility ? spellcastingAbility.mod : 0;
+        if ( !this.system.spells ) return;
+
+        // Translate the list of classes into spellcasting progression
+        const progression = { slot: 0, pact: 0 };
+        const types = {};
+
+        // Grab all classes with spellcasting
+        const classes = this.itemTypes.class.filter(cls => {
+            const type = cls.spellcasting.type;
+            if ( !type ) return false;
+            types[type] ??= 0;
+            types[type] += 1;
+            return true;
+        });
+
+        for ( const cls of classes ) this.constructor.computeClassProgression(
+            progression, cls, { actor: this, count: types[cls.spellcasting.type] }
+        );
+
+        if ( this.type === "npc" ) {
+            if ( progression.slot || progression.pact ) this.system.details.spellLevel = progression.slot || progression.pact;
+            else progression.slot = this.system.details.spellLevel ?? 0;
+        }
+
+        for ( const type of Object.keys(CONFIG.DND5E.spellcastingTypes) ) {
+            this.constructor.prepareSpellcastingSlots(this.system.spells, type, progression, { actor: this });
+        }
+    }
+
+    /**
+   * Determine whether the provided ability is usable for remarkable athlete.
+   * @param {string} ability  Ability type to check.
+   * @returns {boolean}       Whether the actor has the remarkable athlete flag and the ability is physical.
+   * @private
+   */
+    _isRemarkableAthlete(ability) {
+        return (CONFIG.DND5E.rulesVersion === "legacy") && this.getFlag("dnd5e", "remarkableAthlete")
+          && CONFIG.DND5E.characterFlags.remarkableAthlete.abilities.includes(ability);
+    }
+    /**
+   * Prepare the display of movement speed data for the Actor.
+   * @param {object} systemData               System data for the Actor being prepared.
+   * @param {boolean} [largestPrimary=false]  Show the largest movement speed as "primary", otherwise show "walk".
+   * @returns {{primary: string, special: string}}
+   * @protected
+   */
+    _getMovementSpeed(systemData, largestPrimary=false) {
+        const movement = systemData.attributes.movement ?? {};
+
+        // Prepare an array of available movement speeds
+        let speeds = [
+            [movement.burrow, `${"Burrow"} ${movement.burrow}`],
+            [movement.climb, `${"Climb"} ${movement.climb}`],
+            [movement.fly, `${"Fly"} ${movement.fly}${movement.hover ? ` (${"Hover"})` : ""}`],
+            [movement.swim, `${"Swim"} ${movement.swim}`]
+        ];
+        if ( largestPrimary ) {
+            speeds.push([movement.walk, `${"Walk"} ${movement.walk}`]);
+        }
+
+        // Filter and sort speeds on their values
+        speeds = speeds.filter(s => s[0]).sort((a, b) => b[0] - a[0]);
+
+        // Case 1: Largest as primary
+        if ( largestPrimary ) {
+        let primary = speeds.shift();
+        return {
+            primary: `${primary ? primary[1] : "0"} ${movement.units || Object.keys(CONFIG.DND5E.movementUnits)[0]}`,
+            special: speeds.map(s => s[1]).join(", ")
+        };
+        }
+
+        // Case 2: Walk as primary
+        else {
+        return {
+            primary: `${movement.walk || 0} ${movement.units || Object.keys(CONFIG.DND5E.movementUnits)[0]}`,
+            special: speeds.length ? speeds.map(s => s[1]).join(", ") : ""
+        };
+        }
     }
     
     static getProperty(data, term){
@@ -937,12 +1109,127 @@ class CharacterTemplate extends CommonTemplate {
     create(){
         return CommonTemplate.mergeSchema(super.create(), {
             attributes: {
+                prof: 2,
                 ac: {
                     flat: 0,
                     calc: "default",
                     formula: ""
-                }
+                },
+                movement: {
+
+                },
+                spellcasting: "cha",
             }
         })
     }
 }
+
+/**
+ * Object describing the proficiency for a specific ability or skill.
+ *
+ * @param {number} proficiency   Actor's flat proficiency bonus based on their current level.
+ * @param {number} multiplier    Value by which to multiply the actor's base proficiency value.
+ * @param {boolean} [roundDown]  Should half-values be rounded up or down?
+ */
+class Proficiency {
+    constructor(proficiency, multiplier, roundDown=true) {
+  
+      /**
+       * Base proficiency value of the actor.
+       * @type {number}
+       * @private
+       */
+      this._baseProficiency = Number(proficiency ?? 0);
+  
+      /**
+       * Value by which to multiply the actor's base proficiency value.
+       * @type {number}
+       */
+      this.multiplier = Number(multiplier ?? 0);
+  
+      /**
+       * Direction decimal results should be rounded ("up" or "down").
+       * @type {string}
+       */
+      this.rounding = roundDown ? "down" : "up";
+    }
+  
+    /* -------------------------------------------- */
+  
+    /**
+     * Should only deterministic proficiency be returned, regardless of system settings?
+     * @type {boolean}
+     */
+    deterministic = false;
+  
+    /* -------------------------------------------- */
+  
+    /**
+     * Calculate an actor's proficiency modifier based on level or CR.
+     * @param {number} level  Level or CR To use for calculating proficiency modifier.
+     * @returns {number}      Proficiency modifier.
+     */
+    static calculateMod(level) {
+      return Math.floor((level + 7) / 4);
+    }
+  
+    /* -------------------------------------------- */
+  
+    /**
+     * Flat proficiency value regardless of proficiency mode.
+     * @type {number}
+     */
+    get flat() {
+      const roundMethod = (this.rounding === "down") ? Math.floor : Math.ceil;
+      return roundMethod(this.multiplier * this._baseProficiency);
+    }
+  
+    /* -------------------------------------------- */
+  
+    /**
+     * Dice-based proficiency value regardless of proficiency mode.
+     * @type {string}
+     */
+    get dice() {
+      if ( (this._baseProficiency === 0) || (this.multiplier === 0) ) return "0";
+      const roundTerm = (this.rounding === "down") ? "floor" : "ceil";
+      if ( this.multiplier === 0.5 ) {
+        return `${roundTerm}(1d${this._baseProficiency * 2} / 2)`;
+      } else {
+        return `${this.multiplier}d${this._baseProficiency * 2}`;
+      }
+    }
+  
+    /* -------------------------------------------- */
+  
+    /**
+     * Either flat or dice proficiency term based on configured setting.
+     * @type {string}
+     */
+    get term() {
+        //TODO: support for proficiency dice, a variant rule from the DMG
+      return /* (game.settings.get("dnd5e", "proficiencyModifier") === "dice") && !this.deterministic
+        ? this.dice : */ String(this.flat);
+    }
+  
+    /* -------------------------------------------- */
+  
+    /**
+     * Whether the proficiency is greater than zero.
+     * @type {boolean}
+     */
+    get hasProficiency() {
+      return (this._baseProficiency > 0) && (this.multiplier > 0);
+    }
+  
+    /* -------------------------------------------- */
+  
+    /**
+     * Override the default `toString` method to return flat proficiency for backwards compatibility in formula.
+     * @returns {string}  Flat proficiency value.
+     */
+    toString() {
+      return this.term;
+    }
+}
+  

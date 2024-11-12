@@ -22,7 +22,7 @@ class ActorCharactermancerSheet2 extends ActorCharactermancerSheet {
 
         const wrapper = $$`<div class="ve-flex-col w-100 h-100 px-1 pt-1 overflow-y-auto ve-grow veapp__bg-foundry"></div>`;
         wrapper.appendTo(tabSheet);
-        const sheet = $$`<div class="c5e dnd5e sheet actor" ></div>`;
+        const sheet = $$`<div class="c5e dnd5e sheet actor character" ></div>`;
         sheet.appendTo(wrapper);
         this.$sheet = sheet;
         C5e_Inventory.setupListeners();
