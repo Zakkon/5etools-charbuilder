@@ -515,10 +515,10 @@ class C5e_EditWindow {
         this.activeTab = "details";
     }
 
-    render(item5e=null){
-        item5e != null? item5e : this.actor.getItemByCollectionId(this.collectionId);
-        this.item5e = item5e;
-        console.log(item5e);
+    render(entity=null){
+        entity != null? entity : this.actor.getItemByCollectionId(this.collectionId);
+        this.item5e = entity;
+        console.log("to edit: ", entity);
         const windowHeader = this.windowHeader();
         let window_content = $$`<section class="window-content"></section>`
         let handle = this.windowDragHandle();
@@ -527,12 +527,15 @@ class C5e_EditWindow {
         $("body").append(this.element);
 
         let templateName = "weapon";
-        if(item5e.type == "classFeature"){templateName = "feat";}
-        else if(item5e.type == "spell"){templateName = "spell";}
+        if(entity.type == "classFeature"){templateName = "feat";}
+        else if(entity.type == "spell"){templateName = "spell";}
+        else if(entity.type == "class"){templateName = "class";}
+        else if(entity.type == "race"){templateName = "race";}
+        else if(entity.type == "background"){templateName = "background";}
 
-        item5e.cssClass = "editable";
-        item5e.concealDetails = false;//!game.user.isGM && (this.document.system.identified === false)
-        let contentTemplate = new LoadTemplate(window_content, "parts/edit/" + templateName, item5e);
+        entity.cssClass = "editable";
+        entity.concealDetails = false;//!game.user.isGM && (this.document.system.identified === false)
+        let contentTemplate = new LoadTemplate(window_content, "parts/edit/" + templateName, entity);
         contentTemplate.create(()=>{
             this.navigation_switchTab(this.activeTab);
             this.setupListeners(window_content);

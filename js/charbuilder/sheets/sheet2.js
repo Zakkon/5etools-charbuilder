@@ -4,7 +4,7 @@ class ActorCharactermancerSheet2 extends ActorCharactermancerSheet {
     _inv;
     actor;
     element;
-    activeTab = "inventory";
+    activeTab = "features";
 
     constructor(main){
         super(main);

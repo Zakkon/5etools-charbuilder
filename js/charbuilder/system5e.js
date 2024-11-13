@@ -313,12 +313,38 @@ class System5e{
 class Entity5e {
     static use_overrides = false;
     override;
-    constructor(){
+    constructor(itemUid, collectionId, isCustom){
+        this.uid = itemUid;
+        this.collectionId = collectionId? collectionId : System5e.createUniqueID();
+        this.isCustom = isCustom;
         this.override = {};
     }
     
     get config(){return DND5E;}
     prop(path){return Entity5e.getp(this, path);}
+    _createProxy(){
+        return new Proxy(this, {
+            get: (target, prop) => {
+                if (prop === 'system') {
+                    return new Proxy(target.system, {
+                        get: (systemTarget, systemProp) => {
+                            const overrideValue = target.override[systemProp];//target.getNestedProperty(target.override, systemProp);
+                            const systemValue = systemTarget[systemProp];
+                            //console.log(systemProp, systemValue,">", overrideValue);
+                            return overrideValue !== null && overrideValue !== undefined ? overrideValue : systemValue;
+                        }
+                    });
+                }
+                return target[prop];
+            }
+        });
+    }
+    _tryCloneOriginal(original){
+        if(original == null){return;}
+        this.name = original.name;
+        this.system = structuredClone(original.system);
+        this.entries = structuredClone(original.entries);
+    }
     setDependency(type, key){
         this.dependsOnType = type.toLowerCase();
         this.dependsOn = key.toLowerCase();
@@ -407,37 +433,13 @@ class Entity5e {
 }
 class Item5e extends Entity5e{
     constructor(itemUid, quantity=1, collectionId=null, isCustom=false){
-        super();
-        this.uid = itemUid;
-        this.type = "item";
+        super(itemUid, collectionId, isCustom);
         this.quantity = quantity;
-        this.collectionId = collectionId? collectionId : System5e.createUniqueID();
-        this.isCustom = isCustom;
-        if(!isCustom){
-            const original = CharacterBuilder.getItemByUid(this.uid);
-            this.system = structuredClone(original.system);
-            this.entries = structuredClone(original.entries);
-            this.name = original.name;
-        }
+        if(!this.isCustom){this._tryCloneOriginal(CharacterBuilder.getItemByUid(this.uid));}
         this.properties = {};
 
         if(!Entity5e.use_overrides){return this;}
-
-        return new Proxy(this, {
-            get: (target, prop) => {
-                if (prop === 'system') {
-                    return new Proxy(target.system, {
-                        get: (systemTarget, systemProp) => {
-                            const overrideValue = target.override[systemProp];//target.getNestedProperty(target.override, systemProp);
-                            const systemValue = systemTarget[systemProp];
-                            //console.log(systemProp, systemValue,">", overrideValue);
-                            return overrideValue !== null && overrideValue !== undefined ? overrideValue : systemValue;
-                        }
-                    });
-                }
-                return target[prop];
-            }
-        });
+        return this._createProxy();
     }
     static recast(inputObj){
         let item5e = new Item5e(inputObj.uid, inputObj.quantity, inputObj.collectionId, inputObj.isCustom);
@@ -484,6 +486,74 @@ class Item5e extends Entity5e{
     get toggleTitle(){
         return this.system.equipped? "Equipped" : "Not Equipped";
     }
+}
+class CoreFeature5e extends Entity5e{
+    constructor(itemUid, collectionId=null, isCustom=false){
+        super();
+        this.uid = itemUid;
+        this.collectionId = collectionId? collectionId : System5e.createUniqueID();
+        this.isCustom = isCustom;
+        if(!isCustom){
+            const original = CharacterBuilder.getItemByUid(this.uid); //TODO: fix to get a class object rather than an item
+            this.system = structuredClone(original.system);
+            this.entries = structuredClone(original.entries);
+            this.name = original.name;
+        }
+        this.properties = {};
+
+        if(!Entity5e.use_overrides){return this;}
+
+        return new Proxy(this, {
+            get: (target, prop) => {
+                if (prop === 'system') {
+                    return new Proxy(target.system, {
+                        get: (systemTarget, systemProp) => {
+                            const overrideValue = target.override[systemProp];//target.getNestedProperty(target.override, systemProp);
+                            const systemValue = systemTarget[systemProp];
+                            //console.log(systemProp, systemValue,">", overrideValue);
+                            return overrideValue !== null && overrideValue !== undefined ? overrideValue : systemValue;
+                        }
+                    });
+                }
+                return target[prop];
+            }
+        });
+    }
+    static recast(inputObj){
+        let core = new CoreFeature5e(inputObj.uid, inputObj.collectionId, inputObj.isCustom);
+        inputObj && Object.assign(core, inputObj);
+        return core;
+    }
+}
+class Class5e extends Entity5e{
+    constructor(itemUid, collectionId=null, isCustom=false){
+        super(itemUid, collectionId, isCustom);
+        //if(!this.isCustom){this._tryCloneOriginal(CharacterBuilder.getSpellByUid(this.uid));}
+
+        if(!Entity5e.use_overrides){return this;}
+        return this._createProxy();
+    }
+}
+class Race5e extends Entity5e{
+    constructor(itemUid, collectionId=null, isCustom=false){
+        super(itemUid, collectionId, isCustom);
+        //if(!this.isCustom){this._tryCloneOriginal(CharacterBuilder.getSpellByUid(this.uid));}
+
+        if(!Entity5e.use_overrides){return this;}
+        return this._createProxy();
+    }
+}
+class Background5e extends Entity5e{
+    constructor(itemUid, collectionId=null, isCustom=false){
+        super(itemUid, collectionId, isCustom);
+        //if(!this.isCustom){this._tryCloneOriginal(CharacterBuilder.getSpellByUid(this.uid));}
+
+        if(!Entity5e.use_overrides){return this;}
+        return this._createProxy();
+    }
+}
+class Feature5e extends Entity5e{
+
 }
 class ClassFeature5e extends Entity5e{
     constructor(hash, className, classSource, collectionId=null){
@@ -542,38 +612,12 @@ class ClassFeature5e extends Entity5e{
     }
 }
 class Spell5e extends Entity5e{
-    constructor(spellUid, collectionId=null, isCustom=false){
-        super();
-        this.uid = spellUid;
-        this.type = "spell";
-        this.collectionId = collectionId? collectionId : System5e.createUniqueID();
-        this.isCustom = isCustom;
-        if(!this.isCustom)
-        {
-            const original = CharacterBuilder.getSpellByUid(this.uid);
-            this.name = original.name;
-            this.system = structuredClone(original.system);
-            this.entries = structuredClone(original.entries);
-        }
-        
+    constructor(itemUid, collectionId=null, isCustom=false){
+        super(itemUid, collectionId, isCustom);
+        if(!this.isCustom){this._tryCloneOriginal(CharacterBuilder.getSpellByUid(this.uid));}
 
         if(!Entity5e.use_overrides){return this;}
-
-        return new Proxy(this, {
-            get: (target, prop) => {
-                if (prop === 'system') {
-                    return new Proxy(target.system, {
-                        get: (systemTarget, systemProp) => {
-                            const overrideValue = target.override[systemProp];//target.getNestedProperty(target.override, systemProp);
-                            const systemValue = systemTarget[systemProp];
-                            //console.log(systemProp, systemValue,">", overrideValue);
-                            return overrideValue !== null && overrideValue !== undefined ? overrideValue : systemValue;
-                        }
-                    });
-                }
-                return target[prop];
-            }
-        });
+        return this._createProxy();
     }
 
     static recast(inputObj){
@@ -763,7 +807,16 @@ class Actor5e {
                 switch(d.type){
                     case "spell":
                         entity = new Spell5e(null, null, true);
-                        entity.properties = {verbal:{selected:true, label:"Verbal"}};
+                        entity.properties = {verbal:{selected:true, label:"Verbal"}}; //TEST
+                        break;
+                    case "class":
+                        entity = new Class5e(null, null, true);
+                        break;
+                    case "race":
+                        entity = new Race5e(null, null, true);
+                        break;
+                    case "background":
+                        entity = new Race5e(null, null, true);
                         break;
                     default:
                         entity = new Item5e(null, 1, null, true);
