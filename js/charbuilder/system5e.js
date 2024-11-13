@@ -443,6 +443,7 @@ class Entity5e {
 class Item5e extends Entity5e{
     constructor(itemUid, quantity=1, collectionId=null, isCustom=false){
         super(itemUid, collectionId, isCustom);
+        this.entityType = "item";
         this.quantity = quantity;
         if(!this.isCustom){this._tryCloneOriginal(CharacterBuilder.getItemByUid(this.uid));}
         this.properties = {};
@@ -496,77 +497,44 @@ class Item5e extends Entity5e{
         return this.system.equipped? "Equipped" : "Not Equipped";
     }
 }
-class CoreFeature5e extends Entity5e{
-    constructor(itemUid, collectionId=null, isCustom=false){
-        super();
-        this.uid = itemUid;
-        this.collectionId = collectionId? collectionId : System5e.createUniqueID();
-        this.isCustom = isCustom;
-        if(!isCustom){
-            const original = CharacterBuilder.getItemByUid(this.uid); //TODO: fix to get a class object rather than an item
-            this.system = structuredClone(original.system);
-            this.entries = structuredClone(original.entries);
-            this.name = original.name;
-        }
-        this.properties = {};
 
-        if(!Entity5e.use_overrides){return this;}
-
-        return new Proxy(this, {
-            get: (target, prop) => {
-                if (prop === 'system') {
-                    return new Proxy(target.system, {
-                        get: (systemTarget, systemProp) => {
-                            const overrideValue = target.override[systemProp];//target.getNestedProperty(target.override, systemProp);
-                            const systemValue = systemTarget[systemProp];
-                            //console.log(systemProp, systemValue,">", overrideValue);
-                            return overrideValue !== null && overrideValue !== undefined ? overrideValue : systemValue;
-                        }
-                    });
-                }
-                return target[prop];
-            }
-        });
-    }
-    static recast(inputObj){
-        let core = new CoreFeature5e(inputObj.uid, inputObj.collectionId, inputObj.isCustom);
-        inputObj && Object.assign(core, inputObj);
-        return core;
-    }
-}
-class Class5e extends Entity5e{
-    constructor(itemUid, collectionId=null, isCustom=false){
-        super(itemUid, collectionId, isCustom);
-        //if(!this.isCustom){this._tryCloneOriginal(CharacterBuilder.getSpellByUid(this.uid));}
-
-        if(!Entity5e.use_overrides){return this;}
-        return this._createProxy();
-    }
-}
-class Race5e extends Entity5e{
-    constructor(itemUid, collectionId=null, isCustom=false){
-        super(itemUid, collectionId, isCustom);
-        //if(!this.isCustom){this._tryCloneOriginal(CharacterBuilder.getSpellByUid(this.uid));}
-
-        if(!Entity5e.use_overrides){return this;}
-        return this._createProxy();
-    }
-}
-class Background5e extends Entity5e{
-    constructor(itemUid, collectionId=null, isCustom=false){
-        super(itemUid, collectionId, isCustom);
-        //if(!this.isCustom){this._tryCloneOriginal(CharacterBuilder.getSpellByUid(this.uid));}
-
-        if(!Entity5e.use_overrides){return this;}
-        return this._createProxy();
-    }
-}
 class Feature5e extends Entity5e{
+    constructor(hash, collectionId=null, isCustom){
+        super(hash, collectionId, isCustom);
+        this.entityType = "feature";
+    }
+}
+class Class5e extends Feature5e{
+    constructor(itemUid, collectionId=null, isCustom=false){
+        super(itemUid, collectionId, isCustom);
+        //if(!this.isCustom){this._tryCloneOriginal(CharacterBuilder.getSpellByUid(this.uid));}
 
+        if(!Entity5e.use_overrides){return this;}
+        return this._createProxy();
+    }
+}
+class Race5e extends Feature5e{
+    constructor(itemUid, collectionId=null, isCustom=false){
+        super(itemUid, collectionId, isCustom);
+        //if(!this.isCustom){this._tryCloneOriginal(CharacterBuilder.getSpellByUid(this.uid));}
+
+        if(!Entity5e.use_overrides){return this;}
+        return this._createProxy();
+    }
+}
+class Background5e extends Feature5e{
+    constructor(itemUid, collectionId=null, isCustom=false){
+        super(itemUid, collectionId, isCustom);
+        //if(!this.isCustom){this._tryCloneOriginal(CharacterBuilder.getSpellByUid(this.uid));}
+
+        if(!Entity5e.use_overrides){return this;}
+        return this._createProxy();
+    }
 }
 class ClassFeature5e extends Feature5e{
     constructor(hash, className, classSource, collectionId=null, isCustom){
         super(hash, collectionId, isCustom);
+        
         this.className = className;
         this.classSource = classSource;
         //if(!this.isCustom){this._tryCloneOriginal(CharacterBuilder.getClassFeatureByUid(hash, className, classSource));}
@@ -606,6 +574,7 @@ class ClassFeature5e extends Feature5e{
 class Spell5e extends Entity5e{
     constructor(itemUid, collectionId=null, isCustom=false){
         super(itemUid, collectionId, isCustom);
+        this.entityType = "spell";
         if(!this.isCustom){this._tryCloneOriginal(CharacterBuilder.getSpellByUid(this.uid));}
 
         if(!Entity5e.use_overrides){return this;}
@@ -865,16 +834,12 @@ class Actor5e {
     }
     _addEntities(items){
         for(let it of items){
-            switch(it.type){
+            switch(it.entityType){
                 case "spell":
                     if(it.system.preparationMode=="innate"){this.spellbook[it.system.preparationMode].spells.push(it);}
                     else{this.spellbook[it.system.level].spells.push(it);}
                     break;
-
-                case "class":
-                case "background":
-                case "race":
-                case "passive":
+                case "feature":
                     this.features[it.type].items.push(it);
                     break;
                 default:
