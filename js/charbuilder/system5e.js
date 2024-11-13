@@ -507,6 +507,7 @@ class Feature5e extends Entity5e{
 class Class5e extends Feature5e{
     constructor(itemUid, collectionId=null, isCustom=false){
         super(itemUid, collectionId, isCustom);
+        this.type = "class";
         if(!this.isCustom){this._tryCloneOriginal(CharacterBuilder.getEntityByUid("class", {uid: this.uid}));}
 
         if(!Entity5e.use_overrides){return this;}
@@ -522,6 +523,7 @@ class Class5e extends Feature5e{
 class Race5e extends Feature5e{
     constructor(itemUid, collectionId=null, isCustom=false){
         super(itemUid, collectionId, isCustom);
+        this.type = "race";
         //if(!this.isCustom){this._tryCloneOriginal(CharacterBuilder.getSpellByUid(this.uid));}
 
         if(!Entity5e.use_overrides){return this;}
@@ -531,6 +533,7 @@ class Race5e extends Feature5e{
 class Background5e extends Feature5e{
     constructor(itemUid, collectionId=null, isCustom=false){
         super(itemUid, collectionId, isCustom);
+        this.type = "background";
         //if(!this.isCustom){this._tryCloneOriginal(CharacterBuilder.getSpellByUid(this.uid));}
 
         if(!Entity5e.use_overrides){return this;}

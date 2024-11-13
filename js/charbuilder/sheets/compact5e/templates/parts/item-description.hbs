@@ -1,8 +1,8 @@
 <div class="tab flexrow" data-group="primary" data-tab="description">
 
 {{#if editingDescriptionTarget}}
-    {{editor enriched.editing target=editingDescriptionTarget button=false editable=editable
-             engine="prosemirror" collaborate=true}}
+   {{!--  {{editor enriched.editing target=editingDescriptionTarget button=false editable=editable
+             engine="prosemirror" collaborate=true}} --}}
 {{else}}
     <div class="item-properties">
         {{#if isPhysical}}
@@ -77,7 +77,7 @@
             </a>
         </h3>
         {{/if}}
-        {{editor enriched.description target="system.description.value" editable=false engine="prosemirror"}}
+        {{!-- {{editor enriched.description target="system.description.value" editable=false engine="prosemirror"}} --}}
     {{/if}}
 
     {{#if (and (or editable system.unidentified.description) isIdentifiable user.isGM)}}
@@ -90,7 +90,7 @@
             </a>
             {{/if}}
         </h3>
-        {{editor enriched.unidentified target="system.unidentified.description" editable=false engine="prosemirror"}}
+        {{!-- {{editor enriched.unidentified target="system.unidentified.description" editable=false engine="prosemirror"}} --}}
     {{/if}}
 
     {{#if (or editable system.description.chat)}}
@@ -103,14 +103,14 @@
             </a>
             {{/if}}
         </h3>
-        {{editor enriched.chat target="system.description.chat" editable=false engine="prosemirror"}}
+        {{!-- {{editor enriched.chat target="system.description.chat" editable=false engine="prosemirror"}} --}}
     {{/if}}
 
     {{else}}
 
     {{#if (or editable system.unidentified.description)}}
-        {{editor enriched.unidentified target="system.unidentified.description" button=true editable=true
-                 engine="prosemirror"}}
+       {{!--  {{editor enriched.unidentified target="system.unidentified.description" button=true editable=true
+                 engine="prosemirror"}} --}}
     {{/if}}
 
     {{/if}}

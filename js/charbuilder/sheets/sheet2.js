@@ -16,16 +16,15 @@ class ActorCharactermancerSheet2 extends ActorCharactermancerSheet {
 
         //Let's try adding a class feature to the actor
         //First, let's get a class
-        let cls = new Class5e("barbarian_phb");
+        /* let cls = new Class5e("barbarian_phb");
         //Let's try to add the class to the sheet as well
         System5e.tryAddToInventory(this._actor, cls, "class", {doNotRender:true});
         //Let's get the first class feature
-        console.log("CLASS", cls);
         let f = cls.classFeatures[0];
         ClassFeature5e.verifySystemData(f.hash, cls.name, cls.source).then(() => {
             let featureItem = new ClassFeature5e(f.hash, cls.name, cls.source, null, false);
-            System5e.tryAddToInventory(this._actor, featureItem, "passive", {doNotRender:true});
-        });
+            System5e.tryAddToInventory(this._actor, featureItem, "active", {doNotRender:true});
+        }); */
 
         let inv = new TestInventoryElement(this.actor);
         this._inv = inv;
@@ -105,8 +104,10 @@ class ActorCharactermancerSheet2 extends ActorCharactermancerSheet {
         //Disable all tabs
         let nav_tabs = this.$sheet.find(".sheet-navigation.tabs > [data-tab]");
         let tabDivs = this.$sheet.find(".sheet-body > .tab");
+        this._inv._onLeaveTab(this.$sheet.find(".sheet-body > .tab.active"));
         nav_tabs.toggleClass("active", false);
         tabDivs.toggleClass("active", false);
+
         //Enable the specific tab we want open
         nav_tabs = this.$sheet.find(`.sheet-navigation.tabs > [data-tab="${activeTabName}"]`);
         tabDivs = this.$sheet.find(`.sheet-body > .tab[data-tab="${activeTabName}"]`);
@@ -144,6 +145,7 @@ class ActorCharactermancerSheet2 extends ActorCharactermancerSheet {
 
 class TestInventoryElement {
     actor;
+    _expanded = [];
     constructor(actor, rootDiv){
         this.actor = actor;
     }
@@ -173,10 +175,12 @@ class TestInventoryElement {
                 return;
             case "edit":
                 //Get the ui object for the entire item
-                C5e_Inventory.tryOpenEditWindow(this.actor, item, item.itemUid, "item", item.collectionId);
+                C5e_Inventory.tryOpenEditWindow(this.actor, item, item.uid, item.entityType, item.collectionId);
                 return;
             case "equip":
                 return item.update({"system.equipped": !item.system.equipped});
+            case "expand":
+                return this._onExpand(target, item);
             default: break;
         }
     }
@@ -212,6 +216,33 @@ class TestInventoryElement {
     async _onDelete(item, options={}){
         //Remove the item from the actor's inventory
         this.actor.removeEmbeddedDocuments("item", [item]);
+    }
+
+    _isExpanded(collectionId){return this._expanded.includes(collectionId);}
+    _unsetExpanded(collectionId){this._expanded.splice(this._expanded.indexOf(collectionId), 1);}
+    _setExpanded(collectionId){this._expanded.push(collectionId);}
+    async _onExpand(target, item){
+        const li = target.closest("[data-item-id]");
+        //First, check if this item is already expanded
+        if ( this._isExpanded(item.collectionId) ) {
+            const summary = $(li.querySelector(".item-summary"));
+            summary.slideUp(200, () => summary.remove());
+            this._unsetExpanded(item.collectionId);
+        } else {
+            const chatData = {description:"This is an item summary"};
+            let template = new LoadTemplate(null, "parts/item-summary", chatData);
+            template.createAndCompile((innerHTML)=>{
+                const summary = $$`${innerHTML}`;
+                $(li).append(summary.hide());
+                summary.slideDown(200);
+                this._setExpanded(item.collectionId);
+            });
+        }
+    }
+
+    async _onLeaveTab(tab){
+        tab.find(".item-summary").remove(); //Remove all active summaries
+        this._expanded = []; //Clear expanded
     }
 }
 

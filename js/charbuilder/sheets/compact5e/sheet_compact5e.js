@@ -526,12 +526,13 @@ class C5e_EditWindow {
         this.element = window;
         $("body").append(this.element);
 
-        let templateName = "weapon";
-        if(entity.type == "classFeature"){templateName = "feat";}
-        else if(entity.type == "spell"){templateName = "spell";}
+        
+        let templateName = entity.type;
+        if(entity.type == "spell"){templateName = "spell";}
         else if(entity.type == "class"){templateName = "class";}
         else if(entity.type == "race"){templateName = "race";}
         else if(entity.type == "background"){templateName = "background";}
+        else if(entity.entityType == "feature"){templateName = "feat";}
 
         entity.cssClass = "editable";
         entity.concealDetails = false;//!game.user.isGM && (this.document.system.identified === false)
@@ -622,6 +623,13 @@ class C5e_EditWindow {
     }
     
     setupListeners(windowContent){
+        //Make navigation respond to being clicked
+        const nav = windowContent.find(".sheet-navigation.tabs");
+        nav.click(evt=>{
+            const targetTab = evt.target.getAttribute("data-tab");
+            this.navigation_switchTab(targetTab);
+        });
+
         //Input
         for(let el of windowContent.find("input")){
             //Make sure it has a "name" attribute
