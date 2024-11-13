@@ -59,3 +59,74 @@ PLAN:
     - OTHER PLANS:
     - Character sheet spell slots counter
     - Source manager UI improvements
+
+CHAR BUILDER MODE:
+
+DNDBEYOND STYLE:
+- Installation wizard style setup, then you are granted a locked-in sheet (with some options for overrides)
+Pros:
+ - Easy to reverse a class choice. Just go back to the wizard
+Cons: 
+
+DND5E-FVTT STYLE:
+- Start with a blank sheet, then you can add classes. When a class is added, you get a installation wizard for those class choices.
+- Once an installation wizard is complete, a bunch of features are added to your list of class features, ability scores are changed, etc etc
+Pros:
+ - Every aspect of the sheet can be customized
+ - Endless amount of class features can be added
+Cons:
+    - Not so easy to reverse a class choice. In theory you could "rewind" a class installation wizard (removing all class features granted by it), then run the wizard again, and make new choices this time
+---------------
+CHAR CREATION WORKFLOW
+- When character creation is first started, we create a blank actor
+- Then the user is shown the charactermancer screen, without the tab to view the sheet
+- When the user is done in the charactermancer, they can click "Finalize" or something, which takes them to the sheet view
+- The sheet then looks at all the choices made in the mancer, and adds features/changes ability scores/etc of the actor, then shows the sheet
+- Starting Equipment will not be added to the sheet by clicking the "Finalize" button, it only gets added by clicking the "Apply Inventory" button in the mancer's "Starting Equipment" tab
+- The sheet will have an "edit" button, which takes them back to the mancer
+
+Situation 1: Missing choices in mancer
+- If the user doesn't pick a race (or class, background, whatever) in the mancer, that is fine, the sheet will still compile, it will just have stuff missing (maybe 0ft walking speed, for example)
+
+Situation 2: User regrets choice made in the mancer
+- If the user goes back to the mancer, and say changes race from Dwarf to Elf, then hits finalize, that race change should be reflected on the sheet
+- The sheet will then look up any race with the id "dwarf_phb" in the sheet's inventory (it must have "wasGrantedByCharacterMancer=true" or something)
+- Once the race is found, it will look up all changes that race made (for example Lizardfolk's Bite racial feature, and wipe it from the sheet's inventory)
+- Ability scores may also be affected here
+- Then it will add the Elf race, and add it's racial features
+
+Situation 3: User wants to edit their race alot
+- Say the user chose Dwarf in the charactermancer, they will get the base dwarf race on their sheet as an item, and all it's race features as individual items as well
+- The user can then edit each of those features, duplicate them, or add entirely new ones
+- Say they rename the Dwarf race to "MechaDwarf", and change their racial feature called "Darkdivison" to instead be give 120ft of darkvision, rather than 60ft.
+- We've now created an override object for the class itself, saying the race was renamed to "MechaDwarf", and we have also created an override for the Darkvision race feature, saying it gives 120ft of darkvision.
+- If we go back to the mancer, it's going to say your race is "Dwarf" still, since you chose dwarf in the mancer. All you did was to rename the inventory item called "Dwarf" to "MechaDwarf" on your sheet. Behind the screen, your race is still "Dwarf".
+- However, the mancer will detect that you have made overrides to the race item, so in the mancer it will notify you in yellow text that the text & choices in the mancer for that race may not match your overrides any longer. There will be a button to delete your overrides and revert the race to "factory settings".
+- If you change race in the mancer from Dwarf to Elf, it's going to find the Dwarf race on your sheet (yes, the one you renamed to "MechaDwarf"), and delete it, and all derived racial features (including the ones you edited)
+ 
+- If the user prefers to keep their "Darkvision" racial feature that they made overrides to, they can open the edit window and choose to "unlink" it from their race. This means that if their race is deleted, it won't delete the Darkvision racial feature along with it
+- The mancer will still say that their race is "Dwarf", but won't re-add a "Darkvision" racial feature to the sheet again, even if user presses "Finalize" in the mancer.
+- The mancer will only try to apply racial features to the sheet if the user *changes* the race in the mancer and hits finalize. For example, changing from Dwarf to Elf. Changing from Dwarf to Elf and then back to Dwarf and pressing finalize will do no changes, since the race on the sheet was already "Dwarf"
+- Duplicated races/racial features will always be "unlinked".
+
+- If a user opens the edit window for their class and chooses to "unlink" it, the mancer will display your chosen race as "Custom Race" next time you open the mancer.
+- Clicking "Finalize" in the mancer with "Custom Race" selected will do no changes.
+- Swapping from "Custom Race" to "Elf" will apply a new race item to your sheet, and all the inherited racial features. You will still keep the "MechaDwarf" you unlinked earlier.
+
+Situation 4: The user deletes or unlinks a racial feature
+- If a user deletes or unlinks the "Darkvision" racial feature of dwarf on their sheet, then next time you open the charactermancer, it will say that it is detecting a missing racial feature, and present a button to reapply them to your sheet
+- If that button is pressed, the racial feature will be added
+
+Situation 5: The creator of a source you used changed how your race works
+- Assuming your race item on your sheet is not "unlinked", it will automatically load the new, updated race data and build the race item on your sheet from that
+- It will then apply the overrides you have already made, if any exists
+- So if the Dwarf Race was given 20ft of flying speed, that speed will be given to your sheet unless you have an override which says flying speed is something else
+
+- If the creator of the source added a new racial feature, that feature won't get added to your sheet unless you reset the race in the charactermancer
+- Alternatively, the charactermancer will detect that you are missing racial features listed in the race's source and offer to reapply them, in that case
+
+Situation 6: User regrets their "starting equipment" choices
+- When you hit "Finalize" in the charactermancer, it won't actually apply the items defines in the Starting Equipment tab
+- Those items are only applied by clicking the "Apply Items" button on that tab
+- Meaning that if you re-open the mancer to change something like the background, click "Finalize", you won't have duplicates of the starting items
+
