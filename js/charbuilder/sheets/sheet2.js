@@ -150,6 +150,7 @@ class TestInventoryElement {
                 //TODO: Make sure we are not a container also
                 return this._onCreate(target);
             case "delete":
+                this._onDelete(item, {shouldRemoveAdvancements:true});
                 return;
             case "edit":
                 //Get the ui object for the entire item
@@ -187,6 +188,11 @@ class TestInventoryElement {
         delete itemData.system.type;
         //return this.actor.createEmbeddedDocuments("Item", [itemData]);
         return this.actor.createEmbeddedDocuments("item", [itemData]);
+    }
+
+    async _onDelete(item, options={}){
+        //Remove the item from the actor's inventory
+        this.actor.removeEmbeddedDocuments("item", [item]);
     }
 }
 

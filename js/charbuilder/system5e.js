@@ -735,8 +735,6 @@ class Actor5e {
     }
     
     createEmbeddedDocuments(embeddedName, data=[], context={}){
-
-        console.log(data);
         let collection = [];
         if(embeddedName == "item"){
             //create item5e
@@ -765,13 +763,25 @@ class Actor5e {
         //then fire events
         this._onCreateDescendantDocuments(embeddedName, collection);
     }
+    removeEmbeddedDocuments(embeddedName, data=[]){
+        if(embeddedName == "item"){
+            this._removeEntities(data);
+        }
+
+        //Then fire events
+        this._onRemoveDescendantDocuments(embeddedName, data);
+    }
     _onCreateDescendantDocuments(collectionName, documents){
         if(collectionName == "items"){} //update encumberance
         //re-render
         ActorCharactermancerSheet2.instance.render();
     }
+    _onRemoveDescendantDocuments(collectionName, documents){
+        if(collectionName == "items"){} //update encumberance
+        //re-render
+        ActorCharactermancerSheet2.instance.render();
+    }
     _addEntities(items){
-        //just pretend its always the weapons category
         for(let it of items){
             switch(it.type){
                 case "spell":
@@ -786,6 +796,25 @@ class Actor5e {
                     break;
                 default:
                     this.inventory[it.type].items.push(it);
+                    break;
+            }
+        }
+    }
+    _removeEntities(items){
+        for(let it of items){
+            switch(it.type){
+                case "spell":
+                    if(it.system.preparationMode=="innate"){this.spellbook[it.system.preparationMode].spells
+                        = this.spellbook[it.system.preparationMode].spells.filter(obj => obj.collectionId !== it.collectionId);}
+                    else{this.spellbook[it.system.level].spells = this.spellbook[it.system.level].spells.filter(obj => obj.collectionId !== it.collectionId);}
+                    break;
+                case "class":
+                case "background":
+                case "race":
+                    this.features[it.type].items = this.features[it.type].items.filter(obj => obj.collectionId !== it.collectionId);
+                    break;
+                default:
+                    this.inventory[it.type].items = this.inventory[it.type].items.filter(obj => obj.collectionId !== it.collectionId);
                     break;
             }
         }
