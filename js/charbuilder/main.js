@@ -865,6 +865,23 @@ class CharacterBuilder {
   }
 
   //#region Helper Functions
+  /**
+   * Search loaded content for an entity with the given type and uid (example: "class", {uid:"barbarian_phb"})
+   * @param {string} type
+   * @param {object} [options]
+   * @param {string} [options.name] Name of the entity.
+   * @param {string} [options.source] Source of the entity.
+   * @param {string} [options.uid]  If you already have a precompiled uid (or hash, if you prefer that term), provide that here instead of name and source.
+   * @returns {object}
+   */
+  static getEntityByUid(type, options){
+    const datas = CharacterBuilder.instance._data[type];
+    const hash = options.uid ?? UrlUtil.URL_TO_HASH_GENERIC(options).toLowerCase();
+    const matches = datas.filter(e => UrlUtil.URL_TO_HASH_GENERIC(e).toLowerCase() == hash);
+    if(matches.length > 1){console.error("More than one of", type, "found with hash", hash); return matches[0];s}
+    else if(matches.length < 1){return null;}
+    else{return matches[0];}
+  }
   static getItemByUid(itemUid){
     const itemDatas = CharacterBuilder.instance._data.item;
     const foundItem = ActorCharactermancerEquipment.findItemByUID(itemUid, itemDatas);

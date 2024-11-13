@@ -186,7 +186,7 @@ class System5e{
             //If it doesnt, create a new item5e, import system data, then add to inventory
             spell5e = new Spell5e(itemUid, collectionId);
             await spell5e.importSystemData();
-            await System5e.addToInventory(actor, spell5e);
+            await System5e.tryAddToInventory(actor, spell5e);
             await ActorCharactermancerSheet.c5e_inventory.rebuildUi();
             return spell5e;
         }
@@ -196,9 +196,18 @@ class System5e{
             return spell5e;
         }
     }
-    static async addToInventory(actor, entity5e){
+    /**
+     * Shorthand for adding an already created entity5e to the actor inventory
+     * @param {Actor5e} actor
+     * @param {Entity5e} entity5e
+     * @param {string} itemType
+     * @returns {Entity5e}
+     */
+    static async tryAddToInventory(actor, entity5e, itemType){
         console.error("Add item", entity5e.name, entity5e.collectionId);
-        actor.character.system.inventory.items.push(entity5e);
+        entity5e.type = itemType;
+        actor.createEmbeddedDocuments("item", [], [entity5e]);
+        return item5e;
     }
     static async removeFromInventory(actor, collectionId){
         console.error("Remove item", collectionId);
@@ -555,14 +564,12 @@ class Background5e extends Entity5e{
 class Feature5e extends Entity5e{
 
 }
-class ClassFeature5e extends Entity5e{
-    constructor(hash, className, classSource, collectionId=null){
-        super();
-        this.uid = hash;
-        this.type = "classFeature";
+class ClassFeature5e extends Feature5e{
+    constructor(hash, className, classSource, collectionId=null, isCustom){
+        super(hash, collectionId, isCustom);
         this.className = className;
         this.classSource = classSource;
-        this.collectionId = collectionId? collectionId : System5e.createUniqueID();
+        //if(!this.isCustom){this._tryCloneOriginal(CharacterBuilder.getClassFeatureByUid(hash, className, classSource));}
         const original = CharacterBuilder.getClassFeatureByUid(hash, className, classSource);
         if(!original){console.error("Failed to load feature using hash", hash, className, classSource);}
         this.name = original.name;
@@ -573,22 +580,7 @@ class ClassFeature5e extends Entity5e{
         this.properties = {concentration:{label:"Concentration", selected:true}};
 
         if(!Entity5e.use_overrides){return this;}
-
-        return new Proxy(this, {
-            get: (target, prop) => {
-                if (prop === 'system') {
-                    return new Proxy(target.system, {
-                        get: (systemTarget, systemProp) => {
-                            const overrideValue = target.override[systemProp];//target.getNestedProperty(target.override, systemProp);
-                            const systemValue = systemTarget[systemProp];
-                            //console.log(systemProp, systemValue,">", overrideValue);
-                            return overrideValue !== null && overrideValue !== undefined ? overrideValue : systemValue;
-                        }
-                    });
-                }
-                return target[prop];
-            }
-        });
+        return this._createProxy();
     }
     get itemData(){return this;}
     get hash(){return this.uid;}
@@ -782,6 +774,16 @@ class Actor5e {
                 label: "Classes",
                 dataset: {type: "class"},
                 items: [],
+            },
+            active: {
+                label: "Active Abilities",
+                dataset: {type: "active"},
+                items: [],
+            },
+            passive: {
+                label: "Passive Abilities",
+                dataset: {type: "passive"},
+                items: [],
             }
         }
 
@@ -797,13 +799,18 @@ class Actor5e {
         this.movement = this._getMovementSpeed(this.system, false);
     }
     
-    createEmbeddedDocuments(embeddedName, data=[], context={}){
+    /**
+     * Create new, blank items, which are automatically added to the inventory
+     * @param {any} embeddedName
+     * @param {{type:string, quantity:number, identified:boolean}[]} data=[] js objects containing type of item (spell/class/item/race etc etc). This should match the item category you're trying to place them in
+     * @param {Entity5e[]} entities=[] pre-created Entity5e objects containing type of item (spell/class/item/race etc etc). This should match the item category you're trying to place them in
+     */
+    createEmbeddedDocuments(embeddedName="item", data=[], entities=[]){
         let collection = [];
         if(embeddedName == "item"){
             //create item5e
             for(let d of data){
                 let entity;
-                let identified = false;
                 switch(d.type){
                     case "spell":
                         entity = new Spell5e(null, null, true);
@@ -819,14 +826,17 @@ class Actor5e {
                         entity = new Race5e(null, null, true);
                         break;
                     default:
-                        entity = new Item5e(null, 1, null, true);
-                        d.system.identified = true;
+                        entity = new Item5e(null, d.quantity ?? 1, null, true);
+                        d.system.identified = d.identified ?? true;
                         break;
                 }
                 entity.system = d.system;
                 entity.name = d.name;
                 entity.type = d.type; //weapon/spell/equipment/etc/etc
                 collection.push(entity);
+            }
+            for(let e of entities){
+                collection.push(e);
             }
             //Add them to the character
             this._addEntities(collection);
@@ -864,6 +874,7 @@ class Actor5e {
                 case "class":
                 case "background":
                 case "race":
+                case "passive":
                     this.features[it.type].items.push(it);
                     break;
                 default:

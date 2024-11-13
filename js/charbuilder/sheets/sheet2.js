@@ -12,6 +12,17 @@ class ActorCharactermancerSheet2 extends ActorCharactermancerSheet {
         this.actor = main._actor; //Create a new actor
         //Let's give the actor some items
         //System5e.tryAddToInventory_Item(this.actor, null, "dagger|phb", 1, "weapon");
+
+        //Let's try adding a class feature to the actor
+        //First, let's get a class
+        let cls = CharacterBuilder.getEntityByUid("class", {name:"barbarian", source:"phb"});
+        //Let's get the first class feature
+        let f = cls.classFeatures[0];
+        ClassFeature5e.verifySystemData(f.hash, cls.name, cls.source).then(() => {
+            let featureItem = new ClassFeature5e(f.hash, cls.name, cls.source, null, false);
+            System5e.tryAddToInventory(this._actor, featureItem, "passive");
+        });
+
         let inv = new TestInventoryElement(this.actor);
         this._inv = inv;
     }

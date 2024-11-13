@@ -264,7 +264,7 @@ class C5e_Inventory{
               await ClassFeature5e.verifySystemData(fItem.entity.hash, fItem.cls.name, fItem.cls.source);
               //Create a new feature item ana add it to the inventory. It will set its .system property using the database
               let featureItem = new ClassFeature5e(fItem.entity.hash, fItem.cls.name, fItem.cls.source, fItem.collectionId);
-              System5e.addToInventory(CharacterBuilder.instance._actor, featureItem);
+              System5e.tryAddToInventory(CharacterBuilder.instance._actor, featureItem);
             }
             resolve();
         });
