@@ -246,14 +246,14 @@ class CharacterExportFvtt{
         for (let ix = 0; ix < builder.compClass.state['class_ixMax'] + 1; ++ix) {
             let out = {};
             const { propIxClass: propIxClass, propIxSubclass: propIxSubclass, propCurLevel:propCurLevel, propTargetLevel: propTargetLevel } = ActorCharactermancerBaseComponent.class_getProps(ix);
-            const cls = builder.compClass.getClass_({ propIxClass: propIxClass });
+            const cls = builder.compClass._getClass({ propIxClass: propIxClass });
             if (!cls) { continue; }
             //out.classUid = cls.name + "|" + cls.source;
             //We will send the entire class entity, instead of a UID
             out.classEntity = cls;
             out.targetLevel = builder.compClass.state[propTargetLevel];
             out.isPrimary = ix == primaryClassIndex;
-            const sc = builder.compClass.getSubclass_({ cls: cls, propIxSubclass: propIxSubclass });
+            const sc = builder.compClass._getSubclass({ cls: cls, propIxSubclass: propIxSubclass });
             if(sc){
                 //out.subclassUid = sc.name + "|" + sc.source;
                 //We will send the entire subclass entity, instead of a UID
@@ -394,9 +394,9 @@ class CharacterExportFvtt{
         for (let ix = 0; ix < builder.compClass.state['class_ixMax'] + 1; ++ix) {
             let out = {};
             const { propIxClass: propIxClass, propIxSubclass: propIxSubclass } = ActorCharactermancerBaseComponent.class_getProps(ix);
-            const cls = builder.compClass.getClass_({ propIxClass: propIxClass });
+            const cls = builder.compClass._getClass({ propIxClass: propIxClass });
             if (!cls) { continue; }
-            const sc = builder.compClass.getSubclass_({ cls: cls, propIxSubclass: propIxSubclass });
+            const sc = builder.compClass._getSubclass({ cls: cls, propIxSubclass: propIxSubclass });
             if (builder.compSpell.compsSpellSpells[ix]) {
                 let formData = await builder.compSpell.compsSpellSpells[ix].pGetFormData(filterValues);
                 out.spells = simplifySpellForm(formData);
@@ -450,7 +450,7 @@ class CharacterExportFvtt{
             if(isDeleted){deletedClassesCount++; continue;}
 
             //Grab actual class data
-            const cls = compClass.getClass_({propIxClass: propIxClass});
+            const cls = compClass._getClass({propIxClass: propIxClass});
             if(!cls){continue;}
             const targetLevel = compClass._state[propTargetLevel];
             if(deletedClassesCount>0){
@@ -481,7 +481,7 @@ class CharacterExportFvtt{
             let featureOptSel = await this.getClassFeatureChoices(compClass, i);
             if(featureOptSel != null){ block.featureOptSel = featureOptSel; }
             //Now we want to ask compClass if there is a subclass selected for this index
-            const sc = compClass.getSubclass_({cls:cls, propIxSubclass:propIxSubclass});
+            const sc = compClass._getSubclass({cls:cls, propIxSubclass:propIxSubclass});
             if(sc != null) { block.sc = sc; }
             classList.push(block);
         }

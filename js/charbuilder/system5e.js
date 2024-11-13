@@ -241,6 +241,10 @@ class System5e{
        //Fire hook
        System5e._fireHook("state", "item_update", collectionID);
     }
+    static hkActorUpdated(){
+        //Fire hook
+        System5e._fireHook("state", "actor_update", true);
+     }
     static _fireHook(hookProp, prop, value){
         if (this.__hooks[hookProp] && this.__hooks[hookProp][prop]) this.__hooks[hookProp][prop].forEach(hook => hook(prop, value, value/* prevValue */));
     }
@@ -317,8 +321,26 @@ class System5e{
         mod += profMod * System5e.proficiencyMult(baseProf); //proficiency/expertise bonus
         return {mod: mod, passive:(10+mod)};
     }
+    /**
+     * @param {string} label "Animal Handling"
+     * @param {string} abilAbbr "wis"
+     * @param {any} abilities actor.system.abilities
+     * @param {number} prof actor.system.attributes.prof
+     * @param {number} baseProf 0,1,2, or 3
+     * @returns {any}
+     */
+    static calcSkillEmbed(label, abilAbbr, abilities, prof, baseProf=0) {
+        const icon = baseProf == 0? "far fa-circle" : baseProf == 1? "fas fa-check" : baseProf == 2? "fas fa-adjust" : "fas fa-check-double";
+        const hover = baseProf == 0? "Not Proficient" : baseProf == 1? "Proficient" : baseProf == 2? "Half Proficient" : "Expertise";
+        const baseValue = System5e.proficiencyMult(baseProf);
+        const ability = abilities[abilAbbr];
+        const value = baseValue >= 1;
+        const {mod, passive} = System5e.calcSkillMod(ability.value, baseProf, prof);
+        return {label, value, ability:abilAbbr, baseValue, hover, icon, abbreviation:abilAbbr, total:mod, passive};
+    }
     //#endregion
 }
+
 class Entity5e {
     static use_overrides = false;
     override;
@@ -360,9 +382,6 @@ class Entity5e {
     }
     setProp(path, value, toOverride=Entity5e.use_overrides){
         Entity5e.setp(this, path, value, toOverride);
-        if(path == "system.uses.per"){
-            Entity5e.setp(this, "system.hasLimitedUses", system.uses.per != null, toOverride);
-        }
     }
     static setp(obj, path, value, toOverride=Entity5e.use_overrides, defaultSystem="system", overrideSystem="override"){ //DEBUG: turning off overrides for now
         const recursiveSearch = (start, _path, value) => {
@@ -662,6 +681,18 @@ class Actor5e {
             }
         }
     }
+    
+    update(data){
+        for(let [key, value] of Object.entries(data)){
+            this.setProp(key, value);
+        }
+        //Fire item update
+        System5e.hkActorUpdated(this.collectionId);
+    }
+    setProp(path, value, toOverride=Entity5e.use_overrides){
+        Entity5e.setp(this, path, value, toOverride);
+
+    }
     _createFakeCharacterData(){
 
         const template = new CharacterTemplate();
@@ -684,20 +715,12 @@ class Actor5e {
         addAbility("Wisdom", "wis");
         addAbility("Charisma", "cha");
 
+        //SKILLS
         this.skills = {};
         let configSkills = [];
-        const addSkill = (label, abbr, abilAbbr, baseProf=0) => {
-            const icon = baseProf == 0? "far fa-circle" : baseProf == 1? "fas fa-check" : baseProf == 2? "fas fa-adjust" : "fas fa-check-double";
-            const hover = baseProf == 0? "Not Proficient" : baseProf == 1? "Proficient" : baseProf == 2? "Half Proficient" : "Expertise";
-            const baseValue = System5e.proficiencyMult(baseProf);
-            const ability = this.system.abilities[abilAbbr];
-            const value = baseValue >= 1;
-            const {mod, passive} = System5e.calcSkillMod(ability.value, baseProf, this.system.attributes.prof);
-            this.skills[label.toLowerCase()] = {label, value, ability:abilAbbr, baseValue, hover, icon, abbreviation:abilAbbr, total:mod, passive};
-            configSkills.push(label.toLowerCase());
-        }
         for(const [key, value] of Object.entries(CONFIG.DND5E.skills)){
-            addSkill(value.label, key, value.ability);
+            this.skills[value.label.toLowerCase()] = System5e.calcSkillEmbed(value.label, value.ability, this.system.abilities, this.system.attributes.prof);
+            configSkills.push(value.label.toLowerCase());
         }
 
         this.hp = {

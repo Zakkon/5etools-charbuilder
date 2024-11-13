@@ -598,6 +598,12 @@ class CharacterBuilder {
         $$`<div class="btn-invis"></div>`.appendTo(tabHolder);
 
         if(!this.VIEW_MODE){
+          createRightSideBtn("Finalize", "glyphicon-floppy-disk").click(()=>{
+            //Exit charactermancer, go to sheet view
+            console.log("mancer", this.compClass);
+            console.log("choiceData", this.compClass.getChoiceData());
+            this.e_switchTab("sheet");
+          });
           createRightSideBtn("Save", "glyphicon-floppy-disk").click(()=>{
             CharacterExportFvtt.exportCharacter(this);
           });

@@ -210,7 +210,7 @@ class ActorCharactermancerClass extends ActorCharactermancerBaseComponent {
             isAllowNull: true,
             fnDisplay: clsIx => {
                 //Using a simple index, ask _data for the class
-            const cls = this.getClass_({ix: clsIx });
+            const cls = this._getClass({ix: clsIx });
             if (!cls) {
                 console.warn(...LGT, "Could not find class with index " + clsIx + " (" + this._data.class.length + " classes were available)");
                 return '(Unknown)';
@@ -220,7 +220,7 @@ class ActorCharactermancerClass extends ActorCharactermancerBaseComponent {
             },
             fnGetAdditionalStyleClasses: classIx => {
                 if (classIx == null) { return null; }
-                const cls = this.getClass_({ix: classIx});
+                const cls = this._getClass({ix: classIx});
                 if (!cls) { return; }
                 return cls._versionBase_isVersion ? ['italic'] : null;
             },
@@ -241,7 +241,7 @@ class ActorCharactermancerClass extends ActorCharactermancerBaseComponent {
          * Apply the filter on which subclasses can be picked from the dropdown menu
          */
         const applySubclassFilter = () => {
-            const cls = this.getClass_({propIxClass: propIxClass});
+            const cls = this._getClass({propIxClass: propIxClass});
             if (!cls || !this._metaHksClassStgSubclass[ix]) { return; }
             const filteredValues = this._modalFilterClasses.pageFilter.filterBox.getValues();
             const displayableSubclasses = cls.subclasses.map(val => !this._modalFilterClasses.pageFilter.toDisplay(filteredValues, val));
@@ -255,8 +255,8 @@ class ActorCharactermancerClass extends ActorCharactermancerBaseComponent {
         //Filter button and what happens when we click it
         const filterBtn = $("<button class=\"btn btn-xs ve-btn-default btn-5et h-100 btr-0 bbr-0 pr-2\" title=\"Filter for Class and Subclass\"><span class=\"glyphicon glyphicon-filter\"></span> Filter</button>")
         .click(async () => {
-            const cls = this.getClass_({propIxClass: propIxClass });
-            const subcls = this.getSubclass_({cls: cls, propIxSubclass: propIxSubclass});
+            const cls = this._getClass({propIxClass: propIxClass });
+            const subcls = this._getSubclass({cls: cls, propIxSubclass: propIxSubclass});
             const classSelectDisabled = this._class_isClassSelectionDisabled({ ix: ix });
             const subclassSelectDisabled = this._class_isSubclassSelectionDisabled({ ix: ix });
             const userSelection = await this._modalFilterClasses.pGetUserSelection({
@@ -277,7 +277,7 @@ class ActorCharactermancerClass extends ActorCharactermancerBaseComponent {
             await this._pGate(lockChangeClass);
 
             if (userSelection.subclass != null) {
-                const cls = this.getClass_({
+                const cls = this._getClass({
                     propIxClass: propIxClass
                 });
                 const subcls_index = cls.subclasses.findIndex(ix => ix.name === userSelection.subclass.name && ix.source === userSelection.subclass.source);
@@ -299,9 +299,9 @@ class ActorCharactermancerClass extends ActorCharactermancerBaseComponent {
                 this._proxyAssignSimple("state", toObj);
             }
             //First time this function is called, we will probably not get anything out of getClass since we haven't set anything to _state yet
-            const cls = this.getClass_({propIxClass: propIxClass});
+            const cls = this._getClass({propIxClass: propIxClass});
 
-            const subcls = this.getSubclass_({ cls: cls, propIxSubclass: propIxSubclass });
+            const subcls = this._getSubclass({ cls: cls, propIxSubclass: propIxSubclass });
 
             //Render the dropdown for choosing a subclass
             this._class_renderClass_stgSelectSubclass({
@@ -381,8 +381,8 @@ class ActorCharactermancerClass extends ActorCharactermancerBaseComponent {
             [key]: null
             }));
             this._proxyAssignSimple("state", toObj);
-            const cls = this.getClass_({ propIxClass: propIxClass });
-            const subcls = this.getSubclass_({ cls: cls, propIxSubclass: propIxSubclass });
+            const cls = this._getClass({ propIxClass: propIxClass });
+            const subcls = this._getSubclass({ cls: cls, propIxSubclass: propIxSubclass });
             const filteredFeatures = this._class_getFilteredFeatures(cls, subcls);
             if (this._compsClassLevelSelect[ix]) { this._compsClassLevelSelect[ix].setFeatures(filteredFeatures); }
 
@@ -466,8 +466,8 @@ class ActorCharactermancerClass extends ActorCharactermancerBaseComponent {
             if (isMinimized) {
             header.text("Select a Class");
             } else {
-            const cls = this.getClass_({'propIxClass': propIxClass});
-            const subcls = this.getSubclass_({
+            const cls = this._getClass({'propIxClass': propIxClass});
+            const subcls = this._getSubclass({
                 'cls': cls,
                 'propIxSubclass': propIxSubclass
             });
@@ -587,8 +587,8 @@ class ActorCharactermancerClass extends ActorCharactermancerBaseComponent {
         if(!classes){return;}
         //Collect metas
         this._existingClassMetas = classes.map(cls => {
-            const _clsIx = this.getExistingClassIndex(cls);
-            const _scIx = this.getExistingSubclassIndex(_clsIx, cls.subclass);
+            const _clsIx = this._getExistingClassIndex(cls);
+            const _scIx = this._getExistingSubclassIndex(_clsIx, cls.subclass);
             const isPrimaryClass = cls.isPrimary || false;
 
             const failMatchCls = _clsIx>=0 ? null : "Could not find class \"" + cls.name + "\" (\"" 
@@ -682,7 +682,7 @@ class ActorCharactermancerClass extends ActorCharactermancerBaseComponent {
      * @param {any} cls
      * @returns {number} Returns index of class. Returns -1 on failure
      */
-    getExistingClassIndex(cls){
+    _getExistingClassIndex(cls){
         if (cls.source && cls.hash) {
             const ix = this._data.class.findIndex(ourDataClass => cls.source === ourDataClass.source
                 && cls.hash === UrlUtil.URL_TO_HASH_BUILDER[UrlUtil.PG_CLASSES](ourDataClass));
@@ -716,7 +716,7 @@ class ActorCharactermancerClass extends ActorCharactermancerBaseComponent {
      * @param {any} subclass
      * @returns {number} Returns index of subclass. Returns -1 on failure
      */
-    getExistingSubclassIndex(classIx, subclass) {
+    _getExistingSubclassIndex(classIx, subclass) {
         if (!subclass || !~classIx) { return null; }
         const ourDataClass = this._data.class[classIx]; //Grab our class from data
         if (subclass.source && subclass.hash) {
@@ -734,7 +734,7 @@ class ActorCharactermancerClass extends ActorCharactermancerBaseComponent {
         return ourDataClass.subclasses.findIndex(sc => sc.name.toLowerCase().trim() === subclass.name.toLowerCase().trim());
     }
     //#endregion
-    getExistingClassTotalLevels_() {
+    _getExistingClassTotalLevels() {
         if(!this.existingClassMetas?.length){return 0;}
         return this._existingClassMetas.filter(Boolean).map(cls => cls.level).sum();
     }
@@ -746,7 +746,7 @@ class ActorCharactermancerClass extends ActorCharactermancerBaseComponent {
      * @param {string} propIxClass Used to get the class that propIxClass points to
      * @returns {any} Returns a full class object, or a stub of one if all else fails
      */
-    getClass_({ix: ix, propIxClass: propIxClass}) {
+    _getClass({ix: ix, propIxClass: propIxClass}) {
       if (ix == null && propIxClass == null) { throw new Error("At least one argument must be provided!"); }
       //If a propIxClass was provived, try to get the class from this._state
       if (propIxClass != null) {
@@ -764,7 +764,7 @@ class ActorCharactermancerClass extends ActorCharactermancerBaseComponent {
      * @param {number} ix optional, only used if propIxSubclass is not provided
      * @returns {any} Returns a full subclass object, or a stub of one if all else fails
      */
-    getSubclass_({ cls: cls, propIxSubclass: propIxSubclass, ix: ix })
+    _getSubclass({ cls: cls, propIxSubclass: propIxSubclass, ix: ix })
     {
         if (ix == null && propIxSubclass == null) {
             throw new Error("At least one argument must be provided!");
@@ -845,7 +845,7 @@ class ActorCharactermancerClass extends ActorCharactermancerBaseComponent {
             values: cls.subclasses.map((a, b) => b),
             isAllowNull: true,
             fnDisplay: ix => {
-                const subcls = this.getSubclass_({cls: cls, ix: ix });
+                const subcls = this._getSubclass({cls: cls, ix: ix });
                 if (!subcls) {
                 console.warn(...LGT, "Could not find subclass with index " + ix + " (" + cls.subclasses.length + " subclasses were available for class " + cls.name + ')');
                 return '(Unknown)';
@@ -854,7 +854,7 @@ class ActorCharactermancerClass extends ActorCharactermancerBaseComponent {
             },
             fnGetAdditionalStyleClasses: ix => {
                 if (ix == null) { return null; }
-                const subcls = this.getSubclass_({cls: cls, ix: ix });
+                const subcls = this._getSubclass({cls: cls, ix: ix });
                 if (!subcls) { return; }
                 return subcls._versionBase_isVersion ? ['italic'] : null;
             },
@@ -948,7 +948,7 @@ class ActorCharactermancerClass extends ActorCharactermancerBaseComponent {
             //Are we going to forcefully select a level?
             //Default is true
             //TODO: improve this, depending on if we have existingClassMeta and if SETTINGS.LOCK_EXISTING_CHOICES is true
-            const isForceSelect = true; //!existingClassMeta || (this.getExistingClassTotalLevels_() === 0 && SETTINGS.LOCK_EXISTING_CHOICES);
+            const isForceSelect = true; //!existingClassMeta || (this._getExistingClassTotalLevels() === 0 && SETTINGS.LOCK_EXISTING_CHOICES);
             //Create a level select UI component
             this._compsClassLevelSelect[ix] = new Charactermancer_Class_LevelSelect({
                 features: filteredFeatures,
@@ -962,7 +962,7 @@ class ActorCharactermancerClass extends ActorCharactermancerBaseComponent {
 
             //Create a hook for re-rendering it again if needed
             const e_onChangeLevelSelected = async () => {
-                const subclass = this.getSubclass_({cls: cls, propIxSubclass: propIxSubclass});
+                const subclass = this._getSubclass({cls: cls, propIxSubclass: propIxSubclass});
                 const _features = this._class_getFilteredFeatures(cls, subclass);
                 //_features should have loadeds, an each in loadeds should have entity
                 //some of these entity should have an entryData, but this is only for specific choice class features
@@ -988,7 +988,7 @@ class ActorCharactermancerClass extends ActorCharactermancerBaseComponent {
             if(SETTINGS.FILTERS){ //TEMPFIX
                 this._modalFilterClasses.pageFilter.filterBox.on(idFilterBoxChangeClassLevels, () => {
                     if (!this._compsClassLevelSelect[ix]) { return; }
-                    const subclass = this.getSubclass_({cls: cls, propIxSubclass: propIxSubclass});
+                    const subclass = this._getSubclass({cls: cls, propIxSubclass: propIxSubclass});
                     const filteredFeatures = this._class_getFilteredFeatures(cls, subclass);
                     if (this._compsClassLevelSelect[ix]) {
                         this._compsClassLevelSelect[ix].setFeatures(filteredFeatures);
@@ -1076,7 +1076,7 @@ class ActorCharactermancerClass extends ActorCharactermancerBaseComponent {
 
         const doRenderSkillsTools = () => {
             parentElement.empty();
-            const cls = this.getClass_({ propIxClass: propIxClass });
+            const cls = this._getClass({ propIxClass: propIxClass });
             const isPrimaryClass = this._state.class_ixPrimaryClass === ix;
             this._parent.featureSourceTracker_.unregister(this[propCompsClass][ix]);
             const proficiencies = fnGetProfs({ cls: cls, isPrimaryClass: isPrimaryClass });
@@ -1222,7 +1222,7 @@ class ActorCharactermancerClass extends ActorCharactermancerBaseComponent {
 
       const {propIxClass: propIxClass } = ActorCharactermancerBaseComponent.class_getProps(classIx);
 
-      const cls = this.getClass_({'propIxClass': propIxClass });
+      const cls = this._getClass({'propIxClass': propIxClass });
 
       const classItems = Charactermancer_Class_Util.getExistingClassItems(this._actor, cls);
       const firstItem = classItems.length ? classItems[0] : null;
@@ -1580,9 +1580,9 @@ class ActorCharactermancerClass extends ActorCharactermancerBaseComponent {
           propCurLevel: propCurLevel,
           propTargetLevel: propTargetLevel
         } = ActorCharactermancerBaseComponent.class_getProps(classIx);
-        const cls = this.getClass_({ propIxClass: propIxClass });
+        const cls = this._getClass({ propIxClass: propIxClass });
         if (!cls) { continue; }
-        const subcls = this.getSubclass_({
+        const subcls = this._getSubclass({
           'cls': cls,
           'propIxSubclass': propIxSubclass
         });
@@ -1663,7 +1663,7 @@ class ActorCharactermancerClass extends ActorCharactermancerBaseComponent {
         for(let i = 0; i <= this._state.class_ixMax; ++i){
             if(ActorCharactermancerBaseComponent.class_isDeleted(i)){continue;}
             const clsInfo = ActorCharactermancerBaseComponent.class_getProps(i);
-            const cls = this.getClass_({propIxClass:clsInfo.propIxClass});
+            const cls = this._getClass({propIxClass:clsInfo.propIxClass});
             console.log(cls);
         }
 
@@ -1679,6 +1679,49 @@ class ActorCharactermancerClass extends ActorCharactermancerBaseComponent {
         'class_totalLevels': 0,
         'class_pulseChange': false
       };
+    }
+
+    getChoiceData(){
+
+        function fnGetChoices(components) {
+            let arr = [];
+            for(let c of components){
+                arr.push(c._getFormData());
+            }
+            return arr;
+        }
+        
+        const actor = CharacterBuilder.instance._actor;
+        let updatePool = {};
+        const state = this.__state;
+        let out = {};
+        out.classes = [];
+        out.ixPrimaryClass = state.class_ixPrimaryClass;
+        out.numClasses = state.class_ixMax+1;
+        out.totalLevels = state.class_totalLevels;
+        for(let i = 0; i < out.numClasses; ++i){
+            const part = "class_" + i + "_";
+            let cls = {};
+            cls.ixClass = state[`${part}ixClass`];
+            if(cls.ixClass==null){continue;}
+            cls.curLevel = state[`${part}curLevel`];
+            cls.targetLevel = state[`${part}targetLevel`];
+            const data = this._getClass({ix:cls.ixClass});
+            cls.uid = UrlUtil.URL_TO_HASH_GENERIC({name:data.name, source:data.source}).toLowerCase();
+            //Try to get the two skill proficiencies we chose with the class
+            cls.skillProfChoices = fnGetChoices(this._compsClassSkillProficiencies);
+            for(let e of cls.skillProfChoices){
+                for(let [skillName, profValue] of Object.entries(e.data.skillProficiencies)){
+                    const str = `skills.${skillName}`;
+                    const skill = actor.skills[skillName];
+                    const newSkill = System5e.calcSkillEmbed(skill.label, skill.ability, actor.system.abilities, actor.system.attributes.prof, profValue);
+                    updatePool[str] = newSkill;
+                }
+            }
+            out.classes.push(cls);
+        }
+        if(Object.entries(updatePool).length > 0){actor.update(updatePool);}
+        return out;
     }
 }
 class Charactermancer_Class_HpIncreaseModeSelect extends BaseComponent {
@@ -3772,7 +3815,7 @@ class ActorCharactermancerAbility extends ActorCharactermancerBaseComponent {
                 const { propIxClass: propIxClass, propCntAsi: propCntAsi } =
                     ActorCharactermancerBaseComponent.class_getProps(ix);
                 //Get the class
-                const cls = this._parent.compClass.getClass_({ propIxClass: propIxClass });
+                const cls = this._parent.compClass._getClass({ propIxClass: propIxClass });
                 if (!cls) { continue; }
                 asiCount += Number(this._parent.compClass.state[propCntAsi]) || 0;
             }
@@ -10572,7 +10615,7 @@ class ActorCharactermancerSpell extends ActorCharactermancerBaseComponent {
     }) {
         const content = $$`<div class="ve-flex-col"></div>`.hideVe();
         const hkLevelChange = () => {
-            const existingLevel = this._parent.compClass.getExistingClassTotalLevels_();
+            const existingLevel = this._parent.compClass._getExistingClassTotalLevels();
             const newLevel = this._parent.compClass.state.class_totalLevels;
             if (this[compAdditionalSpells]) {
             this[compAdditionalSpells].curLevel = existingLevel;
@@ -10785,8 +10828,8 @@ class ActorCharactermancerSpell extends ActorCharactermancerBaseComponent {
             propTargetLevel: propTargetLevel
         } = ActorCharactermancerBaseComponent.class_getProps(classIndex);
 
-        const cls = this._parent.compClass.getClass_({ propIxClass: propIxClass });
-        const subcls = this._parent.compClass.getSubclass_({ cls: cls, propIxSubclass: propIxSubclass });
+        const cls = this._parent.compClass._getClass({ propIxClass: propIxClass });
+        const subcls = this._parent.compClass._getSubclass({ cls: cls, propIxSubclass: propIxSubclass });
 
         //If our class is null or it is not a caster, wipe the spells component for it (if it exists) and abort
         if (!cls || !this.constructor._spell_isClassCaster(cls, subcls)) {
@@ -10999,8 +11042,8 @@ class ActorCharactermancerSpell extends ActorCharactermancerBaseComponent {
     }
     _hk_onChangeAbilityScores(classIx) {
       const { propIxClass, propTargetLevel, propIxSubclass } = ActorCharactermancerBaseComponent.class_getProps(classIx);
-      const classInfo = this._parent.compClass.getClass_({ propIxClass: propIxClass });
-      const subclassInfo = this._parent.compClass.getSubclass_({ cls: classInfo, propIxSubclass: propIxSubclass });
+      const classInfo = this._parent.compClass._getClass({ propIxClass: propIxClass });
+      const subclassInfo = this._parent.compClass._getSubclass({ cls: classInfo, propIxSubclass: propIxSubclass });
       const level = this._parent.compClass.state[propTargetLevel];
       if (this._compsSpellSpells[classIx]) {
         this._compsSpellSpells[classIx].maxPrepared = this._spell_getMaxPreparedSpells(classInfo, subclassInfo, level);
@@ -11024,8 +11067,8 @@ class ActorCharactermancerSpell extends ActorCharactermancerBaseComponent {
         propIxSubclass: propIxSubclass,
         propTargetLevel: propTargetLevel
       } = ActorCharactermancerBaseComponent.class_getProps(classIndex);
-      const cls = this._parent.compClass.getClass_({ propIxClass: propIxClass });
-      const subcls = this._parent.compClass.getSubclass_({ cls: cls, propIxSubclass: propIxSubclass });
+      const cls = this._parent.compClass._getClass({ propIxClass: propIxClass });
+      const subcls = this._parent.compClass._getSubclass({ cls: cls, propIxSubclass: propIxSubclass });
       const title = cls ? '' + cls.name + (subcls ? " (" + subcls.name + ')' : '') : '';
       dispClassNameLeft.text(title);
       dispClassNameRight.text(title);
@@ -11168,10 +11211,10 @@ class ActorCharactermancerSpell extends ActorCharactermancerBaseComponent {
             propCurLevel: propCurLevel,
             propTargetLevel: propTargetLevel
         } = ActorCharactermancerBaseComponent.class_getProps(classIx);
-        const cls = this._parent.compClass.getClass_({
+        const cls = this._parent.compClass._getClass({
             'propIxClass': propIxClass
         });
-        const subcls = this._parent.compClass.getSubclass_({
+        const subcls = this._parent.compClass._getSubclass({
             'cls': cls,
             'propIxSubclass': propIxSubclass
         });

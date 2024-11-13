@@ -47,6 +47,10 @@ class ActorCharactermancerSheet2 extends ActorCharactermancerSheet {
             console.log("hook fired");
             this.render();
         });
+        System5e.addHookBase("actor_update", (p, collectionId) => {
+            console.log("actor hook fired");
+            this.render();
+        });
     }
 
     render(charInfo){
