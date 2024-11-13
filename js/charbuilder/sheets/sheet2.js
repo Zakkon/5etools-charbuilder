@@ -8,6 +8,7 @@ class ActorCharactermancerSheet2 extends ActorCharactermancerSheet {
 
     constructor(main){
         super(main);
+        ActorCharactermancerSheet2.instance = this;
 
         this.actor = main._actor; //Create a new actor
         //Let's give the actor some items
@@ -15,19 +16,21 @@ class ActorCharactermancerSheet2 extends ActorCharactermancerSheet {
 
         //Let's try adding a class feature to the actor
         //First, let's get a class
-        let cls = CharacterBuilder.getEntityByUid("class", {name:"barbarian", source:"phb"});
+        let cls = new Class5e("barbarian_phb");
+        //Let's try to add the class to the sheet as well
+        System5e.tryAddToInventory(this._actor, cls, "class", {doNotRender:true});
         //Let's get the first class feature
+        console.log("CLASS", cls);
         let f = cls.classFeatures[0];
         ClassFeature5e.verifySystemData(f.hash, cls.name, cls.source).then(() => {
             let featureItem = new ClassFeature5e(f.hash, cls.name, cls.source, null, false);
-            System5e.tryAddToInventory(this._actor, featureItem, "passive");
+            System5e.tryAddToInventory(this._actor, featureItem, "passive", {doNotRender:true});
         });
 
         let inv = new TestInventoryElement(this.actor);
         this._inv = inv;
     }
     preRender(){
-        ActorCharactermancerSheet2.instance = this;
         ActorCharactermancerSheet.characterName = null;
         //if(!!charInfo?.character?.about?.name?.length){ActorCharactermancerSheet.characterName = charInfo.character.about.name;}
         const tabSheet = this._tabSheet?.$wrpTab;

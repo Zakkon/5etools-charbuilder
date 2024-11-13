@@ -203,11 +203,11 @@ class System5e{
      * @param {string} itemType
      * @returns {Entity5e}
      */
-    static async tryAddToInventory(actor, entity5e, itemType){
+    static async tryAddToInventory(actor, entity5e, itemType, options={}){
         console.error("Add item", entity5e.name, entity5e.collectionId);
         entity5e.type = itemType;
-        actor.createEmbeddedDocuments("item", [], [entity5e]);
-        return item5e;
+        actor.createEmbeddedDocuments("item", [], [entity5e], options);
+        return entity5e;
     }
     static async removeFromInventory(actor, collectionId){
         console.error("Remove item", collectionId);
@@ -507,10 +507,16 @@ class Feature5e extends Entity5e{
 class Class5e extends Feature5e{
     constructor(itemUid, collectionId=null, isCustom=false){
         super(itemUid, collectionId, isCustom);
-        //if(!this.isCustom){this._tryCloneOriginal(CharacterBuilder.getSpellByUid(this.uid));}
+        if(!this.isCustom){this._tryCloneOriginal(CharacterBuilder.getEntityByUid("class", {uid: this.uid}));}
 
         if(!Entity5e.use_overrides){return this;}
         return this._createProxy();
+    }
+    _tryCloneOriginal(original){
+        super._tryCloneOriginal(original);
+        if(original == null){return;}
+        this.source = original.source;
+        this.classFeatures = original.classFeatures;
     }
 }
 class Race5e extends Feature5e{
@@ -564,7 +570,7 @@ class ClassFeature5e extends Feature5e{
         this.system = imported.system; //TEMPFIX
     }
     static async verifySystemData(hash, className, classSource){
-        let existingData = CharacterBuilder.getClassFeatureByUid(hash, className, classSource);
+        const existingData = CharacterBuilder.getClassFeatureByUid(hash, className, classSource);
         if(existingData.system){return;}
         //No system data exists, go ahead and import
         let imported = await SourceManager.plutoniumConvertData(existingData, "classFeature");
@@ -774,7 +780,7 @@ class Actor5e {
      * @param {{type:string, quantity:number, identified:boolean}[]} data=[] js objects containing type of item (spell/class/item/race etc etc). This should match the item category you're trying to place them in
      * @param {Entity5e[]} entities=[] pre-created Entity5e objects containing type of item (spell/class/item/race etc etc). This should match the item category you're trying to place them in
      */
-    createEmbeddedDocuments(embeddedName="item", data=[], entities=[]){
+    createEmbeddedDocuments(embeddedName="item", data=[], entities=[], options={}){
         let collection = [];
         if(embeddedName == "item"){
             //create item5e
@@ -808,11 +814,11 @@ class Actor5e {
                 collection.push(e);
             }
             //Add them to the character
-            this._addEntities(collection);
+            this._addEntities(collection, options);
         }
         
         //then fire events
-        this._onCreateDescendantDocuments(embeddedName, collection);
+        this._onCreateDescendantDocuments(embeddedName, collection, options);
     }
     removeEmbeddedDocuments(embeddedName, data=[]){
         if(embeddedName == "item"){
@@ -822,10 +828,10 @@ class Actor5e {
         //Then fire events
         this._onRemoveDescendantDocuments(embeddedName, data);
     }
-    _onCreateDescendantDocuments(collectionName, documents){
+    _onCreateDescendantDocuments(collectionName, documents, options={}){
         if(collectionName == "items"){} //update encumberance
         //re-render
-        ActorCharactermancerSheet2.instance.render();
+        if(!options || !options?.doNotRender){ActorCharactermancerSheet2.instance.render();}
     }
     _onRemoveDescendantDocuments(collectionName, documents){
         if(collectionName == "items"){} //update encumberance

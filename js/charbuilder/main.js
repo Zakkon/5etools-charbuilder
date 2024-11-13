@@ -876,8 +876,11 @@ class CharacterBuilder {
    */
   static getEntityByUid(type, options){
     const datas = CharacterBuilder.instance._data[type];
+    return this._getEntityByUid(datas, options);
+  }
+  static _getEntityByUid(from, options){
     const hash = options.uid ?? UrlUtil.URL_TO_HASH_GENERIC(options).toLowerCase();
-    const matches = datas.filter(e => UrlUtil.URL_TO_HASH_GENERIC(e).toLowerCase() == hash);
+    const matches = from.filter(e => UrlUtil.URL_TO_HASH_GENERIC(e).toLowerCase() == hash);
     if(matches.length > 1){console.error("More than one of", type, "found with hash", hash); return matches[0];s}
     else if(matches.length < 1){return null;}
     else{return matches[0];}
@@ -888,16 +891,11 @@ class CharacterBuilder {
     return foundItem;
   }
   static getClassFeatureByUid(hash, className, classSource){
-    const cls = CharacterBuilder.getClassByNameSource(className, classSource);
-    //if(hash == "undefined|undefined"){console.error("poop");} 
-    const matches = cls.classFeatures.filter(f => {
-        return f.hash == hash;
-    });
-    if(matches.length > 1){throw new Error("Not supposed to return more than one result", hash);}
-    else if(matches.length < 1){
-        console.error("Could not find a match to class feature", hash, "among the class features of ", cls.name + "|" + cls.source, ". Did you forget to load a source?");
-    }
-    return matches[0];
+    const cls = this.getEntityByUid("class", {name:className, source:classSource});
+    const matches = cls.classFeatures.filter(e => e.hash.toLowerCase() == hash);
+    if(matches.length > 1){console.error("More than one class feature found with hash", hash); return matches[0];s}
+    else if(matches.length < 1){return null;}
+    else{return matches[0];}
   }
   static getClassFeatureEntries(name, source){
     const featureDatas = CharacterBuilder.instance._data.classFeature;
