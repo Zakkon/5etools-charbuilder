@@ -1,7 +1,7 @@
 class HandlebarsHelper{
     static getAttributes(options){
         var attributes = [];
-
+        if(options == null || options.hash == null){return attributes;}
         Object.keys(options.hash).forEach(key => {
             var escapedKey = Handlebars.escapeExpression(key);
             var escapedValue = Handlebars.escapeExpression(options.hash[key]);
@@ -13,8 +13,8 @@ class HandlebarsHelper{
     
     static registerHelpers(){
         
-        Handlebars.registerHelper("log", function(something) {
-            console.log(something);
+        Handlebars.registerHelper("log", function(something, options) {
+            console.log(something, ...HandlebarsHelper.getAttributes(options));
           });
         Handlebars.registerHelper('loud', function (aString) {
             return aString.toUpperCase()
@@ -134,7 +134,6 @@ class HandlebarsHelper{
             typeof(context)
              === "function" ) {context = context.call(this);}
         const ctx = options.data.root.itemContext?.[context.collectionId];//[context.id];
-        console.log("CONTEXT", ctx, options.data);
         if ( !ctx ) {
             const inverse = options.inverse(this);
             if ( inverse ) return options.inverse(this);

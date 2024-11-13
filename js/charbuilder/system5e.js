@@ -440,14 +440,9 @@ class Item5e extends Entity5e{
         });
     }
     static recast(inputObj){
-        let entity = null;
-        if(inputObj.type == "item"){entity = new Item5e(inputObj.uid, inputObj.quantity, inputObj.collectionId);}
-        else if(inputObj.type == "classFeature"){
-            entity = new ClassFeature5e(inputObj.uid, inputObj.className, inputObj.classSource, inputObj.collectionId);
-        }
-        else if(inputObj.type == "spell"){return null;}
-        inputObj && Object.assign(entity, inputObj);
-        return entity;
+        let item5e = new Item5e(inputObj.uid, inputObj.quantity, inputObj.collectionId, inputObj.isCustom);
+        inputObj && Object.assign(item5e, inputObj);
+        return item5e;
     }
     get itemData(){return CharacterBuilder.getItemByUid(this.uid);}
     /* DND 5E BOOLEANS */
@@ -581,6 +576,11 @@ class Spell5e extends Entity5e{
         });
     }
 
+    static recast(inputObj){
+        let spell5e = new Spell5e(inputObj.uid, inputObj.collectionId, inputObj.isCustom);
+        inputObj && Object.assign(spell5e, inputObj);
+        return spell5e;
+    }
     async importSystemData(){
         //First, check if system data isn't already imported
         //TODO: after system data is imported, cache the UID in character builder, and just do string matching instead
@@ -624,11 +624,30 @@ class Spell5e extends Entity5e{
 
 class Actor5e {
     
-    constructor(){
-        this._createFakeCharacterData();
+    constructor(saveData=null){
+        if(saveData != null){this._loadFromSaveData(saveData);}
+        else{this._createFakeCharacterData();}
         this.owner = true;
     }
-    
+
+    _loadFromSaveData(data){
+        for(let [key, value] of Object.entries(data)){
+            this[key] = value;
+        }
+        //Recast object types
+        //Recast items
+        for(let [key, value] of Object.entries(this.inventory)){
+            for(let i = 0; i < this.inventory[key].items.length; ++i){
+                this.inventory[key].items[i] = Item5e.recast(this.inventory[key].items[i]);
+            }
+        }
+        //recast spells
+        for(let [key, value] of Object.entries(this.spellbook)){
+            for(let i = 0; i < this.spellbook[key].spells.length; ++i){
+                this.spellbook[key].spells[i] = Spell5e.recast(this.spellbook[key].spells[i]);
+            }
+        }
+    }
     _createFakeCharacterData(){
 
         const template = new CharacterTemplate();

@@ -9,9 +9,9 @@ class ActorCharactermancerSheet2 extends ActorCharactermancerSheet {
     constructor(main){
         super(main);
 
-        this.actor = new Actor5e(); //Create a new actor
+        this.actor = main._actor; //Create a new actor
         //Let's give the actor some items
-        System5e.tryAddToInventory_Item(this.actor, null, "dagger|phb", 1, "weapon");
+        //System5e.tryAddToInventory_Item(this.actor, null, "dagger|phb", 1, "weapon");
         let inv = new TestInventoryElement(this.actor);
         this._inv = inv;
     }
@@ -61,6 +61,11 @@ class ActorCharactermancerSheet2 extends ActorCharactermancerSheet {
             this.activateListeners();
             this._inv.activateListeners(parentElement);
         });
+    }
+
+    loadFromState(stateMeta){
+        if(stateMeta==null){return;}
+        this._meta = stateMeta;
     }
 
     activateCoreListeners(){

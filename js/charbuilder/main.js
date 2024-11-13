@@ -471,11 +471,11 @@ class CharacterBuilder {
       //Try to load a character from cookies using a cookie uid
       const charInfo = existingUid? CookieManager.getCharacterInfo(existingUid).result : null;
       if(!!charInfo){ //If that succeded, load the character stored in the cookie
-        this._actor = charInfo.character;
+        this._actor = new Actor5e(charInfo.actor);
         CharacterBuilder.currentUid = existingUid; //And cache the uid we used, available publicly to read
       }
       else { //If that failed, just create a fresh uid for the blank character we are about to show
-        this._actor = {
+        this._actor = new Actor5e();/* {
           character:{
             system:{
               override:{},
@@ -484,7 +484,7 @@ class CharacterBuilder {
               }
             }
           }
-        }
+        } */
         CharacterBuilder.currentUid = CookieManager.createUid();
       }
 
@@ -517,7 +517,7 @@ class CharacterBuilder {
       const character = charInfo?.character;
       const doLoad = !!character;
       if(doLoad){
-        this.actor.character = System5e.extendSchema_Character(this.actor.character, character.character?.system);
+        //this.actor.character = System5e.extendSchema_Character(this.actor.character, character.character?.system);
       }
 
       await this._pLoad();

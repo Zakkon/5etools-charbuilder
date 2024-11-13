@@ -11,7 +11,7 @@ class CharacterExportFvtt{
         const brewSourceIds = CharacterExportFvtt.getBrewSourceIds();
 
         const _meta = {version:CharacterExportFvtt.VERSION, sheet:{}};
-        const _char = {race:null, classes:null, character:{system: builder.actor.character.system}};
+        const _char = {race:null, classes:null, character:{system: builder._actor.system}};
 
         //probably needs to be cleaned of duplicates later
         let metaDataStack = [];
@@ -190,7 +190,7 @@ class CharacterExportFvtt{
         filters.feat = builder.compFeat.modalFilterFeats._pageFilter._filterBox.getValues();
         _meta.filters = filters;
 
-        const output = {character: _char, _meta:_meta};
+        const output = {character: _char, _meta:_meta, actor:builder._actor};
 
         console.log("Export Character", output);
         let importStr = this.test_printExportJsonAsString(output);
@@ -200,6 +200,18 @@ class CharacterExportFvtt{
         const currentUid = CharacterBuilder.currentUid;
         CookieManager.saveCharacterInfo(output, currentUid);
         
+    }
+    static async exportActor(builder){
+        const _char = builder._actor;
+        const _meta = {version:CharacterExportFvtt.VERSION, sheet:{}};
+        const output = {character: _char, _meta:_meta};
+        console.log("Export Character", output);
+        let importStr = this.test_printExportJsonAsString(output);
+
+        localStorage.setItem("lastCharacter", importStr);
+
+        const currentUid = CharacterBuilder.currentUid;
+        CookieManager.saveCharacterInfo(output, currentUid);
     }
     /**
      * @param {CharacterBuilder} builder
