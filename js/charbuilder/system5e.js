@@ -1100,6 +1100,13 @@ class Actor5e {
         }
     }
     
+    //Runtime label calculation
+    get labels(){
+        return {
+            proficiency: `+${this.system.attributes.prof}`
+        };
+    }
+
     static getProperty(data, term){
 
     }
