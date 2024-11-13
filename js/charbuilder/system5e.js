@@ -856,15 +856,13 @@ class Actor5e {
     }
     _removeEntities(items){
         for(let it of items){
-            switch(it.type){
+            switch(it.entityType){
                 case "spell":
                     if(it.system.preparationMode=="innate"){this.spellbook[it.system.preparationMode].spells
                         = this.spellbook[it.system.preparationMode].spells.filter(obj => obj.collectionId !== it.collectionId);}
                     else{this.spellbook[it.system.level].spells = this.spellbook[it.system.level].spells.filter(obj => obj.collectionId !== it.collectionId);}
                     break;
-                case "class":
-                case "background":
-                case "race":
+                case "feature":
                     this.features[it.type].items = this.features[it.type].items.filter(obj => obj.collectionId !== it.collectionId);
                     break;
                 default:
