@@ -601,8 +601,12 @@ class CharacterBuilder {
           createRightSideBtn("Finalize", "glyphicon-floppy-disk").click(()=>{
             //Exit charactermancer, go to sheet view
             console.log("mancer", this.compClass);
-            console.log("choiceData", this.compClass.getChoiceData());
-            this.e_switchTab("sheet");
+            
+            this.compClass.getChoiceData().then((choiceData)=>{
+              CharacterBuilder.parseMancerChoiceData(this._actor, choiceData);
+              this.e_switchTab("sheet");
+            });
+            
           });
           createRightSideBtn("Save", "glyphicon-floppy-disk").click(()=>{
             CharacterExportFvtt.exportCharacter(this);
@@ -885,6 +889,7 @@ class CharacterBuilder {
     return this._getEntityByUid(datas, options);
   }
   static _getEntityByUid(from, options){
+    if(typeof options === "string"){options = {uid:options};}
     const hash = options.uid ?? UrlUtil.URL_TO_HASH_GENERIC(options).toLowerCase();
     const matches = from.filter(e => UrlUtil.URL_TO_HASH_GENERIC(e).toLowerCase() == hash);
     if(matches.length > 1){console.error("More than one of", type, "found with hash", hash); return matches[0];s}
@@ -952,6 +957,25 @@ class CharacterBuilder {
     return matches[0];
   }
   //#endregion
+
+  static parseMancerChoiceData(actor, choiceData){
+
+    console.log(choiceData);
+
+    for(let cls of choiceData.classes){
+      //Verify features
+      for(let f of cls.featureOptionsSelect.features){
+        let hash = f.hash;
+        //Try to add this feature to the actor
+        //f.type should be either "optionalfeature"(lowercase spelling), "feat", "classFeature", or "subclassFeature"
+        //We can match these to our database
+        OptionalFeature5e.verifySystemData(hash).then(() => {
+          let featureItem = new OptionalFeature5e(hash, null, false);
+          System5e.tryAddToInventory(actor, featureItem, "passive", {doNotRender:false});
+      });
+      }
+    }
+  }
 }
 /**A wrapper for a div that contains components. Only used by CharacterBuilder */
 class CharacterBuilderPanel {

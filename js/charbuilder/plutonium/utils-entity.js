@@ -158,6 +158,32 @@ class UtilEntityGeneric extends UtilEntityBase {
         };
     }
 }
+class UtilEntityOptionalfeature extends UtilEntityBase {
+	static getCompendiumCacheKeyProvider ({isStrict = false} = {}) {
+		return new CompendiumCacheKeyProviderOptionalfeature({isStrict});
+	}
+
+	
+	static _FEATURE_TYPES = (() => {
+		const out = new Map();
+		out.set(new Set(["EI"]), entity => `Invocation: ${entity.name}`);
+		out.set(new Set(["MM"]), entity => `Metamagic: ${entity.name}`);
+		out.set(new Set(["FS:F", "FS:B", "FS:P", "FS:R"]), entity => `Fighting Style: ${entity.name}`);
+		return out;
+	})();
+
+	static getEntityAliases (ent, {isStrict = false} = {}) {
+		if (!ent.name || !ent.srd) return [];
+
+		const out = [];
+
+		for (const [featureTypeSet, fnGetName] of this._FEATURE_TYPES.entries()) {
+			if (ent.featureType.some(it => featureTypeSet.has(it))) out.push({...ent, name: fnGetName(ent)});
+		}
+
+		return out;
+	}
+}
 //#endregion
 //#region UtilActors
 class UtilActors {

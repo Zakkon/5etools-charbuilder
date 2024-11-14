@@ -7,6 +7,7 @@ class ImportTester{
         let flags = null;
 		if(type == "classFeature"){flags = this._getClassSubclassFeatureFlags(item);}
 		else if(type == "spell"){flags = this._getSpellFlags(item);}
+		else if(type == "optionalfeature"){flags = this._getOptionalFeatureFlags(item);}
 		else{flags = this.getFlags_Item(item);}
         let ent = await DataLoader.pCacheAndGet(flags.page, flags.source, flags.hash);
 
@@ -22,6 +23,7 @@ class ImportTester{
 			//If actor exists, the item will be imported unto the actor. If none exists, it will go to a generic directory
             let imp = null;
 			if(type == "classFeature"){imp = new ImportListClassSubclassFeature({actor}); }
+			else if(type == "optionalfeature"){imp = new ImportListOptionalfeature({actor});}
 			else if(type == "spell"){imp = new ImportListSpell({actor}); }
 			else {imp = new ImportListItem({actor}); }
             await imp.pInit(); //Initialize the importer
@@ -134,6 +136,26 @@ class ImportTester{
 
 		return out;
 	}
+	_getOptionalFeatureFlags(optFeature) //(optFeature, opts) 
+	{
+			//opts = opts || {};
+	
+			const out = {
+				/* [SharedConsts.MODULE_ID]: { */
+					page: UrlUtil.PG_OPT_FEATURES,
+					source: optFeature.source,
+					hash: UrlUtil.URL_TO_HASH_BUILDER[UrlUtil.PG_OPT_FEATURES](optFeature),
+			/* 	}, */
+			};
+	
+			/* if (opts.isAddDataFlags) { */
+				out//[SharedConsts.MODULE_ID]
+				.propDroppable = "optionalfeature";
+				//out[SharedConsts.MODULE_ID].filterValues = opts.filterValues;
+			/* } */
+	
+			return out;
+	}
 	async runTest2(cls){
 		/*  this.handleReady().then(() => {
 			 console.log("Ready done!");
@@ -240,9 +262,9 @@ class ImportTester{
         ImportListClass.init();
         //ImportListFeat.init(); 
         ImportListItem.init();
-        /* ImportListClassSubclassFeature.init();
+        ImportListClassSubclassFeature.init();
         ImportListOptionalfeature.init();
-        ImportListPsionic.init();
+        /*ImportListPsionic.init();
         ImportListRace.init();
         ImportListReward.init();
         ImportListCharCreationOption.init();
@@ -954,6 +976,14 @@ class CompendiumCacheKeyProviderClassSubclassFeature extends CompendiumCacheKeyP
 		}
 
 		return `${ent.className} ${ent.level}`;
+	}
+}
+class CompendiumCacheKeyProviderOptionalfeature extends CompendiumCacheKeyProviderGeneric {
+	getLookupMetas (ent) {
+		return [
+			...super.getLookupMetas(ent),
+			...UtilEntityOptionalfeature.getEntityAliases(ent, {isStrict: this._isStrict}).map(({name}) => ({name})),
+		];
 	}
 }
 class UtilsFoundryItem {

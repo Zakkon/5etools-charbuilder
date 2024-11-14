@@ -559,6 +559,33 @@ class Background5e extends Feature5e{
         return this._createProxy();
     }
 }
+class OptionalFeature5e extends Feature5e{
+    constructor(hash, collectionId=null, isCustom){
+        super(hash, collectionId, isCustom);
+        //if(!this.isCustom){this._tryCloneOriginal(CharacterBuilder.getClassFeatureByUid(hash, className, classSource));}
+        const original = CharacterBuilder.getEntityByUid("optionalfeature", {uid:hash});
+        if(!original){console.error("Failed to load feature using hash", hash);}
+        this.name = original.name;
+        this.system = structuredClone(original.system);
+        //this.entries = structuredClone(CharacterBuilder.getClassFeatureEntries(original.name, original.source));
+        /* let entr = []; for(let l of original.loadeds){for(let e of l.entity.entries){entr.push(e);}} this.entries = entr;
+        const classDatas = CharacterBuilder.instance._data;
+        this.properties = {concentration:{label:"Concentration", selected:true}}; */
+
+        if(!Entity5e.use_overrides){return this;}
+        return this._createProxy();
+    }
+    get itemData(){return this;}
+    get hash(){return this.uid;}
+
+    static async verifySystemData(hash){
+        const existingData = CharacterBuilder.getEntityByUid("optionalfeature", {uid:hash});
+        if(existingData.system){return;}
+        //No system data exists, go ahead and import
+        let imported = await SourceManager.plutoniumConvertData(existingData, "optionalfeature");
+        existingData.system = imported.system;
+    }
+}
 class ClassFeature5e extends Feature5e{
     constructor(hash, className, classSource, collectionId=null, isCustom){
         super(hash, collectionId, isCustom);

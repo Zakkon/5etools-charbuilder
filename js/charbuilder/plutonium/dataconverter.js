@@ -3291,19 +3291,31 @@ DataConverterClass.STUB_SUBCLASS = {
 };
 
 class DataConverterFeature extends DataConverter {
-    static async _pGetGenericDescription(ent, configGroup, {fluff=null}={}) {
-        if (!Config.get(configGroup, "isImportDescription") && !fluff?.entries?.length)
-            return "";
+    static async _pGetGenericDescription (ent, configGroup, {fluff = null} = {}) {
+		if (!Config.get(configGroup, "isImportDescription") && !fluff?.entries?.length) return "";
 
-        const pts = [Config.get(configGroup, "isImportDescription") ? await UtilDataConverter.pGetWithDescriptionPlugins(()=>`<div>${Renderer.get().setFirstSection(true).render({
-            entries: ent.entries
-        }, 2)}</div>`) : null, fluff?.entries?.length ? Renderer.get().setFirstSection(true).render({
-            type: "entries",
-            entries: fluff?.entries
-        }) : "", ].filter(Boolean).join(`<hr class="hr-1">`);
+		const pts = [
+			Config.get(configGroup, "isImportDescription")
+				? await DescriptionRenderer.pGetWithDescriptionPlugins(() => {
+					const prerequisite = Renderer.utils.prerequisite.getHtml(ent.prerequisite);
 
-        return pts.length ? `<div>${pts}</div>` : "";
-    }
+					return `<div>
+						${prerequisite ? `<p>${prerequisite}</p>` : ""}
+						${Renderer.get().setFirstSection(true).render({entries: ent.entries}, 2)}
+					</div>`;
+				})
+				: null,
+			fluff?.entries?.length
+				? Renderer.get().setFirstSection(true).render({type: "entries", entries: fluff?.entries})
+				: "",
+		]
+			.filter(Boolean)
+			.join(`<hr class="hr-1">`);
+
+		return pts.length
+			? `<div>${pts}</div>`
+			: "";
+	}
 
     static _getData_getConsume({ent, actor}) {
         if (!ent?.consumes)
@@ -6359,5 +6371,232 @@ class DataConverterSpell extends DataConverter {
 	static async pGetSpellItemEffectTuples (actor, spell, sheetItem, {img} = {}) {
 		const effectsRaw = await this._SideDataInterface.pGetEffectsRawSideLoaded(spell);
 		return UtilActiveEffects.getExpandedEffects(effectsRaw || [], {actor, sheetItem, parentName: spell.name, img}, {isTuples: true});
+	}
+}
+
+class DataConverterOptionalfeature extends DataConverterFeature {
+	static _configGroup = "importOptionalFeature";
+
+	static _SideDataInterface = SideDataInterfaceOptionalfeature;
+	/* static _ImageFetcher = ImageFetcherOptionalfeature; */
+
+	static async pGetDereferencedFeatureItem (feature) {
+				if (feature.entries) return MiscUtil.copyFast(feature);
+
+		const hash = UrlUtil.URL_TO_HASH_BUILDER[UrlUtil.PG_OPT_FEATURES](feature);
+		return DataLoader.pCacheAndGet(UrlUtil.PG_OPT_FEATURES, feature.source, hash, {isCopy: true});
+	}
+
+	static async pGetInitFeatureLoadeds (feature, {actor = null} = {}) {
+		const uid = DataUtil.proxy.getUid("optionalfeature", feature, {isMaintainCase: true});
+		const asFeatRef = {optionalfeature: uid};
+						await PageFilterClassesFoundry.pInitOptionalFeatureLoadeds({optionalfeature: asFeatRef, raw: feature, actor});
+		return asFeatRef;
+	}
+
+		static async pGetDocumentJson (optFeature, opts) {
+		opts = opts || {};
+		if (opts.actor) opts.isActorItem = true;
+
+		Renderer.get().setFirstSection(true).resetHeaderIndex();
+
+		const {DataPrimer} = await Promise.resolve().then(function () { return DataPrimer$1; });
+		const cpyOptFeature = DataPrimer.getCleanedFeature_tmpOptionalfeatureList(optFeature);
+
+		const srdData = await CompendiumCache.pGetAdditionalDataDoc(
+			"optionalfeature",
+			optFeature,
+			{
+				isSrdOnly: true,
+				keyProvider: UtilEntityOptionalfeature.getCompendiumCacheKeyProvider(),
+				taskRunner: opts.taskRunner,
+			},
+		);
+
+		if (srdData) return this._pGetOptionalFeatureItem_fromSrd(cpyOptFeature, opts, srdData);
+		return this._pGetOptionalFeatureItem_other(cpyOptFeature, opts);
+	}
+
+	static async _pGetOptionalFeatureItem_fromSrd (optFeature, opts = {}, srdData) {
+		const idObj = UtilFoundryId.getIdObj({id: optFeature._foundryId});
+
+		const fluff = opts.fluff || await Renderer.optionalfeature.pGetFluff(optFeature);
+
+		const {name: translatedName, description: translatedDescription, flags: translatedFlags} = this._getTranslationMeta({
+			translationData: this._getTranslationData({srdData}),
+			name: UtilApplications.getCleanEntityName(UtilDataConverter.getNameWithSourcePart(optFeature, {isActorItem: opts.isActorItem})),
+			description: await this._pGetGenericDescription(optFeature, "importOptionalFeature", {fluff}),
+		});
+
+		const consumeMeta = UtilDataConverter.getConsumeMeta({ent: optFeature, actor: opts.actor});
+		if (consumeMeta.isConsumes && !consumeMeta.isFound) {
+			opts.actorMultiImportHelper?.addMissingConsumes({
+				ent: optFeature,
+				id: idObj.id,
+			});
+		}
+
+				const activationType = consumeMeta.consume?.type && !srdData.system?.activation?.type ? "special" : srdData.system?.activation?.type;
+
+		const additionalFlags = await this._SideDataInterface.pGetFlagsSideLoaded(optFeature);
+
+		const effects = [
+			...(await this._SideDataInterface.pIsIgnoreSrdEffectsSideLoaded(optFeature) ? [] : MiscUtil.copyFast(srdData.effects || [])),
+		];
+		UtilActiveEffects.mutEffectsDisabledTransfer(effects, "importOptionalFeature");
+
+		const effectsSideTuples = (await this._SideDataInterface.pGetEffectsSideLoadedTuples({ent: optFeature, img: srdData.img, actor: opts.actor}) || []);
+		effectsSideTuples.forEach(({effect, effectRaw}) => UtilActiveEffects.mutEffectDisabledTransfer(effect, "importOptionalFeature", UtilActiveEffects.getDisabledTransferHintsSideData(effectRaw)));
+
+		const systemBase = {
+			...srdData.system,
+
+			activation: {type: activationType},
+
+			source: UtilDocumentSource.getSourceObjectFromEntity(optFeature),
+			description: {value: translatedDescription, chat: ""},
+			requirements: this._getRequirementsString(optFeature),
+			prerequisitesLevel: UtilDataConverter.getPrerequisiteLevelNumber({prereqs: optFeature.prerequisite}),
+			consume: consumeMeta.consume,
+		};
+
+		const additionalSystem = await this._SideDataInterface.pGetSystemSideLoaded(optFeature, {systemBase});
+
+		const out = {
+			...idObj,
+			name: translatedName,
+			type: srdData.type,
+			system: foundry.utils.mergeObject(
+				systemBase,
+				(additionalSystem || {}),
+			),
+			ownership: {default: 0},
+			/* img: await this._ImageFetcher.pGetSaveImagePath(optFeature, {propCompendium: "optionalfeature", fluff, taskRunner: opts.taskRunner}), */
+			flags: {
+				...translatedFlags,
+				...this._getOptionalFeatureFlags(optFeature, opts),
+				...additionalFlags,
+			},
+			effects: UtilActiveEffects.getEffectsMutDedupeId([
+				...effects,
+				...effectsSideTuples.map(it => it.effect),
+			]),
+		};
+
+		this._mutApplyDocOwnership(out, opts);
+
+		return out;
+	}
+
+	static async _pGetOptionalFeatureItem_other (optFeature, opts) {
+		const idObj = UtilFoundryId.getIdObj({id: optFeature._foundryId});
+
+		const fluff = opts.fluff || await Renderer.optionalfeature.pGetFluff(optFeature);
+
+		const descriptionValue = await this._pGetGenericDescription(optFeature, "importOptionalFeature", {fluff});
+		const {typeType, typeSubtype} = this._getOptionalfeatureTypeTypSubtype(optFeature);
+
+		const consumeMeta = UtilDataConverter.getConsumeMeta({ent: optFeature, actor: opts.actor});
+		if (consumeMeta.isConsumes && !consumeMeta.isFound) {
+			opts.actorMultiImportHelper?.addMissingConsumes({
+				ent: optFeature,
+				id: idObj.id,
+			});
+		}
+
+	/* 	const img = await this._ImageFetcher.pGetSaveImagePath(optFeature, {propCompendium: "optionalfeature", fluff, taskRunner: opts.taskRunner}); */
+		const img = null;
+		const additionalFlags = await this._SideDataInterface.pGetFlagsSideLoaded(optFeature);
+
+		const effectsSideTuples = await this._SideDataInterface.pGetEffectsSideLoadedTuples({ent: optFeature, img, actor: opts.actor});
+		effectsSideTuples.forEach(({effect, effectRaw}) => UtilActiveEffects.mutEffectDisabledTransfer(effect, "importOptionalFeature", UtilActiveEffects.getDisabledTransferHintsSideData(effectRaw)));
+
+		const out = this._pGetItemActorPassive(
+			optFeature,
+			{
+				...idObj,
+				isActorItem: opts.isActorItem,
+				mode: "player",
+			/* 	img, */
+				fvttType: "feat",
+				typeType,
+				typeSubtype,
+				source: optFeature.source,
+				actor: opts.actor,
+				description: descriptionValue,
+				isSkipDescription: !Config.get(this._configGroup, "isImportDescription"),
+
+				requirements: this._getRequirementsString(optFeature),
+				prerequisitesLevel: UtilDataConverter.getPrerequisiteLevelNumber({prereqs: optFeature.prerequisite}),
+
+				consumeType: consumeMeta.consume.type,
+				consumeTarget: consumeMeta.consume.target,
+				consumeAmount: consumeMeta.consume.amount,
+
+				activationType: consumeMeta.consume?.type ? "special" : "",
+				activationCost: null,
+				activationCondition: "",
+
+				pFnGetAdditionalSystem: async (entry, {systemBase}) => this._SideDataInterface.pGetSystemSideLoaded(entry, {systemBase}),
+				additionalFlags: additionalFlags,
+				foundryFlags: this._getOptionalFeatureFlags(optFeature, opts),
+				effects: UtilActiveEffects.getEffectsMutDedupeId(effectsSideTuples.map(it => it.effect)),
+			},
+		);
+
+		this._mutApplyDocOwnership(out, opts);
+
+		return out;
+	}
+
+	static _getRequirementsString (optFeature) {
+				if (optFeature._foundryData?.requirements) return optFeature._foundryData.requirements;
+
+		return Renderer.utils.prerequisite.getHtml(
+			UtilDataConverter.getCleanPrerequisites({prereqs: optFeature.prerequisite}),
+			{
+				isTextOnly: true,
+				isSkipPrefix: true,
+			},
+		);
+	}
+
+	static _OPTIONALFEATURE_TYPE_TO_FVTT_CLASS_SUBTYPE = {
+				"AI": "artificerInfusion", 		"AS": "arcaneShot", 		"AS:V1-UA": "arcaneShot", 		"AS:V2-UA": "arcaneShot", 		"ED": "elementalDiscipline", 		"EI": "eldritchInvocation", 		"FS:B": "fightingStyle", 		"FS:F": "fightingStyle", 		"FS:P": "fightingStyle", 		"FS:R": "fightingStyle", 								"MM": "metamagic", 		"MV": "maneuver", 		"MV:B": "maneuver", 		"MV:C2-UA": "maneuver", 						"PB": "pact", 		"RN": "rune", 											};
+
+	static _getOptionalfeatureTypeTypSubtype (optFeature) {
+		const out = {
+			typeType: undefined,
+			typeSubtype: undefined,
+		};
+
+		const [firstFeatureSubtype] = optFeature.featureType
+			.map(ft => this._OPTIONALFEATURE_TYPE_TO_FVTT_CLASS_SUBTYPE[ft])
+			.filter(Boolean);
+		if (!firstFeatureSubtype) return out;
+
+		out.typeType = "class";
+		out.typeSubtype = firstFeatureSubtype;
+
+		return out;
+	}
+
+	static _getOptionalFeatureFlags (optFeature, opts) {
+		opts = opts || {};
+
+		const out = {
+			[SharedConsts.MODULE_ID]: {
+				page: UrlUtil.PG_OPT_FEATURES,
+				source: optFeature.source,
+				hash: UrlUtil.URL_TO_HASH_BUILDER[UrlUtil.PG_OPT_FEATURES](optFeature),
+			},
+		};
+
+		if (opts.isAddDataFlags) {
+			out[SharedConsts.MODULE_ID].propDroppable = "optionalfeature";
+			out[SharedConsts.MODULE_ID].filterValues = opts.filterValues;
+		}
+
+		return out;
 	}
 }

@@ -2826,6 +2826,47 @@ async _pGetBrewUtil (...args) {
 
   async _pGetBrewUtilAutodetected (...args) { throw new Error("Unimplemented!"); }
 }
+class DataSourceUrl extends DataSourceBase {
+	async _pGetJson ({url}) {
+		return DataUtil.loadJSON(url);
+	}
+
+	async _pGetBrewUtilAutodetected (url) {
+		const json = await DataUtil.loadJSON(url);
+		const {isPrerelease, isBrew} = UtilDataSource.getSourceType(json, {isErrorOnMultiple: true});
+		if (isPrerelease) return PrereleaseUtil;
+		if (isBrew) return BrewUtil2;
+		return null;
+	}
+}
+class DataSourceUrlPredefined extends DataSourceUrl {
+	constructor ({url, ...rest}) {
+		super({...rest});
+		this.url = url;
+	}
+
+	get identifier () { return this.url; }
+
+	async pGetOutputs ({uploadedFileMetas, customUrls}) {
+		let data;
+		try {
+			const brewUtil = await this._pGetBrewUtil(this.url);
+			if (brewUtil && !this._isExistingPrereleaseBrew) await brewUtil.pAddBrewFromUrl(this.url);
+
+			data = await this._pGetJson({url: this.url});
+		} catch (e) {
+			const msg = `Failed to load URL "${this.url}"!`;
+			ui.notifications.error(`${msg} ${VeCt.STR_SEE_CONSOLE}`);
+			console.error(msg);
+			throw e;
+		}
+		return new DataSourceOutputs({
+			cacheKeys: [this.url],
+			contents: [data],
+		});
+	}
+}
+
 class DataSourceSpecial extends DataSourceBase {
   get identifier () { return this._cacheKey; }
 
@@ -2863,6 +2904,17 @@ static async _pGetWithCache (source) {
   return this._CACHE[source._cacheKey];
 }
 }
+class DataSourceGenericOfficialAll extends DataSourceUrlPredefined {
+	constructor ({url}) {
+		super(
+			{
+				url: url,
+				filterTypes: [DataPipelineConsts.SOURCE_TYP_OFFICIAL_ALL],
+				isDefault: true,
+			},
+		);
+	}
+}
 class DataSourceGenericOfficialAllSpecial extends DataSourceSpecial {
 	constructor () {
 		super(
@@ -2892,6 +2944,15 @@ class DataSourceSpellOfficialAll extends DataSourceGenericOfficialAllSpecial {
 
 	async _pGet () {
 		return Vetools.pGetAllSpells();
+	}
+}
+class DataSourceOptionalfeatureOfficialAll extends DataSourceGenericOfficialAll {
+	constructor () {
+		super(
+			{
+				url: Vetools.DATA_URL_OPTIONALFEATURES,
+			},
+		);
 	}
 }
 
@@ -3173,6 +3234,17 @@ class DataPipelinesListSpell extends DataPipelinesListGeneric {
 	static async _pGetPipelinesOfficialSources () {
 		return Object.keys(await DataUtil.spell.pLoadIndex());
 	}
+}
+class DataPipelineConfigOptionalfeature extends DataPipelineConfig {
+	_DIRS_HOMEBREW = ["optionalfeature"];
+
+	_ClsDataSourceOfficialAll = DataSourceOptionalfeatureOfficialAll;
+}
+const CONFIG_OPTIONALFEATURE = new DataPipelineConfigOptionalfeature();
+class DataPipelinesListOptionalfeature extends DataPipelinesListGeneric {
+	static _ = ImplementationRegistryDataPipelinesList.get().register(this);
+
+	static _CONFIG = CONFIG_OPTIONALFEATURE;
 }
 //#endregion
 
@@ -7010,3 +7082,151 @@ var ImportListSpell$1 = /*#__PURE__*/Object.freeze({
     __proto__: null,
     ImportListSpell: ImportListSpell
 });
+
+class ImportListOptionalfeature extends ImportListFeature {
+  static init () {
+  this._initCreateSheetItemHook({
+    prop: "optionalfeature",
+    importerName: "Other Option or Feature",
+  });
+}
+
+static get ID () { return "other-options-and-features"; }
+static get DISPLAY_NAME_TYPE_SINGLE () { return "Other Option or Feature"; }
+static get DISPLAY_NAME_TYPE_PLURAL () { return "Other Options & Features"; }
+static get PROPS () { return ["optionalfeature"]; }
+
+static _ = ImplementationRegistryImportList.get().register(this);
+
+_titleSearch = "options and feature";
+_sidebarTab = "items";
+_gameProp = "items";
+_defaultFolderPath = ["Other Options and Features"];
+_pageFilter = new PageFilterOptionalFeatures();
+_page = UrlUtil.PG_OPT_FEATURES;
+_isPreviewable = true;
+_configGroup = "importOptionalFeature";
+_fnListSort = PageFilterOptionalFeatures.sortOptionalFeatures;
+static _DataConverter = DataConverterOptionalfeature;
+static _DataPipelinesList = DataPipelinesListOptionalfeature;
+
+_colWidthName = 4;
+_colWidthSource = 1;
+
+async _pPostRenderOrShow () {
+  await super._pPostRenderOrShow();
+
+  if (!this._actor) return;
+
+  if (!Config.get("importOptionalFeature", "isFilterOnOpen")) return;
+
+  const currentValues = this._pageFilter.filterBox.getValues();
+  const levelNameLookup = Object.keys(currentValues.Level).filter(k => !k.startsWith("_")).mergeMap(it => ({[it.toLowerCase()]: it}));
+
+  const toBlock = [];
+  for (const clsItem of Object.values(this._actor.classes)) {
+    if (clsItem.system.levels >= VeCt.LEVEL_MAX) continue;
+    toBlock.push(...await this._pPostRenderOrShow_filter_getLevelsToBlock({levelNameLookup, clsItem}));
+  }
+
+  if (!toBlock.length) return;
+
+  this._pageFilter.filterBox.setFromValues({
+    "Level": {
+      ...Object.fromEntries(
+        Object.entries(currentValues.Level)
+          .filter(([k]) => !k.startsWith("_")),
+      ),
+      ...Object.fromEntries(
+        toBlock.map(k => [k, 2]),
+      ),
+    },
+  });
+  this._handleFilterChange();
+}
+
+async _pPostRenderOrShow_filter_getLevelsToBlock ({levelNameLookup, clsItem}) {
+  const scItem = clsItem.subclass;
+
+  const flagsSc = UtilDocumentFlags.getPlutoniumFlags(scItem, {propsRequired: ["page", "source", "hash"]});
+  const flagsCls = UtilDocumentFlags.getPlutoniumFlags(clsItem, {propsRequired: ["page", "source", "hash"]});
+
+  const nameClass = flagsCls
+    ? (await DataLoader.pCacheAndGet(flagsCls.page, flagsCls.source, flagsCls.hash)).name || clsItem.name
+    : clsItem.name;
+
+  const nameSubclass = scItem
+    ? flagsSc
+      ? (await DataLoader.pCacheAndGet(flagsSc.page, flagsSc.source, flagsSc.hash)).shortName || scItem.name
+      : scItem.name
+    : null;
+
+  return Array.from({length: VeCt.LEVEL_MAX})
+    .map((_, i) => i + 1)
+    .slice(clsItem.system.levels)
+    .flatMap(lvlNxt => {
+      const fauxPrereq = {
+        level: lvlNxt,
+        class: {name: nameClass},
+      };
+
+      return [
+        PageFilterOptionalFeatures.getLevelFilterItem({level: fauxPrereq}).item.toLowerCase(),
+        nameSubclass
+          ? PageFilterOptionalFeatures.getLevelFilterItem({level: {...fauxPrereq, subclass: {name: nameSubclass}}}).item.toLowerCase()
+          : null,
+      ]
+        .filter(Boolean);
+    })
+    .filter(filterLookupName => levelNameLookup[filterLookupName])
+    .map(filterLookupName => levelNameLookup[filterLookupName]);
+}
+
+_getData_cols_other () {
+  return [
+    {
+      name: "Type",
+      width: 2,
+      field: "type",
+      rowClassName: "ve-text-center",
+    },
+    {
+      name: "Prerequisite",
+      width: 3,
+      field: "prerequisite",
+      rowClassName: "ve-text-center",
+    },
+    {
+      name: "Level",
+      width: 1,
+      field: "level",
+      rowClassName: "ve-text-center",
+    },
+  ];
+}
+
+_getData_row_mutGetAdditionalValues ({it, ix}) {
+      it._vPrerequisite = Renderer.utils.prerequisite.getHtml(it.prerequisite, {isSkipPrefix: true, isListMode: true, blocklistKeys: new Set(["level"])});
+  it._vLevel = Renderer.optionalfeature.getListPrerequisiteLevelText(it.prerequisite);
+  
+  return {
+    type: it._lFeatureType,
+    prerequisite: it._vPrerequisite,
+    level: it._vLevel,
+  };
+}
+
+_renderInner_absorbListItems_fnGetValues (it) {
+  return {
+    ...super._renderInner_absorbListItems_fnGetValues(it),
+    prerequisite: it._vPrerequisite,
+    level: it._vLevel,
+    type: it._lFeatureType,
+  };
+}
+}
+var ImportListOptionalfeature$1 = /*#__PURE__*/Object.freeze({
+  __proto__: null,
+  ImportListOptionalfeature: ImportListOptionalfeature
+});
+/* ImportListOptionalfeature.UserChoose = class extends MixinUserChooseImporter(ImportListOptionalfeature) {}; */

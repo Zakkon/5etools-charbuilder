@@ -4955,7 +4955,9 @@ class PageFilter {
         this.constructor.mutateForFilters(entity, opts);
         this.addToFilters(entity, isExcluded, opts);
     }
-
+    static defaultMiscellaneousDeselFn (val) {
+		return val === "Reprinted";
+	}
     static mutateForFilters(entity, opts) {
         throw new Error("Unimplemented!");
     }
@@ -5042,6 +5044,9 @@ class PageFilter {
         return SourceUtil.getFilterGroup(val) === SourceUtil.FILTER_GROUP_STANDARD;
     }
 };
+
+//#region PageFilter
+//#endregion
 
 //#region PageFilterClasses
 class PageFilterClassesBase extends PageFilter {
@@ -7592,6 +7597,174 @@ let PageFilterItems$1 = class PageFilterItems extends PageFilterEquipment {
     }
 }
 ;
+//#endregion
+
+//#region PageFilterOptionalFeatures
+class PageFilterOptionalFeatures extends PageFilter {
+    static _filterFeatureTypeSort (a, b) {
+    return SortUtil.ascSort(Parser.optFeatureTypeToFull(a.item), Parser.optFeatureTypeToFull(b.item));
+}
+
+static sortOptionalFeatures (itemA, itemB, options) {
+    if (options.sortBy === "level") {
+        const aValue = Number(itemA.values.level) || 0;
+        const bValue = Number(itemB.values.level) || 0;
+        return SortUtil.ascSort(aValue, bValue) || SortUtil.listSort(itemA, itemB, options);
+    }
+    return SortUtil.listSort(itemA, itemB, options);
+}
+
+static getLevelFilterItem (prereq) {
+    const lvlMeta = prereq.level;
+
+    if (typeof lvlMeta === "number") {
+        return new FilterItem({
+            item: `Level ${lvlMeta}`,
+            nest: `(No Class)`,
+        });
+    }
+
+    const className = lvlMeta.class ? lvlMeta.class.name : `(No Class)`;
+    return new FilterItem({
+        item: `${lvlMeta.class ? className : ""}${lvlMeta.subclass ? ` (${lvlMeta.subclass.name})` : ""} Level ${lvlMeta.level}`,
+        nest: className,
+    });
+}
+
+constructor () {
+    super();
+
+    this._typeFilter = new Filter({
+        header: "Feature Type",
+        items: [],
+        displayFn: Parser.optFeatureTypeToFull,
+        itemSortFn: PageFilterOptionalFeatures._filterFeatureTypeSort,
+    });
+    this._pactFilter = new Filter({
+        header: "Pact Boon",
+        items: [],
+        displayFn: Parser.prereqPactToFull,
+    });
+    this._patronFilter = new Filter({
+        header: "Otherworldly Patron",
+        items: [],
+        displayFn: Parser.prereqPatronToShort,
+    });
+    this._spellFilter = new Filter({
+        header: "Spell",
+        items: [],
+        displayFn: StrUtil.toTitleCase,
+    });
+    this._featureFilter = new Filter({
+        header: "Feature",
+        displayFn: StrUtil.toTitleCase,
+    });
+    this._levelFilter = new Filter({
+        header: "Level",
+        itemSortFn: SortUtil.ascSortNumericalSuffix,
+        nests: [],
+    });
+    this._prerequisiteFilter = new MultiFilter({
+        header: "Prerequisite",
+        filters: [
+            this._pactFilter,
+            this._patronFilter,
+            this._spellFilter,
+            this._levelFilter,
+            this._featureFilter,
+        ],
+    });
+    this._miscFilter = new Filter({
+        header: "Miscellaneous",
+        items: ["Has Info", "Has Images", "SRD", "Legacy", "Grants Additional Spells"],
+        isMiscFilter: true,
+        deselFn: PageFilter.defaultMiscellaneousDeselFn.bind(PageFilter),
+    });
+}
+
+static mutateForFilters (ent) {
+    ent._fSources = SourceFilter.getCompleteFilterSources(ent);
+
+            ent.featureType = ent.featureType && ent.featureType instanceof Array ? ent.featureType : ent.featureType ? [ent.featureType] : ["OTH"];
+    if (ent.prerequisite) {
+        ent._sPrereq = true;
+        ent._fPrereqPact = ent.prerequisite.filter(it => it.pact).map(it => it.pact);
+        ent._fPrereqPatron = ent.prerequisite.filter(it => it.patron).map(it => it.patron);
+        ent._fprereqSpell = ent.prerequisite
+            .filter(it => it.spell)
+            .map(prereq => {
+                return (prereq.spell || [])
+                    .map(strOrObj => {
+                        if (typeof strOrObj === "string") return strOrObj.split("#")[0].split("|")[0];
+
+                                                    const ptChoose = strOrObj.choose
+                            .split("|")
+                            .sort(SortUtil.ascSortLower)
+                            .map(pt => {
+                                const [filter, values] = pt.split("=");
+                                switch (filter.toLowerCase()) {
+                                    case "level": return values.split(";").map(v => Parser.spLevelToFullLevelText(Number(v), {isPluralCantrips: false})).join("/");
+                                    case "class": return values.split(";").map(v => v.toTitleCase()).join("/");
+                                    default: return pt;
+                                }
+                            })
+                            .join(" ");
+                        return `Any ${ptChoose}`;
+                    });
+            });
+        ent._fprereqFeature = ent.prerequisite.filter(it => it.feature).map(it => it.feature);
+        ent._fPrereqLevel = ent.prerequisite.filter(it => it.level).map(PageFilterOptionalFeatures$1.getLevelFilterItem.bind(PageFilterOptionalFeatures$1));
+    }
+
+    ent._dFeatureType = ent.featureType.map(ft => Parser.optFeatureTypeToFull(ft));
+    ent._lFeatureType = ent.featureType.join(", ");
+    ent.featureType.sort((a, b) => SortUtil.ascSortLower(Parser.optFeatureTypeToFull(a), Parser.optFeatureTypeToFull(b)));
+
+    this._mutateForFilters_commonMisc(ent);
+    if (ent.additionalSpells) ent._fMisc.push("Grants Additional Spells");
+}
+
+addToFilters (it, isExcluded) {
+    if (isExcluded) return;
+
+    this._sourceFilter.addItem(it._fSources);
+    this._typeFilter.addItem(it.featureType);
+    this._pactFilter.addItem(it._fPrereqPact);
+    this._patronFilter.addItem(it._fPrereqPatron);
+    this._spellFilter.addItem(it._fprereqSpell);
+    this._featureFilter.addItem(it._fprereqFeature);
+
+    (it._fPrereqLevel || []).forEach(it => {
+        this._levelFilter.addNest(it.nest, {isHidden: true});
+        this._levelFilter.addItem(it);
+    });
+}
+
+async _pPopulateBoxOptions (opts) {
+    opts.filters = [
+        this._sourceFilter,
+        this._typeFilter,
+        this._prerequisiteFilter,
+        this._miscFilter,
+    ];
+}
+
+toDisplay (values, it) {
+    return this._filterBox.toDisplay(
+        values,
+        it._fSources,
+        it.featureType,
+        [
+            it._fPrereqPact,
+            it._fPrereqPatron,
+            it._fprereqSpell,
+            it._fPrereqLevel,
+            it._fprereqFeature,
+        ],
+        it._fMisc,
+    );
+}
+};
 //#endregion
 
 class VariantClassFilter extends Filter {

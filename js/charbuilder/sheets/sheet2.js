@@ -25,6 +25,14 @@ class ActorCharactermancerSheet2 extends ActorCharactermancerSheet {
             let featureItem = new ClassFeature5e(f.hash, cls.name, cls.source, null, false);
             System5e.tryAddToInventory(this._actor, featureItem, "active", {doNotRender:true});
         }); */
+        //let ent = CharacterBuilder.getEntityByUid("optionalfeature", {uid:"archery_phb"});
+        //console.log("ARCHERY:", ent);
+        let hash = "archery_phb";
+        OptionalFeature5e.verifySystemData(hash).then(() => {
+            let featureItem = new OptionalFeature5e(hash, null, false);
+            console.log(featureItem);
+            System5e.tryAddToInventory(this._actor, featureItem, "passive", {doNotRender:true});
+        });
 
         let inv = new TestInventoryElement(this.actor);
         this._inv = inv;
@@ -233,7 +241,7 @@ class TestInventoryElement {
             summary.slideUp(200, () => summary.remove());
             this._unsetExpanded(item.collectionId);
         } else {
-            const chatData = {description:"This is an item summary"};
+            const chatData = {description: item.system.description.value};
             let template = new LoadTemplate(null, "parts/item-summary", chatData);
             template.createAndCompile((innerHTML)=>{
                 const summary = $$`${innerHTML}`;

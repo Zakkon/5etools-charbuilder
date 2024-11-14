@@ -1681,14 +1681,30 @@ class ActorCharactermancerClass extends ActorCharactermancerBaseComponent {
       };
     }
 
-    getChoiceData(){
+    async getChoiceData(){
 
-        function fnGetChoices(components) {
+        async function getData(components, ignoreIfIncomplete){
+            const forms = await fnGetChoices(components);
+            return fnMergeData(forms, ignoreIfIncomplete);
+        }
+        async function fnGetChoices(components) {
             let arr = [];
             for(let c of components){
-                arr.push(c._getFormData());
+                if(Array.isArray(c)){
+                    let result = await fnGetChoices(c);
+                    arr = arr.concat(result); continue;}
+                let data = await c.pGetFormData();
+                arr.push(data);
             }
             return arr;
+        }
+        function fnMergeData(forms, ignoreIfIncomplete){
+            let merged = {};
+            for(let f of forms){
+                if(ignoreIfIncomplete && f.isFormIncomplete){continue;}
+                merged = Object.assign(merged, f.data);
+            }
+            return merged;
         }
         
         const actor = CharacterBuilder.instance._actor;
@@ -1708,16 +1724,22 @@ class ActorCharactermancerClass extends ActorCharactermancerBaseComponent {
             cls.targetLevel = state[`${part}targetLevel`];
             const data = this._getClass({ix:cls.ixClass});
             cls.uid = UrlUtil.URL_TO_HASH_GENERIC({name:data.name, source:data.source}).toLowerCase();
-            //Try to get the two skill proficiencies we chose with the class
-            cls.skillProfChoices = fnGetChoices(this._compsClassSkillProficiencies);
-            for(let e of cls.skillProfChoices){
+            /*Information we need to pull:
+            - skill proficiencies (usually you get 2 at the start, may also include tools)
+            - starting proficiencies (weapon and armor proficiencies, saving throw proficiencies)
+            - hp increase mode
+            - featureOptionsSelect
+            */
+            cls.skillProficiencies = await getData(this._compsClassSkillProficiencies);
+            cls.featureOptionsSelect = await getData(this._compsClassFeatureOptionsSelect);
+            /* for(let e of cls.skillProfChoices){
                 for(let [skillName, profValue] of Object.entries(e.data.skillProficiencies)){
                     const str = `skills.${skillName}`;
                     const skill = actor.skills[skillName];
                     const newSkill = System5e.calcSkillEmbed(skill.label, skill.ability, actor.system.abilities, actor.system.attributes.prof, profValue);
                     updatePool[str] = newSkill;
                 }
-            }
+            } */
             out.classes.push(cls);
         }
         if(Object.entries(updatePool).length > 0){actor.update(updatePool);}
