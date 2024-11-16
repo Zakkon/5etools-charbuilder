@@ -1701,7 +1701,7 @@ class ActorCharactermancerClass extends ActorCharactermancerBaseComponent {
         function fnMergeData(forms, ignoreIfIncomplete){
             let merged = {};
             for(let f of forms){
-                if(ignoreIfIncomplete && f.isFormIncomplete){continue;}
+                if(ignoreIfIncomplete && !f.isFormComplete){continue;}
                 merged = Object.assign(merged, f.data);
             }
             return merged;

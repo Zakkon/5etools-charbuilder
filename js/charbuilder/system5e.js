@@ -1,5 +1,19 @@
 class System5e{
     
+    static applyClassChoiceData(actor, choiceData){
+        let updatePool = {};
+        for(let cls of choiceData.classes){
+            //Apply skill proficiencies
+            for(let [skillName, profValue] of Object.entries(cls.skillProficiencies)){
+                console.log(skillName, profValue);
+                const skill = actor.skills[skillName];
+                const newSkill = System5e.calcSkillEmbed(skill.label, skill.ability, actor.system.abilities, actor.system.attributes.prof, profValue);
+                updatePool[`skills.${skillName}`] = newSkill;
+            }
+        }
+        if(Object.entries(updatePool).length > 0){actor.update(updatePool);}
+    }
+    
     /**
      * @param {string} formula
      * * @param {{formula:string}[]} alterations
