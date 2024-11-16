@@ -603,8 +603,10 @@ class CharacterBuilder {
             console.log("mancer", this.compClass);
             
             this.compClass.getChoiceData().then((choiceData)=>{
-              CharacterBuilder.parseMancerChoiceData(this._actor, choiceData);
-              this.e_switchTab("sheet");
+              CharacterBuilder.parseMancerChoiceData(this._actor, choiceData).then(()=>{
+                this.e_switchTab("sheet");
+              });
+              
             });
             
           });
@@ -886,6 +888,7 @@ class CharacterBuilder {
    */
   static getEntityByUid(type, options){
     const datas = CharacterBuilder.instance._data[type];
+    console.error(type, options, datas);
     return this._getEntityByUid(datas, options);
   }
   static _getEntityByUid(from, options){
@@ -958,23 +961,93 @@ class CharacterBuilder {
   }
   //#endregion
 
-  static parseMancerChoiceData(actor, choiceData){
+  /**
+   * Description
+   * @param {Actor5e} actor
+   * @param {any} choiceData
+   * @returns {any}
+   */
+  static async parseMancerChoiceData(actor, choiceData){
 
     console.log(choiceData);
+    //System5e.applyClassChoiceData(actor, choiceData);
+    const addFeatureItem = async(type, hash, dependencyPath) => {
+      //Add new feature item to update pool
+      //f.type should be either "optionalfeature"(lowercase spelling), "feat", "classFeature", or "subclassFeature"
+      if(type != "optionalfeature"){return;}
+      await OptionalFeature5e.verifySystemData(hash);
+      let featureItem = new OptionalFeature5e(hash, null, false);
+      featureItem.markMancerDependency(new MancerDependencyLink(dependencyPath));
+      System5e.tryAddToInventory(actor, featureItem, "passive", {doNotRender:true});
+    }
+    const removeFeatureItem = (it) => {
+      //Or just add to removal pool
+      actor.removeEmbeddedDocuments("item", [it]);
+    }
+
+    //Mark all mancer-given features on actor as unverified
+    const isMancerGranted = (item) => {
+      console.log("Is Granted?", item.isMancerCreated, item);
+      return item.isMancerCreated;
+    }
+    let allItems = actor.getItemsByUid("*").filter(it => isMancerGranted(it) == true);
+    let itemsVerified = new Array(allItems.length).fill(false);
+    //Then try to verify each one, and add new (already verified) features on to the sheet if needed
+    const findItemMatch = (path, uid) => {
+      for(let i = 0; i < allItems.length; ++i){
+        if(allItems[i].isMancerDependencyMatch(path) && allItems[i].uid == uid){return i;}
+      }
+      return -1;
+    }
+
+
+    let updatePool = {};
 
     for(let cls of choiceData.classes){
-      //Verify features
-      for(let f of cls.featureOptionsSelect.features){
-        let hash = f.hash;
-        //Try to add this feature to the actor
-        //f.type should be either "optionalfeature"(lowercase spelling), "feat", "classFeature", or "subclassFeature"
-        //We can match these to our database
-        OptionalFeature5e.verifySystemData(hash).then(() => {
-          let featureItem = new OptionalFeature5e(hash, null, false);
-          System5e.tryAddToInventory(actor, featureItem, "passive", {doNotRender:false});
-      });
+      //HIT POINTS
+      for(let form of cls.hpInfo){
+        let hp = form.data.hitPointsAtFirstLevel;
+        updatePool[`hp.value`] = hp;
+        updatePool[`hp.max`] = hp;
+      }
+      //SKILL PROFICIENCIES
+      //First, reset existing skills
+      for(let [skillName, skill] of Object.entries(actor.skills)){
+        skill.baseProf = 0; //No proficiency
+        const newSkill = System5e.calcSkillEmbed(skill, actor.system.abilities, actor.system.attributes.prof);
+        updatePool[`skills.${skillName}`] = newSkill;
+      }
+      //Then, apply skills we gained from class
+      for(let form of cls.skillProficiencies){
+        if(!form?.data?.skillProficiencies){continue;}
+        for(let [skillName, profValue] of Object.entries(form.data.skillProficiencies)){
+          let skill = actor.skills[skillName];
+          skill.baseProf = profValue;
+          const newSkill = System5e.calcSkillEmbed(skill, actor.system.abilities, actor.system.attributes.prof);
+          updatePool[`skills.${skillName}`] = newSkill;
+        }
+      }
+      //FEATURE OPTIONS SELECT
+      for(let fos of cls.featureOptionsSelect){
+        //FEATURES
+        for(let f of fos.data.features){
+          let hash = f.hash; //also known as "uid"
+          let matchIndex = findItemMatch(fos.data.path, hash);
+          if(matchIndex >= 0){itemsVerified[matchIndex] = true;}
+          else { await addFeatureItem(f.type, hash, fos.data.path); } //If no match exists, just create a new feature
+        }
       }
     }
+
+    //Then remove all unverified features
+    console.log("items to verify:", allItems);
+    for(let i = 0; i < itemsVerified.length; ++i){
+      let it = allItems[i];
+      let isVerified = itemsVerified[i];
+      if(!isVerified){console.log(it.uid, "remains unverified!"); removeFeatureItem(it);}
+    }
+
+    actor.update(updatePool); //Forces render
   }
 }
 /**A wrapper for a div that contains components. Only used by CharacterBuilder */

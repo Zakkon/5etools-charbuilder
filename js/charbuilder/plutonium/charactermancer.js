@@ -1683,17 +1683,20 @@ class ActorCharactermancerClass extends ActorCharactermancerBaseComponent {
 
     async getChoiceData(){
 
-        async function getData(components, ignoreIfIncomplete){
-            const forms = await fnGetChoices(components);
-            return fnMergeData(forms, ignoreIfIncomplete);
+        async function getData(components, path, ignoreIfIncomplete=false){
+            const forms = await fnGetFormData(components, path);
+            //return fnMergeData(forms, ignoreIfIncomplete);
+            return forms;
         }
-        async function fnGetChoices(components) {
+        async function fnGetFormData(components, path) {
             let arr = [];
-            for(let c of components){
+            for(let i = 0; i < components.length; ++i){
+                let c = components[i];
                 if(Array.isArray(c)){
-                    let result = await fnGetChoices(c);
+                    let result = await fnGetFormData(c, `${path}_${i}`);
                     arr = arr.concat(result); continue;}
                 let data = await c.pGetFormData();
+                data.path = `${path}_${i}`;
                 arr.push(data);
             }
             return arr;
@@ -1728,18 +1731,12 @@ class ActorCharactermancerClass extends ActorCharactermancerBaseComponent {
             - skill proficiencies (usually you get 2 at the start, may also include tools)
             - starting proficiencies (weapon and armor proficiencies, saving throw proficiencies)
             - hp increase mode
+            - hp info
             - featureOptionsSelect
             */
-            cls.skillProficiencies = await getData(this._compsClassSkillProficiencies);
-            cls.featureOptionsSelect = await getData(this._compsClassFeatureOptionsSelect);
-            /* for(let e of cls.skillProfChoices){
-                for(let [skillName, profValue] of Object.entries(e.data.skillProficiencies)){
-                    const str = `skills.${skillName}`;
-                    const skill = actor.skills[skillName];
-                    const newSkill = System5e.calcSkillEmbed(skill.label, skill.ability, actor.system.abilities, actor.system.attributes.prof, profValue);
-                    updatePool[str] = newSkill;
-                }
-            } */
+            cls.hpInfo = await getData(this._compsClassHpInfo, part + "hpInfo");
+            cls.skillProficiencies = await getData(this._compsClassSkillProficiencies, part + "skillProf");
+            cls.featureOptionsSelect = await getData(this._compsClassFeatureOptionsSelect, part + "fos");
             out.classes.push(cls);
         }
         if(Object.entries(updatePool).length > 0){actor.update(updatePool);}
@@ -1852,6 +1849,9 @@ class Charactermancer_Class_HpInfo extends BaseComponent {
     //Functions in case some external party wants to get some info
     get hitDice(){return this._hitDice;} //How many faces, not how many dice
     get hitPointsAtFirstLevel() { return Renderer.class.getHitPointsAtFirstLevel(this._hitDice); }
+    pGetFormData(){
+        return {data:{hitDice: this.hitDice, hitPointsAtFirstLevel: this.hitPointsAtFirstLevel}};
+    }
    
 }
 class Charactermancer_AdditionalSpellsUtil {

@@ -6,14 +6,15 @@ class System5e{
             //Apply skill proficiencies
             for(let [skillName, profValue] of Object.entries(cls.skillProficiencies)){
                 console.log(skillName, profValue);
-                const skill = actor.skills[skillName];
-                const newSkill = System5e.calcSkillEmbed(skill.label, skill.ability, actor.system.abilities, actor.system.attributes.prof, profValue);
+                let skill = actor.skills[skillName];
+                skill.baseProf = profValue;
+                const newSkill = System5e.calcSkillEmbed(skill, actor.system.abilities, actor.system.attributes.prof);
                 updatePool[`skills.${skillName}`] = newSkill;
             }
         }
         if(Object.entries(updatePool).length > 0){actor.update(updatePool);}
     }
-    
+
     /**
      * @param {string} formula
      * * @param {{formula:string}[]} alterations
@@ -336,20 +337,23 @@ class System5e{
         return {mod: mod, passive:(10+mod)};
     }
     /**
-     * @param {string} label "Animal Handling"
-     * @param {string} abilAbbr "wis"
-     * @param {any} abilities actor.system.abilities
-     * @param {number} prof actor.system.attributes.prof
-     * @param {number} baseProf 0,1,2, or 3
+     * @param {object} data
+     * @param {number} [data.baseProf]
+     * @param {string} [data.ability]
+     * @param {object} [abilities]
+     * @param {number} [proficiencyModifier]
      * @returns {any}
      */
-    static calcSkillEmbed(label, abilAbbr, abilities, prof, baseProf=0) {
-        const icon = baseProf == 0? "far fa-circle" : baseProf == 1? "fas fa-check" : baseProf == 2? "fas fa-adjust" : "fas fa-check-double";
-        const hover = baseProf == 0? "Not Proficient" : baseProf == 1? "Proficient" : baseProf == 2? "Half Proficient" : "Expertise";
-        const baseValue = System5e.proficiencyMult(baseProf);
-        const ability = abilities[abilAbbr];
-        const value = baseValue >= 1;
-        const {mod, passive} = System5e.calcSkillMod(ability.value, baseProf, prof);
+    static calcSkillEmbed(data, abilities, proficiencyModifier) {
+        data.icon = data.baseProf == 0? "far fa-circle" : data.baseProf == 1? "fas fa-check" : data.baseProf == 2? "fas fa-adjust" : "fas fa-check-double";
+        data.hover = data.baseProf == 0? "Not Proficient" : data.baseProf == 1? "Proficient" : data.baseProf == 2? "Half Proficient" : "Expertise";
+        data.baseValue = System5e.proficiencyMult(data.baseProf);
+        data.value = data.baseProf >= 1;
+        data.abbreviation = data.ability;
+        const {mod, passive} = System5e.calcSkillMod(abilities[data.ability].value, data.baseProf, proficiencyModifier);
+        data.total = mod;
+        data.passive = passive;
+        return data;
         return {label, value, ability:abilAbbr, baseValue, hover, icon, abbreviation:abilAbbr, total:mod, passive};
     }
     //#endregion
@@ -454,6 +458,14 @@ class Entity5e {
         //Fire item update
         System5e.hkItemUpdated(this.collectionId);
     }
+
+    get isMancerCreated(){
+        return this.mancerDependency != null;
+    }
+    markMancerDependency(dependency){
+        this.mancerDependency = dependency;
+    }
+    isMancerDependencyMatch(creationKey){return this.isMancerCreated && this.mancerDependency.creationKey == creationKey;}
 
     stringifyEntries(){
         for(let i = 0; i < this.entries.length; ++i){
@@ -594,6 +606,7 @@ class OptionalFeature5e extends Feature5e{
 
     static async verifySystemData(hash){
         const existingData = CharacterBuilder.getEntityByUid("optionalfeature", {uid:hash});
+        if(existingData == null){console.error("No existing data found for optionalfeature", hash);}
         if(existingData.system){return;}
         //No system data exists, go ahead and import
         let imported = await SourceManager.plutoniumConvertData(existingData, "optionalfeature");
@@ -699,6 +712,7 @@ class Spell5e extends Entity5e{
 class Actor5e {
     
     constructor(saveData=null){
+        this._mancerDependencies = {};
         if(saveData != null){this._loadFromSaveData(saveData);}
         else{this._createFakeCharacterData();}
         this.owner = true;
@@ -760,7 +774,11 @@ class Actor5e {
         this.skills = {};
         let configSkills = [];
         for(const [key, value] of Object.entries(CONFIG.DND5E.skills)){
-            this.skills[value.label.toLowerCase()] = System5e.calcSkillEmbed(value.label, value.ability, this.system.abilities, this.system.attributes.prof);
+            this.skills[value.label.toLowerCase()] = System5e.calcSkillEmbed({
+                label: value.label,
+                ability: value.ability,
+                baseProf: 0},
+                this.system.abilities, this.system.attributes.prof);
             configSkills.push(value.label.toLowerCase());
         }
 
@@ -939,6 +957,14 @@ class Actor5e {
         }
     }
 
+    _runInventoryFunc(func){
+        //Search item inventory
+        for(let section in this.inventory){ func(this.inventory[section].items);}
+        //Search features
+        for(let section in this.features){ func(this.features[section].items);}
+        //Search spells
+        for(let section in this.spellbook){ func(this.spellbook[section].spells);}
+    }
     async getItemByCollectionId(collectionId, errorIfNotFound=false){
         let matches = [];
         const runMatching = (searchIn) => {
@@ -957,6 +983,19 @@ class Actor5e {
             return null;
         }
         return matches[0];
+    }
+    getItemsByUid(uid, errorIfNotFound=false){
+        let matches = [];
+        const runMatching = (searchIn) => {
+            matches = matches.concat(searchIn.filter(f => {return !f.isCustom && (f.uid == uid || uid == "*");}));
+        }
+       this._runInventoryFunc(runMatching);
+       
+        if(matches.length < 1 && errorIfNotFound){
+            console.error("Could not find a match to uid", uid, this);
+            return null;
+        }
+        return matches;
     }
     getFlag(flagCategory, flagName){
         return false;
@@ -1255,6 +1294,15 @@ class Actor5e {
         };
     }
 
+    _mancerDependencies;
+    setMancerDependency(path, value){
+        if(value == null){delete this._mancerDependencies[path]; return;}
+        this._mancerDependencies[path] = value;
+    }
+    getMarkerDependency(path){
+        return this._mancerDependencies[path];
+    }
+
     static getProperty(data, term){
 
     }
@@ -1408,5 +1456,35 @@ class Proficiency {
     toString() {
       return this.term;
     }
+}
+
+//This object contains info about other sources it needs to exist
+class DependencyLink {
+
+    creationKey;
+    constructor(){
+
+    }
+    isSatisfied(){
+        return true;
+    }
+}
+class EntityDependenceLink extends DependencyLink{
+
+}
+class MancerDependencyLink extends DependencyLink{
+    constructor(creationKey){
+        super();
+        this.creationKey = creationKey;
+    }
+
+    isMatch(creationKey, itemUid){
+        return this.creationKey == creationKey;
+    }
+
+}
+//This object contains info about sub-features that we grant to the sheet
+class ChildLink {
+
 }
   
