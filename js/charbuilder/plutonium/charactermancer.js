@@ -1105,6 +1105,7 @@ class ActorCharactermancerClass extends ActorCharactermancerBaseComponent {
                 this[propCompsClass][ix].render(parentElement);
 
                 //LOAD FROM SAVE FILE
+                console.log("CLASSES", this._actor); //BUG HERE
                 //Set state to component AFTER first render, this way all other components have hooks set up and can react to the changes we are about to make
                 if(SETTINGS.USE_EXISTING_WEB && ix < this._actor?.classes?.length){
                     //So we can set the state of the proficiency select component here
