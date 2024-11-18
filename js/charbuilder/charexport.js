@@ -18,6 +18,7 @@ class CharacterExportFvtt{
 
         //#region CLASS
         const classData = await CharacterExportFvtt.getClassData(builder.compClass);
+        console.log("CLASS DATA OUT", classData);
         let classArray = null;
         for(let i = 0; i < classData.length; ++i){
             const data = classData[i];

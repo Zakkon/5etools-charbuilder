@@ -568,9 +568,9 @@ class ActorCharactermancerClass extends ActorCharactermancerBaseComponent {
       return this._existingClassMetas;
     }
     /**Load some information prior to first rendering. Just to do with loading from the modal and loading existing data from actor */
-    async pLoad() {
+    async pLoad(character) {
       await this._modalFilterClasses.pPreloadHidden();
-      if(this._actor){await this._doHandleExistingClassItems(this._actor.classes);}
+      if(this._actor){await this._doHandleExistingClassItems(character.classes);}
     }
     async setStateFromSaveFile(actor){
         //Some of this loading logic has been moved to pLoad, which runs right before render
@@ -1727,6 +1727,7 @@ class ActorCharactermancerClass extends ActorCharactermancerBaseComponent {
             cls.targetLevel = state[`${part}targetLevel`];
             const data = this._getClass({ix:cls.ixClass});
             cls.uid = UrlUtil.URL_TO_HASH_GENERIC({name:data.name, source:data.source}).toLowerCase();
+            cls.path = part + "class";
             /*Information we need to pull:
             - skill proficiencies (usually you get 2 at the start, may also include tools)
             - starting proficiencies (weapon and armor proficiencies, saving throw proficiencies)
@@ -1735,6 +1736,7 @@ class ActorCharactermancerClass extends ActorCharactermancerBaseComponent {
             - featureOptionsSelect
             */
             cls.hpInfo = await getData(this._compsClassHpInfo, part + "hpInfo");
+            cls.hpIncreaseMode = await getData(this._compsClassHpIncreaseMode, part + "hpIncreaseMode");
             cls.skillProficiencies = await getData(this._compsClassSkillProficiencies, part + "skillProf");
             cls.featureOptionsSelect = await getData(this._compsClassFeatureOptionsSelect, part + "fos");
             out.classes.push(cls);
@@ -1850,7 +1852,7 @@ class Charactermancer_Class_HpInfo extends BaseComponent {
     get hitDice(){return this._hitDice;} //How many faces, not how many dice
     get hitPointsAtFirstLevel() { return Renderer.class.getHitPointsAtFirstLevel(this._hitDice); }
     pGetFormData(){
-        return {data:{hitDice: this.hitDice, hitPointsAtFirstLevel: this.hitPointsAtFirstLevel}};
+        return {data:{hitDice: this.hitDice, hitPointsAtFirstLevel: Renderer.class.getHitPointsAtFirstLevel(this._hitDice, {styleHint:"formula"})}};
     }
    
 }
@@ -7069,7 +7071,7 @@ class ActorCharactermancerRace extends ActorCharactermancerBaseComponent {
     get ["compRaceConditionImmunity"]() {
       return this._compRaceConditionImmunity;
     }
-    async pLoad() {
+    async pLoad(character) {
       await this._modalFilterRaces.pPreloadHidden();
       if(SETTINGS.USE_EXISTING_WEB){
         //console.log(this._actor?.race);
@@ -7131,7 +7133,7 @@ class ActorCharactermancerRace extends ActorCharactermancerBaseComponent {
     _test_DoHandleExistingRace(existingRace){
         if(!existingRace || !existingRace.race){return;}
         const raceInfo = existingRace.race;
-        const { ixRace: ixRace, ixRaceVersion: ixRaceVersion } = this._test_getExistingRaceIndex(raceInfo);
+        const { ixRace: ixRace, ixRaceVersion: ixRaceVersion } = this._getExistingRaceIndex(raceInfo);
         const isRacePresent = !!ixRace;
         if(!isRacePresent){
             //throw error
@@ -7150,7 +7152,7 @@ class ActorCharactermancerRace extends ActorCharactermancerBaseComponent {
             }
         }
     }
-    _test_getExistingRaceIndex(race){
+    _getExistingRaceIndex(race){
         const raceNameLower = race.name.trim().toLowerCase();//(IntegrationBabele.getOriginalName(race) || '').trim().toLowerCase();
         let outIxRace = -1;
         let outIxRaceVersion = null;
@@ -7175,13 +7177,14 @@ class ActorCharactermancerRace extends ActorCharactermancerBaseComponent {
     }
     /**
      * Sets the state of the StatgenUI based on a save file. This should be called just after first render.
-     * @param {{race:{race:any, stateInfo:any}}} actor
+     * @param {{race:{race:any, stateInfo:{subcomps:any, _compRaceSize:any}}}} actor
      */
     setStateFromSaveFile(actor){
+        console.log("RACE STATE", actor);
         if(!actor || !actor.race){return;}
         const data = actor.race;
         const raceInfo = data.race;
-        const { ixRace: ixRace, ixRaceVersion: ixRaceVersion } = this._test_getExistingRaceIndex(raceInfo);
+        const { ixRace: ixRace, ixRaceVersion: ixRaceVersion } = this._getExistingRaceIndex(raceInfo);
         const isRacePresent = ixRace>=0;
         if(!isRacePresent){
             //throw error
@@ -7238,6 +7241,62 @@ class ActorCharactermancerRace extends ActorCharactermancerBaseComponent {
         }
     }
     _getDefaultState() { return {race_ixRace: null, race_ixRace_version: null}; }
+
+    async getChoiceData(){
+
+        async function getData(components, path, ignoreIfIncomplete=false){
+            const forms = await fnGetFormData(components, path);
+            //return fnMergeData(forms, ignoreIfIncomplete);
+            return forms;
+        }
+        async function fnGetFormData(components, path) {
+            let arr = [];
+            for(let i = 0; i < components.length; ++i){
+                let c = components[i];
+                if(Array.isArray(c)){
+                    let result = await fnGetFormData(c, `${path}_${i}`);
+                    arr = arr.concat(result); continue;}
+                let data = await c.pGetFormData();
+                data.path = `${path}_${i}`;
+                arr.push(data);
+            }
+            return arr;
+        }
+        function fnMergeData(forms, ignoreIfIncomplete){
+            let merged = {};
+            for(let f of forms){
+                if(ignoreIfIncomplete && !f.isFormComplete){continue;}
+                merged = Object.assign(merged, f.data);
+            }
+            return merged;
+        }
+        
+        const actor = CharacterBuilder.instance._actor;
+        const state = this.__state;
+        console.log("RACE COMP", this);
+        let out = {};
+        out.races = [];
+        if(state.race_ixRace != null){ //Only let user have one race for now
+            const part = "race_" + "0" + "_";
+            let r = {};
+            r.ixRace = state.race_ixRace;
+            r.ixRaceVersion = state.race_ixRace_version;
+            const data = this._data.race[r.ixRace];
+            r.uid = UrlUtil.URL_TO_HASH_GENERIC({name:data.name, source:data.source}).toLowerCase();
+            r.path = part + "race";
+            /*Information we need to pull:
+            - skill proficiencies (usually you get 2 at the start, may also include tools)
+            - starting proficiencies (weapon and armor proficiencies, saving throw proficiencies)
+            - hp increase mode
+            - hp info
+            - featureOptionsSelect
+            */
+            r.languageProficiencies = await getData(this._compRaceLanguageProficiencies, part + "languageProficiencies");
+            //What about language choices?
+            out.races.push(r);
+        }
+        return out;
+    }
 }
 
 class Charactermancer_Race_Util {
@@ -7695,7 +7754,7 @@ class ActorCharactermancerBackground extends ActorCharactermancerBaseComponent {
     get isCustomizeLanguagesTools() {
       return this._state.background_isCustomizeLanguagesTools;
     }
-    async pLoad() {
+    async pLoad(character) {
       await this._modalFilterBackgrounds.pPreloadHidden();
     }
     getFeatureCustomizedBackground_({
@@ -7937,6 +7996,56 @@ class ActorCharactermancerBackground extends ActorCharactermancerBaseComponent {
         'background_isCustomizeLanguagesTools': false,
         'background_pulseBackground': false
       };
+    }
+
+    async getChoiceData(){
+
+        async function getData(components, path, ignoreIfIncomplete=false){
+            const forms = await fnGetFormData(components, path);
+            //return fnMergeData(forms, ignoreIfIncomplete);
+            return forms;
+        }
+        async function fnGetFormData(components, path) {
+            let arr = [];
+            for(let i = 0; i < components.length; ++i){
+                let c = components[i];
+                if(Array.isArray(c)){
+                    let result = await fnGetFormData(c, `${path}_${i}`);
+                    arr = arr.concat(result); continue;}
+                let data = await c.pGetFormData();
+                data.path = `${path}_${i}`;
+                arr.push(data);
+            }
+            return arr;
+        }
+        function fnMergeData(forms, ignoreIfIncomplete){
+            let merged = {};
+            for(let f of forms){
+                if(ignoreIfIncomplete && !f.isFormComplete){continue;}
+                merged = Object.assign(merged, f.data);
+            }
+            return merged;
+        }
+        
+        const actor = CharacterBuilder.instance._actor;
+        const state = this.__state;
+        console.log("BG COMP", this);
+        let out = {};
+        out.backgrounds = [];
+        if(state.background_ixBackground != null){ //Only let user have one background for now
+            const part = "background" + "0" + "_";
+            let bg = {};
+            bg.ixBackground = state.background_ixBackground;
+            bg.customLanguagesTools = state.background_isCustomizeLanguagesTools;
+            bg.customSkills = state.background_isCustomizeSkills;
+            const data = this._data.background[bg.ixBackground];
+            bg.uid = UrlUtil.URL_TO_HASH_GENERIC({name:data.name, source:data.source}).toLowerCase();
+            bg.path = part + "background";
+            bg.characteristics = await getData(this._compBackgroundCharacteristics, part + "characteristics");
+            //What about language choices?
+            out.backgrounds.push(bg);
+        }
+        return out;
     }
 }
 ActorCharactermancerBackground._ENTRY_CUSTOMIZING = {
@@ -10739,7 +10848,7 @@ class ActorCharactermancerSpell extends ActorCharactermancerBaseComponent {
     get compsSpellAdditionalSpellSubclass() {
       return this._compsSpellAdditionalSpellSubclass;
     }
-    async pLoad() {
+    async pLoad(character) {
       await this._modalFilterSpells.pPreloadHidden();
     }
     
@@ -14157,7 +14266,7 @@ class ActorCharactermancerFeat extends ActorCharactermancerBaseComponent {
     get modalFilterFeats() {
       return this._modalFilterFeats;
     }
-    async pLoad() {
+    async pLoad(character) {
       await this._modalFilterFeats.pPreloadHidden();
     }
 

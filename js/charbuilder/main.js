@@ -415,6 +415,8 @@ class SETTINGS{
     static LOCK_SUBCLASS_LOWLVL = false;
     static ENABLE_SOURCE_UPLOAD_FILE = false;
     static ENABLE_SOURCE_CUSTOM_URL = false;
+    static SHEET_ISEDITABLE = false;
+    static SHEET_MANCER_RECREATES_SHEET = true;
 }
 class CharacterBuilder {
     tabButtonParent;
@@ -471,6 +473,7 @@ class CharacterBuilder {
       //Try to load a character from cookies using a cookie uid
       const charInfo = existingUid? CookieManager.getCharacterInfo(existingUid).result : null;
       if(!!charInfo){ //If that succeded, load the character stored in the cookie
+        console.log("loaded charinfo", charInfo);
         this._actor = new Actor5e(charInfo.actor);
         CharacterBuilder.currentUid = existingUid; //And cache the uid we used, available publicly to read
       }
@@ -520,7 +523,7 @@ class CharacterBuilder {
         //this.actor.character = System5e.extendSchema_Character(this.actor.character, character.character?.system);
       }
 
-      await this._pLoad();
+      await this._pLoad(character);
 
       
       //APPLY FILTERS
@@ -560,6 +563,7 @@ class CharacterBuilder {
       return true;
 
     }
+    
 
     _createTabs($wrp){
         const tabHolder = $$`<div class="w-100 no-shrink ui-tab__wrp-tab-heads--border tab_button_holder"></div>`.appendTo($wrp);
@@ -602,7 +606,8 @@ class CharacterBuilder {
             //Exit charactermancer, go to sheet view
             console.log("mancer", this.compClass);
             
-            this.compClass.getChoiceData().then((choiceData)=>{
+
+            this.getChoiceData().then((choiceData)=>{
               CharacterBuilder.parseMancerChoiceData(this._actor, choiceData).then(()=>{
                 this.e_switchTab("sheet");
               });
@@ -648,15 +653,15 @@ class CharacterBuilder {
         this.tabDescription = newPanel();
         this.tabSheet = newPanel();
     }
-    async _pLoad(){
+    async _pLoad(character){
         if(!SETTINGS.FILTERS){return;}
-        await this.compRace.pLoad();
-        await this.compBackground.pLoad();
+        await this.compRace.pLoad(character);
+        await this.compBackground.pLoad(character);
         //This sets state based on what is in the savefile (if USE_EXISTING_WEB) is true
         //Only handles class, subclass, level and isPrimary
-        await this.compClass.pLoad();
-        await this.compSpell.pLoad();
-        await this.compFeat.pLoad();
+        await this.compClass.pLoad(character);
+        await this.compSpell.pLoad(character);
+        await this.compFeat.pLoad(character);
     }
     async loadCachedFilters(charInfo){
       if(charInfo?._meta?.filters == null){return;}
@@ -961,61 +966,104 @@ class CharacterBuilder {
   }
   //#endregion
 
+  async getChoiceData(){
+    let classData = await this.compClass.getChoiceData();
+    let raceData = await this.compRace.getChoiceData();
+    let backgroundData = await this.compBackground.getChoiceData();
+    let targetData = {};
+    targetData = Object.assign(targetData, classData, raceData, backgroundData);
+    return targetData;
+  }
+  //#region Parse Mancher Choice Data
   /**
-   * Description
+   * Parses choices made in the charactermancer, and applies them to the sheet
    * @param {Actor5e} actor
    * @param {any} choiceData
    * @returns {any}
    */
   static async parseMancerChoiceData(actor, choiceData){
 
-    console.log(choiceData);
+    console.log("ChoiceData", choiceData);
     //System5e.applyClassChoiceData(actor, choiceData);
     const addFeatureItem = async(type, hash, dependencyPath) => {
       //Add new feature item to update pool
       //f.type should be either "optionalfeature"(lowercase spelling), "feat", "classFeature", or "subclassFeature"
-      if(type != "optionalfeature"){return;}
-      await OptionalFeature5e.verifySystemData(hash);
-      let featureItem = new OptionalFeature5e(hash, null, false);
-      featureItem.markMancerDependency(new MancerDependencyLink(dependencyPath));
-      System5e.tryAddToInventory(actor, featureItem, "passive", {doNotRender:true});
+      
+      switch(type){
+        case "optionalfeature":
+          await OptionalFeature5e.verifySystemData(hash);
+          let featureItem = new OptionalFeature5e(hash, null, false);
+          featureItem.markMancerDependency(new MancerDependencyLink(dependencyPath));
+          System5e.tryAddToInventory(actor, featureItem, "passive", {doNotRender:true});
+          return featureItem;
+        case "class":
+          //await Class5e.verifySystemData(hash);
+          let classItem = new Class5e(hash, null, false);
+          classItem.markMancerDependency(new MancerDependencyLink(dependencyPath));
+          System5e.tryAddToInventory(actor, classItem, "class", {doNotRender:true});
+          return classItem;
+        case "background":
+          //await Class5e.verifySystemData(hash);
+          let backgroundItem = new Background5e(hash, null, false);
+          backgroundItem.markMancerDependency(new MancerDependencyLink(dependencyPath));
+          System5e.tryAddToInventory(actor, backgroundItem, "background", {doNotRender:true});
+          return backgroundItem;
+        case "race":
+          let raceItem = new Race5e(hash, null, false);
+          raceItem.markMancerDependency(new MancerDependencyLink(dependencyPath));
+          System5e.tryAddToInventory(actor, raceItem, "race", {doNotRender:true});
+          return raceItem;
+        default:
+          return null;
+      }
+      
     }
     const removeFeatureItem = (it) => {
       //Or just add to removal pool
       actor.removeEmbeddedDocuments("item", [it]);
     }
-
-    //Mark all mancer-given features on actor as unverified
     const isMancerGranted = (item) => {
       console.log("Is Granted?", item.isMancerCreated, item);
       return item.isMancerCreated;
     }
-    let allItems = actor.getItemsByUid("*").filter(it => isMancerGranted(it) == true);
-    let itemsVerified = new Array(allItems.length).fill(false);
-    //Then try to verify each one, and add new (already verified) features on to the sheet if needed
     const findItemMatch = (path, uid) => {
       for(let i = 0; i < allItems.length; ++i){
         if(allItems[i].isMancerDependencyMatch(path) && allItems[i].uid == uid){return i;}
       }
       return -1;
     }
-
+    //Reset actor if settings demand it
+    if(SETTINGS.SHEET_MANCER_RECREATES_SHEET){
+      actor = new Actor5e();
+      CharacterBuilder.instance._actor = actor;
+      ActorCharactermancerSheet2.instance.setup(actor);
+    }
+    console.assert(SETTINGS.SHEET_MANCER_RECREATES_SHEET == true, "Sheet recreation mode is currently the only mode supported");
+    //Mark all mancer-given features on actor as unverified
+    let allItems = actor.getItemsByUid("*").filter(it => isMancerGranted(it) == true);
+    let itemsVerified = new Array(allItems.length).fill(false);
+    //Then try to verify each one, and add new (already verified) features on to the sheet if needed
 
     let updatePool = {};
 
     for(let cls of choiceData.classes){
+      addFeatureItem("class", cls.uid, cls.path);
       //HIT POINTS
       for(let form of cls.hpInfo){
-        let hp = form.data.hitPointsAtFirstLevel;
-        updatePool[`hp.value`] = hp;
-        updatePool[`hp.max`] = hp;
+        let hpFormula = form.data.hitPointsAtFirstLevel;
+        let hpNum = Roll._evaluateSync(Roll.replaceFormulaData(hpFormula, actor.system));
+        updatePool[`hp.value`] = hpNum;
+        updatePool[`hp.max`] = hpNum;
+        //updatePool["attributes.hd"] = ???
       }
       //SKILL PROFICIENCIES
       //First, reset existing skills
-      for(let [skillName, skill] of Object.entries(actor.skills)){
+      if(!SETTINGS.SHEET_MANCER_RECREATES_SHEET){
+        for(let [skillName, skill] of Object.entries(actor.skills)){
         skill.baseProf = 0; //No proficiency
         const newSkill = System5e.calcSkillEmbed(skill, actor.system.abilities, actor.system.attributes.prof);
         updatePool[`skills.${skillName}`] = newSkill;
+        }
       }
       //Then, apply skills we gained from class
       for(let form of cls.skillProficiencies){
@@ -1038,6 +1086,16 @@ class CharacterBuilder {
         }
       }
     }
+    for(let race of choiceData.races){
+      let raceItem = await addFeatureItem("race", race.uid, race.path);
+      updatePool["system.details.race"] = {name:raceItem.name};
+      //Movement speed
+      console.log("RACE ITEM", raceItem);
+    }
+    for(let bg of choiceData.backgrounds){
+      let bgItem = await addFeatureItem("background", bg.uid, bg.path);
+      updatePool["system.details.background"] = {name:bgItem.name};
+    }
 
     //Then remove all unverified features
     console.log("items to verify:", allItems);
@@ -1047,8 +1105,12 @@ class CharacterBuilder {
       if(!isVerified){console.log(it.uid, "remains unverified!"); removeFeatureItem(it);}
     }
 
-    actor.update(updatePool); //Forces render
+    actor.update(updatePool, {doNotFireUpdate:true});
+    //Movement speed?
+    actor.movement = actor._getMovementSpeed(actor.system, false);
+    actor.update(); //Forces render
   }
+  //#endregion
 }
 /**A wrapper for a div that contains components. Only used by CharacterBuilder */
 class CharacterBuilderPanel {

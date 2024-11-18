@@ -10,7 +10,6 @@ class ActorCharactermancerSheet2 extends ActorCharactermancerSheet {
         super(main);
         ActorCharactermancerSheet2.instance = this;
 
-        this.actor = main._actor; //Create a new actor
         //Let's give the actor some items
         //System5e.tryAddToInventory_Item(this.actor, null, "dagger|phb", 1, "weapon");
 
@@ -27,11 +26,18 @@ class ActorCharactermancerSheet2 extends ActorCharactermancerSheet {
         }); */
         //let ent = CharacterBuilder.getEntityByUid("optionalfeature", {uid:"archery_phb"});
         //console.log("ARCHERY:", ent);
+        this.setup(main._actor);
+    }
+    setup(actor){
+        console.log("ACTOR", actor);
+        this.actor = actor; //Create a new actor
         let hash = "archery_phb";
         OptionalFeature5e.verifySystemData(hash).then(() => {
             let featureItem = new OptionalFeature5e(hash, null, false);
             console.log(featureItem);
-            System5e.tryAddToInventory(this._actor, featureItem, "passive", {doNotRender:true});
+            
+        console.log("ACTOR2", actor);
+            System5e.tryAddToInventory(actor, featureItem, "passive", {doNotRender:true});
         });
 
         let inv = new TestInventoryElement(this.actor);
@@ -61,7 +67,7 @@ class ActorCharactermancerSheet2 extends ActorCharactermancerSheet {
         });
     }
 
-    render(charInfo){
+    render(){
         
         if(!this.$sheet){this.preRender();}
         let parentElement = this.$sheet; //Should be a jquery object

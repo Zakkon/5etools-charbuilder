@@ -569,7 +569,7 @@ class Race5e extends Feature5e{
     constructor(itemUid, collectionId=null, isCustom=false){
         super(itemUid, collectionId, isCustom);
         this.type = "race";
-        //if(!this.isCustom){this._tryCloneOriginal(CharacterBuilder.getSpellByUid(this.uid));}
+        if(!this.isCustom){this._tryCloneOriginal(CharacterBuilder.getEntityByUid("race", {uid: this.uid}));}
 
         if(!Entity5e.use_overrides){return this;}
         return this._createProxy();
@@ -579,7 +579,7 @@ class Background5e extends Feature5e{
     constructor(itemUid, collectionId=null, isCustom=false){
         super(itemUid, collectionId, isCustom);
         this.type = "background";
-        //if(!this.isCustom){this._tryCloneOriginal(CharacterBuilder.getSpellByUid(this.uid));}
+        if(!this.isCustom){this._tryCloneOriginal(CharacterBuilder.getEntityByUid("background", {uid: this.uid}));}
 
         if(!Entity5e.use_overrides){return this;}
         return this._createProxy();
@@ -715,7 +715,7 @@ class Actor5e {
         this._mancerDependencies = {};
         if(saveData != null){this._loadFromSaveData(saveData);}
         else{this._createFakeCharacterData();}
-        this.owner = true;
+        this.owner = SETTINGS.SHEET_ISEDITABLE;
     }
 
     _loadFromSaveData(data){
@@ -737,10 +737,13 @@ class Actor5e {
         }
     }
     
-    update(data){
-        for(let [key, value] of Object.entries(data)){
-            this.setProp(key, value);
+    update(data, options){
+        if(data != null){
+            for(let [key, value] of Object.entries(data)){
+                this.setProp(key, value);
+            }
         }
+        if(options?.doNotFireUpdate){return;}
         //Fire item update
         System5e.hkActorUpdated(this.collectionId);
     }
@@ -931,10 +934,16 @@ class Actor5e {
                     else{this.spellbook[it.system.level].spells.push(it);}
                     break;
                 case "feature":
+                case "background":
+                case "race":
+                case "class":
                     this.features[it.type].items.push(it);
                     break;
-                default:
+                case "item":
                     this.inventory[it.type].items.push(it);
+                    break;
+                default:
+                    console.error("Could not add entity of entityType", it.entityType, ", not sure where to put it");
                     break;
             }
         }

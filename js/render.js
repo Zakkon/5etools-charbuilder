@@ -6182,6 +6182,10 @@ Renderer.class = class {
 
 		styleHint ||= VetoolsConfig.get("styleSwitcher", "style");
 
+		if(styleHint === "formula"){
+			return `${clsHd.number * clsHd.faces} + @abilities.con.mod`;
+		}
+
 		return styleHint === "classic"
 			? `${clsHd.number * clsHd.faces} + your Constitution modifier`
 			: `${clsHd.number * clsHd.faces} + Con. modifier`;

@@ -26,7 +26,9 @@ class Roll{
         this.terms = terms;
     }
     evaluateSync(){
-        const formula = this._formula;
+        return Roll._evaluateSync(this._formula);
+    }
+    static _evaluateSync(formula){
         // Use a regular expression to validate that the formula only contains numbers, spaces, and arithmetic operators
         if (/^[\d\s+\-*/().]+$/.test(formula)) {
             try {
