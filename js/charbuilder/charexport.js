@@ -191,7 +191,7 @@ class CharacterExportFvtt{
         filters.feat = builder.compFeat.modalFilterFeats._pageFilter._filterBox.getValues();
         _meta.filters = filters;
 
-        const output = {character: _char, _meta:_meta, actor:builder._actor};
+        const output = {mancerData: _char, _meta:_meta, actor:builder._actor};
 
         console.log("Export Character", output);
         let importStr = this.test_printExportJsonAsString(output);

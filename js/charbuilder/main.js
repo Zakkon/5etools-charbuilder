@@ -440,8 +440,10 @@ class CharacterBuilder {
     tabs;
     _featureSourceTracker;
     _actor;
+    _mancerData;
     instance;
     get actor(){return this._actor;}
+    get mancerData(){return this._mancerData;}
     static useHeaderTitleAndReturnButton = false;
     static enableSaveToFile = true;
     
@@ -474,20 +476,13 @@ class CharacterBuilder {
       const charInfo = existingUid? CookieManager.getCharacterInfo(existingUid).result : null;
       if(!!charInfo){ //If that succeded, load the character stored in the cookie
         console.log("loaded charinfo", charInfo);
-        this._actor = new Actor5e(charInfo.actor);
+        this._actor = new Actor5e(charInfo.actor); //Charinfo.actor contains actor data
+        this._mancerData = charInfo.mancerData; //Contains the save data used by the charactermancer
         CharacterBuilder.currentUid = existingUid; //And cache the uid we used, available publicly to read
       }
       else { //If that failed, just create a fresh uid for the blank character we are about to show
-        this._actor = new Actor5e();/* {
-          character:{
-            system:{
-              override:{},
-              inventory:{
-                items:[],
-              }
-            }
-          }
-        } */
+        this._actor = new Actor5e();
+        this._mancerData = null;
         CharacterBuilder.currentUid = CookieManager.createUid();
       }
 
@@ -517,13 +512,13 @@ class CharacterBuilder {
     }
 
     async _pRenderTest(charInfo){
-      const character = charInfo?.character;
-      const doLoad = !!character;
+      const mancerData = charInfo?.mancerData;
+      const doLoad = !!mancerData;
       if(doLoad){
         //this.actor.character = System5e.extendSchema_Character(this.actor.character, character.character?.system);
       }
 
-      await this._pLoad(character);
+      await this._pLoad(mancerData);
 
       
       //APPLY FILTERS
@@ -542,19 +537,19 @@ class CharacterBuilder {
 
       await this.compSpell.pRender();
       await this.compFeat.render();
-      if(doLoad){this.compDescription.setStateFromSaveFile(character);}
+      if(doLoad){this.compDescription.setStateFromSaveFile(mancerData);}
       await this.compDescription.render();
 
 
-      if(doLoad){this.compBackground.setStateFromSaveFile(character);}
-      if(doLoad){this.compRace.setStateFromSaveFile(character);}
-      if(doLoad){this.compAbility.setStateFromSaveFile(character);}
-      if(doLoad){this.compSpell.setStateFromSaveFile(character);}
-      if(doLoad){this.compEquipment.setStateFromSaveFile(character);}
-      if(doLoad){await this.compClass.setStateFromSaveFile(character);}
+      if(doLoad){this.compBackground.setStateFromSaveFile(mancerData);}
+      if(doLoad){this.compRace.setStateFromSaveFile(mancerData);}
+      if(doLoad){this.compAbility.setStateFromSaveFile(mancerData);}
+      if(doLoad){this.compSpell.setStateFromSaveFile(mancerData);}
+      if(doLoad){this.compEquipment.setStateFromSaveFile(mancerData);}
+      if(doLoad){await this.compClass.setStateFromSaveFile(mancerData);}
 
       
-      if(doLoad){await this.compFeat.setStateFromSaveFile(character);}
+      if(doLoad){await this.compFeat.setStateFromSaveFile(mancerData);}
 
       if(doLoad){this.compSheet.loadFromState(charInfo._meta.sheet);}
       this.compSheet.render(charInfo);

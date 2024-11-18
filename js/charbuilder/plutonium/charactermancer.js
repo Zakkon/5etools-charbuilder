@@ -116,7 +116,7 @@ class ActorCharactermancerBaseComponent extends BaseComponent {
 class ActorCharactermancerClass extends ActorCharactermancerBaseComponent {
     _data;
     _tabClass;
-    _actor;
+    _mancerData;
 
     /**
      * @param {{parent:CharacterBuilder}} parentInfo
@@ -125,7 +125,7 @@ class ActorCharactermancerClass extends ActorCharactermancerBaseComponent {
     constructor(parentInfo) {
       parentInfo = parentInfo || {};
       super();
-      this._actor = parentInfo.actor;
+      this._mancerData = parentInfo.mancerData;
       this._data = parentInfo.data; //data is an object containing information about all classes, subclasses, feats, etc
       this._parent = parentInfo.parent;
       this._tabClass = parentInfo.tabClass;
@@ -568,9 +568,9 @@ class ActorCharactermancerClass extends ActorCharactermancerBaseComponent {
       return this._existingClassMetas;
     }
     /**Load some information prior to first rendering. Just to do with loading from the modal and loading existing data from actor */
-    async pLoad(character) {
+    async pLoad(mancerData) {
       await this._modalFilterClasses.pPreloadHidden();
-      if(this._actor){await this._doHandleExistingClassItems(character.classes);}
+      if(this._mancerData){await this._doHandleExistingClassItems(mancerData.classes);}
     }
     async setStateFromSaveFile(actor){
         //Some of this loading logic has been moved to pLoad, which runs right before render
@@ -1086,11 +1086,11 @@ class ActorCharactermancerClass extends ActorCharactermancerBaseComponent {
                 //TEMPFIX
                 let existing = {};
                 let existingFvtt = null;
-                if (SETTINGS.USE_EXISTING && this._actor){
-                    existingFvtt = { skillProficiencies: MiscUtil.get(this._actor, "_source", "system", propSystem) };
+                if (SETTINGS.USE_EXISTING && this._mancerData){
+                    existingFvtt = { skillProficiencies: MiscUtil.get(this._mancerData, "_source", "system", propSystem) };
                     existing = Charactermancer_OtherProficiencySelect.getExisting(existingFvtt);
                 }
-                else if(SETTINGS.USE_EXISTING_WEB && this._actor){
+                else if(SETTINGS.USE_EXISTING_WEB && this._mancerData){
                     //Filling in 'existing' will only mark a choice as (you already have this proficiency from another source)
                     //existing = this._actor.classes[ix].skillProficiencies.data;
                 }
@@ -1105,13 +1105,12 @@ class ActorCharactermancerClass extends ActorCharactermancerBaseComponent {
                 this[propCompsClass][ix].render(parentElement);
 
                 //LOAD FROM SAVE FILE
-                console.log("CLASSES", this._actor); //BUG HERE
                 //Set state to component AFTER first render, this way all other components have hooks set up and can react to the changes we are about to make
-                if(SETTINGS.USE_EXISTING_WEB && ix < this._actor?.classes?.length){
+                if(SETTINGS.USE_EXISTING_WEB && ix < this._mancerData?.classes?.length){
                     //So we can set the state of the proficiency select component here
                     const comp = this[propCompsClass][ix];
                     //Make sure this is the same class
-                    if(SETTINGS.TRANSFER_CHOICES || (this._actor.classes[ix].name == cls.name && this._actor.classes[ix].source == cls.source)){
+                    if(SETTINGS.TRANSFER_CHOICES || (this._mancerData.classes[ix].name == cls.name && this._mancerData.classes[ix].source == cls.source)){
                         const chooseOptions =  proficiencies[0]; //Proficiencies is an array, usually only with one entry
                         //This should be a secure way to get the options we have to pick from, regardless if it is choose from, or choose any
                         
@@ -1124,8 +1123,8 @@ class ActorCharactermancerClass extends ActorCharactermancerBaseComponent {
                             if(propCompsClass == "_compsClassToolProficiencies"){mode = "tools"};
 
                             let chosenProficiencies = {}
-                            if(mode == "skills"){chosenProficiencies = this._actor.classes[ix].skillProficiencies?.data?.skillProficiencies;}
-                            else if (mode == "tools"){chosenProficiencies = this._actor.classes[ix].toolProficiencies?.data?.toolProficiencies;}
+                            if(mode == "skills"){chosenProficiencies = this._mancerData.classes[ix].skillProficiencies?.data?.skillProficiencies;}
+                            else if (mode == "tools"){chosenProficiencies = this._mancerData.classes[ix].toolProficiencies?.data?.toolProficiencies;}
 
                             //Its possible that one class outputs null on either tools or skills because they dont provide an option
                             const chosenNames = !!chosenProficiencies? Object.keys(chosenProficiencies) : [];
@@ -1185,9 +1184,9 @@ class ActorCharactermancerClass extends ActorCharactermancerBaseComponent {
                 'primaryProficiencies': cls.startingProficiencies,
                 'multiclassProficiencies': cls.multiclassing?.proficienciesGained,
                 'savingThrowsProficiencies': cls.proficiency,
-                'existingProficienciesFvttArmor': MiscUtil.get(this._actor, "_source", "system", "traits", "armorProf"),
-                'existingProficienciesFvttWeapons': MiscUtil.get(this._actor, '_source', "system", "traits", "weaponProf"),
-                'existingProficienciesFvttSavingThrows': Charactermancer_Class_StartingProficiencies.getExistingProficienciesFvttSavingThrows(this._actor)
+                'existingProficienciesFvttArmor': MiscUtil.get(this._mancerData, "_source", "system", "traits", "armorProf"),
+                'existingProficienciesFvttWeapons': MiscUtil.get(this._mancerData, '_source', "system", "traits", "weaponProf"),
+                'existingProficienciesFvttSavingThrows': Charactermancer_Class_StartingProficiencies.getExistingProficienciesFvttSavingThrows(this._mancerData)
             });
             this._compsClassStartingProficiencies[ix].render(element);
         }
@@ -1219,13 +1218,13 @@ class ActorCharactermancerClass extends ActorCharactermancerBaseComponent {
     _class_getExistingClassMeta(classIx) {
       if (this._existingClassMetas[classIx]) {return this._existingClassMetas[classIx];}
       console.warn("Creating new ExistingClassMeta. Not tested!");
-      if(!this._actor){return null;}
+      if(!this._mancerData){return null;}
 
       const {propIxClass: propIxClass } = ActorCharactermancerBaseComponent.class_getProps(classIx);
 
       const cls = this._getClass({'propIxClass': propIxClass });
 
-      const classItems = Charactermancer_Class_Util.getExistingClassItems(this._actor, cls);
+      const classItems = Charactermancer_Class_Util.getExistingClassItems(this._mancerData, cls);
       const firstItem = classItems.length ? classItems[0] : null;
       if (!firstItem) { return null; }
       return {'item': firstItem, 'level': Number(firstItem.system.levels || 0)};
@@ -1362,7 +1361,7 @@ class ActorCharactermancerClass extends ActorCharactermancerBaseComponent {
         const previousComponents = this._compsClassFeatureOptionsSelect[ix] || [];
         previousComponents.forEach(e => this._parent.featureSourceTracker_.unregister(e)); //Unregister each of them from the feature source tracker
         stgFeatureOptions.empty();
-        const existingFeatureChecker = this._existingClassMetas[ix] ? new Charactermancer_Class_Util.ExistingFeatureChecker(this._actor) : null;
+        const existingFeatureChecker = this._existingClassMetas[ix] ? new Charactermancer_Class_Util.ExistingFeatureChecker(this._mancerData) : null;
         const importableFeatures = Charactermancer_Util.getImportableFeatures(filteredFeatures);
         const features = MiscUtil.copy(importableFeatures);
         if(SETTINGS.FILTERS){ //TEMPFIX
@@ -6805,7 +6804,7 @@ class ActorCharactermancerRace extends ActorCharactermancerBaseComponent {
     constructor(parentInfo) {
       parentInfo = parentInfo || {};
       super();
-      this._actor = parentInfo.actor;
+      this._mancerData = parentInfo.mancerData;
       this._data = parentInfo.data;
       this._parent = parentInfo.parent;
       this._tabRace = parentInfo.tabRace;
@@ -7072,7 +7071,7 @@ class ActorCharactermancerRace extends ActorCharactermancerBaseComponent {
     get ["compRaceConditionImmunity"]() {
       return this._compRaceConditionImmunity;
     }
-    async pLoad(character) {
+    async pLoad(mancerData) {
       await this._modalFilterRaces.pPreloadHidden();
       if(SETTINGS.USE_EXISTING_WEB){
         //console.log(this._actor?.race);
@@ -7086,7 +7085,7 @@ class ActorCharactermancerRace extends ActorCharactermancerBaseComponent {
     //#region FVTT
     /**This function grabs existing race from a foundryVTT actor */
     _pLoad_pDoHandleExistingRace() {
-        const myRace = this._actor.system.details?.race;
+        const myRace = this._mancerData.system.details?.race;
         if (!myRace) { return; }
         const { ixRace: ixRace, ixRaceVersion: ixRaceVersion, isRacePresent: isRacePresent }
         = this._pLoad_getExistingRaceIndex(myRace);
@@ -7391,7 +7390,7 @@ class ActorCharactermancerBackground extends ActorCharactermancerBaseComponent {
     constructor(parentInfo) {
         parentInfo = parentInfo || {};
         super();
-        this._actor = parentInfo.actor;
+        this._mancerData = parentInfo.mancerData;
         this._data = parentInfo.data;
         this._parent = parentInfo.parent;
         this._tabBackground = parentInfo.tabBackground;
@@ -7755,7 +7754,7 @@ class ActorCharactermancerBackground extends ActorCharactermancerBaseComponent {
     get isCustomizeLanguagesTools() {
       return this._state.background_isCustomizeLanguagesTools;
     }
-    async pLoad(character) {
+    async pLoad(mancerData) {
       await this._modalFilterBackgrounds.pPreloadHidden();
     }
     getFeatureCustomizedBackground_({
@@ -7872,7 +7871,7 @@ class ActorCharactermancerBackground extends ActorCharactermancerBaseComponent {
                       <div class="bold">Tool Proficiencies</div>
                       ${wrapperCheckboxIsCustomizeLanguagesTools}
                   </div>`.appendTo(parentDiv.showVe());
-        const existingFvtt = {'toolProficiencies': MiscUtil.get(this._actor, '_source', "system", 'tools')};
+        const existingFvtt = {'toolProficiencies': MiscUtil.get(this._mancerData, '_source', "system", 'tools')};
         this._compBackgroundToolProficiencies = new Charactermancer_OtherProficiencySelect({
           'featureSourceTracker': this._parent.featureSourceTracker_,
           //TEMPFIX 'existing': Charactermancer_OtherProficiencySelect.getExisting(existingFvtt),
