@@ -8001,6 +8001,7 @@ class ActorCharactermancerBackground extends ActorCharactermancerBaseComponent {
     async getChoiceData(){
 
         async function getData(components, path, ignoreIfIncomplete=false){
+            if(!Array.isArray(components)){components = [components];}
             const forms = await fnGetFormData(components, path);
             //return fnMergeData(forms, ignoreIfIncomplete);
             return forms;
@@ -8013,6 +8014,8 @@ class ActorCharactermancerBackground extends ActorCharactermancerBaseComponent {
                     let result = await fnGetFormData(c, `${path}_${i}`);
                     arr = arr.concat(result); continue;}
                 let data = await c.pGetFormData();
+                
+            console.log("FORM DATA", data);
                 data.path = `${path}_${i}`;
                 arr.push(data);
             }
@@ -8041,6 +8044,8 @@ class ActorCharactermancerBackground extends ActorCharactermancerBaseComponent {
             const data = this._data.background[bg.ixBackground];
             bg.uid = UrlUtil.URL_TO_HASH_GENERIC({name:data.name, source:data.source}).toLowerCase();
             bg.path = part + "background";
+            console.log("GET LANG", this);
+            bg.languages = await getData(this._compBackgroundLanguageProficiencies, part + "languages");
             bg.characteristics = await getData(this._compBackgroundCharacteristics, part + "characteristics");
             //What about language choices?
             out.backgrounds.push(bg);

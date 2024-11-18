@@ -646,6 +646,9 @@ class ClassFeature5e extends Feature5e{
         this.system = imported.system; //TEMPFIX
     }
     static async verifySystemData(hash, className, classSource){
+        console.assert(className != null, "Class name is null!");
+        console.assert(classSource != null, "Class source is null!");
+        console.assert(hash != null, "Class Feature hash is null!");
         const existingData = CharacterBuilder.getClassFeatureByUid(hash, className, classSource);
         if(existingData.system){return;}
         //No system data exists, go ahead and import
@@ -716,6 +719,7 @@ class Actor5e {
         if(saveData != null){this._loadFromSaveData(saveData);}
         else{this._createFakeCharacterData();}
         this.owner = SETTINGS.SHEET_ISEDITABLE;
+        this.isCharacter = true;
     }
 
     _loadFromSaveData(data){
@@ -847,6 +851,13 @@ class Actor5e {
                 label: "Passive Abilities",
                 dataset: {type: "passive"},
                 items: [],
+            }
+        }
+        this.traits = {
+            traits: {
+                languages:{
+
+                }
             }
         }
 

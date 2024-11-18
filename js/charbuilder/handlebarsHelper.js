@@ -122,6 +122,7 @@ class HandlebarsHelper{
         fetch("dnd5e.inventory", "inventory_dnd5e");
         fetch("dnd5e.actor-spellbook", "parts/actor-spellbook");
         fetch("dnd5e.actor-features", "parts/actor-features");
+        fetch("dnd5e.actor-traits", "parts/actor-traits");
     }
     
     /**

@@ -980,7 +980,7 @@ class CharacterBuilder {
 
     console.log("ChoiceData", choiceData);
     //System5e.applyClassChoiceData(actor, choiceData);
-    const addFeatureItem = async(type, hash, dependencyPath) => {
+    const addFeatureItem = async(type, hash, dependencyPath, data={}) => {
       //Add new feature item to update pool
       //f.type should be either "optionalfeature"(lowercase spelling), "feat", "classFeature", or "subclassFeature"
       
@@ -1008,6 +1008,12 @@ class CharacterBuilder {
           raceItem.markMancerDependency(new MancerDependencyLink(dependencyPath));
           System5e.tryAddToInventory(actor, raceItem, "race", {doNotRender:true});
           return raceItem;
+        case "classFeature":
+          await ClassFeature5e.verifySystemData(hash, data.className, data.classSource);
+          let clsFeatureItem = new ClassFeature5e(hash, data.className, data.classSource, null, false);
+          clsFeatureItem.markMancerDependency(new MancerDependencyLink(dependencyPath));
+          System5e.tryAddToInventory(actor, clsFeatureItem, "passive", {doNotRender:true});
+          return clsFeatureItem;
         default:
           return null;
       }
@@ -1040,9 +1046,18 @@ class CharacterBuilder {
     //Then try to verify each one, and add new (already verified) features on to the sheet if needed
 
     let updatePool = {};
+    let languages = [];
 
+    //#region CLASS
     for(let cls of choiceData.classes){
-      addFeatureItem("class", cls.uid, cls.path);
+      const clsData = CharacterBuilder.getEntityByUid("class", {uid: cls.uid});
+      addFeatureItem("class", cls.uid, cls.path); //Add the class item itself to our sheet
+      //CLASS FEATURES
+      console.log("CLASS DATA", clsData);
+      for(let f of clsData.classFeatures){
+        if(f.level > cls.targetLevel){continue;}
+        addFeatureItem("classFeature", f.hash, cls.path, {className:clsData.name.toLowerCase(), classSource:clsData.source.toLowerCase()});
+      }
       //HIT POINTS
       for(let form of cls.hpInfo){
         let hpFormula = form.data.hitPointsAtFirstLevel;
@@ -1051,6 +1066,7 @@ class CharacterBuilder {
         updatePool[`hp.max`] = hpNum;
         //updatePool["attributes.hd"] = ???
       }
+
       //SKILL PROFICIENCIES
       //First, reset existing skills
       if(!SETTINGS.SHEET_MANCER_RECREATES_SHEET){
@@ -1073,24 +1089,38 @@ class CharacterBuilder {
       //FEATURE OPTIONS SELECT
       for(let fos of cls.featureOptionsSelect){
         //FEATURES
-        for(let f of fos.data.features){
+        /* for(let f of fos.data.features){
           let hash = f.hash; //also known as "uid"
           let matchIndex = findItemMatch(fos.data.path, hash);
           if(matchIndex >= 0){itemsVerified[matchIndex] = true;}
           else { await addFeatureItem(f.type, hash, fos.data.path); } //If no match exists, just create a new feature
-        }
+        } */
       }
     }
+    //#endregion
+    //#region RACE
     for(let race of choiceData.races){
       let raceItem = await addFeatureItem("race", race.uid, race.path);
       updatePool["system.details.race"] = {name:raceItem.name};
       //Movement speed
       console.log("RACE ITEM", raceItem);
     }
+    //#endregion
+    //#region BACKGROUND
     for(let bg of choiceData.backgrounds){
       let bgItem = await addFeatureItem("background", bg.uid, bg.path);
       updatePool["system.details.background"] = {name:bgItem.name};
+      console.log("LANGUAGES", bg);
+      //Apply languages to language array
+      //TODO: check for duplicates
+      for(let el of bg.languages){
+        for(let [key, value] of Object.entries(el.data.languageProficiencies))
+        {
+          languages.push(key);
+        }
+      }
     }
+    //#endregion
 
     //Then remove all unverified features
     console.log("items to verify:", allItems);
@@ -1099,7 +1129,8 @@ class CharacterBuilder {
       let isVerified = itemsVerified[i];
       if(!isVerified){console.log(it.uid, "remains unverified!"); removeFeatureItem(it);}
     }
-
+      
+    updatePool["traits.traits.languages.selected"] = languages;
     actor.update(updatePool, {doNotFireUpdate:true});
     //Movement speed?
     actor.movement = actor._getMovementSpeed(actor.system, false);
