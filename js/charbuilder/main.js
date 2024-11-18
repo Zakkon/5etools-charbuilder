@@ -888,7 +888,6 @@ class CharacterBuilder {
    */
   static getEntityByUid(type, options){
     const datas = CharacterBuilder.instance._data[type];
-    console.error(type, options, datas);
     return this._getEntityByUid(datas, options);
   }
   static _getEntityByUid(from, options){
@@ -965,8 +964,9 @@ class CharacterBuilder {
     let classData = await this.compClass.getChoiceData();
     let raceData = await this.compRace.getChoiceData();
     let backgroundData = await this.compBackground.getChoiceData();
+    let abilityData = await this.compAbility.getChoiceData();
     let targetData = {};
-    targetData = Object.assign(targetData, classData, raceData, backgroundData);
+    targetData = Object.assign(targetData, classData, raceData, backgroundData, abilityData);
     return targetData;
   }
   //#region Parse Mancher Choice Data
@@ -1033,6 +1033,14 @@ class CharacterBuilder {
       }
       return -1;
     }
+    
+    const pullLanguages = (forms) => {
+      let languages = [];
+      for(let form of forms){
+        for(let [key, value] of Object.entries(form.data.languageProficiencies)){languages.push(key);}
+      }
+      return languages;
+    }
     //Reset actor if settings demand it
     if(SETTINGS.SHEET_MANCER_RECREATES_SHEET){
       actor = new Actor5e();
@@ -1048,6 +1056,11 @@ class CharacterBuilder {
     let updatePool = {};
     let languages = [];
 
+    //#region ABILITY SCORES
+    const abilityAbbr = ["str", "dex", "con", "int", "wis", "cha"];
+    for(let a of abilityAbbr){
+      updatePool[`system.abilities${a}`] = System5e.calcAbilityScoreEmbed(actor.system.abilities[`${a}`], choiceData.ability[`${a}`], actor.system.attributes.prof); }
+    //#endregion
     //#region CLASS
     for(let cls of choiceData.classes){
       const clsData = CharacterBuilder.getEntityByUid("class", {uid: cls.uid});
@@ -1104,6 +1117,7 @@ class CharacterBuilder {
       updatePool["system.details.race"] = {name:raceItem.name};
       //Movement speed
       console.log("RACE ITEM", raceItem);
+      languages = languages.concat(pullLanguages(race.languages));
     }
     //#endregion
     //#region BACKGROUND
@@ -1112,13 +1126,7 @@ class CharacterBuilder {
       updatePool["system.details.background"] = {name:bgItem.name};
       console.log("LANGUAGES", bg);
       //Apply languages to language array
-      //TODO: check for duplicates
-      for(let el of bg.languages){
-        for(let [key, value] of Object.entries(el.data.languageProficiencies))
-        {
-          languages.push(key);
-        }
-      }
+      languages = languages.concat(pullLanguages(bg.languages));
     }
     //#endregion
 
@@ -1129,7 +1137,8 @@ class CharacterBuilder {
       let isVerified = itemsVerified[i];
       if(!isVerified){console.log(it.uid, "remains unverified!"); removeFeatureItem(it);}
     }
-      
+    
+    //TODO: check for language duplicates
     updatePool["traits.traits.languages.selected"] = languages;
     actor.update(updatePool, {doNotFireUpdate:true});
     //Movement speed?

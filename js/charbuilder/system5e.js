@@ -356,6 +356,12 @@ class System5e{
         return data;
         return {label, value, ability:abilAbbr, baseValue, hover, icon, abbreviation:abilAbbr, total:mod, passive};
     }
+    static calcAbilityScoreEmbed(data, total, proficiencyModifier){
+        data.value = total;
+        data.mod = this.calcAttrMod(total);
+        data.save = this.calcAttrSave(total, data.baseProf??0, proficiencyModifier??0);
+        return data;
+    }
     //#endregion
 }
 

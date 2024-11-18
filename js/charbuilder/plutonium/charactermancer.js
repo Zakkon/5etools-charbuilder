@@ -1684,6 +1684,7 @@ class ActorCharactermancerClass extends ActorCharactermancerBaseComponent {
     async getChoiceData(){
 
         async function getData(components, path, ignoreIfIncomplete=false){
+            if(!Array.isArray(components)){components = [components];}
             const forms = await fnGetFormData(components, path);
             //return fnMergeData(forms, ignoreIfIncomplete);
             return forms;
@@ -3921,6 +3922,44 @@ class ActorCharactermancerAbility extends ActorCharactermancerBaseComponent {
                 this._compStatgen._state[prop] = val;
             }
         }
+    }
+
+    async getChoiceData(){
+
+        async function getData(components, path, ignoreIfIncomplete=false){
+            if(!Array.isArray(components)){components = [components];}
+            const forms = await fnGetFormData(components, path);
+            //return fnMergeData(forms, ignoreIfIncomplete);
+            return forms;
+        }
+        async function fnGetFormData(components, path) {
+            let arr = [];
+            for(let i = 0; i < components.length; ++i){
+                let c = components[i];
+                if(Array.isArray(c)){
+                    let result = await fnGetFormData(c, `${path}_${i}`);
+                    arr = arr.concat(result); continue;}
+                let data = await c.pGetFormData();
+                data.path = `${path}_${i}`;
+                arr.push(data);
+            }
+            return arr;
+        }
+        function fnMergeData(forms, ignoreIfIncomplete){
+            let merged = {};
+            for(let f of forms){
+                if(ignoreIfIncomplete && !f.isFormComplete){continue;}
+                merged = Object.assign(merged, f.data);
+            }
+            return merged;
+        }
+
+        console.log("ABILITY COMP", this);
+        const state = this._compStatgen.__state;
+        let out = {};
+        const abbr = ["str", "dex", "con", "int", "wis", "cha"];
+        for(let a of abbr){ out[a] = state[`common_export_${a}`]; }
+        return {ability:out};
     }
 }
 
@@ -7245,6 +7284,7 @@ class ActorCharactermancerRace extends ActorCharactermancerBaseComponent {
     async getChoiceData(){
 
         async function getData(components, path, ignoreIfIncomplete=false){
+            if(!Array.isArray(components)){components = [components];}
             const forms = await fnGetFormData(components, path);
             //return fnMergeData(forms, ignoreIfIncomplete);
             return forms;
@@ -7291,7 +7331,12 @@ class ActorCharactermancerRace extends ActorCharactermancerBaseComponent {
             - hp info
             - featureOptionsSelect
             */
-            r.languageProficiencies = await getData(this._compRaceLanguageProficiencies, part + "languageProficiencies");
+           console.clear();
+            let adasd = this._compRaceLanguageProficiencies;
+            const form = await adasd.pGetFormData();
+            console.log("FORM RAE", form);
+            r.languages = await getData(this._compRaceLanguageProficiencies, part + "languageProficiencies");
+            console.log("FORM AFTER", r.languages);
             //What about language choices?
             out.races.push(r);
         }
