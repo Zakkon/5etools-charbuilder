@@ -1041,6 +1041,13 @@ class CharacterBuilder {
       }
       return languages;
     }
+    const pullDamageResistances = (forms) => {
+      let resistances = [];
+      for(let form of forms){
+        for(let [key, value] of Object.entries(form.data.resist)){resistances.push(key);}
+      }
+      return resistances;
+    }
     //Reset actor if settings demand it
     if(SETTINGS.SHEET_MANCER_RECREATES_SHEET){
       actor = new Actor5e();
@@ -1053,15 +1060,12 @@ class CharacterBuilder {
     let itemsVerified = new Array(allItems.length).fill(false);
     //Then try to verify each one, and add new (already verified) features on to the sheet if needed
 
+
     let updatePool = {};
     let languages = [];
 
-    //#region ABILITY SCORES
-    const abilityAbbr = ["str", "dex", "con", "int", "wis", "cha"];
-    for(let a of abilityAbbr){
-      updatePool[`system.abilities${a}`] = System5e.calcAbilityScoreEmbed(actor.system.abilities[`${a}`], choiceData.ability[`${a}`], actor.system.attributes.prof); }
-    //#endregion
-    //#region CLASS
+    
+    //#region Parse Classes
     for(let cls of choiceData.classes){
       const clsData = CharacterBuilder.getEntityByUid("class", {uid: cls.uid});
       addFeatureItem("class", cls.uid, cls.path); //Add the class item itself to our sheet
@@ -1111,16 +1115,17 @@ class CharacterBuilder {
       }
     }
     //#endregion
-    //#region RACE
+    //#region Parse Race
     for(let race of choiceData.races){
       let raceItem = await addFeatureItem("race", race.uid, race.path);
       updatePool["system.details.race"] = {name:raceItem.name};
       //Movement speed
       console.log("RACE ITEM", raceItem);
       languages = languages.concat(pullLanguages(race.languages));
+      updatePool["traits.traits.dr.selected"] = pullDamageResistances(race.damRes);
     }
     //#endregion
-    //#region BACKGROUND
+    //#region Parse Background
     for(let bg of choiceData.backgrounds){
       let bgItem = await addFeatureItem("background", bg.uid, bg.path);
       updatePool["system.details.background"] = {name:bgItem.name};
@@ -1128,6 +1133,12 @@ class CharacterBuilder {
       //Apply languages to language array
       languages = languages.concat(pullLanguages(bg.languages));
     }
+    //#endregion
+    //#region Parse Ability Scores
+    //This should be done after class, we need the proficiency modifier (based on class level)
+    const abilityAbbr = ["str", "dex", "con", "int", "wis", "cha"];
+    for(let a of abilityAbbr){
+      updatePool[`system.abilities${a}`] = System5e.calcAbilityScoreEmbed(actor.system.abilities[`${a}`], choiceData.ability[`${a}`], actor.system.attributes.prof); }
     //#endregion
 
     //Then remove all unverified features

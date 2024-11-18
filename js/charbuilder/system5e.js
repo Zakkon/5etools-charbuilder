@@ -863,6 +863,18 @@ class Actor5e {
             traits: {
                 languages:{
 
+                },
+                dr: {
+                    
+                },
+                dv: {
+
+                },
+                di:{
+
+                },
+                ci:{
+                    
                 }
             }
         }

@@ -109,6 +109,31 @@ class ActorCharactermancerBaseComponent extends BaseComponent {
             }
         }
     }
+
+    async _getFormDataFromComponents(components, path, ignoreIfIncomplete=false){
+        if(components == null){return [];}
+        if(!Array.isArray(components)){components = [components];}
+
+        console.log("PATH", path, components);
+        async function fnGetFormData(components, path) {
+            let arr = [];
+            for(let i = 0; i < components.length; ++i){
+                let c = components[i];
+                if(c == null){continue;}
+                if(Array.isArray(c)){
+                    let result = await fnGetFormData(c, `${path}_${i}`);
+                    arr = arr.concat(result); continue;}
+                let data = await c.pGetFormData();
+                data.path = `${path}_${i}`;
+                arr.push(data);
+            }
+            return arr;
+        }
+
+        const forms = await fnGetFormData(components, path);
+        //return fnMergeData(forms, ignoreIfIncomplete);
+        return forms;
+    }
 }
 //#endregion
 
@@ -7283,33 +7308,7 @@ class ActorCharactermancerRace extends ActorCharactermancerBaseComponent {
 
     async getChoiceData(){
 
-        async function getData(components, path, ignoreIfIncomplete=false){
-            if(!Array.isArray(components)){components = [components];}
-            const forms = await fnGetFormData(components, path);
-            //return fnMergeData(forms, ignoreIfIncomplete);
-            return forms;
-        }
-        async function fnGetFormData(components, path) {
-            let arr = [];
-            for(let i = 0; i < components.length; ++i){
-                let c = components[i];
-                if(Array.isArray(c)){
-                    let result = await fnGetFormData(c, `${path}_${i}`);
-                    arr = arr.concat(result); continue;}
-                let data = await c.pGetFormData();
-                data.path = `${path}_${i}`;
-                arr.push(data);
-            }
-            return arr;
-        }
-        function fnMergeData(forms, ignoreIfIncomplete){
-            let merged = {};
-            for(let f of forms){
-                if(ignoreIfIncomplete && !f.isFormComplete){continue;}
-                merged = Object.assign(merged, f.data);
-            }
-            return merged;
-        }
+        
         
         const actor = CharacterBuilder.instance._actor;
         const state = this.__state;
@@ -7331,12 +7330,16 @@ class ActorCharactermancerRace extends ActorCharactermancerBaseComponent {
             - hp info
             - featureOptionsSelect
             */
-           console.clear();
-            let adasd = this._compRaceLanguageProficiencies;
-            const form = await adasd.pGetFormData();
-            console.log("FORM RAE", form);
-            r.languages = await getData(this._compRaceLanguageProficiencies, part + "languageProficiencies");
-            console.log("FORM AFTER", r.languages);
+            r.languages = await this._getFormDataFromComponents(this._compRaceLanguageProficiencies, part + "languageProficiencies");
+            console.log("COMPER", this._compRaceDamageResistance);
+            r.damRes = await this._getFormDataFromComponents(this._compRaceDamageResistance, part + "damRes");
+            r.damImm = await this._getFormDataFromComponents(this._compRaceDamageImmunity, part + "damImm");
+            r.damVul = await this._getFormDataFromComponents(this._compRaceDamageVulnerability, part + "damVul");
+            r.expertise = await this._getFormDataFromComponents(this._compRaceExpertise, part + "expertise");
+            r.skills = await this._getFormDataFromComponents(this._compRaceSkillProficiencies, part + "skills");
+            r.skillsToolsLanguages = await this._getFormDataFromComponents(this.compRaceSkillToolLanguageProficiencies, part + "skillsToolsLanguages");
+            r.tools = await this._getFormDataFromComponents(this._compRaceToolProficiencies, part + "tools");
+            r.weaponProficiencies = await this._getFormDataFromComponents(this._compRaceWeaponProficiencies, part + "weaponProficiencies");
             //What about language choices?
             out.races.push(r);
         }
@@ -18444,6 +18447,8 @@ class Charactermancer_ImmResVulnSelect extends BaseComponent {
 
     pGetFormData() {
         let isFormComplete = true;
+
+        console.log("DAM RES IMM", this);
 
         return {
             isFormComplete,
