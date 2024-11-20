@@ -580,6 +580,15 @@ class Race5e extends Feature5e{
         if(!Entity5e.use_overrides){return this;}
         return this._createProxy();
     }
+
+    static async verifySystemData(hash){
+        const existingData = CharacterBuilder.getEntityByUid("race", {uid:hash});
+        if(existingData == null){console.error("No existing data found for race", hash);}
+        if(existingData.system){return;}
+        //No system data exists, go ahead and import
+        let imported = await SourceManager.plutoniumConvertData(existingData, "race");
+        existingData.system = imported.system;
+    }
 }
 class Background5e extends Feature5e{
     constructor(itemUid, collectionId=null, isCustom=false){
@@ -725,6 +734,7 @@ class Actor5e {
         if(saveData != null){this._loadFromSaveData(saveData);}
         else{this._createFakeCharacterData();}
         this.owner = SETTINGS.SHEET_ISEDITABLE;
+        this.config = CONFIG.DND5E;
         this.isCharacter = true;
     }
 
@@ -787,12 +797,12 @@ class Actor5e {
         this.skills = {};
         let configSkills = [];
         for(const [key, value] of Object.entries(CONFIG.DND5E.skills)){
-            this.skills[value.label.toLowerCase()] = System5e.calcSkillEmbed({
+            this.skills[key] = System5e.calcSkillEmbed({
                 label: value.label,
                 ability: value.ability,
                 baseProf: 0},
                 this.system.abilities, this.system.attributes.prof);
-            configSkills.push(value.label.toLowerCase());
+            configSkills.push(key);
         }
 
         this.hp = {
@@ -874,22 +884,20 @@ class Actor5e {
 
                 },
                 ci:{
-                    
-                }
-            }
+
+                },
+                weaponProf: {},
+                armorProf: {},
+                toolProf: {}
+            },
+            size: "med",
         }
 
         this.elements = {inventory: "dnd5e-inventory"};
-        this.config = {skills:configSkills};
 
-
-        let rollData = this.getRollData({deterministic:true});
-        this._prepareAbilities({rollData});
-        this._prepareArmorClass();
-        this._prepareInitiative();
-        this._prepareSpellcasting();
-        this.movement = this._getMovementSpeed(this.system, false);
+        this.prepareDerivedData();
     }
+    
     
     /**
      * Create new, blank items, which are automatically added to the inventory
@@ -1064,7 +1072,31 @@ class Actor5e {
         return data;
     }
 
-        /**
+    prepareEmbeddedDocuments(){
+        this.applyActiveEffects();
+    }
+    applyActiveEffects(){
+        this.prepareEmbeddedData();
+    }
+    prepareEmbeddedData(){
+        if(this.system.details.race != null){
+            this._prepareRace(this.system.details.race);
+        }
+        else{console.log("No race", this.system.details);}
+    }
+
+    //#region Derived Data
+    prepareDerivedData(){
+        const globalBonuses = this.system.bonuses?.abilities ?? {};
+        const rollData = this.getRollData({deterministic:true});
+        const globalCheckBonus = Roll.simplifyBonus(globalBonuses?.check, rollData);
+        this._prepareAbilities({rollData});
+        this._prepareArmorClass();
+        this._prepareInitiative(rollData, globalCheckBonus);
+        this._prepareSpellcasting();
+        this.movement = this._getMovementSpeed(this.system, false);
+    }
+    /**
      * Prepare modifiers and other values for abilities.
      * @param {object} [options={}]
      * @param {object} [options.rollData={}]    Roll data used to calculate bonuses.
@@ -1108,7 +1140,7 @@ class Actor5e {
 
         // Apply automatic migrations for older data structures
         let cfg = CONFIG.DND5E.armorClasses[ac.calc];
-        if ( !cfg ) {
+        if (!cfg) {
             ac.calc = "flat";
             if ( Number.isNumeric(ac.value) ) ac.flat = Number(ac.value);
             cfg = CONFIG.DND5E.armorClasses.flat;
@@ -1124,8 +1156,10 @@ class Actor5e {
         }, {armors: [], shields: []});
         const rollData = this.getRollData({ deterministic: true });
 
+        
+        console.log("AC", ac, cfg);
         // Determine base AC
-        switch ( ac.calc ) {
+        switch (ac.calc) {
 
             // Flat AC (no additional bonuses)
             case "flat":
@@ -1139,7 +1173,7 @@ class Actor5e {
 
             default:
                 let formula = ac.calc === "custom" ? ac.formula : cfg.formula;
-                if ( armors.length ) {
+                if (armors.length) {
                     if ( armors.length > 1 ) this._preparationWarnings.push({
                         message: "You are wearing multiple armors!", type: "warning"
                     });
@@ -1149,7 +1183,7 @@ class Actor5e {
                     ac.dex = isHeavy ? 0 : Math.min(armorData.dex ?? Infinity, this.system.abilities.dex?.mod ?? 0);
                     ac.equippedArmor = armors[0];
                 }
-                else ac.dex = this.system.abilities.dex?.mod ?? 0;
+                else {ac.dex = this.system.abilities.dex?.mod ?? 0;}
                 ac.armor = ac.armor ?? CONFIG.DND5E.baseArmorClass;
 
                 rollData.attributes.ac = ac;
@@ -1272,6 +1306,30 @@ class Actor5e {
             this.constructor.prepareSpellcastingSlots(this.system.spells, type, progression, { actor: this });
         }
     }
+    _prepareRace(race, force=true){
+        //Try copying over each of the movement types from race
+        for (const key of Object.keys(CONFIG.DND5E.movementTypes)) {
+            if (!race.system.movement[key] || (!force && (this.system.attributes.movement[key] !== null)) ) {continue};
+            this.system.attributes.movement[key] = race.system.movement[key];
+        }
+        //Also check the boolean if we can hover
+        if (race.system.movement.hover) {this.system.attributes.movement.hover = true;}
+        //Copy over units
+        if (force && race.system.movement.units) {this.system.attributes.movement.units = race.system.movement.units;}
+        else {this.system.attributes.movement.units ??= race.system.movement.units;}
+    
+        //Try copying over each of the sense types from race
+        for (const key of Object.keys(CONFIG.DND5E.senses)) {
+            if (!race.system.senses[key] || (!force && (this.system.attributes.senses[key] !== null))) {continue;}
+            this.system.attributes.senses[key] = race.system.senses[key];
+        }
+        //Also include special senses
+        this.system.attributes.senses.special = [this.system.attributes.senses.special, race.system.senses.special].filterJoin(";");
+        //Copy over units
+        if (force && race.system.senses.units) {this.system.attributes.senses.units = race.system.senses.units;}
+        else {this.system.attributes.senses.units ??= race.system.senses.units;}
+    }
+    //#endregion
 
     /**
    * Determine whether the provided ability is usable for remarkable athlete.
@@ -1300,7 +1358,7 @@ class Actor5e {
             [movement.fly, `${"Fly"} ${movement.fly}${movement.hover ? ` (${"Hover"})` : ""}`],
             [movement.swim, `${"Swim"} ${movement.swim}`]
         ];
-        if ( largestPrimary ) {
+        if (largestPrimary) {
             speeds.push([movement.walk, `${"Walk"} ${movement.walk}`]);
         }
 
@@ -1308,7 +1366,7 @@ class Actor5e {
         speeds = speeds.filter(s => s[0]).sort((a, b) => b[0] - a[0]);
 
         // Case 1: Largest as primary
-        if ( largestPrimary ) {
+        if (largestPrimary) {
         let primary = speeds.shift();
         return {
             primary: `${primary ? primary[1] : "0"} ${movement.units || Object.keys(CONFIG.DND5E.movementUnits)[0]}`,
@@ -1382,6 +1440,7 @@ class CharacterTemplate extends CommonTemplate {
 
                 },
                 spellcasting: "cha",
+                senses: {}
             }
         })
     }

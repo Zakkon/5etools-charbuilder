@@ -476,7 +476,7 @@ h5 {
   display: inline-block;
   margin: 0 2px 0 0;
   padding: 0 3px;
-  font-size: var(--font-size-10);
+  /* font-size: var(--font-size-10); */
   line-height: 16px;
   border: 1px solid #999;
   border-radius: 3px;

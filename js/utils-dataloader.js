@@ -2324,3 +2324,15 @@ class DataLoader {
 globalThis.DataLoader = DataLoader;
 
 // endregion
+class DataPostLoaderBase {
+	static async pMutPostLoad (json) {}
+}
+class DataPostLoaderComposite extends DataPostLoaderBase {
+	static _DataPostLoaders;
+
+	static async pMutPostLoad (json) {
+		for (const postLoader of this._DataPostLoaders) {
+			await postLoader.pMutPostLoad(json);
+		}
+	}
+}

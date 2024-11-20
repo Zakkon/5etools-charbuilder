@@ -1004,6 +1004,7 @@ class CharacterBuilder {
           System5e.tryAddToInventory(actor, backgroundItem, "background", {doNotRender:true});
           return backgroundItem;
         case "race":
+          await Race5e.verifySystemData(hash);
           let raceItem = new Race5e(hash, null, false);
           raceItem.markMancerDependency(new MancerDependencyLink(dependencyPath));
           System5e.tryAddToInventory(actor, raceItem, "race", {doNotRender:true});
@@ -1034,19 +1035,34 @@ class CharacterBuilder {
       return -1;
     }
     
-    const pullLanguages = (forms) => {
-      let languages = [];
+    const pullProperties = (forms, propertyParentName) => {
+      let properties = [];
       for(let form of forms){
-        for(let [key, value] of Object.entries(form.data.languageProficiencies)){languages.push(key);}
+        for(let [key, value] of Object.entries(form.data[propertyParentName])){properties.push(key);}
       }
-      return languages;
+      return properties;
     }
-    const pullDamageResistances = (forms) => {
-      let resistances = [];
-      for(let form of forms){
-        for(let [key, value] of Object.entries(form.data.resist)){resistances.push(key);}
+    const mergeUpdatePool = (prop, array) => {
+      if(updatePool[prop] == null){updatePool[prop] = array; return;}
+      updatePool[prop] = updatePool[prop].concat(array);
+    }
+    const skillNameToAbbr = (name) => {
+      name = name.toLowerCase();
+      for(let [key, value] of Object.entries(CONFIG.DND5E.skills)){
+        if(value.label.toLowerCase() === name){return key;}
       }
-      return resistances;
+      return null;
+    }
+    const pullSkillProperties = (forms) => {
+      for(let form of forms){
+        for(let [skillName, profValue] of Object.entries(form.data.skillProficiencies)){
+          const skillAbbr = skillNameToAbbr(skillName);
+          let skill = actor.skills[skillAbbr];
+          skill.baseProf = profValue;
+          const newSkill = System5e.calcSkillEmbed(skill, actor.system.abilities, actor.system.attributes.prof);
+          updatePool[`skills.${skillAbbr}`] = newSkill;
+        }
+      }
     }
     //Reset actor if settings demand it
     if(SETTINGS.SHEET_MANCER_RECREATES_SHEET){
@@ -1094,15 +1110,7 @@ class CharacterBuilder {
         }
       }
       //Then, apply skills we gained from class
-      for(let form of cls.skillProficiencies){
-        if(!form?.data?.skillProficiencies){continue;}
-        for(let [skillName, profValue] of Object.entries(form.data.skillProficiencies)){
-          let skill = actor.skills[skillName];
-          skill.baseProf = profValue;
-          const newSkill = System5e.calcSkillEmbed(skill, actor.system.abilities, actor.system.attributes.prof);
-          updatePool[`skills.${skillName}`] = newSkill;
-        }
-      }
+      pullSkillProperties(cls.skillProficiencies);
       //FEATURE OPTIONS SELECT
       for(let fos of cls.featureOptionsSelect){
         //FEATURES
@@ -1118,20 +1126,24 @@ class CharacterBuilder {
     //#region Parse Race
     for(let race of choiceData.races){
       let raceItem = await addFeatureItem("race", race.uid, race.path);
-      updatePool["system.details.race"] = {name:raceItem.name};
+      console.log("RaceItem", raceItem);
+      updatePool["system.details.race"] = {name:raceItem.name, system:raceItem.system};
       //Movement speed
-      console.log("RACE ITEM", raceItem);
-      languages = languages.concat(pullLanguages(race.languages));
-      updatePool["traits.traits.dr.selected"] = pullDamageResistances(race.damRes);
+      mergeUpdatePool("traits.traits.languages.selected", pullProperties(race.languages, "languageProficiencies"));
+      mergeUpdatePool("traits.traits.dr.selected", pullProperties(race.damRes, "resist"));
+      mergeUpdatePool("traits.traits.weaponProf.selected", pullProperties(race.weaponProficiencies, "weaponProficiencies"));
+      const sizeAbbr = race.size?.[0]?.data??"M";
+      const sizeConversion = {m:"med", t:"tiny", s:"sm", g:"grg", h:"huge", l:"large"};
+      updatePool["traits.size"] = sizeConversion[sizeAbbr.toLowerCase()];
     }
     //#endregion
     //#region Parse Background
     for(let bg of choiceData.backgrounds){
       let bgItem = await addFeatureItem("background", bg.uid, bg.path);
       updatePool["system.details.background"] = {name:bgItem.name};
-      console.log("LANGUAGES", bg);
+      pullSkillProperties(bg.skillProficiencies);
       //Apply languages to language array
-      languages = languages.concat(pullLanguages(bg.languages));
+      mergeUpdatePool("traits.traits.languages.selected", pullProperties(bg.languages, "languageProficiencies"));
     }
     //#endregion
     //#region Parse Ability Scores
@@ -1150,10 +1162,10 @@ class CharacterBuilder {
     }
     
     //TODO: check for language duplicates
-    updatePool["traits.traits.languages.selected"] = languages;
     actor.update(updatePool, {doNotFireUpdate:true});
     //Movement speed?
-    actor.movement = actor._getMovementSpeed(actor.system, false);
+    actor.prepareEmbeddedDocuments();
+    actor.prepareDerivedData();
     actor.update(); //Forces render
   }
   //#endregion

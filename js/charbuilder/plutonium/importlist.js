@@ -7230,3 +7230,444 @@ var ImportListOptionalfeature$1 = /*#__PURE__*/Object.freeze({
   ImportListOptionalfeature: ImportListOptionalfeature
 });
 /* ImportListOptionalfeature.UserChoose = class extends MixinUserChooseImporter(ImportListOptionalfeature) {}; */
+
+//#region Race
+class _DataPostLoaderRaceFeaturePrereleaseBrew extends DataPostLoaderBase {
+	static async pMutPostLoad (json) {
+		if (!json.race?.length) return;
+
+		json.raceFeature = json.race
+			.flatMap(race => {
+				return (race.entries || [])
+					.filter(ent => ent.name && ent.entries)
+					.map(ent => DataConverterRaceFeature.getFauxRaceFeature(race, ent));
+			});
+	}
+}
+class DataPostLoaderRacePrereleaseBrew extends DataPostLoaderBase {
+	static async pMutPostLoad (json) {
+		if (!json.race?.length && !json.subrace?.length) return;
+
+		const postLoaded = await Charactermancer_Race_Util.pPostLoadPrereleaseBrew(json);
+		Object.assign(json, postLoaded);
+		delete json.subrace;
+	}
+}
+class DataPostLoaderRaceFeaturePrereleaseBrew extends DataPostLoaderComposite {
+	static _DataPostLoaders = [
+		DataPostLoaderRacePrereleaseBrew,
+		_DataPostLoaderRaceFeaturePrereleaseBrew,
+	];
+}
+class DataSourceRaceOfficialAll extends DataSourceGenericOfficialAllSpecial {
+	get _cacheKey () { return "5etools-races"; }
+
+	async _pGet () {
+		return Vetools.pGetRaces();
+	}
+}
+class DataSourceRaceFeatureOfficialAll extends DataSourceRaceOfficialAll {
+	get _cacheKey () { return "5etools-race-features"; }
+}
+class DataPipelineConfigRace extends DataPipelineConfig {
+	_DIRS_HOMEBREW = ["race", "subrace"];
+
+	_ClsDataSourceOfficialAll = DataSourceRaceOfficialAll;
+
+	_ClsDataPostLoaderPrereleaseBrew = DataPostLoaderRacePrereleaseBrew;
+	_ClsDataPostLoaderPrerelease = DataPostLoaderRacePrereleaseBrew;
+	_ClsDataPostLoaderBrew = DataPostLoaderRacePrereleaseBrew;
+}
+class DataPipelineConfigRaceFeature extends DataPipelineConfig {
+	_DIRS_HOMEBREW = ["race", "subrace"];
+
+	_ClsDataSourceOfficialAll = DataSourceRaceFeatureOfficialAll;
+
+	_ClsDataPostLoader = DataPostLoaderRaceFeaturePrereleaseBrew;
+}
+const CONFIG_RACE = new DataPipelineConfigRace();
+const CONFIG_RACE_FEATURE = new DataPipelineConfigRaceFeature();
+class DataPipelinesListRace extends DataPipelinesListGeneric {
+	static _ = ImplementationRegistryDataPipelinesList.get().register(this);
+	static _CONFIG = CONFIG_RACE;
+}
+class ImportListRace extends ImportListCharacter {
+  static init () {
+  this._initCreateSheetItemHook({
+    prop: "race",
+    importerName: "Race",
+  });
+}
+
+static get ID () { return "races-and-subraces"; }
+static get DISPLAY_NAME_TYPE_PLURAL () { return "Races & Subraces"; }
+static get PROPS () { return ["race"]; }
+
+static _ = ImplementationRegistryImportList.get().register(this);
+
+_titleSearch = "race";
+_sidebarTab = "items";
+_gameProp = "items";
+_defaultFolderPath = ["Races"];
+_pageFilter = new PageFilterRaces();
+_page = UrlUtil.PG_RACES;
+_isPreviewable = true;
+_configGroup = "importRace";
+_isActorRadio = true;
+/* _ClsCustomizer = ImportCustomizerRace; */
+static _DataConverter = DataConverterRace;
+static _DataPipelinesList = DataPipelinesListRace;
+
+_colWidthName = 4;
+_colWidthSource = 1;
+
+_getData_cols_other () {
+  return [
+    {
+      name: "Ability",
+      width: 5,
+      field: "ability",
+    },
+    {
+      name: "Size",
+      width: 1,
+      field: "size",
+    },
+  ];
+}
+
+_getData_row_mutGetAdditionalValues ({it, ix}) {
+      it._vAbility = it.ability ? Renderer.getAbilityData(it.ability).asTextShort : "None";
+  it._vSize = (it.size || [Parser.SZ_VARIES]).map(sz => Parser.sizeAbvToFull(sz)).join("/");
+  
+  return {
+    ability: it._vAbility,
+    size: it._vSize,
+  };
+}
+
+getData () {
+  return {
+    ...super.getData(),
+    buttonsAdditional: [
+      this._content.some(it => it._versions) ? {
+        name: "btn-run-mods",
+        text: "Customize and Import...",
+      } : null,
+    ].filter(Boolean),
+  };
+}
+
+_renderInner_absorbListItems_fnGetValues (it) {
+  return {
+    ...super._renderInner_absorbListItems_fnGetValues(it),
+    ability: it._vAbility,
+    size: it._vSize,
+  };
+}
+
+async _pImportEntry_pImportToActor (race, importOpts) {
+  race = await this._pImportEntry_getUserVersion(race);
+
+      const actUpdate = {
+    system: {},
+    prototypeToken: {},
+  };
+
+  const level = MiscUtil.get(this._actor, "system", "details", "level") || 1;
+  const dataBuilderOpts = new ImportListRace.ImportEntryOpts({
+    isCharactermancer: importOpts.isCharactermancer,
+    pb: Math.floor((level - 1) / 4) + 2,
+  });
+
+  this._pImportEntry_fillFlags(race, actUpdate, dataBuilderOpts);
+  await this._pImportEntry_pFillAbilities(race, actUpdate, dataBuilderOpts);
+  if (dataBuilderOpts.isCancelled) return ImportSummary.cancelled({entity: race});
+  this._pImportEntry_fillAttributes(race, actUpdate, dataBuilderOpts);
+  const skillsAndTraitsMeta = await this._pImportEntry_pFillSkillsAndTraits(race, actUpdate.system, dataBuilderOpts);
+  if (dataBuilderOpts.isCancelled) return ImportSummary.cancelled({entity: race});
+  const importSummariesAdditionalSpells = await this._pApplyAllAdditionalSpellsToActor({entity: race, importOpts, dataBuilderOpts});
+  if (dataBuilderOpts.isCancelled) return ImportSummary.cancelled({entity: race});
+  const {skillsChosenFvtt, languagesChosenFvtt} = skillsAndTraitsMeta || {};
+  await this._pImportEntry_pFillItems({
+    race,
+    actUpdate,
+    importOpts,
+    dataBuilderOpts,
+    importSummariesAdditionalSpells,
+    skillsChosenFvtt,
+    languagesChosenFvtt,
+  });
+  if (dataBuilderOpts.isCancelled) return ImportSummary.cancelled({entity: race});
+
+      MiscUtil.set(actUpdate, "system", "details", "race", dataBuilderOpts.raceItemToCreate.id);
+
+      await UtilDocuments.pUpdateDocument(this._actor, actUpdate);
+
+      await this._pImportActorAdditionalFeats(race, importOpts, dataBuilderOpts);
+  if (dataBuilderOpts.isCancelled) return ImportSummary.cancelled({entity: race});
+
+      await this._pImportEntry_pImportToActor_pAddSubEntities({ent: race, importOpts});
+
+  if (this._actor.isToken) this._actor.sheet.render();
+
+  return new ImportSummary({
+    status: ConstsTaskRunner.TASK_EXIT_COMPLETE,
+    imported: [
+      new ImportedDocument({
+        name: race.name,
+        actor: this._actor,
+      }),
+    ],
+    entity: race,
+  });
+}
+
+_pImportEntry_fillFlags (race, act, dataBuilderOpts) {
+  const flags = {};
+  const flagsDnd5e = {};
+
+  const hasPowerfulBuild = (race.traitTags && race.traitTags.includes("Powerful Build"))
+    || race.entries.some(it => it.name === "Powerful Build");
+  if (hasPowerfulBuild) flagsDnd5e.powerfulBuild = true;
+
+  if (race.entries.some(it => it.name === "Savage Attacks")) flagsDnd5e.savageAttacks = true;
+  if (race.entries.some(it => it.name === "Lucky") && race._baseName === "Halfling") flagsDnd5e.halflingLucky = true;
+
+  if (Object.keys(flagsDnd5e).length) flags[SharedConsts.SYSTEM_ID_DND5E] = flagsDnd5e;
+  if (Object.keys(flags).length) act.flags = flags;
+}
+
+async _pImportEntry_pFillAbilities (race, actUpdate, dataBuilderOpts) {
+  await Charactermancer_AbilityScoreSelect.pFillActorAbilityData(this._actor, race.ability, actUpdate, dataBuilderOpts);
+}
+
+_pImportEntry_fillAttributes (race, actUpdate, dataBuilderOpts) {
+              const formDataSenses = Charactermancer_SenseSelect.getFormDataFromRace(race);
+  DataConverter.doApplySensesFormDataToActorUpdate({
+    existingSensesActor: MiscUtil.get(this._actor, "_source", "system", "attributes", "senses"),
+    existingTokenActor: MiscUtil.get(this._actor, "_source", "prototypeToken"),
+    formData: formDataSenses,
+    actorData: {}, 			actorToken: actUpdate.prototypeToken,
+    configGroup: "importRace",
+  });
+}
+
+async _pImportEntry_pFillSkillsAndTraits (race, sys, dataBuilderOpts) {
+  sys.traits = {};
+
+  await this._pImportEntry_pHandleSize(race, sys, dataBuilderOpts);
+  if (dataBuilderOpts.isCancelled) return;
+
+          await DataConverter.pFillActorSkillToolLanguageData(
+    {
+      existingProficienciesSkills: MiscUtil.get(this._actor, "_source", "system", "skills"),
+      existingProficienciesTools: MiscUtil.get(this._actor, "_source", "system", "tools"),
+      existingProficienciesLanguages: MiscUtil.get(this._actor, "_source", "system", "traits", "languages"),
+      skillToolLanguageProficiencies: race.skillToolLanguageProficiencies,
+      actorData: sys,
+      importOpts: dataBuilderOpts,
+    },
+  );
+  if (dataBuilderOpts.isCancelled) return;
+
+  const skillsChosenFvtt = await DataConverter.pFillActorSkillData(
+    MiscUtil.get(this._actor, "_source", "system", "skills"),
+    race.skillProficiencies,
+    sys,
+    dataBuilderOpts,
+  );
+  if (dataBuilderOpts.isCancelled) return;
+
+  const languagesChosenFvtt = await DataConverter.pFillActorLanguageData(
+    MiscUtil.get(this._actor, "_source", "system", "traits", "languages"),
+    race.languageProficiencies,
+    sys,
+    dataBuilderOpts,
+  );
+  if (dataBuilderOpts.isCancelled) return;
+
+  await DataConverter.pFillActorToolProfData(
+    MiscUtil.get(this._actor, "_source", "system", "tools"),
+    race.toolProficiencies,
+    sys,
+    dataBuilderOpts,
+  );
+  if (dataBuilderOpts.isCancelled) return;
+
+      await DataConverter.pFillActorArmorProfData(
+    MiscUtil.get(this._actor, "_source", "system", "traits", "armorProf"),
+    race.armorProficiencies,
+    sys,
+    dataBuilderOpts,
+  );
+  if (dataBuilderOpts.isCancelled) return;
+
+  await DataConverter.pFillActorWeaponProfData(
+    MiscUtil.get(this._actor, "_source", "system", "traits", "weaponProf"),
+    race.weaponProficiencies,
+    sys,
+    dataBuilderOpts,
+  );
+  if (dataBuilderOpts.isCancelled) return;
+
+  await DataConverter.pFillActorImmunityData(
+    MiscUtil.get(this._actor, "_source", "system", "traits", "di"),
+    race.immune,
+    sys,
+    dataBuilderOpts,
+  );
+  if (dataBuilderOpts.isCancelled) return;
+
+  await DataConverter.pFillActorResistanceData(
+    MiscUtil.get(this._actor, "_source", "system", "traits", "dr"),
+    race.resist,
+    sys,
+    dataBuilderOpts,
+  );
+  if (dataBuilderOpts.isCancelled) return;
+
+  await DataConverter.pFillActorVulnerabilityData(
+    MiscUtil.get(this._actor, "_source", "system", "traits", "dv"),
+    race.vulnerable,
+    sys,
+    dataBuilderOpts,
+  );
+  if (dataBuilderOpts.isCancelled) return;
+
+  await DataConverter.pFillActorConditionImmunityData(
+    MiscUtil.get(this._actor, "_source", "system", "traits", "ci"),
+    race.conditionImmune,
+    sys,
+    dataBuilderOpts,
+  );
+  if (dataBuilderOpts.isCancelled) return;
+
+  await DataConverter.pFillActorExpertiseData(
+    {
+      existingProficienciesSkills: MiscUtil.get(this._actor, "_source", "system", "skills"),
+      existingProficienciesTools: MiscUtil.get(this._actor, "_source", "system", "tools"),
+      expertise: race.expertise,
+      actorData: sys,
+      importOpts: dataBuilderOpts,
+    },
+  );
+  
+  
+  return {
+    skillsChosenFvtt,
+    languagesChosenFvtt,
+  };
+}
+
+static _isSkippableFeature (ent) {
+  if (typeof ent === "string") return true; 		if (!ent.name) return true; 		if (ent.name === "Size") return true; 		return false;
+}
+
+async _pImportEntry_pFillItems (
+  {
+    race,
+    actUpdate,
+    importOpts,
+    dataBuilderOpts,
+    importSummariesAdditionalSpells,
+    skillsChosenFvtt,
+    languagesChosenFvtt,
+  },
+) {
+      for (const ent of race.entries) {
+    if (this.constructor._isSkippableFeature(ent)) continue;
+
+    const fauxRaceFeature = DataConverterRaceFeature.getFauxRaceFeature(race, ent);
+    await DataConverterRaceFeature.pMutActorUpdateFeature(this._actor, actUpdate, fauxRaceFeature, dataBuilderOpts);
+    if (dataBuilderOpts.isCancelled) return;
+  }
+
+  const tagHashItemIdMap = {};
+  this._applyAdditionalSpellImportSummariesToTagHashItemIdMap({tagHashItemIdMap, importSummariesAdditionalSpells});
+
+  const raceFeatureDataMetas = [];
+
+  await DescriptionRenderer.pGetWithDescriptionPlugins(
+    async () => {
+      for (const ent of race.entries) {
+        if (this.constructor._isSkippableFeature(ent)) continue;
+
+        const raceFeature = DataConverterRaceFeature.getFauxRaceFeature(race, ent);
+
+        const raceFeatureItem = await DataConverterRaceFeature.pGetDocumentJson(
+          raceFeature,
+          {
+            actor: this._actor,
+            taskRunner: importOpts.taskRunner,
+            actorMultiImportHelper: importOpts.actorMultiImportHelper,
+          },
+        );
+        raceFeatureDataMetas.push({id: raceFeatureItem._id, name: raceFeatureItem.name});
+        dataBuilderOpts.items.push(raceFeatureItem);
+      }
+    },
+    {
+      actorId: this._actor.id,
+      tagHashItemIdMap,
+    },
+  );
+  
+  const raceItem = await DataConverterRace.pGetDocumentJson(
+    race,
+    {
+      fluff: await Renderer.race.pGetFluff(race),
+      actor: this._actor,
+      raceFeatureDataMetas,
+      taskRunner: importOpts.taskRunner,
+      actorMultiImportHelper: importOpts.actorMultiImportHelper,
+      size: dataBuilderOpts.size,
+      skillsChosenFvtt,
+      languagesChosenFvtt,
+    },
+  );
+  dataBuilderOpts.raceItemToCreate = raceItem;
+  dataBuilderOpts.items.unshift(raceItem);
+
+  const importedMetas = await UtilDocuments.pCreateEmbeddedDocuments(
+    this._actor,
+    dataBuilderOpts.items,
+    {ClsEmbed: Item, isRender: !importOpts.isBatched},
+  );
+  const [importedMetaRace, ...importedMetasFeatures] = importedMetas;
+
+  await UtilAdvancements.pAddItemGrantAdvancementLinks({
+    actor: this._actor,
+    parentEmbeddedDocument: importedMetaRace.document,
+    childLevelledEmbeddedDocuments: importedMetasFeatures
+      .map(importedMeta => new UtilAdvancements.LevelledEmbeddedDocument_MinLevel0({
+        embeddedDocument: importedMeta.document,
+      })),
+  });
+
+  if (importSummariesAdditionalSpells?.length) {
+    await UtilAdvancements.pAddItemGrantAdvancementLinks({
+      actor: this._actor,
+      parentEmbeddedDocument: importedMetaRace.document,
+      childLevelledEmbeddedDocuments: importSummariesAdditionalSpells
+        .filter(importSummary => importSummary.getPrimaryDocument())
+        .map(importSummary => new UtilAdvancements.LevelledEmbeddedDocument_MinLevel0({
+          embeddedDocument: importSummary.getPrimaryDocument(),
+        })),
+    });
+  }
+}
+
+async _pImportEntry_pHandleSize (race, actUpdate, dataBuilderOpts) {
+  const formData = await Charactermancer_Race_SizeSelect.pGetUserInput({
+    sizes: race.size,
+  });
+
+  if (formData == null) return dataBuilderOpts.isCancelled = true;
+  if (formData === VeCt.SYM_UI_SKIP) return;
+
+  dataBuilderOpts.size = formData.data || Parser.SZ_MEDIUM;
+          actUpdate.traits.size = UtilActors.VET_SIZE_TO_ABV[dataBuilderOpts.size] || "med";
+}
+}
+//#endregion

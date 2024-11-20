@@ -7330,8 +7330,8 @@ class ActorCharactermancerRace extends ActorCharactermancerBaseComponent {
             - hp info
             - featureOptionsSelect
             */
+            r.size = await this._getFormDataFromComponents(this._compRaceSize, part + "size");
             r.languages = await this._getFormDataFromComponents(this._compRaceLanguageProficiencies, part + "languageProficiencies");
-            console.log("COMPER", this._compRaceDamageResistance);
             r.damRes = await this._getFormDataFromComponents(this._compRaceDamageResistance, part + "damRes");
             r.damImm = await this._getFormDataFromComponents(this._compRaceDamageImmunity, part + "damImm");
             r.damVul = await this._getFormDataFromComponents(this._compRaceDamageVulnerability, part + "damVul");
@@ -8047,38 +8047,6 @@ class ActorCharactermancerBackground extends ActorCharactermancerBaseComponent {
     }
 
     async getChoiceData(){
-
-        async function getData(components, path, ignoreIfIncomplete=false){
-            if(!Array.isArray(components)){components = [components];}
-            const forms = await fnGetFormData(components, path);
-            //return fnMergeData(forms, ignoreIfIncomplete);
-            return forms;
-        }
-        async function fnGetFormData(components, path) {
-            let arr = [];
-            for(let i = 0; i < components.length; ++i){
-                let c = components[i];
-                if(Array.isArray(c)){
-                    let result = await fnGetFormData(c, `${path}_${i}`);
-                    arr = arr.concat(result); continue;}
-                let data = await c.pGetFormData();
-                
-            console.log("FORM DATA", data);
-                data.path = `${path}_${i}`;
-                arr.push(data);
-            }
-            return arr;
-        }
-        function fnMergeData(forms, ignoreIfIncomplete){
-            let merged = {};
-            for(let f of forms){
-                if(ignoreIfIncomplete && !f.isFormComplete){continue;}
-                merged = Object.assign(merged, f.data);
-            }
-            return merged;
-        }
-        
-        const actor = CharacterBuilder.instance._actor;
         const state = this.__state;
         console.log("BG COMP", this);
         let out = {};
@@ -8092,10 +8060,18 @@ class ActorCharactermancerBackground extends ActorCharactermancerBaseComponent {
             const data = this._data.background[bg.ixBackground];
             bg.uid = UrlUtil.URL_TO_HASH_GENERIC({name:data.name, source:data.source}).toLowerCase();
             bg.path = part + "background";
-            console.log("GET LANG", this);
-            bg.languages = await getData(this._compBackgroundLanguageProficiencies, part + "languages");
-            bg.characteristics = await getData(this._compBackgroundCharacteristics, part + "characteristics");
-            //What about language choices?
+            bg.languages = await this._getFormDataFromComponents(this._compBackgroundLanguageProficiencies, part + "languages");
+            bg.characteristics = await this._getFormDataFromComponents(this._compBackgroundCharacteristics, part + "characteristics");
+            bg.armorProficiencies = await this._getFormDataFromComponents(this._compBackgroundArmorProficiencies, part + "armorProficiencies");
+            bg.weaponProficiencies = await this._getFormDataFromComponents(this._compBackgroundWeaponProficiencies, part + "weaponProficiencies");
+            bg.conImm = await this._getFormDataFromComponents(this._compBackgroundConditionImmunity, part + "conImm");
+            bg.damImm = await this._getFormDataFromComponents(this._compBackgroundDamageImmunity, part + "damImm");
+            bg.damRes = await this._getFormDataFromComponents(this._compBackgroundDamageResistance, part + "damRes");
+            bg.damVul = await this._getFormDataFromComponents(this._compBackgroundDamageVulnerability, part + "damVul");
+            bg.expertise = await this._getFormDataFromComponents(this._compBackgroundExpertise, part + "expertise");
+            bg.languageToolProficiencies = await this._getFormDataFromComponents(this._compBackgroundLanguageToolProficiencies, part + "languageToolProficiencies");
+            bg.skillProficiencies = await this._getFormDataFromComponents(this._compBackgroundSkillProficiencies, part + "skillProficiencies");
+            bg.toolProficiencies = await this._getFormDataFromComponents(this._compBackgroundToolProficiencies, part + "toolProficiencies");
             out.backgrounds.push(bg);
         }
         return out;

@@ -1,12 +1,10 @@
 class ImportTester{
 
     async runTest(item, type){
-       /*  this.handleReady().then(() => {
-            console.log("Ready done!");
-        }); */
         let flags = null;
 		if(type == "classFeature"){flags = this._getClassSubclassFeatureFlags(item);}
 		else if(type == "spell"){flags = this._getSpellFlags(item);}
+		else if(type == "race"){flags = this._getRaceFlags(item);}
 		else if(type == "optionalfeature"){flags = this._getOptionalFeatureFlags(item);}
 		else{flags = this.getFlags_Item(item);}
         let ent = await DataLoader.pCacheAndGet(flags.page, flags.source, flags.hash);
@@ -25,6 +23,7 @@ class ImportTester{
 			if(type == "classFeature"){imp = new ImportListClassSubclassFeature({actor}); }
 			else if(type == "optionalfeature"){imp = new ImportListOptionalfeature({actor});}
 			else if(type == "spell"){imp = new ImportListSpell({actor}); }
+			else if(type == "race"){imp = new ImportListRace({actor}); }
 			else {imp = new ImportListItem({actor}); }
             await imp.pInit(); //Initialize the importer
 
@@ -133,6 +132,21 @@ class ImportTester{
 			MiscUtil.set(out, "midiProperties", "magicdam", true);
 			MiscUtil.set(out, "midiProperties", "magiceffect", true);
 		} */
+
+		return out;
+	}
+	_getRaceFlags (race, opts) {
+		const out = {
+			/* [SharedConsts.MODULE_ID]: { */
+				page: UrlUtil.PG_RACES,
+				source: race.source,
+				hash: UrlUtil.URL_TO_HASH_BUILDER[UrlUtil.PG_RACES](race),
+				propDroppable: "race",
+				/* filterValues: opts.filterValues, */
+			/* }, */
+		};
+
+		/* if (opts.isActorItem) out[SharedConsts.MODULE_ID].isDirectImport = true; */
 
 		return out;
 	}

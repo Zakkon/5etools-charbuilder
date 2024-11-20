@@ -637,6 +637,20 @@ var SideDataInterfaceSpell$1 = /*#__PURE__*/Object.freeze({
     SideDataInterfaceSpell: SideDataInterfaceSpell
 });
 
+class SideDataInterfaceRace extends SideDataInterfaceBase {
+	static _SIDE_LOAD_OPTS = {
+		propBrew: "foundryRace",
+		fnLoadJson: Vetools.pGetRaceSideData.bind(Vetools),
+		propJson: "race",
+		propsMatch: ["source", "name"],
+	};
+}
+
+var SideDataInterfaceRace$1 = /*#__PURE__*/Object.freeze({
+    __proto__: null,
+    SideDataInterfaceRace: SideDataInterfaceRace
+});
+
 class SideDataInterfaces {
     static init() {
         SideDataInterfaceClass.init();

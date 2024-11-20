@@ -329,6 +329,18 @@ Array.prototype.meanAbsoluteDeviation || Object.defineProperty(Array.prototype, 
         return (this.map(num=>Math.abs(num - mean)) || []).mean();
     },
 });
+/**
+ * Join an Array using a string separator, first filtering out any parts which return a false-y value
+ * @param {string} sep    The separator string
+ * @returns {string}      The joined string, filtered of any false values
+ */
+Array.prototype.filterJoin || Object.defineProperty(Array.prototype, "filterJoin", {
+    enumerable: false,
+    writable: true,
+    value: function(sep) {
+        return this.filter(p => !!p).join(sep);
+    },
+});
 
 Map.prototype.getOrSet || Object.defineProperty(Map.prototype, "getOrSet", {
     enumerable: false,

@@ -78,12 +78,13 @@ class Roll{
      * @protected
      */
     static simplifyBonus(bonusFormula, data={}) {
-        if ( !bonusFormula ) return 0;
-        if ( Number.isNumeric(bonusFormula) ) return Number(bonusFormula);
+        if (!bonusFormula) return 0;
+        if (Number.isNumeric(bonusFormula)) {return Number(bonusFormula);}
         try {
             const roll = new Roll(bonusFormula, data);
             return roll.isDeterministic ? roll.evaluateSync().total : 0;
-        } catch(error) {
+        }
+        catch(error) {
             console.error(error);
             return 0;
         }

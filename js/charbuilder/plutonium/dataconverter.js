@@ -2332,9 +2332,9 @@ class DataConverter {
 		static async _pGetSpeedEffects (speeds, {actor, actorItem, iconEntity, iconPropCompendium, taskRunner = null} = {}) {
 		if (speeds == null) return [];
 
-		const icon = iconEntity && iconPropCompendium
+		const icon = null;/* iconEntity && iconPropCompendium
 			? await this._ImageFetcher.pGetSaveImagePath(iconEntity, {propCompendium: iconPropCompendium, taskRunner})
-			: undefined;
+			: undefined; */
 
 				
 		if (typeof speeds === "number") return [];
@@ -6600,3 +6600,229 @@ class DataConverterOptionalfeature extends DataConverterFeature {
 		return out;
 	}
 }
+class DataConverterRace extends DataConverter {
+	static _configGroup = "importRace";
+
+	static _SideDataInterface = SideDataInterfaceRace;
+	/* static _ImageFetcher = ImageFetcherRace; */
+
+		static async pGetDocumentJson (race, opts) {
+		opts = opts || {};
+		if (opts.actor) opts.isActorItem = true;
+
+		Renderer.get().setFirstSection(true).resetHeaderIndex();
+
+		const img = null;//await this._ImageFetcher.pGetSaveImagePath(race, {fluff: await Renderer.race.pGetFluff(race), propCompendium: "race", taskRunner: opts.taskRunner});
+
+		const additionalFlags = await this._SideDataInterface.pGetFlagsSideLoaded(race);
+
+		const effectsSideTuples = await this._SideDataInterface.pGetEffectsSideLoadedTuples({ent: race, img, actor: opts.actor});
+		effectsSideTuples.forEach(({effect, effectRaw}) => UtilActiveEffects.mutEffectDisabledTransfer(effect, this._configGroup, UtilActiveEffects.getDisabledTransferHintsSideData(effectRaw)));
+
+		const systemBase = {
+			description: {value: await this._pGetRaceDescription(race, opts), chat: ""},
+			source: UtilDocumentSource.getSourceObjectFromEntity(race),
+
+			movement: this._getRaceMovement(race, opts),
+			type: this._getRaceType(race, opts),
+			senses: this._getRaceSenses(race, opts),
+
+			advancement: this._getRaceAdvancement(race, opts),
+		};
+
+		const additionalSystem = await this._SideDataInterface.pGetSystemSideLoaded(race, {systemBase});
+
+		const out = {
+			...UtilFoundryId.getIdObj(),
+			name: UtilApplications.getCleanEntityName(UtilDataConverter.getNameWithSourcePart(race)),
+			type: "race",
+			system: foundry.utils.mergeObject(
+				systemBase,
+				(additionalSystem || {}),
+			),
+			effects: UtilActiveEffects.getEffectsMutDedupeId([
+				...await this._pGetSpeedEffects(race.speed, {actor: opts.actor, iconEntity: race, iconPropCompendium: "race", taskRunner: opts.taskRunner}),
+				...effectsSideTuples.map(it => it.effect),
+			]),
+			flags: {
+				...this._getRaceFlags(race, opts),
+				...additionalFlags,
+			},
+			img,
+			ownership: {default: 0},
+		};
+
+		this._mutApplyDocOwnership(out, opts);
+
+		return out;
+	}
+
+	static _pGetRaceDescription (race, opts) {
+		if (!Config.get(this._configGroup, "isImportDescription")) return "";
+
+		return DescriptionRenderer.pGetWithDescriptionPlugins(async () => {
+			const ptSummary = `<table class="w-100 summary stripe-even">
+				<tr>
+					<th class="ve-col-4 ve-text-center">Ability Scores</th>
+					<th class="ve-col-4 ve-text-center">Size</th>
+					<th class="ve-col-4 ve-text-center">Speed</th>
+				</tr>
+				<tr>
+					<td class="ve-text-center">${Renderer.getAbilityData(race.ability).asText}</td>
+					<td class="ve-text-center">${(race.size || [Parser.SZ_VARIES]).map(sz => Parser.sizeAbvToFull(sz)).join("/")}</td>
+					<td class="ve-text-center">${Parser.getSpeedString(race, {isMetric: Config.isUseMetricDistance({configGroup: this._configGroup})})}</td>
+				</tr>
+			</table>`;
+
+			const ptFeatures = this._pGetRaceDescription_features(race, opts);
+
+			const fluff = await Renderer.race.pGetFluff(race);
+			let ptFluff = null;
+			if (fluff) {
+				ptFluff = Renderer.utils.getFluffTabContent({entity: race, isImageTab: false, fluff});
+			}
+
+			return `<div>
+				${ptSummary}
+				${ptFeatures}
+				${ptFluff != null ? `<hr class="hr-1">${ptFluff}` : ""}
+			</div>`;
+		});
+	}
+
+	static _pGetRaceDescription_features (race, opts) {
+				if (!opts.isActorItem) return Renderer.get().setFirstSection(true).render({type: "entries", entries: race.entries}, 1);
+
+		if (!opts.actor || !opts.raceFeatureDataMetas?.length) return "";
+
+		const ptsFeature = opts.raceFeatureDataMetas
+			.map(({id, name}) => `@UUID[Actor.${opts.actor.id}.Item.${id}]{${name}}`);
+
+		return `<div class="mt-2">${ptsFeature.map(f => `<p>${f}</p>`).join("")}</div>`;
+	}
+
+	static _getRaceMovement (race, opts) {
+		if (race.speed == null) return {};
+		return DataConverter.getMovement(race.speed, {configGroup: this._configGroup});
+	}
+
+	static _getRaceType (race, opts) {
+		const subtype = race.creatureTypeTags?.length
+			? race.creatureTypeTags.join("; ")
+			: (race._baseName || race.name || "").toLowerCase();
+
+		if (!race.creatureTypes?.length) {
+			return {
+				value: "humanoid",
+				subtype,
+				custom: "",
+			};
+		}
+
+		if (race.creatureTypes.length === 1) {
+			return {
+				value: race.creatureTypes[0],
+				subtype,
+				custom: "",
+			};
+		}
+
+		return {
+			value: race.creatureTypes.join("/"),
+			subtype,
+			custom: "",
+		};
+	}
+
+	static _getRaceSenses (race, opts) {
+		const formDataSenses = Charactermancer_SenseSelect.getFormDataFromRace(race);
+		return this._getFoundrySenseData({configGroup: this._configGroup, formData: formDataSenses});
+	}
+
+	static _getRaceAdvancement (race, opts) {
+		return [
+			...this._getRaceAdvancement_ability(race, opts),
+			...this._getRaceAdvancement_size(race, opts),
+			...this._getRaceAdvancement_skills(race, opts),
+			...this._getRaceAdvancement_languages(race, opts),
+		];
+	}
+
+		static _getRaceAdvancement_ability (race, opts) {
+		const out = [];
+
+		if (!race.ability?.length) return out;
+
+				if (race.lineage === "VRGR") {
+			out.push(UtilAdvancements.getAdvancementAbilityScoreImprovementVrgr());
+			return out;
+		}
+
+		const advAbility = UtilAdvancements.getAdvancementAbilityScoreImprovement(race.ability);
+		if (advAbility != null) out.push(advAbility);
+
+		return out;
+	}
+
+	static _getRaceAdvancement_size (race, opts) {
+		const advancement = UtilAdvancements.getAdvancementSize(race.size, {selectedSize: opts.size});
+		if (advancement == null) return [];
+		return [advancement];
+	}
+
+	static _getRaceAdvancement_skills (race, opts) {
+		if (!opts.skillsChosenFvtt) return [];
+
+				if (race.skillToolLanguageProficiencies) return [];
+
+		const adv = UtilAdvancements.getAdvancementSkills({
+			skillProficiencies: race.skillProficiencies,
+			skillsChosenFvtt: Object.keys(opts.skillsChosenFvtt), 		});
+		if (adv == null) return [];
+
+		return [adv];
+	}
+
+	static _getRaceAdvancement_languages (race, opts) {
+		if (!opts.languagesChosenFvtt) return [];
+
+				if (race.skillToolLanguageProficiencies) return [];
+
+		const adv = UtilAdvancements.getAdvancementLanguages({
+			languageProficiencies: race.languageProficiencies,
+			languagesChosenFvtt: opts.languagesChosenFvtt,
+		});
+		if (adv == null) return [];
+
+		return [adv];
+	}
+
+	static _getRaceFlags (race, opts) {
+		const out = {
+			[SharedConsts.MODULE_ID]: {
+				page: UrlUtil.PG_RACES,
+				source: race.source,
+				hash: UrlUtil.URL_TO_HASH_BUILDER[UrlUtil.PG_RACES](race),
+				propDroppable: "race",
+				filterValues: opts.filterValues,
+			},
+		};
+
+		if (opts.isActorItem) out[SharedConsts.MODULE_ID].isDirectImport = true;
+
+		return out;
+	}
+
+	static isStubEntity (race) {
+		return race.name === DataConverterRace.STUB_RACE.name && race.source === DataConverterRace.STUB_RACE.source;
+	}
+
+	static getRaceStub () {
+		return MiscUtil.copyFast(DataConverterRace.STUB_RACE);
+	}
+}
+DataConverterRace.STUB_RACE = {
+	name: "Unknown Race",
+	source: Parser.SRC_PHB,
+	_isStub: true,
+};

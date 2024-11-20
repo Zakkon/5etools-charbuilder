@@ -75,19 +75,38 @@ class HandlebarsHelper{
               .join('\n');
         });
         Handlebars.registerHelper('selectOptions', function (choices, options) {
-            let str = "";
-            let opts = HandlebarsHelper.getAttributes(options);
+            if(choices == null){return Handlebars.SafeString("");}
+            let {blank=null, selected=null, sort=false, labelAttr, nameAttr} = HandlebarsHelper.getAttributes(options);
+            selected = selected instanceof Array ? selected.map(String) : [String(selected)];
+            let myOptions = [];
             //Blank option
-            if(opts.blank != null){str += `<option value="${opts.blank}" ${(!opts.selected)?"selected":""}></option>`;}
-            if(choices != null){
-                for(const [key, value] of Object.entries(choices)){
-                    let lbl = typeof(value) == "object"? value.label : value;
-                    str += `<option value="${key}"${(!!opts.selected && opts.selected == key)?"selected":""}>${lbl}</option>`;
+            if(blank != null){options.push({label:blank, name:""});}
+            if(choices instanceof Array){
+                console.assert(nameAttr != null, "selectOptions requires a nameAttr if choices is an array!");
+                for(let c of choices){
+                    const label = c[labelAttr];
+                    const name = String(c[nameAttr]); //we are going to need a nameAttr variable to 
+                    myOptions.push({label, name});
                 }
             }
+            else{
+                for (let [key, value] of Object.entries(choices)) {
+                    const label = labelAttr ? value[labelAttr] : value;
+                    const name = String(nameAttr ? value[nameAttr] : key);
+                    myOptions.push({name, label});
+                }
+            }
+            //Sort the array, if requested
+            if (sort==true) {myOptions.sort((left, right) => left.label.localeCompare(right.label));}
             
-            let result = new Handlebars.SafeString(str);
-            return result;
+            //Create the string
+            let str = "";
+            for(let o of myOptions){
+                const isSelected = selected != null && selected.includes(o.name);
+                str += `<option value="${o.name}" ${isSelected? "selected":""}>${o.label}</option>`;
+            }
+            
+            return new Handlebars.SafeString(str);
         });
         Handlebars.registerHelper("dnd5e-itemContext", HandlebarsHelper.itemContext);
         Handlebars.registerHelper("dnd5e-dataset", HandlebarsHelper.dataset);
