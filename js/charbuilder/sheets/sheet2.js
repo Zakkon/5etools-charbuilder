@@ -37,6 +37,11 @@ class ActorCharactermancerSheet2 extends ActorCharactermancerSheet {
             
             System5e.tryAddToInventory(actor, featureItem, "passive", {doNotRender:true});
         }); */
+        /* let hash = UrlUtil.URL_TO_HASH_GENERIC({name:"acid (vial)", source:"phb"});
+        Item5e.verifySystemData(hash).then(() => {
+            let item = new Item5e(hash, 1, null, false);
+            System5e.tryAddToInventory(actor, item, "weapon", {doNotRender:true});
+        }); */
 
         let inv = new TestInventoryElement(this.actor);
         this._inv = inv;

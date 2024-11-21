@@ -221,7 +221,7 @@ class System5e{
      * @returns {Entity5e}
      */
     static async tryAddToInventory(actor, entity5e, itemType, options={}){
-        console.error("Add", itemType, entity5e.name, entity5e.collectionId);
+        //console.error("Add", itemType, entity5e.name, entity5e.collectionId);
         entity5e.type = itemType;
         actor.createEmbeddedDocuments("item", [], [entity5e], options);
         return entity5e;
@@ -474,6 +474,10 @@ class Entity5e {
         }
     }
 
+    _prepareLabels(){
+        this.labels = {};
+    }
+
     
     get hasAttack() {
         return ["mwak", "rwak", "msak", "rsak"].includes(this.system.actionType);
@@ -491,8 +495,14 @@ class Item5e extends Entity5e{
         super(itemUid, collectionId, isCustom);
         this.entityType = "item";
         this.quantity = quantity;
-        if(!this.isCustom){this._tryCloneOriginal(CharacterBuilder.getItemByUid(this.uid));}
+        if(!this.isCustom){this._tryCloneOriginal(CharacterBuilder.getEntityByUid("item", this.uid));}
         this.properties = {};
+
+        System5e.addHookBase("item_update", (p, collectionId) => {
+            console.log("item update hook fired");
+            //this._prepareLabels();
+        });
+        //if(this.system != null){this._prepareLabels();}
 
         if(!Entity5e.use_overrides){return this;}
         return this._createProxy();
@@ -516,6 +526,14 @@ class Item5e extends Entity5e{
         let imported = await SourceManager.plutoniumConvertData(existingData, "item");
         existingData.system = imported.system;
         this.system = imported.system; //TEMPFIX
+    }
+    static async verifySystemData(hash){
+        console.log(CharacterBuilder.instance._data);
+        let existingData = CharacterBuilder.getEntityByUid("item", hash);
+        if(existingData.system){return;}
+        //No system data exists, go ahead and import
+        let imported = await SourceManager.plutoniumConvertData(existingData, "item");
+        existingData.system = imported.system;
     }
     
     //Runtime label calculations
@@ -737,13 +755,26 @@ class Spell5e extends Entity5e{
         this.entityType = "spell";
         if(!this.isCustom){this._tryCloneOriginal(CharacterBuilder.getSpellByUid(this.uid));}
 
+        System5e.addHookBase("item_update", (p, collectionId) => {
+            console.log("spell update hook fired");
+            this._prepareLabels();
+        });
+        if(this.system != null){this._prepareLabels();}
+
         if(!Entity5e.use_overrides){return this;}
         return this._createProxy();
+    }
+    
+    _prepareLabels(){
+        super._prepareLabels();
+        this.labels.school = this.system.school;
+        this.labels.activation = `${this.system.activation.cost} ${this.system.activation.type}`;
     }
 
     static recast(inputObj){
         let spell5e = new Spell5e(inputObj.uid, inputObj.collectionId, inputObj.isCustom);
         inputObj && Object.assign(spell5e, inputObj);
+        spell5e._prepareLabels();
         return spell5e;
     }
     async importSystemData(){

@@ -6107,7 +6107,7 @@ async pInit () {
 async _pImportEntry (feature, importOpts, dataOpts) {
   importOpts ||= new ImportOpts();
 
-  console.log("IMPORT FEATURE", feature, importOpts, dataOpts);
+  //console.log("IMPORT FEATURE", feature, importOpts, dataOpts);
   if (!this._actor) {
     const dereferenced = await this.constructor._DataConverter.pGetDereferencedFeatureItem(feature);
     return super._pImportEntry(dereferenced, importOpts, dataOpts);

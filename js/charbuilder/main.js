@@ -892,7 +892,7 @@ class CharacterBuilder {
   }
   static _getEntityByUid(from, options){
     if(typeof options === "string"){options = {uid:options};}
-    const hash = options.uid ?? UrlUtil.URL_TO_HASH_GENERIC(options).toLowerCase();
+    const hash = (options.uid ?? UrlUtil.URL_TO_HASH_GENERIC(options)).toLowerCase();
     const matches = from.filter(e => UrlUtil.URL_TO_HASH_GENERIC(e).toLowerCase() == hash);
     if(matches.length > 1){console.error("More than one of", type, "found with hash", hash); return matches[0];s}
     else if(matches.length < 1){return null;}
@@ -952,7 +952,6 @@ class CharacterBuilder {
       }
     }
     else{
-      console.log("SUBCLASSFEATURES", scls.subclassFeatures, hash);
       matches = scls.subclassFeatures.filter(e => e.hash.toLowerCase() == hash);
     }
     if(matches.length > 1){console.error("More than one subclass feature found with hash", hash); return matches[0];s}
