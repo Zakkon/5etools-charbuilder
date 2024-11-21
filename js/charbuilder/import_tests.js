@@ -3,6 +3,7 @@ class ImportTester{
     async runTest(item, type){
         let flags = null;
 		if(type == "classFeature"){flags = this._getClassSubclassFeatureFlags(item);}
+		else if(type == "subclassFeature"){flags = this._getClassSubclassFeatureFlags(item);}
 		else if(type == "spell"){flags = this._getSpellFlags(item);}
 		else if(type == "race"){flags = this._getRaceFlags(item);}
 		else if(type == "optionalfeature"){flags = this._getOptionalFeatureFlags(item);}
@@ -21,6 +22,7 @@ class ImportTester{
 			//If actor exists, the item will be imported unto the actor. If none exists, it will go to a generic directory
             let imp = null;
 			if(type == "classFeature"){imp = new ImportListClassSubclassFeature({actor}); }
+			else if(type == "subclassFeature"){imp = new ImportListClassSubclassFeature({actor}); }
 			else if(type == "optionalfeature"){imp = new ImportListOptionalfeature({actor});}
 			else if(type == "spell"){imp = new ImportListSpell({actor}); }
 			else if(type == "race"){imp = new ImportListRace({actor}); }

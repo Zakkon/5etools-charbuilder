@@ -903,10 +903,44 @@ class CharacterBuilder {
     const foundItem = ActorCharactermancerEquipment.findItemByUID(itemUid, itemDatas);
     return foundItem;
   }
+  /**
+   * Looks through the database for any class feature with a matching uid(a.k.a. "hash")
+   * @param {string} hash
+   * @param {string} className
+   * @param {string} classSource
+   * @returns {ClassFeature5e}
+   */
   static getClassFeatureByUid(hash, className, classSource){
     const cls = this.getEntityByUid("class", {name:className, source:classSource});
     const matches = cls.classFeatures.filter(e => e.hash.toLowerCase() == hash);
     if(matches.length > 1){console.error("More than one class feature found with hash", hash); return matches[0];s}
+    else if(matches.length < 1){return null;}
+    else{return matches[0];}
+  }
+  /**
+   * Looks through the database for any subclass feature with a matching uid(a.k.a. "hash")
+   * @param {string} hash
+   * @param {string} className
+   * @param {string} classSource
+   * @param {string} subclassName
+   * @param {string} subclassSource
+   * @returns {ClassFeature5e}
+   */
+  static getSubclassFeatureByUid(hash, className, classSource, subclassName, subclassSource){
+    const cls = this.getEntityByUid("class", {name:className, source:classSource});
+    const scls = this._getEntityByUid(cls.subclasses, {name:subclassName, source:subclassSource});
+    //We have to search within loadeds
+    const useLoadeds = true;
+    let matches = [];
+    if(useLoadeds){
+      for(let f of scls.subclassFeatures){
+        matches = matches.concat(f.loadeds.filter(e => e.hash.toLowerCase() == hash));
+      }
+    }
+    else{
+      matches = scls.subclassFeatures.filter();
+    }
+    if(matches.length > 1){console.error("More than one subclass feature found with hash", hash); return matches[0];s}
     else if(matches.length < 1){return null;}
     else{return matches[0];}
   }
@@ -1015,7 +1049,14 @@ class CharacterBuilder {
           clsFeatureItem.markMancerDependency(new MancerDependencyLink(dependencyPath));
           System5e.tryAddToInventory(actor, clsFeatureItem, "passive", {doNotRender:true});
           return clsFeatureItem;
+        case "subclassFeature":
+          await SubclassFeature5e.verifySystemData(hash, data.className, data.classSource, data.subclassName, data.subclassSource);
+          let sclsFeatureItem = new SubclassFeature5e(hash, data.className, data.classSource, data.subclassName, data.subclassSource, null, false);
+          sclsFeatureItem.markMancerDependency(new MancerDependencyLink(dependencyPath));
+          System5e.tryAddToInventory(actor, sclsFeatureItem, "passive", {doNotRender:true});
+          return sclsFeatureItem;
         default:
+          console.error("Could not recognize entity type", type);
           return null;
       }
       
@@ -1109,10 +1150,26 @@ class CharacterBuilder {
     //#region Parse Classes
     let totalLevel = 0;
     for(let cls of choiceData.classes){
+      let addedFeatureHashes = [];
       const clsData = CharacterBuilder.getEntityByUid("class", {uid: cls.uid});
+      let sclsData = null;
       let classItem = await addFeatureItem("class", cls.uid, cls.path); //Add the class item itself to our sheet
       classItem.targetLevel = cls.targetLevel;
       totalLevel += cls.targetLevel;
+      //Subclass
+      const hasSubclass = cls.ixSubclass != null;
+      if(hasSubclass){
+        sclsData = CharacterBuilder._getEntityByUid(clsData.subclasses, {uid: cls.subclassUid});
+        //Go through scData's features and add them to the inventory (the ones that were not added by FOS)
+        for(let f of sclsData.subclassFeatures){
+          //console.log(f);
+          //probably best to look in f.loadeds
+          /* await addFeatureItem(feature.type, feature.hash, cls.path,
+            {className:clsData.name.toLowerCase(), classSource:clsData.source.toLowerCase()}); */
+        }
+      }
+
+
       //HIT POINTS
       for(let form of cls.hpInfo){
         let hpFormula = form.data.hitPointsAtFirstLevel;
@@ -1138,7 +1195,9 @@ class CharacterBuilder {
         //FEATURES
         for(let feature of fos.data.features??[]){
           await addFeatureItem(feature.type, feature.hash, cls.path,
-            {className:clsData.name.toLowerCase(), classSource:clsData.source.toLowerCase()});
+            {className:clsData.name.toLowerCase(), classSource:clsData.source.toLowerCase(),
+              subclassName:sclsData?.name.toLowerCase(), subclassSource:sclsData?.source.toLowerCase()});
+          addedFeatureHashes.push(feature.hash);
         }
         pullSkillProperties(fos.data.formDatasExpertise, true);
         pullSkillProperties(fos.data.formDatasSkillProficiencies);
@@ -1156,6 +1215,9 @@ class CharacterBuilder {
         //saving throw proficiencies
         //additional spells
       }
+
+      
+      
     }
     updatePool["system.details.level"] = totalLevel;
     updatePool["system.attributes.prof"] = System5e.calcProficiencyBonus(totalLevel);

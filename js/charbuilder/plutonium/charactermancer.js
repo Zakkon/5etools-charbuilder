@@ -1726,6 +1726,13 @@ class ActorCharactermancerClass extends ActorCharactermancerBaseComponent {
             const data = this._getClass({ix:cls.ixClass});
             cls.uid = UrlUtil.URL_TO_HASH_GENERIC({name:data.name, source:data.source}).toLowerCase();
             cls.path = part + "class";
+            cls.ixSubclass = state[`${part}subclass_ixSubclass`]; //if this is null, we have no subclass
+            const hasSubclass = cls.ixSubclass != null;
+            if(hasSubclass){
+                const scData = this._getSubclass({cls:data, ix:cls.ixSubclass});
+                cls.subclassUid = UrlUtil.URL_TO_HASH_GENERIC({name:scData.name, source:scData.source}).toLowerCase();
+            }
+            
             /*Information we need to pull:
             - skill proficiencies (usually you get 2 at the start, may also include tools)
             - starting proficiencies (weapon and armor proficiencies, saving throw proficiencies)
