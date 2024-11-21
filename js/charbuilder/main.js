@@ -898,6 +898,22 @@ class CharacterBuilder {
     else if(matches.length < 1){return null;}
     else{return matches[0];}
   }
+  static getEntityByProps(type, propMatches, options){
+    const datas = CharacterBuilder.instance._data[type];
+    return this._getEntityByProps(datas, propMatches, options);
+  }
+  static _getEntityByProps(from, propMatches, options){
+    const matches = from.filter(e => Object.entries(propMatches).every(([key, value]) => {
+      const itemValue = e[key];
+      if (options?.caseInsensitive && typeof itemValue === 'string' && typeof value === 'string') {
+        return itemValue.toLowerCase() === value.toLowerCase();
+      }
+      return itemValue === value;
+    }));
+    if(matches.length > 1){console.error("More than one result matches props"); return matches[0];s}
+    else if(matches.length < 1){return null;}
+    else{return matches[0];}
+  }
   static getItemByUid(itemUid){
     const itemDatas = CharacterBuilder.instance._data.item;
     const foundItem = ActorCharactermancerEquipment.findItemByUID(itemUid, itemDatas);
@@ -1130,6 +1146,13 @@ class CharacterBuilder {
         }
       }
     }
+    const addSpellItem = async (hash, knownType) => {
+      await Spell5e.verifySystemData(hash);
+      let spellItem = new Spell5e(hash, null, false);
+      System5e.tryAddToInventory(actor, spellItem, "spell", {doNotRender:true});
+      return spellItem;
+    }
+
     //Reset actor if settings demand it
     if(SETTINGS.SHEET_MANCER_RECREATES_SHEET){
       actor = new Actor5e();
@@ -1159,6 +1182,17 @@ class CharacterBuilder {
       const hasSubclass = cls.ixSubclass != null;
       if(hasSubclass){
         sclsData = CharacterBuilder._getEntityByUid(clsData.subclasses, {uid: cls.subclassUid});
+        console.log("SUBCLASS DATA", sclsData);
+        //Add subclass's additionalSpells
+        for(let addSpells of sclsData.additionalSpells??[]){
+          for(let [knownType, value] of Object.entries(addSpells)){
+            for(let [gainedAtLvl, spellHashes] of Object.entries(value)){
+              if(cls.targetLevel < gainedAtLvl){continue;} //Must be high enough level
+              let preparationMode = knownType; if(knownType == "known"){preparationMode = "alwaysKnown";} //Assume they mean alwaysKnown when they say known
+              for(let hash of spellHashes){await addSpellItem(hash, preparationMode);}
+            }
+          }
+        }
         //Go through scData's features and add them to the inventory (the ones that were not added by FOS)
         for(let f of sclsData.subclassFeatures){
           //console.log(f);

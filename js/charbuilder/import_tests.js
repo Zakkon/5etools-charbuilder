@@ -9,6 +9,7 @@ class ImportTester{
 		else if(type == "optionalfeature"){flags = this._getOptionalFeatureFlags(item);}
 		else{flags = this.getFlags_Item(item);}
         let ent = await DataLoader.pCacheAndGet(flags.page, flags.source, flags.hash);
+		console.log("ENT", ent);
 
         const isUseImporter = true;
         const pFnImport = null;
@@ -34,6 +35,7 @@ class ImportTester{
 				
 				//This is what we want. Tell the importlist to import ent (an obj in 5etools schema)
 				const summary = await imp.pImportEntry(ent, {filterValues: flags.filterValues, isDataOnly:true});
+				console.log("SUMMARY", summary);
 				return summary._imported[0].document;
 			}
 

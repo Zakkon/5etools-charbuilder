@@ -236,50 +236,50 @@ var DataPrimer$1 = /*#__PURE__*/Object.freeze({
 class ImportList extends MixinHidableApplication(MixinFolderPathBuilder(EmptyClass))
 {
   static async api_pImportEntry (
-  entry,
-  {
-    isTemp = false,
-    packId = null,
-    actorMultiImportHelper = null,
-  } = {},
-) {
-  if (game.user.role < Config.get("import", "minimumRole")) throw new Error(`You do not have sufficient permissions!`);
+    entry,
+    {
+      isTemp = false,
+      packId = null,
+      actorMultiImportHelper = null,
+    } = {},
+  ) {
+    if (game.user.role < Config.get("import", "minimumRole")) throw new Error(`You do not have sufficient permissions!`);
 
-  const pack = packId ? game.packs.get(packId) : null;
-  if (!pack && packId) throw new Error(`Could not find pack "${pack}"`);
+    const pack = packId ? game.packs.get(packId) : null;
+    if (!pack && packId) throw new Error(`Could not find pack "${pack}"`);
 
-  if (isTemp && packId) throw new Error(`Options "isTemp" and "packId" are mutually exclusive!`);
+    if (isTemp && packId) throw new Error(`Options "isTemp" and "packId" are mutually exclusive!`);
 
-  entry = await entry;
-  if (entry == null) throw new Error(`Entry cannot be null/undefined!`);
+    entry = await entry;
+    if (entry == null) throw new Error(`Entry cannot be null/undefined!`);
 
-  const imp = new this();
-  await imp.pInit();
-  imp.pack = pack;
-  return imp.pImportEntry(entry, new ImportOpts({isTemp, actorMultiImportHelper}));
+    const imp = new this();
+    await imp.pInit();
+    imp.pack = pack;
+    return imp.pImportEntry(entry, new ImportOpts({isTemp, actorMultiImportHelper}));
   }
 
   static init () {
-      UtilLibWrapper.addPatch(
+    UtilLibWrapper.addPatch(
     "Actor.fromDropData",
     this._lw_Actor_fromDropData,
     UtilLibWrapper.LIBWRAPPER_MODE_MIXED,
-  );
-  UtilLibWrapper.addPatch(
-    "Item.fromDropData",
-    this._lw_Item_fromDropData,
-    UtilLibWrapper.LIBWRAPPER_MODE_MIXED,
-  );
-  UtilLibWrapper.addPatch(
-    "JournalEntry.fromDropData",
-    this._lw_JournalEntry_fromDropData,
-    UtilLibWrapper.LIBWRAPPER_MODE_MIXED,
-  );
-  UtilLibWrapper.addPatch(
-    "RollTable.fromDropData",
-    this._lw_RollTable_fromDropData,
-    UtilLibWrapper.LIBWRAPPER_MODE_MIXED,
-  );
+    );
+    UtilLibWrapper.addPatch(
+      "Item.fromDropData",
+      this._lw_Item_fromDropData,
+      UtilLibWrapper.LIBWRAPPER_MODE_MIXED,
+    );
+    UtilLibWrapper.addPatch(
+      "JournalEntry.fromDropData",
+      this._lw_JournalEntry_fromDropData,
+      UtilLibWrapper.LIBWRAPPER_MODE_MIXED,
+    );
+    UtilLibWrapper.addPatch(
+      "RollTable.fromDropData",
+      this._lw_RollTable_fromDropData,
+      UtilLibWrapper.LIBWRAPPER_MODE_MIXED,
+    );
   }
 
 static async _lw_Actor_fromDropData (fn, ...args) {
@@ -1297,7 +1297,7 @@ _handleFilterChange () {
 
   /**
    * Create a wrapper for our own _pImportEntry
-   * @param {any} ent An item in 5etools schema
+   * @param {any} ent An entity in 5etools schema
    * @param {ImportOpts} importOpts
    * @param {any} dataOpts={}
    * @returns {Promise<ImportSummary>}
@@ -2666,7 +2666,7 @@ class ImportListCharacter extends ImportList {
 	}
 
 	
-			async _pDoMergeAndApplyActorUpdate (actorUpdate) {
+	async _pDoMergeAndApplyActorUpdate (actorUpdate) {
 		if (!Object.keys(actorUpdate).length) return;
 
 		this._doMergeExistingSkillToolData({actorUpdate, propActorData: "skills"});
@@ -6123,7 +6123,7 @@ async _pImportEntry (feature, importOpts, dataOpts) {
 
     const out = await super._pImportEntry(feature, importOpts, dataOpts);
 
-          await UtilActors.pLinkTempUuids({actor: this._actor});
+    await UtilActors.pLinkTempUuids({actor: this._actor});
 
     return out;
   }
@@ -6135,7 +6135,7 @@ async _pImportEntry (feature, importOpts, dataOpts) {
     ? (importOpts.featureEntriesPageFilterValues)
     : (importOpts.filterValues || (await this._pGetPageFilterValues()));
 
-      let allFeatures;
+  let allFeatures;
   if (importOpts.isPreLoadedFeature) {
     allFeatures = [feature];
   }
@@ -6150,7 +6150,7 @@ async _pImportEntry (feature, importOpts, dataOpts) {
     filterValues,
   );
 
-      if (!allFeatures.length) return ImportSummary.cancelled({entity: feature});
+  if (!allFeatures.length) return ImportSummary.cancelled({entity: feature});
 
   allFeatures = Charactermancer_Util.getImportableFeatures(allFeatures);
 

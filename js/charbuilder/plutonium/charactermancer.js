@@ -1731,6 +1731,23 @@ class ActorCharactermancerClass extends ActorCharactermancerBaseComponent {
             if(hasSubclass){
                 const scData = this._getSubclass({cls:data, ix:cls.ixSubclass});
                 cls.subclassUid = UrlUtil.URL_TO_HASH_GENERIC({name:scData.name, source:scData.source}).toLowerCase();
+                //Try to include additional spells
+                if(scData.additionalSpells != null){
+                    let merged = {};
+                    //First, just do some basic array merging. merged will now contain properties like "known", which specify knownType
+                    for(let addSpells of scData.additionalSpells){ Object.assign(merged, addSpells);}
+                    for(let [knownType, array1] of Object.entries(merged)){
+                        for(let [lvlGained, spellNames] of Object.entries(array1)){
+                            for(let ix = 0; ix < spellNames.length; ++ix){
+                                //Get real spell
+                                const spellData = CharacterBuilder.getEntityByProps("spell", {name:spellNames[ix]}, {caseInsensitive:true});
+                                if(spellData == null){console.error("Could not find spell with name", spellNames[ix]);}
+                                merged[knownType][lvlGained][ix] = UrlUtil.URL_TO_HASH_GENERIC({name: spellData.name.toLowerCase(), source:spellData.source.toLowerCase()}); //Switch from name to hash
+                            }
+                        }
+                    }
+                    cls.additionalSpells = merged;
+                }
             }
             
             /*Information we need to pull:

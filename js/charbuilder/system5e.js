@@ -673,6 +673,7 @@ class ClassFeature5e extends Feature5e{
     }
 }
 class SubclassFeature5e extends Feature5e{
+    //Default is false
     static useLoadeds = false; //Set this to true if you want to import one big subclassFeature detailing several subclassFeatures (gained at the same level, likely) within itself, set it to false if you want to import each subclassFeature individually
     constructor(hash, className, classSource, subclassName, subclassSource, collectionId=null, isCustom){
         super(hash, collectionId, isCustom);
@@ -755,13 +756,13 @@ class Spell5e extends Entity5e{
         existingData.system = imported.system;
         this.system = imported.system; //TEMPFIX
     }
-    /* static async verifySystemData(hash, className, classSource){
-        let existingData = CharacterBuilder.getSpellByUid(hash, className, classSource);
+    static async verifySystemData(hash){
+        let existingData = CharacterBuilder.getEntityByUid("spell", hash);
         if(existingData.system){return;}
         //No system data exists, go ahead and import
         let imported = await SourceManager.plutoniumConvertData(existingData, "spell");
         existingData.system = imported.system;
-    } */
+    }
 
     //Getter for static config
     get config(){
@@ -1073,7 +1074,13 @@ class Actor5e {
         }
     }
     _getEntities(entityType, subtype){
-        return this._getInventory(entityType)[subtype][(entityType=="spell")?"spells":"items"];
+        try{
+            const inv = this._getInventory(entityType);
+            const arrayName = (entityType=="spell")?"spells":"items";
+            if(!inv[subtype]){inv[subtype] = {}; inv[subtype][arrayName] = [];}
+            return inv[subtype][arrayName];
+        }
+        catch(e){ console.log(entityType, subtype); console.error(e);  return null;}
     }
 
     _runInventoryFunc(func){
