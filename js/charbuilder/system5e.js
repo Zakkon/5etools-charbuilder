@@ -300,7 +300,7 @@ class System5e{
         }
     }
     static proficiencyMult(baseProf){
-        return baseProf == 0? 0 : baseProf == 1? 1 : baseProf == 2? 0.5 : 2;
+        return baseProf == 0? 0 : baseProf == 1? 1 : baseProf == 2? 2 : 0.5;
     }
     static calcAttrMod(abilityScore){
         let mod = Math.floor((abilityScore-10)/2);
@@ -325,8 +325,8 @@ class System5e{
      * @returns {any}
      */
     static calcSkillEmbed(data, abilities, proficiencyModifier) {
-        data.icon = data.baseProf == 0? "far fa-circle" : data.baseProf == 1? "fas fa-check" : data.baseProf == 2? "fas fa-adjust" : "fas fa-check-double";
-        data.hover = data.baseProf == 0? "Not Proficient" : data.baseProf == 1? "Proficient" : data.baseProf == 2? "Half Proficient" : "Expertise";
+        data.icon = data.baseProf == 0? "far fa-circle" : data.baseProf == 1? "fas fa-check" : data.baseProf == 2? "fas fa-check-double" : "fas fa-adjust";
+        data.hover = data.baseProf == 0? "Not Proficient" : data.baseProf == 1? "Proficient" : data.baseProf == 2? "Expertise" : "Half Proficient";
         data.baseValue = System5e.proficiencyMult(data.baseProf);
         data.value = data.baseProf >= 1;
         data.abbreviation = data.ability;
@@ -343,8 +343,8 @@ class System5e{
      * @returns {any}
      */
     static calcToolEmbed(data, proficiencyModifier) {
-        data.icon = data.baseProf == 0? "far fa-circle" : data.baseProf == 1? "fas fa-check" : data.baseProf == 2? "fas fa-adjust" : "fas fa-check-double";
-        data.hover = data.baseProf == 0? "Not Proficient" : data.baseProf == 1? "Proficient" : data.baseProf == 2? "Half Proficient" : "Expertise";
+        data.icon = data.baseProf == 0? "far fa-circle" : data.baseProf == 1? "fas fa-check" : data.baseProf == 2? "fas fa-check-double" : "fas fa-adjust";
+        data.hover = data.baseProf == 0? "Not Proficient" : data.baseProf == 1? "Proficient" : data.baseProf == 2? "Expertise" : "Half Proficient";
         data.baseValue = System5e.proficiencyMult(data.baseProf);
         data.value = data.baseProf >= 1;
         const {mod, passive} = System5e.calcSkillMod(0, data.baseProf, proficiencyModifier);

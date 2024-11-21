@@ -169,7 +169,7 @@ DND5E.skills = {
     icon: "icons/sundries/books/book-embossed-bound-brown.webp"
   },
   ins: {
-    label: "Inspiration",
+    label: "Insight",
     ability: "wis",
     fullKey: "insight",
     reference: "Compendium.dnd5e.rules.JournalEntry.NizgRXLNUqtdlC1s.JournalEntryPage.8R5SMbAGbECNgO8z",

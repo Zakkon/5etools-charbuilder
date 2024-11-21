@@ -1037,7 +1037,8 @@ class CharacterBuilder {
     
     const pullProperties = (forms, propertyParentName) => {
       let properties = [];
-      for(let form of forms){
+      for(let form of forms??[]){
+        if(!form.data[propertyParentName] && !form.isFormComplete){continue;}
         for(let [key, value] of Object.entries(form.data[propertyParentName])){properties.push(key);}
       }
       return properties;
@@ -1047,7 +1048,7 @@ class CharacterBuilder {
       updatePool[prop] = updatePool[prop].concat(array);
     }
     
-    const pullSkillProperties = (forms) => {
+    const pullSkillProperties = (forms, isExpertise=false) => {
       const skillNameToAbbr = (name) => {
         name = name.toLowerCase();
         for(let [key, value] of Object.entries(CONFIG.DND5E.skills)){
@@ -1056,10 +1057,11 @@ class CharacterBuilder {
         return null;
       }
 
-      for(let form of forms){
-        for(let [skillName, profValue] of Object.entries(form.data.skillProficiencies??{})){
+      for(let form of forms??[]){
+        for(let [skillName, profValue] of Object.entries(form.data[isExpertise? "expertise" : "skillProficiencies"]??{})){
           const skillAbbr = skillNameToAbbr(skillName);
           let skill = actor.skills[skillAbbr];
+          if(skill.baseProf > profValue){continue;} //Do not try to overwrite a higher proficiency (replacing expertise with normal proficiency, for example)
           skill.baseProf = profValue;
           const newSkill = System5e.calcSkillEmbed(skill, actor.system.abilities, actor.system.attributes.prof);
           updatePool[`skills.${skillAbbr}`] = newSkill;
@@ -1081,6 +1083,7 @@ class CharacterBuilder {
           if(toolAbbr == null){console.error("Failed to find any tool with name", toolName);}
           let tool = actor.tools[toolAbbr];
           if(tool == null){console.error("Failed to find any tool with abbr", toolAbbr, actor.tools);}
+          if(tool.baseProf > profValue){continue;} //Do not try to overwrite a higher proficiency (replacing expertise with normal proficiency, for example)
           tool.baseProf = profValue;
           const newTool = System5e.calcToolEmbed(tool, actor.system.attributes.prof);
           updatePool[`tools.${toolAbbr}`] = newTool;
@@ -1133,9 +1136,25 @@ class CharacterBuilder {
       //FEATURE OPTIONS SELECT
       for(let fos of cls.featureOptionsSelect){
         //FEATURES
-        for(let f of fos.data.features){
-          addFeatureItem(f.type, f.hash, cls.path, {className:clsData.name.toLowerCase(), classSource:clsData.source.toLowerCase()});
+        for(let feature of fos.data.features??[]){
+          await addFeatureItem(feature.type, feature.hash, cls.path,
+            {className:clsData.name.toLowerCase(), classSource:clsData.source.toLowerCase()});
         }
+        pullSkillProperties(fos.data.formDatasExpertise, true);
+        pullSkillProperties(fos.data.formDatasSkillProficiencies);
+        pullSkillProperties(fos.data.formDatasSkillToolLanguageProficiencies);
+        mergeUpdatePool("traits.traits.languages.selected", pullProperties(fos.data.formDatasLanguageProficiencies, "languageProficiencies"));
+        mergeUpdatePool("traits.traits.languages.selected", pullProperties(fos.data.formDatasSkillToolLanguageProficiencies, "languageProficiencies"));
+        mergeUpdatePool("traits.traits.dr.selected", pullProperties(fos.data.formDatasDamageResistances, "resist"));
+        mergeUpdatePool("traits.traits.di.selected", pullProperties(fos.data.formDatasDamageImmunities, "immune"));
+        mergeUpdatePool("traits.traits.dv.selected", pullProperties(fos.data.formDatasDamageVulnerabilities, "vulnerable"));
+        mergeUpdatePool("traits.traits.ci.selected", pullProperties(fos.data.formDatasConditionImmunities, "conditionImmune"));
+        mergeUpdatePool("traits.traits.weaponProf.selected", pullProperties(fos.data.formDatasWeaponProficiencies, "weaponProficiencies"));
+        mergeUpdatePool("traits.traits.armorProf.selected", pullProperties(fos.data.formDatasArmorProficiencies, "armorProficiencies"));
+        //senses
+        //resources
+        //saving throw proficiencies
+        //additional spells
       }
     }
     updatePool["system.details.level"] = totalLevel;
@@ -1153,6 +1172,7 @@ class CharacterBuilder {
       pullToolProperties(race.tools);
       pullSkillProperties(race.skillsToolsLanguages);
       pullToolProperties(race.skillsToolsLanguages);
+      pullSkillProperties(race.expertise, true);
       mergeUpdatePool("traits.traits.dr.selected", pullProperties(race.damRes, "resist"));
       mergeUpdatePool("traits.traits.di.selected", pullProperties(race.damImm, "immune"));
       mergeUpdatePool("traits.traits.dv.selected", pullProperties(race.damVul, "vulnerable"));
