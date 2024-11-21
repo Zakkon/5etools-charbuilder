@@ -1182,7 +1182,6 @@ class CharacterBuilder {
       const hasSubclass = cls.ixSubclass != null;
       if(hasSubclass){
         sclsData = CharacterBuilder._getEntityByUid(clsData.subclasses, {uid: cls.subclassUid});
-        console.log("SUBCLASS DATA", sclsData);
         //Add subclass's additionalSpells
         for(let addSpells of sclsData.additionalSpells??[]){
           for(let [knownType, value] of Object.entries(addSpells)){
