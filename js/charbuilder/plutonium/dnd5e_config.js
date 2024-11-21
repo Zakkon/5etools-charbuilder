@@ -505,146 +505,182 @@ preLocalize("toolProficiencies", { sort: true });
  */
 DND5E.tools = {
   alchemist: {
+    label: "Alchemist's Supplies",
     ability: "int",
     id: "SztwZhbhZeCqyAes"
   },
   bagpipes: {
+    label: "Bagpipes",
     ability: "cha",
     id: "yxHi57T5mmVt0oDr"
   },
   brewer: {
+    label: "Brewer's Supplies",
     ability: "int",
     id: "Y9S75go1hLMXUD48"
   },
   calligrapher: {
+    label: "Calligrapher's Supplies",
     ability: "dex",
     id: "jhjo20QoiD5exf09"
   },
   card: {
+    label: "Playing Card Set", //not sure about this
     ability: "wis",
     id: "YwlHI3BVJapz4a3E"
   },
   carpenter: {
+    label: "Carpenter's Tools",
     ability: "str",
     id: "8NS6MSOdXtUqD7Ib"
   },
   cartographer: {
+    label: "Cartographer's Tools",
     ability: "wis",
     id: "fC0lFK8P4RuhpfaU"
   },
   chess: {
+    label: "Dragonchess Set", //Not sure about this
     ability: "wis",
     id: "23y8FvWKf9YLcnBL"
   },
   cobbler: {
+    label: "Cobbler's Tools",
     ability: "dex",
     id: "hM84pZnpCqKfi8XH"
   },
   cook: {
+    label: "Cook's Utensils",
     ability: "wis",
     id: "Gflnp29aEv5Lc1ZM"
   },
   dice: {
+    label: "Dice Set", //Not sure about this
     ability: "wis",
     id: "iBuTM09KD9IoM5L8"
   },
   disg: {
+    label: "Disguise Kit", //not sure about this
     ability: "cha",
     id: "IBhDAr7WkhWPYLVn"
   },
   drum: {
+    label: "Brewer's Supplies",
     ability: "cha",
     id: "69Dpr25pf4BjkHKb"
   },
   dulcimer: {
+    label: "dulcimer", //not sure about this
     ability: "cha",
     id: "NtdDkjmpdIMiX7I2"
   },
   flute: {
+    label: "Flute", //not sure about this
     ability: "cha",
     id: "eJOrPcAz9EcquyRQ"
   },
   forg: {
+    label: "Forgery Kit", //Not sure about this
     ability: "dex",
     id: "cG3m4YlHfbQlLEOx"
   },
   glassblower: {
+    label: "Glassblower's Tools",
     ability: "int",
     id: "rTbVrNcwApnuTz5E"
   },
   herb: {
+    label: "Herbalist's Kit", //not sure about this
     ability: "int",
     id: "i89okN7GFTWHsvPy"
   },
   horn: {
+    label: "Horn", //Not sure about this
     ability: "cha",
     id: "aa9KuBy4dst7WIW9"
   },
   jeweler: {
+    label: "Jeweler's Tools",
     ability: "int",
     id: "YfBwELTgPFHmQdHh"
   },
   leatherworker: {
+    label: "Leatherworker's Tools",
     ability: "dex",
     id: "PUMfwyVUbtyxgYbD"
   },
   lute: {
+    label: "Lute", //not sure about this
     ability: "cha",
     id: "qBydtUUIkv520DT7"
   },
   lyre: {
+    label: "Lyre", //Not sure about this
     ability: "cha",
     id: "EwG1EtmbgR3bM68U"
   },
   mason: {
+    label: "Mason's Tools",
     ability: "str",
     id: "skUih6tBvcBbORzA"
   },
   navg: {
+    label: "Painter's Supplies",
     ability: "wis",
     id: "YHCmjsiXxZ9UdUhU"
   },
   painter: {
+    label: "Brewer's Supplies",
     ability: "wis",
     id: "ccm5xlWhx74d6lsK"
   },
   panflute: {
+    label: "Panflute", //Not sure about this
     ability: "cha",
     id: "G5m5gYIx9VAUWC3J"
   },
   pois: {
+    label: "Poisoner's Kit", //not sure about this
     ability: "int",
     id: "il2GNi8C0DvGLL9P"
   },
   potter: {
+    label: "Potter's Tools",
     ability: "int",
     id: "hJS8yEVkqgJjwfWa"
   },
   shawm: {
+    label: "Shawm", //not sure about this
     ability: "cha",
     id: "G3cqbejJpfB91VhP"
   },
   smith: {
+    label: "Smith's Tools",
     ability: "str",
     id: "KndVe2insuctjIaj"
   },
   thief: {
+    label: "Thieve's Tools",
     ability: "dex",
     id: "woWZ1sO5IUVGzo58"
   },
   tinker: {
+    label: "Tinker's Tools",
     ability: "dex",
     id: "0d08g1i5WXnNrCNA"
   },
   viol: {
+    label: "Viol", //Not sure about this
     ability: "cha",
     id: "baoe3U5BfMMMxhCU"
   },
   weaver: {
+    label: "Weaver's Tools",
     ability: "dex",
     id: "ap9prThUB2y9lDyj"
   },
   woodcarver: {
+    label: "Woodcarver's Tools",
     ability: "dex",
     id: "xKErqkLo4ASYr5EP"
   }

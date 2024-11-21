@@ -177,6 +177,7 @@ class System5e{
         return JSON.stringify(schema.system);
     }
 
+    //Deprecated
     static async tryAddToInventory_Item(actor, collectionId, itemUid, quantity, itemType="weapon"){
         //Try to see if this item already exists in the character inventory
         let item5e = await actor.getItemByCollectionId(collectionId);
@@ -194,6 +195,7 @@ class System5e{
             return item5e;
         }
     }
+    //Deprecated
     static async tryAddToInventory_Spell(actor, collectionId, itemUid, quantity){
         //Try to see if this item already exists in the character inventory
         let spell5e = System5e.getEntityByCollectionId(collectionId);
@@ -219,37 +221,16 @@ class System5e{
      * @returns {Entity5e}
      */
     static async tryAddToInventory(actor, entity5e, itemType, options={}){
-        console.error("Add item", entity5e.name, entity5e.collectionId);
+        console.error("Add", itemType, entity5e.name, entity5e.collectionId);
         entity5e.type = itemType;
         actor.createEmbeddedDocuments("item", [], [entity5e], options);
         return entity5e;
     }
     static async removeFromInventory(actor, collectionId){
+        //TODO: use removeEmbeddedDocuments instead
         console.error("Remove item", collectionId);
-        const index = actor.character.system.inventory.items.map(e => e.collectionId).indexOf(collectionId);
-        actor.character.system.inventory.items.splice(index, 1);
-    }
-    /**
-     * Try to get an existing entiy from the inventory
-     * @param {Actor} actor
-     * @param {string} itemType
-     * @param {string} matchData should match the uid of the entity
-     * @param {string} collectionId If this is provided, it will be used during matching instead of matchData
-     * @returns {Entity5e}
-     */
-    static getFromInventory(itemType, matchData, collectionId, actor=null){
-        if(!actor){actor = CharacterBuilder.instance._actor;}
-        for(let it of actor.character.system.inventory.items){
-            //To get the functions on the Item5e object, we need to recast it
-            if(!it.type != itemType){continue;}
-            if(collectionId!= null){if(it.collectionId == collectionId){return it;}continue;}
-            if(ent.uid == matchData){return it;}
-        }
-        return null;
-    }
-    static getInventoryEntities(actor=null){
-        if(!actor){actor = CharacterBuilder.instance._actor;}
-        return actor.character.system.inventory.items;
+        const index = actor.system.inventory.items.map(e => e.collectionId).indexOf(collectionId);
+        actor.system.inventory.items.splice(index, 1);
     }
     static __hooks = {};
     static hkItemUpdated(collectionID){
@@ -270,6 +251,7 @@ class System5e{
 
     }
 
+    //DEPRECATED
     /**
      * Get an Entity5e using the collection id. Item must already be in actor's inventory
      * @param {string} collectionId
@@ -277,48 +259,46 @@ class System5e{
      * @returns {Entity5e}
      */
     static getEntityByCollectionId(collectionId, actor=null){
+        //DEPRECATED
         if(!actor){actor = CharacterBuilder.instance._actor;}
-        for(let it of actor.character.system.inventory.items){
-            if(it == null){ console.warn("Null entity found in inventory", actor.character.system.inventory.items); continue;}
+        for(let it of actor.system.inventory.items){
+            if(it == null){ console.warn("Null entity found in inventory", actor.system.inventory.items); continue;}
             if(it.collectionId == collectionId){return it;}
         }
         return null;
     }
-    /**
-     * Returns any items in the inventory matching the value of property
-     * @param {string} property
-     * @param {any} value
-     * @param {Actor} actor=null
-     * @returns {Entity5e[]}
-     */
-    static getEntitiesByProp(property, value, actor=null){
-        return System5e.getEntitiesByProps([{property:property, value:value}], actor);
-    }
-    /**
-     * Returns any items in the inventory matching the value of property
-     * @param {{property:string, value:any}[]} propPairs
-     * @param {Actor} actor=null
-     * @returns {Entity5e[]}
-     */
-    static getEntitiesByProps(propPairs, actor=null){
-        if(!actor){actor = CharacterBuilder.instance._actor;}
-        let ar = [];
-        for(let it of actor.character.system.inventory.items){
-            //To get the functions on the Item5e object, we need to recast it
-            let match = true;
-            for(let i = 0; i < propPairs.length && match; ++i){
-                let pv = propPairs[i];
-                if(it[pv.property] != pv.value){match = false;}
-            }
-            if(match){ar.push(it);}
-        }
-        return ar;
-    }
+
     static createUniqueID(){
         return Math.random().toString(16).slice(2);
     }
 
     //#region Game Rules
+    static calcProficiencyBonus(level){
+        switch(level){
+            case 0:
+            case 1:
+            case 2:
+            case 3:
+            case 4: return 2;
+            case 5:
+            case 6:
+            case 7:
+            case 8: return 3;
+            case 9:
+            case 10:
+            case 11:
+            case 12: return 4;
+            case 13:
+            case 14:
+            case 15:
+            case 16: return 5;
+            case 17:
+            case 18:
+            case 19:
+            case 20: return 6;
+            default: return 6;
+        }
+    }
     static proficiencyMult(baseProf){
         return baseProf == 0? 0 : baseProf == 1? 1 : baseProf == 2? 0.5 : 2;
     }
@@ -355,6 +335,21 @@ class System5e{
         data.passive = passive;
         return data;
         return {label, value, ability:abilAbbr, baseValue, hover, icon, abbreviation:abilAbbr, total:mod, passive};
+    }
+    /**
+     * @param {object} data
+     * @param {number} [data.baseProf]
+     * @param {number} [proficiencyModifier]
+     * @returns {any}
+     */
+    static calcToolEmbed(data, proficiencyModifier) {
+        data.icon = data.baseProf == 0? "far fa-circle" : data.baseProf == 1? "fas fa-check" : data.baseProf == 2? "fas fa-adjust" : "fas fa-check-double";
+        data.hover = data.baseProf == 0? "Not Proficient" : data.baseProf == 1? "Proficient" : data.baseProf == 2? "Half Proficient" : "Expertise";
+        data.baseValue = System5e.proficiencyMult(data.baseProf);
+        data.value = data.baseProf >= 1;
+        const {mod, passive} = System5e.calcSkillMod(0, data.baseProf, proficiencyModifier);
+        data.total = mod;
+        return data;
     }
     static calcAbilityScoreEmbed(data, total, proficiencyModifier){
         data.value = total;
@@ -795,14 +790,19 @@ class Actor5e {
 
         //SKILLS
         this.skills = {};
-        let configSkills = [];
         for(const [key, value] of Object.entries(CONFIG.DND5E.skills)){
             this.skills[key] = System5e.calcSkillEmbed({
                 label: value.label,
                 ability: value.ability,
                 baseProf: 0},
                 this.system.abilities, this.system.attributes.prof);
-            configSkills.push(key);
+        }
+        //TOOLS
+        this.tools = {};
+        for(const [key, value] of Object.entries(CONFIG.DND5E.tools)){
+            this.tools[key] = System5e.calcToolEmbed({
+                label: value.label,
+                baseProf: 0}, this.system.attributes.prof);
         }
 
         this.hp = {
@@ -895,6 +895,7 @@ class Actor5e {
 
         this.elements = {inventory: "dnd5e-inventory"};
 
+        this.prepareEmbeddedData();
         this.prepareDerivedData();
     }
     
@@ -935,9 +936,7 @@ class Actor5e {
                 entity.type = d.type; //weapon/spell/equipment/etc/etc
                 collection.push(entity);
             }
-            for(let e of entities){
-                collection.push(e);
-            }
+            if(entities != null){collection = collection.concat(entities);}
             //Add them to the character
             this._addEntities(collection, options);
         }
@@ -965,24 +964,15 @@ class Actor5e {
     }
     _addEntities(items){
         for(let it of items){
+            let subType = it.type;
             switch(it.entityType){
                 case "spell":
-                    if(it.system.preparationMode=="innate"){this.spellbook[it.system.preparationMode].spells.push(it);}
-                    else{this.spellbook[it.system.level].spells.push(it);}
-                    break;
-                case "feature":
-                case "background":
-                case "race":
-                case "class":
-                    this.features[it.type].items.push(it);
-                    break;
-                case "item":
-                    this.inventory[it.type].items.push(it);
-                    break;
-                default:
-                    console.error("Could not add entity of entityType", it.entityType, ", not sure where to put it");
-                    break;
+                    if(it.system.preparationMode=="innate"){subType = it.system.preparationMode;}
+                    else{subType = it.system.level;}
+                break;
             }
+            let refArray = this._getEntities(it.entityType, subType);
+            refArray.push(it);
         }
     }
     _removeEntities(items){
@@ -1001,6 +991,25 @@ class Actor5e {
                     break;
             }
         }
+    }
+    _getInventory(entityType){
+        switch(entityType){
+            case "spell":
+                return this.spellbook;
+            case "feature":
+            case "background":
+            case "race":
+            case "class":
+                return this.features;
+            case "item":
+                return this.inventory;
+            default:
+                console.error("Could not find inventory matching entityType", entityType);
+                return null;
+        }
+    }
+    _getEntities(entityType, subtype){
+        return this._getInventory(entityType)[subtype][(entityType=="spell")?"spells":"items"];
     }
 
     _runInventoryFunc(func){
@@ -1078,15 +1087,32 @@ class Actor5e {
     applyActiveEffects(){
         this.prepareEmbeddedData();
     }
+    /**
+   * Prepare movement & senses values derived from race item.
+   */
     prepareEmbeddedData(){
         if(this.system.details.race != null){
             this._prepareRace(this.system.details.race);
+            this.system.details.type = this.system.details.race.system.type;
         }
-        else{console.log("No race", this.system.details);}
+        else{
+            this.system.details.type = {value:"humanoid", swarm:false};
+        }
+        for (const key of Object.keys(CONFIG.DND5E.movementTypes)) {this.system.attributes.movement[key] ??= 0;}
+        for (const key of Object.keys(CONFIG.DND5E.senses)) {this.system.attributes.senses[key] ??= 0;}
+        this.system.attributes.movement.units ??= Object.keys(CONFIG.DND5E.movementUnits)[0];
+        this.system.attributes.senses.units ??= Object.keys(CONFIG.DND5E.movementUnits)[0];
+    }
+    prepareSheetDetails(){
+        
     }
 
     //#region Derived Data
+    /**
+   * Prepare remaining character data.
+   */
     prepareDerivedData(){
+
         const globalBonuses = this.system.bonuses?.abilities ?? {};
         const rollData = this.getRollData({deterministic:true});
         const globalCheckBonus = Roll.simplifyBonus(globalBonuses?.check, rollData);
@@ -1095,6 +1121,8 @@ class Actor5e {
         this._prepareInitiative(rollData, globalCheckBonus);
         this._prepareSpellcasting();
         this.movement = this._getMovementSpeed(this.system, false);
+
+        this.prepareSheetDetails();
     }
     /**
      * Prepare modifiers and other values for abilities.
@@ -1157,7 +1185,6 @@ class Actor5e {
         const rollData = this.getRollData({ deterministic: true });
 
         
-        console.log("AC", ac, cfg);
         // Determine base AC
         switch (ac.calc) {
 
@@ -1441,6 +1468,9 @@ class CharacterTemplate extends CommonTemplate {
                 },
                 spellcasting: "cha",
                 senses: {}
+            },
+            details:{
+                level: 0,
             }
         })
     }

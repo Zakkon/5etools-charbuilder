@@ -29,16 +29,14 @@ class ActorCharactermancerSheet2 extends ActorCharactermancerSheet {
         this.setup(main._actor);
     }
     setup(actor){
-        console.log("ACTOR", actor);
         this.actor = actor; //Create a new actor
-        let hash = "archery_phb";
+        /* let hash = "archery_phb";
         OptionalFeature5e.verifySystemData(hash).then(() => {
             let featureItem = new OptionalFeature5e(hash, null, false);
             console.log(featureItem);
             
-        console.log("ACTOR2", actor);
             System5e.tryAddToInventory(actor, featureItem, "passive", {doNotRender:true});
-        });
+        }); */
 
         let inv = new TestInventoryElement(this.actor);
         this._inv = inv;

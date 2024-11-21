@@ -36,6 +36,9 @@ class HandlebarsHelper{
         Handlebars.registerHelper('eq', function (value1, value2) {
             return value1 === value2;
         });
+        Handlebars.registerHelper('greaterThan', function (value1, value2) {
+            return value1 > value2;
+        });
         Handlebars.registerHelper('checked', function (value) {
             return (value === 'true' || value == true)? `checked` : "";
         });

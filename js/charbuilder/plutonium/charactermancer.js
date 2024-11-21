@@ -1707,34 +1707,6 @@ class ActorCharactermancerClass extends ActorCharactermancerBaseComponent {
     }
 
     async getChoiceData(){
-
-        async function getData(components, path, ignoreIfIncomplete=false){
-            if(!Array.isArray(components)){components = [components];}
-            const forms = await fnGetFormData(components, path);
-            //return fnMergeData(forms, ignoreIfIncomplete);
-            return forms;
-        }
-        async function fnGetFormData(components, path) {
-            let arr = [];
-            for(let i = 0; i < components.length; ++i){
-                let c = components[i];
-                if(Array.isArray(c)){
-                    let result = await fnGetFormData(c, `${path}_${i}`);
-                    arr = arr.concat(result); continue;}
-                let data = await c.pGetFormData();
-                data.path = `${path}_${i}`;
-                arr.push(data);
-            }
-            return arr;
-        }
-        function fnMergeData(forms, ignoreIfIncomplete){
-            let merged = {};
-            for(let f of forms){
-                if(ignoreIfIncomplete && !f.isFormComplete){continue;}
-                merged = Object.assign(merged, f.data);
-            }
-            return merged;
-        }
         
         const actor = CharacterBuilder.instance._actor;
         let updatePool = {};
@@ -1761,10 +1733,10 @@ class ActorCharactermancerClass extends ActorCharactermancerBaseComponent {
             - hp info
             - featureOptionsSelect
             */
-            cls.hpInfo = await getData(this._compsClassHpInfo, part + "hpInfo");
-            cls.hpIncreaseMode = await getData(this._compsClassHpIncreaseMode, part + "hpIncreaseMode");
-            cls.skillProficiencies = await getData(this._compsClassSkillProficiencies, part + "skillProf");
-            cls.featureOptionsSelect = await getData(this._compsClassFeatureOptionsSelect, part + "fos");
+            cls.hpInfo = await this._getFormDataFromComponents(this._compsClassHpInfo, part + "hpInfo");
+            cls.hpIncreaseMode = await this._getFormDataFromComponents(this._compsClassHpIncreaseMode, part + "hpIncreaseMode");
+            cls.skillProficiencies = await this._getFormDataFromComponents(this._compsClassSkillProficiencies, part + "skillProf");
+            cls.featureOptionsSelect = await this._getFormDataFromComponents(this._compsClassFeatureOptionsSelect, part + "fos");
             out.classes.push(cls);
         }
         if(Object.entries(updatePool).length > 0){actor.update(updatePool);}
@@ -7331,15 +7303,17 @@ class ActorCharactermancerRace extends ActorCharactermancerBaseComponent {
             - featureOptionsSelect
             */
             r.size = await this._getFormDataFromComponents(this._compRaceSize, part + "size");
-            r.languages = await this._getFormDataFromComponents(this._compRaceLanguageProficiencies, part + "languageProficiencies");
             r.damRes = await this._getFormDataFromComponents(this._compRaceDamageResistance, part + "damRes");
             r.damImm = await this._getFormDataFromComponents(this._compRaceDamageImmunity, part + "damImm");
             r.damVul = await this._getFormDataFromComponents(this._compRaceDamageVulnerability, part + "damVul");
+            r.conImm = await this._getFormDataFromComponents(this._compRaceConditionImmunity, part + "conImm");
             r.expertise = await this._getFormDataFromComponents(this._compRaceExpertise, part + "expertise");
             r.skills = await this._getFormDataFromComponents(this._compRaceSkillProficiencies, part + "skills");
-            r.skillsToolsLanguages = await this._getFormDataFromComponents(this.compRaceSkillToolLanguageProficiencies, part + "skillsToolsLanguages");
             r.tools = await this._getFormDataFromComponents(this._compRaceToolProficiencies, part + "tools");
+            r.languages = await this._getFormDataFromComponents(this._compRaceLanguageProficiencies, part + "languages");
+            r.skillsToolsLanguages = await this._getFormDataFromComponents(this.compRaceSkillToolLanguageProficiencies, part + "skillsToolsLanguages");
             r.weaponProficiencies = await this._getFormDataFromComponents(this._compRaceWeaponProficiencies, part + "weaponProficiencies");
+            r.armorProficiencies = await this._getFormDataFromComponents(this._compRaceArmorProficiencies, part + "armorProficiencies");
             //What about language choices?
             out.races.push(r);
         }
@@ -8069,9 +8043,9 @@ class ActorCharactermancerBackground extends ActorCharactermancerBaseComponent {
             bg.damRes = await this._getFormDataFromComponents(this._compBackgroundDamageResistance, part + "damRes");
             bg.damVul = await this._getFormDataFromComponents(this._compBackgroundDamageVulnerability, part + "damVul");
             bg.expertise = await this._getFormDataFromComponents(this._compBackgroundExpertise, part + "expertise");
-            bg.languageToolProficiencies = await this._getFormDataFromComponents(this._compBackgroundLanguageToolProficiencies, part + "languageToolProficiencies");
-            bg.skillProficiencies = await this._getFormDataFromComponents(this._compBackgroundSkillProficiencies, part + "skillProficiencies");
-            bg.toolProficiencies = await this._getFormDataFromComponents(this._compBackgroundToolProficiencies, part + "toolProficiencies");
+            bg.languagesTools = await this._getFormDataFromComponents(this._compBackgroundLanguageToolProficiencies, part + "languagesTools");
+            bg.skills = await this._getFormDataFromComponents(this._compBackgroundSkillProficiencies, part + "skills");
+            bg.tools = await this._getFormDataFromComponents(this._compBackgroundToolProficiencies, part + "tools");
             out.backgrounds.push(bg);
         }
         return out;

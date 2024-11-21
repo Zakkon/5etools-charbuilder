@@ -1437,7 +1437,7 @@ h5 {
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  padding: 1px 4px;
+  /* padding: 1px 4px; */
 }
 .c5e.sheet.actor .tag.tool a:is(.proficiency-toggle, .config-button) {
   display: flex;

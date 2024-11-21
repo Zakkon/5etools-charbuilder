@@ -1046,21 +1046,44 @@ class CharacterBuilder {
       if(updatePool[prop] == null){updatePool[prop] = array; return;}
       updatePool[prop] = updatePool[prop].concat(array);
     }
-    const skillNameToAbbr = (name) => {
-      name = name.toLowerCase();
-      for(let [key, value] of Object.entries(CONFIG.DND5E.skills)){
-        if(value.label.toLowerCase() === name){return key;}
-      }
-      return null;
-    }
+    
     const pullSkillProperties = (forms) => {
+      const skillNameToAbbr = (name) => {
+        name = name.toLowerCase();
+        for(let [key, value] of Object.entries(CONFIG.DND5E.skills)){
+          if(value.label.toLowerCase() === name){return key;}
+        }
+        return null;
+      }
+
       for(let form of forms){
-        for(let [skillName, profValue] of Object.entries(form.data.skillProficiencies)){
+        for(let [skillName, profValue] of Object.entries(form.data.skillProficiencies??{})){
           const skillAbbr = skillNameToAbbr(skillName);
           let skill = actor.skills[skillAbbr];
           skill.baseProf = profValue;
           const newSkill = System5e.calcSkillEmbed(skill, actor.system.abilities, actor.system.attributes.prof);
           updatePool[`skills.${skillAbbr}`] = newSkill;
+        }
+      }
+    }
+    const pullToolProperties = (forms) => {
+      const toolNameToAbbr = (name) => {
+        name = name.toLowerCase();
+        for(let [key, value] of Object.entries(CONFIG.DND5E.tools)){
+          if(value.label.toLowerCase() === name){return key;}
+        }
+        return null;
+      }
+      
+      for(let form of forms){
+        for(let [toolName, profValue] of Object.entries(form.data.toolProficiencies??{})){
+          const toolAbbr = toolNameToAbbr(toolName);
+          if(toolAbbr == null){console.error("Failed to find any tool with name", toolName);}
+          let tool = actor.tools[toolAbbr];
+          if(tool == null){console.error("Failed to find any tool with abbr", toolAbbr, actor.tools);}
+          tool.baseProf = profValue;
+          const newTool = System5e.calcToolEmbed(tool, actor.system.attributes.prof);
+          updatePool[`tools.${toolAbbr}`] = newTool;
         }
       }
     }
@@ -1078,15 +1101,15 @@ class CharacterBuilder {
 
 
     let updatePool = {};
-    let languages = [];
 
     
     //#region Parse Classes
+    let totalLevel = 0;
     for(let cls of choiceData.classes){
       const clsData = CharacterBuilder.getEntityByUid("class", {uid: cls.uid});
-      addFeatureItem("class", cls.uid, cls.path); //Add the class item itself to our sheet
-      //CLASS FEATURES
-      console.log("CLASS DATA", clsData);
+      let classItem = await addFeatureItem("class", cls.uid, cls.path); //Add the class item itself to our sheet
+      classItem.targetLevel = cls.targetLevel;
+      totalLevel += cls.targetLevel;
       for(let f of clsData.classFeatures){
         if(f.level > cls.targetLevel){continue;}
         addFeatureItem("classFeature", f.hash, cls.path, {className:clsData.name.toLowerCase(), classSource:clsData.source.toLowerCase()});
@@ -1122,6 +1145,8 @@ class CharacterBuilder {
         } */
       }
     }
+    updatePool["system.details.level"] = totalLevel;
+    updatePool["system.attributes.prof"] = System5e.calcProficiencyBonus(totalLevel);
     //#endregion
     //#region Parse Race
     for(let race of choiceData.races){
@@ -1130,8 +1155,18 @@ class CharacterBuilder {
       updatePool["system.details.race"] = {name:raceItem.name, system:raceItem.system};
       //Movement speed
       mergeUpdatePool("traits.traits.languages.selected", pullProperties(race.languages, "languageProficiencies"));
+      mergeUpdatePool("traits.traits.languages.selected", pullProperties(race.skillsToolsLanguages, "languageProficiencies"));
+      pullSkillProperties(race.skills);
+      pullToolProperties(race.tools);
+      pullSkillProperties(race.skillsToolsLanguages);
+      pullToolProperties(race.skillsToolsLanguages);
       mergeUpdatePool("traits.traits.dr.selected", pullProperties(race.damRes, "resist"));
+      mergeUpdatePool("traits.traits.di.selected", pullProperties(race.damImm, "immune"));
+      mergeUpdatePool("traits.traits.dv.selected", pullProperties(race.damVul, "vulnerable"));
+      mergeUpdatePool("traits.traits.ci.selected", pullProperties(race.conImm, "conditionImmune"));
+      mergeUpdatePool("traits.traits.expertise.selected", pullProperties(race.expertise, "expertise"));
       mergeUpdatePool("traits.traits.weaponProf.selected", pullProperties(race.weaponProficiencies, "weaponProficiencies"));
+      mergeUpdatePool("traits.traits.armorProf.selected", pullProperties(race.armorProficiencies, "armorProficiencies"));
       const sizeAbbr = race.size?.[0]?.data??"M";
       const sizeConversion = {m:"med", t:"tiny", s:"sm", g:"grg", h:"huge", l:"large"};
       updatePool["traits.size"] = sizeConversion[sizeAbbr.toLowerCase()];
@@ -1141,9 +1176,10 @@ class CharacterBuilder {
     for(let bg of choiceData.backgrounds){
       let bgItem = await addFeatureItem("background", bg.uid, bg.path);
       updatePool["system.details.background"] = {name:bgItem.name};
-      pullSkillProperties(bg.skillProficiencies);
-      //Apply languages to language array
+      pullSkillProperties(bg.skills);
+      pullToolProperties(bg.languagesTools);
       mergeUpdatePool("traits.traits.languages.selected", pullProperties(bg.languages, "languageProficiencies"));
+      mergeUpdatePool("traits.traits.languages.selected", pullProperties(bg.languagesTools, "languageProficiencies"));
     }
     //#endregion
     //#region Parse Ability Scores
@@ -1154,7 +1190,6 @@ class CharacterBuilder {
     //#endregion
 
     //Then remove all unverified features
-    console.log("items to verify:", allItems);
     for(let i = 0; i < itemsVerified.length; ++i){
       let it = allItems[i];
       let isVerified = itemsVerified[i];
