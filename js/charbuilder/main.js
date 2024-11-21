@@ -929,16 +929,15 @@ class CharacterBuilder {
   static getSubclassFeatureByUid(hash, className, classSource, subclassName, subclassSource){
     const cls = this.getEntityByUid("class", {name:className, source:classSource});
     const scls = this._getEntityByUid(cls.subclasses, {name:subclassName, source:subclassSource});
-    //We have to search within loadeds
-    const useLoadeds = true;
     let matches = [];
-    if(useLoadeds){
+    if(SubclassFeature5e.useLoadeds){
       for(let f of scls.subclassFeatures){
         matches = matches.concat(f.loadeds.filter(e => e.hash.toLowerCase() == hash));
       }
     }
     else{
-      matches = scls.subclassFeatures.filter();
+      console.log("SUBCLASSFEATURES", scls.subclassFeatures, hash);
+      matches = scls.subclassFeatures.filter(e => e.hash.toLowerCase() == hash);
     }
     if(matches.length > 1){console.error("More than one subclass feature found with hash", hash); return matches[0];s}
     else if(matches.length < 1){return null;}
@@ -1194,6 +1193,8 @@ class CharacterBuilder {
       for(let fos of cls.featureOptionsSelect){
         //FEATURES
         for(let feature of fos.data.features??[]){
+          //.isRequiredOption is a good teller if they want us to load a subclassFeature from within a loadeds
+          if(feature.type == "subclassFeature" && (feature.isRequiredOption === false && feature.isRequiredOption !== null) && !SubclassFeature5e.useLoadeds){continue;}
           await addFeatureItem(feature.type, feature.hash, cls.path,
             {className:clsData.name.toLowerCase(), classSource:clsData.source.toLowerCase(),
               subclassName:sclsData?.name.toLowerCase(), subclassSource:sclsData?.source.toLowerCase()});

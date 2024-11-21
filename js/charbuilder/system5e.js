@@ -673,6 +673,7 @@ class ClassFeature5e extends Feature5e{
     }
 }
 class SubclassFeature5e extends Feature5e{
+    static useLoadeds = false; //Set this to true if you want to import one big subclassFeature detailing several subclassFeatures (gained at the same level, likely) within itself, set it to false if you want to import each subclassFeature individually
     constructor(hash, className, classSource, subclassName, subclassSource, collectionId=null, isCustom){
         super(hash, collectionId, isCustom);
         
@@ -683,11 +684,15 @@ class SubclassFeature5e extends Feature5e{
         //if(!this.isCustom){this._tryCloneOriginal(CharacterBuilder.getClassFeatureByUid(hash, className, classSource));}
         const original = CharacterBuilder.getSubclassFeatureByUid(hash, className, classSource, subclassName, subclassSource);
         if(!original){console.error("Failed to load feature using hash", hash, className, classSource, subclassName, subclassSource);}
-        this.name = original.name??original.entity.name;
+        this.name = SubclassFeature5e.useLoadeds? original.entity.name : original.name;
         this.system = structuredClone(original.system);
         //this.entries = structuredClone(CharacterBuilder.getClassFeatureEntries(original.name, original.source));
-        let entr = []; console.log("SC FEATURE", original);
-        for(let e of original.entity.entries){entr.push(e);}
+        let entr = [];
+        if(SubclassFeature5e.useLoadeds){
+            for(let e of original.entity.entries){entr.push(e);}
+        }
+        else{for(let l of original.loadeds){for(let e of l.entity.entries){entr.push(e);}}}
+        
         this.entries = entr;
 
         if(!Entity5e.use_overrides){return this;}
