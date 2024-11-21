@@ -1110,10 +1110,6 @@ class CharacterBuilder {
       let classItem = await addFeatureItem("class", cls.uid, cls.path); //Add the class item itself to our sheet
       classItem.targetLevel = cls.targetLevel;
       totalLevel += cls.targetLevel;
-      for(let f of clsData.classFeatures){
-        if(f.level > cls.targetLevel){continue;}
-        addFeatureItem("classFeature", f.hash, cls.path, {className:clsData.name.toLowerCase(), classSource:clsData.source.toLowerCase()});
-      }
       //HIT POINTS
       for(let form of cls.hpInfo){
         let hpFormula = form.data.hitPointsAtFirstLevel;
@@ -1137,12 +1133,9 @@ class CharacterBuilder {
       //FEATURE OPTIONS SELECT
       for(let fos of cls.featureOptionsSelect){
         //FEATURES
-        /* for(let f of fos.data.features){
-          let hash = f.hash; //also known as "uid"
-          let matchIndex = findItemMatch(fos.data.path, hash);
-          if(matchIndex >= 0){itemsVerified[matchIndex] = true;}
-          else { await addFeatureItem(f.type, hash, fos.data.path); } //If no match exists, just create a new feature
-        } */
+        for(let f of fos.data.features){
+          addFeatureItem(f.type, f.hash, cls.path, {className:clsData.name.toLowerCase(), classSource:clsData.source.toLowerCase()});
+        }
       }
     }
     updatePool["system.details.level"] = totalLevel;

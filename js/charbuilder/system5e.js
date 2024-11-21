@@ -662,8 +662,14 @@ class ClassFeature5e extends Feature5e{
         const existingData = CharacterBuilder.getClassFeatureByUid(hash, className, classSource);
         if(existingData.system){return;}
         //No system data exists, go ahead and import
+        try{
         let imported = await SourceManager.plutoniumConvertData(existingData, "classFeature");
         existingData.system = imported.system;
+        }
+        catch(e){
+            console.log("hash:", hash, "clsName:", className, classSource);
+            console.error(e);
+        }
     }
 }
 class Spell5e extends Entity5e{
