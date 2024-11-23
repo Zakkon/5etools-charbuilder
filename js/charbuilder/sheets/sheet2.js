@@ -91,10 +91,44 @@ class ActorCharactermancerSheet2 extends ActorCharactermancerSheet {
                 this.element.appendTo(parentElement);
             }
 
+            this._postRender();
+
             this.navigation_switchTab(this.activeTab); //Go to a tab
             this.activateListeners();
             this._inv.activateListeners(parentElement);
         });
+    }
+
+    _postRender(){
+        //Find spell slot markers
+        const markers = this.element.find(".spellSlotMarker");
+        
+        for(let markerDiv of markers){
+            //get grandparent
+            let grandparent = markerDiv.parentNode.parentNode;
+            console.log(grandparent);
+            //Get some data from the parent
+            const dataset = grandparent.dataset;
+            //lets say lvl 1 has 2 spell slots
+            let contents = "";
+            if(dataset.preparationMode != "innate" || dataset.level < 1){
+                //We now have to get the actual category of the inventory, and from there get max & current spell slots
+                const sectionInfo = this.actor.spellbook[dataset.level];
+                const maxSpellSlots = isNumeric(sectionInfo.slots)? sectionInfo.slots : 0;
+                const spellSlotsRemaining = isNumeric(sectionInfo.uses)? sectionInfo.uses : 0;
+                for (let i = 1; i <= maxSpellSlots; i++) {
+                    if (i <= spellSlotsRemaining) {
+                        contents += `<span class="dot"></span>`;
+                    }
+                    else {
+                        contents += `<span class="dot empty"></span>`;
+                    }
+                }
+            }
+            
+            console.log("marker", markerDiv);
+            $(markerDiv).html(contents);
+        }
     }
 
     loadFromState(stateMeta){

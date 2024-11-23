@@ -1,5 +1,7 @@
 :root{
     --tertiary-text: grey;
+    --highlight: #44191a; /* same as dnd5e*/
+    --light-highlight: #9e6e6f;
 }
 a {
     cursor: pointer;
@@ -470,6 +472,35 @@ form .details .form-group.uses-per span, form .details .form-group.consumption s
     display: flex;
 }
 
+/* SPELL SLOTS */
+.spellSlotMarker {
+    display: flex;
+    flex: initial !important;
+    gap: 2px;
+    align-items: center;
+}
+.spellSlotMarker .dot {
+    position: relative;
+    display: block;
+    width: 15px;
+    height: 15px;
+    cursor: pointer;
+    background-color: var(--highlight);
+    border: 1px solid var(--highlight);
+    border-radius: 3px;
+}
+.spellSlotMarker .dot.empty {
+    background-color: transparent;
+    border-color: #7a7971;
+}
+.spellSlotMarker .dot:hover,
+.spellSlotMarker .dot.change {
+    background-color: var(--light-highlight);
+    border-color: #7a7971;
+  }
+
+
+/*FOOTER*/
 .c5e footer{
     padding: 0px;
 }

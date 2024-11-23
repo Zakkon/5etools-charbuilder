@@ -921,6 +921,21 @@ class Actor5e {
             }
             
         };
+        const createSpellCategory = (label, preparationMode, level, usesSlots=false) => {
+            return {
+                label: label,
+                canCreate:true,
+                level,
+                dataset: {
+                    level,
+                    preparationMode: preparationMode,
+                    type: "spell",
+                },
+                usesSlots,
+                uses:"-", slots:"-",
+                spells:[] //spell5e[]
+            }
+        }
 
         this.spellbook = {
             innate: {
@@ -935,7 +950,11 @@ class Actor5e {
                 usesSlots:false,
                 uses:"-", slots:"-",
                 spells:[] //spell5e[]
-            }
+            },
+            1:createSpellCategory("1st Level", "prepared", 1),
+            2:createSpellCategory("2nd Level", "prepared", 2),
+            3:createSpellCategory("3rd Level", "prepared", 3),
+            4:createSpellCategory("4th Level", "prepared", 4),
         }
 
         this.features = {

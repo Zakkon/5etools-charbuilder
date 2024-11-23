@@ -34,6 +34,7 @@
     <li class="items-header spellbook-header flexrow" {{ dnd5e-dataset section.dataset }}>
         <div class="item-name flexrow">
             <h3>{{section.label}}</h3>
+            <div class="spellSlotMarker"></div>
             <div class="spell-slots">
                 {{#if section.usesSlots}}
                 <input type="text" name="system.spells.{{section.prop}}.value" value="{{section.uses}}" placeholder="0"

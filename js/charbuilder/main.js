@@ -1145,9 +1145,10 @@ class CharacterBuilder {
         }
       }
     }
-    const addSpellItem = async (hash, knownType) => {
+    const addSpellItem = async (hash, preparationMode) => {
       await Spell5e.verifySystemData(hash);
       let spellItem = new Spell5e(hash, null, false);
+      spellItem.system.preparationMode = preparationMode;
       System5e.tryAddToInventory(actor, spellItem, "spell", {doNotRender:true});
       return spellItem;
     }
