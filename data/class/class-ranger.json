@@ -4386,26 +4386,25 @@
 			"entryData": {
 				"senses": [
 					{
-						"grantMode": "conditionals",
 						"conditionals": [
-								{
-									"condition": "!actor.senses?.darkvision",
-									"mod": {
-										"senses.darkvision": {
-											"value": 60,
-											"mode": "set"
-										}
-									}
-								},
-								{
-									"condition": "actor.senses?.darkvision > 0",
-									"mod": {
-										"senses.darkvision": {
-											"value": 30,
-											"mode": "add"
-										}
+							{
+								"condition": "!actor.senses?.darkvision",
+								"mod": {
+									"senses.darkvision": {
+										"value": 60,
+										"mode": "set"
 									}
 								}
+							},
+							{
+								"condition": "!!actor.senses?.darkvision",
+								"mod": {
+									"senses.darkvision": {
+										"value": 30,
+										"mode": "add"
+									}
+								}
+							}
 						]
 					}
 				]

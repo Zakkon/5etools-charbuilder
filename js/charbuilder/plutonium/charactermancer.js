@@ -1744,11 +1744,15 @@ class ActorCharactermancerClass extends ActorCharactermancerBaseComponent {
                                 const isHash = spellName.includes("_");
                                 if(!isHash){
                                     //Get real spell
-                                    const decodedName = decodeURI(spellNames[ix]);
+                                    let decodedName = decodeURI(spellNames[ix]);
+                                    const parts = decodedName.split("#");
+                                    if(parts.length > 1){decodedName = parts[0];}
                                     const spellData = CharacterBuilder.getEntityByProps("spell", {name:decodedName}, {caseInsensitive:true});
                                     if(spellData == null){console.error("Could not find spell with name", decodedName, CharacterBuilder.instance._data.spell);}
                                     hash = UrlUtil.URL_TO_HASH_GENERIC({name: spellData.name.toLowerCase(), source:spellData.source.toLowerCase()}); //Switch from name to hash
+                                    if(parts.length > 1){hash += `#${parts[1]}`;}
                                 }
+                                console.log("spell hash out:", hash);
                                 merged[knownType][lvlGained][ix] = hash;
                             }
                         }
@@ -14774,7 +14778,22 @@ class ActorCharactermancerFeat extends ActorCharactermancerBaseComponent {
         let updatePool = {};
         const state = this.__state;
         let out = {};
-        out.feats = [];
+        out.featFromAsi = [];
+        out.featsFromBackground = [];
+        out.featsFromRace = [];
+        out.featsFromCustom = [];
+        //Get the ASI component
+        const compAsi = CharacterBuilder.instance.compAbility._compStatgen;
+        for(let i = 0; i < 999; ++i){
+            const path = `common_asi_custom_${i}_`;
+            const ixFeat = compAsi.__state[`${path}ixFeat`];
+            if(ixFeat == null){break;} //end loop
+            //Get feat
+            const feat = compAsi._feats[ixFeat];
+            //Get feat chosen ability
+            const ixFeatAbility = compAsi.__state[`${path}ixFeatAbility`];
+            out.featsFromCustom.push({hash:feat._hash, ixFeatAbility});
+        }
         if(Object.entries(updatePool).length > 0){actor.update(updatePool);}
         return out;
     }

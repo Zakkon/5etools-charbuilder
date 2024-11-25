@@ -282,8 +282,8 @@ class TestInventoryElement {
             summary.slideUp(200, () => summary.remove());
             this._unsetExpanded(item.collectionId);
         } else {
-            const chatData = {description: JSON.stringify(item)
-                //item.system.description.value
+            const chatData = {description: //JSON.stringify(item)
+                item.system.description.value
             };
             let template = new LoadTemplate(null, "parts/item-summary", chatData);
             template.createAndCompile((innerHTML)=>{

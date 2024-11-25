@@ -792,6 +792,40 @@ class SubclassFeature5e extends Feature5e{
         }
     }
 }
+class Feat5e extends Feature5e {
+    constructor(hash, collectionId=null, isCustom){
+        super(hash, collectionId, isCustom);
+        //if(!this.isCustom){this._tryCloneOriginal(CharacterBuilder.getClassFeatureByUid(hash, className, classSource));}
+        const original = CharacterBuilder.getEntityByUid("feat", {uid:hash});
+        if(!original){console.error("Failed to load feature using hash", hash);}
+        this.name = original.name;
+        this.system = structuredClone(original.system);
+        //this.entries = structuredClone(CharacterBuilder.getClassFeatureEntries(original.name, original.source));
+        let entr = [];
+        
+        this.entries = entr;
+
+        if(!Entity5e.use_overrides){return this;}
+        return this._createProxy();
+    }
+    get itemData(){return this;}
+    get hash(){return this.uid;}
+
+    /* static async verifySystemData(hash){
+        const existingData = CharacterBuilder.getEntityByUid("feat", {uid:hash});
+        if(existingData.system){return;}
+        //No system data exists, go ahead and import
+        try{
+            let imported = await SourceManager.plutoniumConvertData(existingData, "feat");
+            existingData.system = imported.system;
+            existingData.actorTokenMod = imported.actorTokenMod;
+        }
+        catch(e){
+            console.log("hash:", hash, "class name & source:", className, classSource, "subclass name & source:", subclassName, subclassSource);
+            console.error(e);
+        }
+    } */
+}
 class Spell5e extends Entity5e{
     constructor(itemUid, collectionId=null, isCustom=false){
         super(itemUid, collectionId, isCustom);
