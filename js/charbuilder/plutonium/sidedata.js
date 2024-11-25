@@ -14,25 +14,20 @@ class SideDataInterfaceBase {
 
     /**
      * @param {{name: string, className: string, classSource: string, level: number, source: string, displayText: string}} ent
-     * @returns {any}
+     * @returns {{propBrew:string, fnLoadJson:Function, propJson:string, propsMatch:string[]}}
      */
-    static _getSideLoadOpts(ent) {
-        return null;
-    }
+    static _getSideLoadOpts(ent) { return null; }
 
     static _SIDE_LOAD_OPTS = null;
 
     /**
      * @param {{ent: {name: string, className: string, classSource: string, level: number, source: string, displayText: string}, propOpts:string}}
-     * @returns {any}
+     * @returns {{propBrew:string, fnLoadJson:Function, propJson:string, propsMatch:string[]}}
      */
     static _getResolvedOpts({ent, propOpts="_SIDE_LOAD_OPTS"}={}) {
         const out = this._getSideLoadOpts(ent) || this[propOpts];
         if (out.propsMatch){return out;}
-        return {
-            ...out,
-            propsMatch: ["source", "name"],
-        };
+        return { ...out, propsMatch: ["source", "name"], };
     }
 
     static async pGetSystemSideLoaded (ent, {sideDataSourceGenerated, propOpts = "_SIDE_LOAD_OPTS", systemBase = undefined, actorType = undefined} = {}) {
@@ -276,7 +271,21 @@ class SideDataInterfaceBase {
         return out;
     }
 
-    static async _pGetStarSideLoaded(ent, {propBrew, fnLoadJson, propJson, propsMatch, propFromEntity, propFromSideLoaded, base=undefined, actorType=undefined, }, ) {
+    /**
+     * @param {any} ent an entity in 5eTools schema
+     * @param {string} {propBrew
+     * @param {Function} fnLoadJson
+     * @param {string} propJson
+     * @param {string[]} propsMatch
+     * @param {any} propFromEntity
+     * @param {any} propFromSideLoaded
+     * @param {any} base=undefined
+     * @param {any} actorType=undefined
+     * @param {any} }
+     * @returns {any}
+     */
+    static async _pGetStarSideLoaded(ent, {propBrew, fnLoadJson, propJson, propsMatch,
+        propFromEntity, propFromSideLoaded, base=undefined, actorType=undefined, }, ) {
         const found = await this._pGetSideLoadedMatch(ent, {
             propBrew,
             fnLoadJson,
@@ -305,7 +314,20 @@ class SideDataInterfaceBase {
         return out;
     }
 
-    static async _pGetSideLoadedMatch(ent, {propBrew, fnLoadJson, propJson, propsMatch, propBase, base=undefined, actorType=undefined, isSilent=false}={}) {
+    /**
+     * @param {any} ent an entity in 5eTools schema
+     * @param {string} propBrew
+     * @param {Function} fnLoadJson
+     * @param {string} propJson
+     * @param {string[]} propsMatch
+     * @param {any} propBase
+     * @param {any} base=undefined
+     * @param {any} actorType=undefined
+     * @param {boolean} isSilent=false}={}
+     * @returns {any}
+     */
+    static async _pGetSideLoadedMatch(ent, {propBrew, fnLoadJson, propJson, propsMatch,
+        propBase, base=undefined, actorType=undefined, isSilent=false}={}) {
         const founds = [];
 
         //TEMPFIX
@@ -328,13 +350,11 @@ class SideDataInterfaceBase {
         if (propBrew) {
             const prerelease = await PrereleaseUtil.pGetBrewProcessed();
             const foundPrerelease = (MiscUtil.get(prerelease, propBrew) || []).find(it=>this._pGetAdditional_fnMatch(propsMatch, ent, it));
-            if (foundPrerelease)
-                founds.push(foundPrerelease);
+            if (foundPrerelease) founds.push(foundPrerelease);
 
             const brew = await BrewUtil2.pGetBrewProcessed();
             const foundBrew = (MiscUtil.get(brew, propBrew) || []).find(it=>this._pGetAdditional_fnMatch(propsMatch, ent, it));
-            if (foundBrew)
-                founds.push(foundBrew);
+            if (foundBrew) founds.push(foundBrew);
         }
 
         if (fnLoadJson && propJson) {
@@ -422,11 +442,11 @@ class SideDataInterfaceClass extends SideDataInterfaceBase {
 class SideDataInterfaceClassSubclassFeature extends SideDataInterfaceBase {
      /**
      * @param {{name: string, className: string, classSource: string, level: number, source: string, displayText: string}} feature
-     * @returns {any}
+     * @returns {{propBrew:string, fnLoadJson:Function, propJson:string, propsMatch:string[]}}
      */
     static _getSideLoadOpts(feature) {
         return {
-            propBrew: UtilEntityClassSubclassFeature.getBrewProp(feature),
+            propBrew: UtilEntityClassSubclassFeature.getBrewProp(feature), //Should return either foundryClassFeature or foundrySublassFeature
             fnLoadJson: async()=>this.pPreloadSideData(),
             propJson: UtilEntityClassSubclassFeature.getEntityType(feature),
             propsMatch: ["classSource", "className", "subclassSource", "subclassShortName", "level", "source", "name"],

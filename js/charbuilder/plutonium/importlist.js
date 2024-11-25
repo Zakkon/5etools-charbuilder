@@ -4298,7 +4298,7 @@ async _pEnsureFilterBoxInit () {
 
     //If just a temporary import
     if (importOpts.isTemp) {
-      const imported = await UtilDocuments.pCreateDocument(Item, scData, {isRender: false, isTemporary: true});
+      const imported = await UtilDocuments.pCreateDocument(Subclass5e, scData, {isRender: false, isTemporary: true});
 
       return new ImportSummary({
         status: ConstsTaskRunner.TASK_EXIT_COMPLETE,
@@ -6446,6 +6446,13 @@ class ImportListFeature extends ImportListCharacter {
     dataBuilderOpts.chosenAbilityScoreIncrease = formData.data;
   }
 
+  /**
+   * @param {any} feature a feature in 5eTools schema
+   * @param {{system:any}} actUpdate
+   * @param {any} importOpts
+   * @param {any} dataBuilderOpts
+   * @returns {any}
+   */
   async _pImportEntry_pFillItems (feature, actUpdate, importOpts, dataBuilderOpts) {
     await this.constructor._DataConverter.pMutActorUpdateFeature(this._actor, actUpdate, feature, dataBuilderOpts);
     if (dataBuilderOpts.isCancelled) return;

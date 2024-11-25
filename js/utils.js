@@ -1548,6 +1548,12 @@ globalThis.MiscUtil = class {
 		return true;
 	}
 
+ /**
+  * Gets a value from object using the path
+  * @param {any} object the object to read from
+  * @param {string[]} path
+  * @returns {any}
+  */
 	static get (object, ...path) {
 		if (object == null) return object;
 		for (let i = 0; i < path.length; ++i) {

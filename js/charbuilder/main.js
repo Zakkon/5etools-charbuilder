@@ -1254,9 +1254,9 @@ class CharacterBuilder {
         console.log("SUBCLASS DATA", sclsData);
         
         //Try to import the subclass itself (TEST)
-        let subclassItem = await addFeatureItem("subclass", cls.subclassUid, null,
+        /* let subclassItem = await addFeatureItem("subclass", cls.subclassUid, null,
           {className: clsData.name, classSource: clsData.source,
-            subclassName: sclsData.name, subclassSource: sclsData.source});
+            subclassName: sclsData.name, subclassSource: sclsData.source}); */
           
 
         //Go through scData's features and add them to the inventory (the ones that were not added by FOS)

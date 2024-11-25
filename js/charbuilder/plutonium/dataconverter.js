@@ -101,7 +101,7 @@ class DataConverter {
 
  /**
   * @param {any} actor
-  * @param {any} actorUpdate
+  * @param {{system:any}} actorUpdate
   * @param {any} entry
   * @param {sideData:any} opts
   * @returns {any}
@@ -120,7 +120,7 @@ class DataConverter {
  /**
   * @param {any} actor
   * @param {any} actorUpdate
-  * @param {{sideData:any}} opts
+  * @param {{sideData:{actorTokenMod:any}}} opts
   * @returns {any}
   */
 	static _mutActorUpdate_mutFromSideTokenMod (actor, actorUpdate, opts) {
@@ -129,7 +129,7 @@ class DataConverter {
 
  /**
   * @param {any} actor
-  * @param {any} actorUpdate
+  * @param {{system:any}} actorUpdate
   * @param {{sideData:any}} opts
   * @param {string} sideProp
   * @param {string} actorProp
@@ -139,21 +139,32 @@ class DataConverter {
 		if (!opts.sideData || !opts.sideData[sideProp]) return;
 
 		Object.entries(opts.sideData[sideProp])
+			//Path is the name of the entry, modMetas is the entry itself
 			.forEach(([path, modMetas]) => this._mutActorUpdate_mutFromSideMod_handleProp(actor, actorUpdate, opts, sideProp, actorProp, path, modMetas));
 	}
 
+ /**
+  * @param {any} actor
+  * @param {{system:any}} actorUpdate
+  * @param {{sideData:any}} opts
+  * @param {string} sideProp
+  * @param {string} actorProp
+  * @param {string} path
+  * @param {{mode:string, conditionals:any[]}[]} modMetas
+  */
 	static _mutActorUpdate_mutFromSideMod_handleProp (actor, actorUpdate, opts, sideProp, actorProp, path, modMetas) {
 		const pathParts = path.split(".");
 
-				if (path === "_") {
+		//If path is just a single underscore, look for conditionals only
+		if (path === "_") {
 			modMetas.forEach(modMeta => {
 				switch (modMeta.mode) {
 					case "conditionals": {
 						for (const cond of modMeta.conditionals) {
 														
-														window.PLUT_CONTEXT = {actor};
+							window.PLUT_CONTEXT = {actor};
 
-														if (cond.condition && !eval(cond.condition)) continue;
+							if (cond.condition && !eval(cond.condition)) continue;
 
 							Object.entries(cond.mod)
 								.forEach(([path, modMetas]) => this._mutActorUpdate_mutFromSideMod_handleProp(actor, actorUpdate, opts, sideProp, actorProp, path, modMetas));
@@ -170,6 +181,7 @@ class DataConverter {
 			return;
 		}
 
+		
 		const fromActor = MiscUtil.get(actor, "system", actorProp, ...pathParts);
 		const fromUpdate = MiscUtil.get(actorUpdate, actorProp, ...pathParts);
 		const existing = fromUpdate || fromActor;
@@ -219,7 +231,7 @@ class DataConverter {
 					} 					break;
 				}
 
-								case "setMax": {
+				case "setMax": {
 					const existingLower = `${existing || 0}`.toLowerCase();
 					let asNum = Number(existingLower);
 					if (isNaN(asNum)) asNum = 0;
@@ -3363,17 +3375,17 @@ class DataConverterFeature extends DataConverter {
     }
 
     /**
+	 * Load SideData and update the actor
      * @param {any} actor
-     * @param {any} actorUpdate
+     * @param {{system:any}} actorUpdate
      * @param {any} ent an entity in 5eTools schema
      * @param {any} dataBuilderOpts
      * @returns {any}
      */
     static async pMutActorUpdateFeature(actor, actorUpdate, ent, dataBuilderOpts) {
+		//Relies on our parent class to specify what _SideDataInterface is
         const sideData = await this._SideDataInterface.pGetSideLoaded(ent);
-        this.mutActorUpdate(actor, actorUpdate, ent, {
-            sideData
-        });
+        this.mutActorUpdate(actor, actorUpdate, ent, { sideData });
     }
 
     static async pGetDereferencedFeatureItem(feature) {
@@ -3459,7 +3471,7 @@ class DataConverterClassSubclassFeature extends DataConverterFeature {
 			}
 			default: throw new Error(`Unhandled feature type "${type}"`);
 		}
-	}§§
+	}
 
 	static async pGetClassSubclassFeatureIgnoredLookup ({data}) {
 		if (!data.classFeature?.length && !data.subclassFeature?.length) return {};

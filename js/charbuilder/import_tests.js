@@ -36,8 +36,19 @@ class ImportTester{
             else {
 				
 				//This is what we want. Tell the importlist to import ent (an obj in 5etools schema)
-				const summary = await imp.pImportEntry(ent, {filterValues: flags.filterValues, isDataOnly:true});
-				console.log("SUMMARY", summary);
+				const summary = await imp.pImportEntry(ent, {filterValues: flags.filterValues, isDataOnly:true, isTemp:true});
+				if(type == "subclassFeature"){
+					//Subclass features may have "actorTokenMod" properties added in the data/class/foundry.json
+					const doc = summary._imported[0].document;
+					const sideData = await SideDataInterfaceClassSubclassFeature.pGetSideLoaded(ent);
+					if(!!sideData){
+						const propNames = ["actorTokenMod"];
+						for(let prop of propNames){
+							if(!!sideData[prop]){doc[prop] = sideData[prop];}
+						}
+					}
+				}
+
 				return summary._imported[0].document;
 			}
 
