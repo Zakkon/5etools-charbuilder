@@ -388,9 +388,9 @@ Renderer.spell.populateBrewLookup(await BrewUtil2.pGetBrewProcessed(), {isForce:
         //data.class[i].system = result.system;
     }
   }
-  static async plutoniumConvertData(data, type){
+  static async plutoniumConvertData(data, type, additionalData){
     const tester = new ImportTester();
-    let result = await tester.runTest(data, type);
+    let result = await tester.runTest(data, type, additionalData);
     return result;
   }
 }
@@ -943,8 +943,7 @@ class CharacterBuilder {
    * @returns {ClassFeature5e}
    */
   static getSubclassFeatureByUid(hash, className, classSource, subclassName, subclassSource){
-    const cls = this.getEntityByUid("class", {name:className, source:classSource});
-    const scls = this._getEntityByUid(cls.subclasses, {name:subclassName, source:subclassSource});
+    const scls = this.getSubclass(className, classSource, subclassName, subclassSource);
     let matches = [];
     if(SubclassFeature5e.useLoadeds){
       for(let f of scls.subclassFeatures){
@@ -957,6 +956,10 @@ class CharacterBuilder {
     if(matches.length > 1){console.error("More than one subclass feature found with hash", hash); return matches[0];s}
     else if(matches.length < 1){return null;}
     else{return matches[0];}
+  }
+  static getSubclass(className, classSource, subclassName, subclassSource){
+    const cls = this.getEntityByUid("class", {name:className, source:classSource});
+    return this._getEntityByUid(cls.subclasses, {name:subclassName, source:subclassSource});
   }
   static getClassFeatureEntries(name, source){
     const featureDatas = CharacterBuilder.instance._data.classFeature;
@@ -1045,6 +1048,12 @@ class CharacterBuilder {
           classItem.markMancerDependency(new MancerDependencyLink(dependencyPath));
           System5e.tryAddToInventory(actor, classItem, "class", {doNotRender:true});
           return classItem;
+        case "subclass":
+          await Subclass5e.verifySystemData(data.className, data.classSource, data.subclassName, data.subclassSource);
+          let subclassItem = new Subclass5e(hash, null, false);
+          //subclassItem.markMancerDependency(new MancerDependencyLink(dependencyPath));
+          System5e.tryAddToInventory(actor, subclassItem, "passive", {doNotRender:true});
+          return subclassItem;
         case "background":
           //await Class5e.verifySystemData(hash);
           let backgroundItem = new Background5e(hash, null, false);
@@ -1145,6 +1154,15 @@ class CharacterBuilder {
         }
       }
     }
+    const pullSenses = (data) => {
+      for(let [senseKey, input] of Object.entries(data)){
+        let currentVal = updatePool[`senses.${senseKey}`] ?? 0;
+        let nextVal = currentVal;
+        if(currentVal > 0 && input.bonus_hasFromRaceAlready != null){nextVal = currentVal + input.bonus_hasFromRaceAlready;}
+        else{nextVal = input.value;}
+        updatePool[`senses.${senseKey}`] = nextVal;
+      }
+    }
     const addSpellItem = async (hash, preparationMode) => {
       await Spell5e.verifySystemData(hash);
       let spellItem = new Spell5e(hash, null, false);
@@ -1169,93 +1187,6 @@ class CharacterBuilder {
     let updatePool = {};
 
     
-    //#region Parse Classes
-    let totalLevel = 0;
-    for(let cls of choiceData.classes){
-      let addedFeatureHashes = [];
-      const clsData = CharacterBuilder.getEntityByUid("class", {uid: cls.uid});
-      let sclsData = null;
-      let classItem = await addFeatureItem("class", cls.uid, cls.path); //Add the class item itself to our sheet
-      classItem.targetLevel = cls.targetLevel;
-      totalLevel += cls.targetLevel;
-      //Subclass
-      const hasSubclass = cls.ixSubclass != null;
-      if(hasSubclass){
-        sclsData = CharacterBuilder._getEntityByUid(clsData.subclasses, {uid: cls.subclassUid});
-        //Add subclass's additionalSpells
-        for(let addSpells of sclsData.additionalSpells??[]){
-          for(let [knownType, value] of Object.entries(addSpells)){
-            for(let [gainedAtLvl, spellHashes] of Object.entries(value)){
-              if(cls.targetLevel < gainedAtLvl){continue;} //Must be high enough level
-              let preparationMode = knownType; if(knownType == "known"){preparationMode = "alwaysKnown";} //Assume they mean alwaysKnown when they say known
-              for(let hash of spellHashes){await addSpellItem(hash, preparationMode);}
-            }
-          }
-        }
-        //Go through scData's features and add them to the inventory (the ones that were not added by FOS)
-        for(let f of sclsData.subclassFeatures){
-          //console.log(f);
-          //probably best to look in f.loadeds
-          /* await addFeatureItem(feature.type, feature.hash, cls.path,
-            {className:clsData.name.toLowerCase(), classSource:clsData.source.toLowerCase()}); */
-        }
-      }
-
-
-      //HIT POINTS
-      for(let form of cls.hpInfo){
-        let hpFormula = form.data.hitPointsAtFirstLevel;
-        let hpNum = Roll._evaluateSync(Roll.replaceFormulaData(hpFormula, actor.system));
-        updatePool[`hp.value`] = hpNum;
-        updatePool[`hp.max`] = hpNum;
-        //updatePool["attributes.hd"] = ???
-      }
-
-      //SKILL PROFICIENCIES
-      //First, reset existing skills
-      if(!SETTINGS.SHEET_MANCER_RECREATES_SHEET){
-        for(let [skillName, skill] of Object.entries(actor.skills)){
-        skill.baseProf = 0; //No proficiency
-        const newSkill = System5e.calcSkillEmbed(skill, actor.system.abilities, actor.system.attributes.prof);
-        updatePool[`skills.${skillName}`] = newSkill;
-        }
-      }
-      //Then, apply skills we gained from class
-      pullSkillProperties(cls.skillProficiencies);
-      //FEATURE OPTIONS SELECT
-      for(let fos of cls.featureOptionsSelect){
-        //FEATURES
-        for(let feature of fos.data.features??[]){
-          //.isRequiredOption is a good teller if they want us to load a subclassFeature from within a loadeds
-          if(feature.type == "subclassFeature" && (feature.isRequiredOption === false && feature.isRequiredOption !== null) && !SubclassFeature5e.useLoadeds){continue;}
-          await addFeatureItem(feature.type, feature.hash, cls.path,
-            {className:clsData.name.toLowerCase(), classSource:clsData.source.toLowerCase(),
-              subclassName:sclsData?.name.toLowerCase(), subclassSource:sclsData?.source.toLowerCase()});
-          addedFeatureHashes.push(feature.hash);
-        }
-        pullSkillProperties(fos.data.formDatasExpertise, true);
-        pullSkillProperties(fos.data.formDatasSkillProficiencies);
-        pullSkillProperties(fos.data.formDatasSkillToolLanguageProficiencies);
-        mergeUpdatePool("traits.traits.languages.selected", pullProperties(fos.data.formDatasLanguageProficiencies, "languageProficiencies"));
-        mergeUpdatePool("traits.traits.languages.selected", pullProperties(fos.data.formDatasSkillToolLanguageProficiencies, "languageProficiencies"));
-        mergeUpdatePool("traits.traits.dr.selected", pullProperties(fos.data.formDatasDamageResistances, "resist"));
-        mergeUpdatePool("traits.traits.di.selected", pullProperties(fos.data.formDatasDamageImmunities, "immune"));
-        mergeUpdatePool("traits.traits.dv.selected", pullProperties(fos.data.formDatasDamageVulnerabilities, "vulnerable"));
-        mergeUpdatePool("traits.traits.ci.selected", pullProperties(fos.data.formDatasConditionImmunities, "conditionImmune"));
-        mergeUpdatePool("traits.traits.weaponProf.selected", pullProperties(fos.data.formDatasWeaponProficiencies, "weaponProficiencies"));
-        mergeUpdatePool("traits.traits.armorProf.selected", pullProperties(fos.data.formDatasArmorProficiencies, "armorProficiencies"));
-        //senses
-        //resources
-        //saving throw proficiencies
-        //additional spells
-      }
-
-      
-      
-    }
-    updatePool["system.details.level"] = totalLevel;
-    updatePool["system.attributes.prof"] = System5e.calcProficiencyBonus(totalLevel);
-    //#endregion
     //#region Parse Race
     for(let race of choiceData.races){
       let raceItem = await addFeatureItem("race", race.uid, race.path);
@@ -1292,6 +1223,100 @@ class CharacterBuilder {
     }
     //#endregion
     //#region Parse Ability Scores
+    //#region Parse Classes
+    let totalLevel = 0;
+    for(let cls of choiceData.classes){
+      let addedFeatureHashes = [];
+      const clsData = CharacterBuilder.getEntityByUid("class", {uid: cls.uid});
+      let sclsData = null;
+      let classItem = await addFeatureItem("class", cls.uid, cls.path); //Add the class item itself to our sheet
+      classItem.targetLevel = cls.targetLevel;
+      totalLevel += cls.targetLevel;
+      //Subclass
+      const hasSubclass = cls.ixSubclass != null;
+      if(hasSubclass){
+        sclsData = CharacterBuilder._getEntityByUid(clsData.subclasses, {uid: cls.subclassUid});
+        //Add subclass's additionalSpells
+        for(let addSpells of sclsData.additionalSpells??[]){
+          for(let [knownType, value] of Object.entries(addSpells)){
+            for(let [gainedAtLvl, spellHashes] of Object.entries(value)){
+              if(cls.targetLevel < gainedAtLvl){continue;} //Must be high enough level
+              let preparationMode = knownType; if(knownType == "known"){preparationMode = "alwaysKnown";} //Assume they mean alwaysKnown when they say known
+              for(let hash of spellHashes){await addSpellItem(hash, preparationMode);}
+            }
+          }
+        }
+        console.log("SUBCLASS DATA", sclsData);
+        //Go through scData's features and add them to the inventory (the ones that were not added by FOS)
+        for(let f of sclsData.subclassFeatures){
+          //console.log(f);
+          //probably best to look in f.loadeds
+          /* await addFeatureItem(feature.type, feature.hash, cls.path,
+            {className:clsData.name.toLowerCase(), classSource:clsData.source.toLowerCase()}); */
+        }
+
+        //We need to get senses from hardcodings, unfortunately
+        const senses = Hardcodings.getSenses("subclass", sclsData);
+        pullSenses(senses);
+      }
+
+
+      //HIT POINTS
+      for(let form of cls.hpInfo){
+        let hpFormula = form.data.hitPointsAtFirstLevel;
+        let hpNum = Roll._evaluateSync(Roll.replaceFormulaData(hpFormula, actor.system));
+        updatePool[`hp.value`] = hpNum;
+        updatePool[`hp.max`] = hpNum;
+        //updatePool["attributes.hd"] = ???
+      }
+
+      //SKILL PROFICIENCIES
+      //First, reset existing skills
+      if(!SETTINGS.SHEET_MANCER_RECREATES_SHEET){
+        for(let [skillName, skill] of Object.entries(actor.skills)){
+        skill.baseProf = 0; //No proficiency
+        const newSkill = System5e.calcSkillEmbed(skill, actor.system.abilities, actor.system.attributes.prof);
+        updatePool[`skills.${skillName}`] = newSkill;
+        }
+      }
+      //Then, apply skills we gained from class
+      pullSkillProperties(cls.skillProficiencies);
+      //FEATURE OPTIONS SELECT
+      for(let fos of cls.featureOptionsSelect){
+        //FEATURES
+        for(let feature of fos.data.features??[]){
+          //.isRequiredOption is a good teller if they want us to load a subclassFeature from within a loadeds
+          if(feature.type == "subclassFeature" && (feature.isRequiredOption === false
+            && feature.isRequiredOption !== null) && !SubclassFeature5e.useLoadeds){continue;}
+          const featureItem = await addFeatureItem(feature.type, feature.hash, cls.path,
+            {className:clsData.name.toLowerCase(), classSource:clsData.source.toLowerCase(),
+              subclassName:sclsData?.name.toLowerCase(), subclassSource:sclsData?.source.toLowerCase()});
+          addedFeatureHashes.push(feature.hash);
+        }
+        pullSkillProperties(fos.data.formDatasExpertise, true);
+        pullSkillProperties(fos.data.formDatasSkillProficiencies);
+        pullSkillProperties(fos.data.formDatasSkillToolLanguageProficiencies);
+        mergeUpdatePool("traits.traits.languages.selected", pullProperties(fos.data.formDatasLanguageProficiencies, "languageProficiencies"));
+        mergeUpdatePool("traits.traits.languages.selected", pullProperties(fos.data.formDatasSkillToolLanguageProficiencies, "languageProficiencies"));
+        mergeUpdatePool("traits.traits.dr.selected", pullProperties(fos.data.formDatasDamageResistances, "resist"));
+        mergeUpdatePool("traits.traits.di.selected", pullProperties(fos.data.formDatasDamageImmunities, "immune"));
+        mergeUpdatePool("traits.traits.dv.selected", pullProperties(fos.data.formDatasDamageVulnerabilities, "vulnerable"));
+        mergeUpdatePool("traits.traits.ci.selected", pullProperties(fos.data.formDatasConditionImmunities, "conditionImmune"));
+        mergeUpdatePool("traits.traits.weaponProf.selected", pullProperties(fos.data.formDatasWeaponProficiencies, "weaponProficiencies"));
+        mergeUpdatePool("traits.traits.armorProf.selected", pullProperties(fos.data.formDatasArmorProficiencies, "armorProficiencies"));
+        //senses
+        //resources
+        //saving throw proficiencies
+        //additional spells
+      }
+
+      
+      
+    }
+    updatePool["system.details.level"] = totalLevel;
+    updatePool["system.attributes.prof"] = System5e.calcProficiencyBonus(totalLevel);
+    //#endregion
+    
     //This should be done after class, we need the proficiency modifier (based on class level)
     const abilityAbbr = ["str", "dex", "con", "int", "wis", "cha"];
     for(let a of abilityAbbr){

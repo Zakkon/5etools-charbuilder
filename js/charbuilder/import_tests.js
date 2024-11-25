@@ -1,13 +1,15 @@
 class ImportTester{
 
-    async runTest(item, type){
+    async runTest(item, type, additionalData){
         let flags = null;
 		if(type == "classFeature"){flags = this._getClassSubclassFeatureFlags(item);}
+		else if(type == "subclass"){flags = this._getClassSubclassFlags(item, additionalData.cls);}
 		else if(type == "subclassFeature"){flags = this._getClassSubclassFeatureFlags(item);}
 		else if(type == "spell"){flags = this._getSpellFlags(item);}
 		else if(type == "race"){flags = this._getRaceFlags(item);}
 		else if(type == "optionalfeature"){flags = this._getOptionalFeatureFlags(item);}
 		else{flags = this.getFlags_Item(item);}
+		//Try to load the entity from the cache
         let ent = await DataLoader.pCacheAndGet(flags.page, flags.source, flags.hash);
 
         const isUseImporter = true;
@@ -22,6 +24,7 @@ class ImportTester{
 			//If actor exists, the item will be imported unto the actor. If none exists, it will go to a generic directory
             let imp = null;
 			if(type == "classFeature"){imp = new ImportListClassSubclassFeature({actor}); }
+			else if(type == "subclass"){imp = new ImportListClass({actor}); }
 			else if(type == "subclassFeature"){imp = new ImportListClassSubclassFeature({actor}); }
 			else if(type == "optionalfeature"){imp = new ImportListOptionalfeature({actor});}
 			else if(type == "spell"){imp = new ImportListSpell({actor}); }
@@ -78,6 +81,26 @@ class ImportTester{
 			out[SharedConsts.MODULE_ID].propDroppable = prop;
 			out[SharedConsts.MODULE_ID].filterValues = opts.filterValues;
 		} */
+
+		return out;
+	}
+	_getClassSubclassFlags (sc, cls, filterValues, proficiencyImportMode, isActorItem, spellSlotLevelSelection) {
+		const out = {
+			/* [SharedConsts.MODULE_ID]: { */
+				page: UrlUtil.PG_CLASSES,
+				source: sc ? sc.source : cls.source,
+				hash: sc ? UrlUtil.URL_TO_HASH_BUILDER["subclass"](sc) : UrlUtil.URL_TO_HASH_BUILDER["class"](cls),
+
+				propDroppable: sc ? "subclass" : "class",
+				//filterValues,
+
+				//isPrimaryClass: proficiencyImportMode === Charactermancer_Class_ProficiencyImportModeSelect.MODE_PRIMARY,
+
+				//spellSlotLevelSelection,
+			/* }, */
+		};
+
+		//if (isActorItem) out[SharedConsts.MODULE_ID].isDirectImport = true;
 
 		return out;
 	}

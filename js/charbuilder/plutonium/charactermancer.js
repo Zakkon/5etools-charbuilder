@@ -15839,6 +15839,13 @@ class Charactermancer_Util {
         }
     }
 
+    /**
+     * Description
+     * @param {{source:string, classFeature:string, subclassFeature:string, loadeds:{entity:any}[]}[]} allFeatures
+     * @param {any} pageFilter
+     * @param {any} filterValues
+     * @returns {any[]}
+     */
     static getFilteredFeatures(allFeatures, pageFilter, filterValues) {
         return allFeatures.filter(f=>{
             //Try to get the source of the feature

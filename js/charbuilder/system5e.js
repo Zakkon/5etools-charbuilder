@@ -584,6 +584,42 @@ class Class5e extends Feature5e{
         this.classFeatures = original.classFeatures;
     }
 }
+class Subclass5e extends Feature5e{
+    constructor(itemUid, collectionId=null, isCustom=false){
+        super(itemUid, collectionId, isCustom);
+        this.type = "subclass";
+        if(!this.isCustom){this._tryCloneOriginal(CharacterBuilder.getEntityByUid("subclass", {uid: this.uid}));}
+
+        if(!Entity5e.use_overrides){return this;}
+        return this._createProxy();
+    }
+    _tryCloneOriginal(original){
+        super._tryCloneOriginal(original);
+        if(original == null){return;}
+        console.log("SUBCLASS LOAD FROM ORIGINAL", original);
+        this.source = original.source;
+        //this.classFeatures = original.classFeatures;
+    }
+    static async verifySystemData(className, classSource, subclassName, subclassSource){
+        console.assert(className != null, "Class name is null!");
+        console.assert(classSource != null, "Class source is null!");
+        console.assert(subclassName != null, "Subclass name is null!");
+        console.assert(subclassSource != null, "Subclass source is null!");
+        //console.assert(hash != null, "Subclass Feature hash is null!");
+        const subclassData = CharacterBuilder.getSubclass(className, classSource, subclassName, subclassSource);
+        const classData = CharacterBuilder.getEntityByUid("class", {name:className, source:classSource});
+        if(subclassData.system){return;}
+        //No system data exists, go ahead and import
+        try{
+            let imported = await SourceManager.plutoniumConvertData(subclassData, "subclass", {cls: classData});
+            subclassData.system = imported.system;
+        }
+        catch(e){
+            console.log("class name & source:", className, classSource, "subclass name & source:", subclassName, subclassSource);
+            console.error(e);
+        }
+    }
+}
 class Race5e extends Feature5e{
     constructor(itemUid, collectionId=null, isCustom=false){
         super(itemUid, collectionId, isCustom);

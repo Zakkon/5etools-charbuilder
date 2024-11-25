@@ -2102,7 +2102,7 @@ class DataConverter {
 		const dataTarget = MiscUtil.getOrSet(actorData, "attributes", "senses", {});
 		Object.assign(dataTarget, MiscUtil.copyFast(existingSensesActor));
 
-				const foundrySenseData = this._getFoundrySenseData({configGroup, formData});
+		const foundrySenseData = this._getFoundrySenseData({configGroup, formData});
 
 				this._getSensesNumericalKeys(foundrySenseData)
 			.forEach(kSense => {
@@ -2128,7 +2128,7 @@ class DataConverter {
 			dataToken: actorToken,
 			configGroup,
 		});
-			}
+	}
 
 	static _getFoundrySenseData ({configGroup, formData}) {
 		const out = {};
@@ -2156,7 +2156,7 @@ class DataConverter {
 	}
 
 	
-		static mutTokenSight ({dataAttributesSenses, dataToken, configGroup}) {
+	static mutTokenSight ({dataAttributesSenses, dataToken, configGroup}) {
 		if (!dataAttributesSenses) return {dataAttributesSenses, dataToken};
 
 		if (dataAttributesSenses.darkvision) {
@@ -2986,7 +2986,7 @@ class DataConverterClass extends DataConverter {
 			? null
 			: await this._ImageFetcher.pGetSaveImagePathMeta(cls, {propCompendium: "class", fluff: await Renderer.class.pGetFluff(cls), taskRunner: opts.taskRunner});
 
-		const img = (imgMetaSc && !imgMetaSc.isFallback) ? imgMetaSc.img : imgMetaCls && !imgMetaCls.isFallback ? imgMetaCls.img : (imgMetaSc?.img || imgMetaCls.img);
+		const img = null;//(imgMetaSc && !imgMetaSc.isFallback) ? imgMetaSc.img : imgMetaCls && !imgMetaCls.isFallback ? imgMetaCls.img : (imgMetaSc?.img || imgMetaCls.img);
 		const additionalFlags = await this._SideDataInterface.pGetFlagsSideLoaded(sc, {propOpts: "_SIDE_LOAD_OPTS_SUBCLASS"});
 		const additionalAdvancement = await this._SideDataInterface._pGetAdvancementSideLoaded(sc, {propOpts: "_SIDE_LOAD_OPTS_SUBCLASS"});
 

@@ -1867,13 +1867,13 @@ class DataLoader {
 	/* -------------------------------------------- */
 
 	/**
-	 * @param page
-	 * @param source
-	 * @param hash
-	 * @param [isCopy] If a copy, rather than the original entity, should be returned.
-	 * @param [isRequired] If an error should be thrown on a missing entity.
-	 * @param [_isReturnSentinel] If a null sentinel should be returned, if it exists.
-	 * @param [_isInsertSentinelOnMiss] If a null sentinel should be inserted on cache miss.
+	 * @param {string} page
+	 * @param {string} source
+	 * @param {string} hash
+	 * @param {boolean} [options.isCopy] If a copy, rather than the original entity, should be returned.
+	 * @param {boolean} [options.isRequired] If an error should be thrown on a missing entity.
+	 * @param {boolean} [options._isReturnSentinel] If a null sentinel should be returned, if it exists.
+	 * @param {boolean} [options._isInsertSentinelOnMiss] If a null sentinel should be inserted on cache miss.
 	 */
 	static getFromCache (
 		page,
@@ -1891,6 +1891,16 @@ class DataLoader {
 		return this._getVerifiedRequiredEntity({pageClean, sourceClean, hashClean, ent, isRequired});
 	}
 
+ /**
+  * @param {object} options
+  * @param {string} [options.pageClean]
+  * @param {string} [options.sourceClean]
+  * @param {string} [options.hashClean]
+  * @param {boolean} [options.isCopy=false]
+  * @param {boolean} [options._isInsertSentinelOnMiss=false]
+  * @param {boolean} [options._isReturnSentinel=false]
+  * @returns {any}
+  */
 	static _getFromCache (
 		{
 			pageClean,

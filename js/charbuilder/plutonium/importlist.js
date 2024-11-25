@@ -4252,7 +4252,7 @@ async _pImportSubclass_pImportToActor (cls, sc, importOpts, dataOpts) {
     },
   );
 
-  const duplicateMeta = this._getDuplicateMeta({
+  /* const duplicateMeta = this._getDuplicateMeta({
     name: scData.name,
     sourceIdentifier: UtilDocumentSource.getDocumentSourceIdentifierString({doc: scData}),
     importOpts,
@@ -4267,7 +4267,9 @@ async _pImportSubclass_pImportToActor (cls, sc, importOpts, dataOpts) {
         }),
       ],
     });
-  }
+  } */
+
+    console.log("SCDATA", scData);
 
   const Clazz = this._getDocumentClass();
 
@@ -6104,6 +6106,13 @@ async pInit () {
   await this._modalFilterSpells.pPreloadHidden();
 }
 
+/**
+ * Description
+ * @param {any} feature
+ * @param {{isLeaf:boolean, featureEntriesPageFilter:any, isPreLoadedFeature:boolean, featureEntriesPageFilterValues:any}} importOpts
+ * @param {any} dataOpts
+ * @returns {any}
+ */
 async _pImportEntry (feature, importOpts, dataOpts) {
   importOpts ||= new ImportOpts();
 
@@ -7443,7 +7452,7 @@ async _pImportEntry_pFillAbilities (race, actUpdate, dataBuilderOpts) {
 }
 
 _pImportEntry_fillAttributes (race, actUpdate, dataBuilderOpts) {
-              const formDataSenses = Charactermancer_SenseSelect.getFormDataFromRace(race);
+  const formDataSenses = Charactermancer_SenseSelect.getFormDataFromRace(race);
   DataConverter.doApplySensesFormDataToActorUpdate({
     existingSensesActor: MiscUtil.get(this._actor, "_source", "system", "attributes", "senses"),
     existingTokenActor: MiscUtil.get(this._actor, "_source", "prototypeToken"),

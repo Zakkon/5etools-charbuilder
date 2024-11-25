@@ -103,10 +103,10 @@ class ActorCharactermancerSheet2 extends ActorCharactermancerSheet {
         //Find spell slot markers
         const markers = this.element.find(".spellSlotMarker");
         
+        //Insert spell slots
         for(let markerDiv of markers){
             //get grandparent
             let grandparent = markerDiv.parentNode.parentNode;
-            console.log(grandparent);
             //Get some data from the parent
             const dataset = grandparent.dataset;
             //lets say lvl 1 has 2 spell slots
@@ -125,8 +125,6 @@ class ActorCharactermancerSheet2 extends ActorCharactermancerSheet {
                     }
                 }
             }
-            
-            console.log("marker", markerDiv);
             $(markerDiv).html(contents);
         }
     }
