@@ -1303,17 +1303,17 @@ _handleFilterChange () {
    * @returns {Promise<ImportSummary>}
    */
   async pImportEntry (ent, importOpts, dataOpts = {}) {
-    return new ImportEntryManager({
-      instance: this, //Mark us as the instance running the import
-      ent,
-      importOpts,
-      dataOpts,
-    }).pImportEntry();
-}
+      return new ImportEntryManager({
+        instance: this, //Mark us as the instance running the import
+        ent,
+        importOpts,
+        dataOpts,
+      }).pImportEntry();
+  }
 
 
   /**
-   * @param {any} ent An item in 5etools schema
+   * @param {any} ent An entity in 5etools schema
    * @param {ImportOpts} importOpts
    * @param {any} dataOpts
    * @returns {Promise<ImportSummary>}
@@ -1324,7 +1324,7 @@ _handleFilterChange () {
     console.log(...LGT, `Importing ${this._titleSearch} "${ent.name}" (from "${Parser.sourceJsonToAbv(ent.source)}")`);
 
     //Check if any class that inherits us wants to treat this entity as a stub
-    if (this.constructor._DataConverter.isStubEntity(ent)) return ImportSummary.completedStub({entity: ent});
+    if (this.constructor._DataConverter.isStubEntity(ent)) {return ImportSummary.completedStub({entity: ent});}
 
     //if ent._fvttCustomizerState is set, we can apply customization to the entity
     ent = await this._pGetCustomizedEntity({ent});
@@ -1752,130 +1752,189 @@ _pImportEntry_pDoUpdateExisting_maintainImg ({duplicateMeta, docData}) {
   if (prevImg != null) docData.img = prevImg;
 }
 
-/**
- * Import an entity to a directory
- * @param {any} toImport an entity in 5etools schema
- * @param {{filterValues:any, isAddDefaultOwnershipFromConfig:boolean, defaultOwnership:any, userOwnership:any, isTemp:boolean}} importOpts
- * @param {any} dataOpts
- * @param {{name:string}} docData existing doc data. If null, we will import
- * @param {boolean} isSkipDuplicateHandling
- * @returns {any}
- */
-async _pImportEntry_pImportToDirectoryGeneric (toImport, importOpts, dataOpts = {}, {docData = null, isSkipDuplicateHandling = /*false*/ true /*TEMPFIX*/} = {}) {
-  docData = docData || await this._pImportEntry_pImportToDirectoryGeneric_pGetImportableData(
-    toImport,
-    {
-      isAddDataFlags: true,
-      filterValues: importOpts.filterValues,
-      ...dataOpts,
-      isAddDefaultOwnershipFromConfig: importOpts.isAddDefaultOwnershipFromConfig ?? true,
-      defaultOwnership: importOpts.defaultOwnership,
-      userOwnership: importOpts.userOwnership,
-    },
-    importOpts,
-  );
-
-  //See if a duplicate already exists
-  const duplicateMeta = isSkipDuplicateHandling ? null : this._getDuplicateMeta({
-      name: docData.name,
-      sourceIdentifier: UtilDocumentSource.getDocumentSourceIdentifierString({doc: docData}),
-      flags: this._getDuplicateCheckFlags(docData),
+  /**
+   * Import an entity to a directory
+   * @param {any} toImport an entity in 5etools schema
+   * @param {{filterValues:any, isAddDefaultOwnershipFromConfig:boolean, defaultOwnership:any, userOwnership:any, isTemp:boolean}} importOpts
+   * @param {any} dataOpts
+   * @param {{name:string}} docData existing doc data. If null, we will import
+   * @param {boolean} isSkipDuplicateHandling
+   * @returns {any}
+   */
+  async _pImportEntry_pImportToDirectoryGeneric (toImport, importOpts, dataOpts = {}, {docData = null, isSkipDuplicateHandling = /*false*/ true /*TEMPFIX*/} = {}) {
+    docData = docData || await this._pImportEntry_pImportToDirectoryGeneric_pGetImportableData(
+      toImport,
+      {
+        isAddDataFlags: true,
+        filterValues: importOpts.filterValues,
+        ...dataOpts,
+        isAddDefaultOwnershipFromConfig: importOpts.isAddDefaultOwnershipFromConfig ?? true,
+        defaultOwnership: importOpts.defaultOwnership,
+        userOwnership: importOpts.userOwnership,
+      },
       importOpts,
-      entity: toImport,
-  });
+    );
 
-  //If duplicate exists, we might wanna skip, and not import it
-  if (duplicateMeta?.isSkip) {
-    return new ImportSummary({
-      status: ConstsTaskRunner.TASK_EXIT_SKIPPED_DUPLICATE,
-      imported: [
-        new ImportedDocument({
-          isExisting: true,
-          document: duplicateMeta.existing,
-        }),
-      ],
-      entity: toImport,
+    //See if a duplicate already exists
+    const duplicateMeta = isSkipDuplicateHandling ? null : this._getDuplicateMeta({
+        name: docData.name,
+        sourceIdentifier: UtilDocumentSource.getDocumentSourceIdentifierString({doc: docData}),
+        flags: this._getDuplicateCheckFlags(docData),
+        importOpts,
+        entity: toImport,
+    });
+
+    //If duplicate exists, we might wanna skip, and not import it
+    if (duplicateMeta?.isSkip) {
+      return new ImportSummary({
+        status: ConstsTaskRunner.TASK_EXIT_SKIPPED_DUPLICATE,
+        imported: [
+          new ImportedDocument({
+            isExisting: true,
+            document: duplicateMeta.existing,
+          }),
+        ],
+        entity: toImport,
+      });
+    }
+
+    
+    console.log("DOC DATA", docData, toImport, importOpts, dataOpts);
+
+    //Defined by foundry. Item, Journal, Scene, Cards, etc
+    const Clazz = this._getDocumentClass();
+
+    if (importOpts.isTemp) {
+      const imported = await UtilDocuments.pCreateDocument(Clazz, docData, {isRender: false, isTemporary: true});
+      return new ImportSummary({
+        status: ConstsTaskRunner.TASK_EXIT_COMPLETE,
+        imported: [
+          new ImportedDocument({
+            document: imported,
+          }),
+        ],
+        entity: toImport,
+      });
+    }
+
+    //Try to import the document into a pack
+    if (this._pack) {
+      if (duplicateMeta?.isOverwrite) {
+        return this._pImportEntry_pDoUpdateExistingPackEntity({
+          entity: toImport,
+          duplicateMeta,
+          docData,
+          importOpts,
+        });
+      }
+
+      //Create a new document, using the foundry class as a template
+      const instance = new Clazz(docData);
+      //import the document into the pack
+      const imported = await this._pack.importDocument(instance);
+
+      await this._pImportEntry_pAddToTargetTableIfRequired([imported], duplicateMeta, importOpts);
+
+      return new ImportSummary({
+        status: ConstsTaskRunner.TASK_EXIT_COMPLETE,
+        imported: [
+          new ImportedDocument({
+            document: imported,
+            pack: this._pack,
+          }),
+        ],
+        entity: toImport,
+      });
+    }
+
+    //Else, just try to import it into a directory
+    return this._pImportEntry_pImportToDocData({
+      duplicateMeta,
+      docData,
+      toImport,
+      isSkipDuplicateHandling,
+      Clazz,
+      importOpts,
+    });
+
+    //Else, just try to import it into a directory
+    return this._pImportEntry_pImportToDirectoryGeneric_toDirectory({
+      duplicateMeta,
+      docData,
+      toImport,
+      isSkipDuplicateHandling,
+      Clazz,
+      importOpts,
     });
   }
+  /**
+   * Import an entity to a directory
+   * @param {{duplicateMeta:{isOverwrite:boolean}, docData:{name:string, pages:any, folder:any},
+   * toImport:{any}, isSkipDuplicateHandling:boolean, Clazz:{any},
+   * importOpts:{filterValues:any, isAddDefaultOwnershipFromConfig:boolean, defaultOwnership:any,
+   * userOwnership:any, isTemp:boolean, isBatched:boolean}}}
+   * @returns {ImportSummary}
+   */
+  async _pImportEntry_pImportToDirectoryGeneric_toDirectory ({
+      duplicateMeta,
+      docData,
+      toImport,
+      isSkipDuplicateHandling = false,
+      Clazz,
+      folderType = null,
+      importOpts,
+    }, ) {
 
-  
-  console.log("DOC DATA", docData, toImport, importOpts, dataOpts);
-
-  //Defined by foundry. Item, Journal, Scene, Cards, etc
-  const Clazz = this._getDocumentClass();
-
-  if (importOpts.isTemp) {
-    const imported = await UtilDocuments.pCreateDocument(Clazz, docData, {isRender: false, isTemporary: true});
-    return new ImportSummary({
-      status: ConstsTaskRunner.TASK_EXIT_COMPLETE,
-      imported: [
-        new ImportedDocument({
-          document: imported,
-        }),
-      ],
-      entity: toImport,
-    });
-  }
-
-  //Try to import the document into a pack
-  if (this._pack) {
+    //Check if we are just doing an overwrite
     if (duplicateMeta?.isOverwrite) {
-      return this._pImportEntry_pDoUpdateExistingPackEntity({
+      return this._pImportEntry_pDoUpdateExistingDirectoryEntity({
         entity: toImport,
         duplicateMeta,
         docData,
+      });
+    }
+
+   /*  const folderIdMeta = await this._pImportEntry_pImportToDirectoryGeneric_pGetFolderIdMeta({
+      toImport,
+      importOpts,
+      folderType,
+    });
+
+    if (folderIdMeta?.parentDocumentId) {
+            return this._pImportEntry_pImportToDirectoryGeneric_toDirectorySubEntities({
+        entity: toImport,
+        parent: game.journal.get(folderIdMeta.parentDocumentId),
+        folderIdMeta,
+        isSkipDuplicateHandling,
+        embeddedDocDatas: docData.pages,
+        ClsEmbed: JournalEntryPage,
         importOpts,
       });
     }
 
-    //Create a new document, using the foundry class as a template
-    const instance = new Clazz(docData);
-     //import the document into the pack
-    const imported = await this._pack.importDocument(instance);
+    if (folderIdMeta?.folderId) docData.folder = folderIdMeta.folderId; */
 
-    await this._pImportEntry_pAddToTargetTableIfRequired([imported], duplicateMeta, importOpts);
+    const imported = await UtilDocuments.pCreateDocument(Clazz, docData, {isTemporary: false, isRender: !importOpts.isBatched});
 
     return new ImportSummary({
       status: ConstsTaskRunner.TASK_EXIT_COMPLETE,
       imported: [
         new ImportedDocument({
           document: imported,
-          pack: this._pack,
         }),
       ],
       entity: toImport,
     });
   }
-
-  //Else, just try to import it into a directory
-  return this._pImportEntry_pImportToDocData({
-    duplicateMeta,
-    docData,
-    toImport,
-    isSkipDuplicateHandling,
-    Clazz,
-    importOpts,
-  });
-
-  //Else, just try to import it into a directory
-  return this._pImportEntry_pImportToDirectoryGeneric_toDirectory({
-    duplicateMeta,
-    docData,
-    toImport,
-    isSkipDuplicateHandling,
-    Clazz,
-    importOpts,
-  });
-}
-/**
- * Import an entity to a directory
- * @param {{duplicateMeta:{isOverwrite:boolean}, docData:{name:string, pages:any, folder:any},
- * toImport:{any}, isSkipDuplicateHandling:boolean, Clazz:{any},
- * importOpts:{filterValues:any, isAddDefaultOwnershipFromConfig:boolean, defaultOwnership:any,
- * userOwnership:any, isTemp:boolean, isBatched:boolean}}}
- * @returns {ImportSummary}
- */
-async _pImportEntry_pImportToDirectoryGeneric_toDirectory ({
+  /**
+   * Import an entity and just return it to us raw, without creating a document for it
+   * @param {{duplicateMeta:{isOverwrite:boolean}, docData:{name:string, pages:any, folder:any},
+  * toImport:{any}, isSkipDuplicateHandling:boolean, Clazz:{any},
+  * importOpts:{filterValues:any, isAddDefaultOwnershipFromConfig:boolean, defaultOwnership:any,
+  * userOwnership:any, isTemp:boolean, isBatched:boolean}}}
+  * @returns {ImportSummary}
+  */
+  async _pImportEntry_pImportToDocData ({
     duplicateMeta,
     docData,
     toImport,
@@ -1883,35 +1942,18 @@ async _pImportEntry_pImportToDirectoryGeneric_toDirectory ({
     Clazz,
     folderType = null,
     importOpts,
-}, ) {
-  //Check if we are just doing an overwrite
-  if (duplicateMeta?.isOverwrite) {
-    return this._pImportEntry_pDoUpdateExistingDirectoryEntity({
-      entity: toImport,
-      duplicateMeta,
-      docData,
-    });
-  }
+  }, ) {
 
-  const folderIdMeta = await this._pImportEntry_pImportToDirectoryGeneric_pGetFolderIdMeta({
-    toImport,
-    importOpts,
-    folderType,
+  return new ImportSummary({
+    status: ConstsTaskRunner.TASK_EXIT_COMPLETE,
+    imported: [
+      /* new ImportedDocument({
+        document: imported,
+      }), */
+      docData
+    ],
+    entity: toImport,
   });
-
-  if (folderIdMeta?.parentDocumentId) {
-          return this._pImportEntry_pImportToDirectoryGeneric_toDirectorySubEntities({
-      entity: toImport,
-      parent: game.journal.get(folderIdMeta.parentDocumentId),
-      folderIdMeta,
-      isSkipDuplicateHandling,
-      embeddedDocDatas: docData.pages,
-      ClsEmbed: JournalEntryPage,
-      importOpts,
-    });
-  }
-
-  if (folderIdMeta?.folderId) docData.folder = folderIdMeta.folderId;
 
   const imported = await UtilDocuments.pCreateDocument(Clazz, docData, {isTemporary: false, isRender: !importOpts.isBatched});
 
@@ -1924,129 +1966,88 @@ async _pImportEntry_pImportToDirectoryGeneric_toDirectory ({
     ],
     entity: toImport,
   });
-}
-/**
- * Import an entity and just return it to us raw, without creating a document for it
- * @param {{duplicateMeta:{isOverwrite:boolean}, docData:{name:string, pages:any, folder:any},
-* toImport:{any}, isSkipDuplicateHandling:boolean, Clazz:{any},
-* importOpts:{filterValues:any, isAddDefaultOwnershipFromConfig:boolean, defaultOwnership:any,
-* userOwnership:any, isTemp:boolean, isBatched:boolean}}}
-* @returns {ImportSummary}
-*/
-async _pImportEntry_pImportToDocData ({
-   duplicateMeta,
-   docData,
-   toImport,
-   isSkipDuplicateHandling = false,
-   Clazz,
-   folderType = null,
-   importOpts,
-}, ) {
+  }
 
- return new ImportSummary({
-  status: ConstsTaskRunner.TASK_EXIT_COMPLETE,
-  imported: [
-    /* new ImportedDocument({
-      document: imported,
-    }), */
-    docData
-  ],
-  entity: toImport,
-});
+  async _pImportEntry_pImportToDirectoryGeneric_pGetFolderIdMeta (
+    {
+      toImport,
+      importOpts,
+      folderType = null,
+    },
+  ) {
+    folderType = folderType || this.constructor.FOLDER_TYPE;
 
- const imported = await UtilDocuments.pCreateDocument(Clazz, docData, {isTemporary: false, isRender: !importOpts.isBatched});
+        if (this._container) return new FolderIdMeta();
 
- return new ImportSummary({
-   status: ConstsTaskRunner.TASK_EXIT_COMPLETE,
-   imported: [
-     new ImportedDocument({
-       document: imported,
-     }),
-   ],
-   entity: toImport,
- });
-}
+    return importOpts.isImportToTempDirectory
+      ? new FolderIdMeta({folderId: await UtilFolders.pCreateTempFolderGetId({folderType})})
+      : importOpts.folderId !== undefined
+        ? new FolderIdMeta({folderId: importOpts.folderId})
+        : this._pImportEntry_pGetFolderIdMeta(
+          toImport,
+          {
+            isAddDefaultOwnershipFromConfig: importOpts.isAddDefaultOwnershipFromConfig ?? true,
+            defaultOwnership: importOpts.defaultOwnership,
+            userOwnership: importOpts.userOwnership,
+            isBatched: importOpts.isBatched,
+            folderType,
+          },
+        );
+  }
 
-async _pImportEntry_pImportToDirectoryGeneric_pGetFolderIdMeta (
-  {
-    toImport,
-    importOpts,
-    folderType = null,
-  },
-) {
-  folderType = folderType || this.constructor.FOLDER_TYPE;
+  async _pImportEntry_pImportToDirectoryGeneric_toDirectorySubEntities (
+    {
+      entity,
+      parent,
+      isSkipDuplicateHandling,
+      embeddedDocDatas,
+      ClsEmbed,
+      importOpts,
+    },
+  ) {
+    importOpts ||= new ImportOpts();
 
-      if (this._container) return new FolderIdMeta();
+    const duplicateMetasSub = isSkipDuplicateHandling
+      ? {toCreates: embeddedDocDatas, toUpdates: []}
+      : this._getDuplicateMetasSub({parent, children: embeddedDocDatas, importOpts});
 
-  return importOpts.isImportToTempDirectory
-    ? new FolderIdMeta({folderId: await UtilFolders.pCreateTempFolderGetId({folderType})})
-    : importOpts.folderId !== undefined
-      ? new FolderIdMeta({folderId: importOpts.folderId})
-      : this._pImportEntry_pGetFolderIdMeta(
-        toImport,
+    const importedDocuments = [];
+
+    if (duplicateMetasSub.toCreates.length) {
+      const importedEmbeds = await UtilDocuments.pCreateEmbeddedDocuments(
+        parent,
+        duplicateMetasSub.toCreates,
         {
-          isAddDefaultOwnershipFromConfig: importOpts.isAddDefaultOwnershipFromConfig ?? true,
-          defaultOwnership: importOpts.defaultOwnership,
-          userOwnership: importOpts.userOwnership,
-          isBatched: importOpts.isBatched,
-          folderType,
+          ClsEmbed,
+          isRender: !importOpts.isBatched,
         },
       );
-}
 
-async _pImportEntry_pImportToDirectoryGeneric_toDirectorySubEntities (
-  {
-    entity,
-    parent,
-    isSkipDuplicateHandling,
-    embeddedDocDatas,
-    ClsEmbed,
-    importOpts,
-  },
-) {
-  importOpts ||= new ImportOpts();
+      importedDocuments.push(
+        ...importedEmbeds.map(it => new ImportedDocument({embeddedDocument: it?.document})),
+      );
+    }
 
-  const duplicateMetasSub = isSkipDuplicateHandling
-    ? {toCreates: embeddedDocDatas, toUpdates: []}
-    : this._getDuplicateMetasSub({parent, children: embeddedDocDatas, importOpts});
+        if (duplicateMetasSub.toUpdates.length) {
+      const importedEmbeds = await UtilDocuments.pUpdateEmbeddedDocuments(
+        parent,
+        duplicateMetasSub.toUpdates,
+        {
+          ClsEmbed,
+        },
+      );
 
-  const importedDocuments = [];
+      importedDocuments.push(
+        ...importedEmbeds.map(it => new ImportedDocument({embeddedDocument: it?.document, isExisting: true})),
+      );
+    }
 
-  if (duplicateMetasSub.toCreates.length) {
-    const importedEmbeds = await UtilDocuments.pCreateEmbeddedDocuments(
-      parent,
-      duplicateMetasSub.toCreates,
-      {
-        ClsEmbed,
-        isRender: !importOpts.isBatched,
-      },
-    );
-
-    importedDocuments.push(
-      ...importedEmbeds.map(it => new ImportedDocument({embeddedDocument: it?.document})),
-    );
+    return new ImportSummary({
+      status: ConstsTaskRunner.TASK_EXIT_COMPLETE,
+      imported: importedDocuments,
+      entity,
+    });
   }
-
-      if (duplicateMetasSub.toUpdates.length) {
-    const importedEmbeds = await UtilDocuments.pUpdateEmbeddedDocuments(
-      parent,
-      duplicateMetasSub.toUpdates,
-      {
-        ClsEmbed,
-      },
-    );
-
-    importedDocuments.push(
-      ...importedEmbeds.map(it => new ImportedDocument({embeddedDocument: it?.document, isExisting: true})),
-    );
-  }
-
-  return new ImportSummary({
-    status: ConstsTaskRunner.TASK_EXIT_COMPLETE,
-    imported: importedDocuments,
-    entity,
-  });
-}
 
 _getDocumentClass () {
   switch (this._gameProp) {
@@ -3679,52 +3680,58 @@ async _pEnsureFilterBoxInit () {
   });
 }
 
+  /**
+   * @param {any} cls a subclass in 5eTools schema
+   * @param {any} importOpts
+   * @param {any} dataOpts
+   * @returns {any}
+   */
   async _pImportEntry (cls, importOpts, dataOpts) {
-  importOpts ||= new ImportOpts();
+    importOpts ||= new ImportOpts();
 
-  await this._pEnsureFilterBoxInit();
+    await this._pEnsureFilterBoxInit();
 
-          let clsRaw = null;
-  let scRaw = null;
-  if (cls?.subclassFeatures?.every(it => it == null || it instanceof Array)) {
-    scRaw = await DataLoader.pCacheAndGet("raw_subclass", cls.source, UrlUtil.URL_TO_HASH_BUILDER["subclass"](cls), {isCopy: true});
-    clsRaw = await DataLoader.pCacheAndGet("raw_class", scRaw.classSource, UrlUtil.URL_TO_HASH_BUILDER["class"]({name: scRaw.className, source: scRaw.classSource}), {isCopy: true});
-  }
-
-      if (cls?.classFeatures?.every(it => it == null || it instanceof Array)) {
-    clsRaw = await DataLoader.pCacheAndGet("raw_class", cls.source, UrlUtil.URL_TO_HASH_BUILDER[UrlUtil.PG_CLASSES](cls), {isCopy: true});
-  }
-
-      if (clsRaw || scRaw) {
-    const toLoad = {class: [clsRaw]};
-
-    if (scRaw) {
-      toLoad.subclass = [scRaw];
+    //Try to identify which class and subclass we need (yes, we re-fetch the subclass)
+    let clsRaw = null;
+    let scRaw = null;
+    if (cls?.subclassFeatures?.every(it => it == null || it instanceof Array)) {
+      scRaw = await DataLoader.pCacheAndGet("raw_subclass", cls.source, UrlUtil.URL_TO_HASH_BUILDER["subclass"](cls), {isCopy: true});
+      clsRaw = await DataLoader.pCacheAndGet("raw_class", scRaw.classSource, UrlUtil.URL_TO_HASH_BUILDER["class"]({name: scRaw.className, source: scRaw.classSource}), {isCopy: true});
     }
 
-    const {DataPrimer} = await Promise.resolve().then(function () { return DataPrimer$1; });
-
-    const data = await DataPrimer.pGetPrimedJson(toLoad);
-    cls = data.class[0];
-
-    if (scRaw) {
-      const sc = cls.subclasses[0];
-      cls.subclasses = [];
-      return this._pImportSubclass(cls, sc, importOpts, dataOpts);
+    if (cls?.classFeatures?.every(it => it == null || it instanceof Array)) {
+      clsRaw = await DataLoader.pCacheAndGet("raw_class", cls.source, UrlUtil.URL_TO_HASH_BUILDER[UrlUtil.PG_CLASSES](cls), {isCopy: true});
     }
-  }
-  
-  return this._pImportClass(cls, importOpts, dataOpts);
-}
 
-async pImportClass (cls, importOpts, dataOpts) {
-  return new ImportEntryManagerClass({
-    instance: this,
-    ent: cls,
-    importOpts,
-    dataOpts,
-  }).pImportEntry();
-}
+    //If we have a class or subclass to import
+    if (clsRaw || scRaw) {
+      const toLoad = {class: [clsRaw] }; //Mark which class we want to use
+      if (scRaw) { toLoad.subclass = [scRaw]; } //Mark which subclass we want to import
+
+      const {DataPrimer} = await Promise.resolve().then(function () { return DataPrimer$1; });
+
+      const data = await DataPrimer.pGetPrimedJson(toLoad);
+      cls = data.class[0];
+
+      if (scRaw) {
+        const sc = cls.subclasses[0];
+        cls.subclasses = [];
+        //Import the subclass
+        return this._pImportSubclass(cls, sc, importOpts, dataOpts);
+      }
+    }
+
+    return this._pImportClass(cls, importOpts, dataOpts);
+  }
+
+  async pImportClass (cls, importOpts, dataOpts) {
+    return new ImportEntryManagerClass({
+      instance: this,
+      ent: cls,
+      importOpts,
+      dataOpts,
+    }).pImportEntry();
+  }
 
   async _pImportClass (cls, importOpts, dataOpts) {
   importOpts ||= new ImportOpts();
@@ -3739,7 +3746,7 @@ async pImportClass (cls, importOpts, dataOpts) {
   return this._pImportClass_pImportToDocData(cls, importOpts, dataOpts);
 
   return this._pImportClass_pImportToItems(cls, importOpts, dataOpts);
-}
+  }
 
   async _pImportClass_pImportToActor (cls, importOpts, dataOpts) {
   const dataBuilderOpts = new ImportListClass.ImportEntryOpts({
@@ -3762,7 +3769,7 @@ async pImportClass (cls, importOpts, dataOpts) {
   const sc = cls.subclasses?.length ? cls.subclasses[0] : null;
 
   return this._pImportClassSubclass_pImportToActor({cls, sc, importOpts, dataBuilderOpts, allFeatures});
-}
+  }
 
   static _tagFirstSubclassLoaded (cls, allFeatures = null) {
   let subclassLoadeds;
@@ -3800,522 +3807,541 @@ async pImportClass (cls, importOpts, dataOpts) {
   }
 
   subclassLoadeds[0]._foundryIsIgnoreFeature = true;
-}
+  }
 
-async _pImportClassSubclass_pImportToActor ({cls, sc, importOpts, dataBuilderOpts, allFeatures}) {
-      const actorMultiImportHelper = importOpts.actorMultiImportHelper || new ActorMultiImportHelper({actor: this._actor});
+  async _pImportClassSubclass_pImportToActor ({cls, sc, importOpts, dataBuilderOpts, allFeatures}) {
+        const actorMultiImportHelper = importOpts.actorMultiImportHelper || new ActorMultiImportHelper({actor: this._actor});
 
-  const selectedLevelIndices = await this._pGetSelectedLevelIndices(cls, importOpts, allFeatures, dataBuilderOpts, sc != null);
-  if (dataBuilderOpts.isCancelled) return ImportSummary.cancelled();
+    const selectedLevelIndices = await this._pGetSelectedLevelIndices(cls, importOpts, allFeatures, dataBuilderOpts, sc != null);
+    if (dataBuilderOpts.isCancelled) return ImportSummary.cancelled();
 
-  await this._pValidateUserLevelIndices(selectedLevelIndices, dataBuilderOpts);
-  if (dataBuilderOpts.isCancelled) return ImportSummary.cancelled();
+    await this._pValidateUserLevelIndices(selectedLevelIndices, dataBuilderOpts);
+    if (dataBuilderOpts.isCancelled) return ImportSummary.cancelled();
 
-  dataBuilderOpts.targetLevel = Math.max(...selectedLevelIndices) + 1;
-  dataBuilderOpts.numLevels = dataBuilderOpts.targetLevel - Math.min(...selectedLevelIndices);
-  dataBuilderOpts.numLevelsPrev = UtilActors.getTotalClassLevels(this._actor);
-  dataBuilderOpts.isIncludesLevelOne = cls != null 			&& selectedLevelIndices.includes(0);
-  const {proficiencyImportMode, shouldBeMulticlass} = await this._pImportClass_pGetProficiencyImportMode(cls, dataBuilderOpts);
-  dataBuilderOpts.proficiencyImportMode = proficiencyImportMode;
-  dataBuilderOpts.shouldBeMulticlass = shouldBeMulticlass;
-  if (dataBuilderOpts.isCancelled) return ImportSummary.cancelled();
-  const hpIncreaseMeta = await this._pImportClass_pGetHpImportMode(cls, dataBuilderOpts);
-  if (dataBuilderOpts.isCancelled) return ImportSummary.cancelled();
-  dataBuilderOpts.hpIncreaseMode = hpIncreaseMeta.mode;
-  dataBuilderOpts.hpIncreaseCustomRollFormula = hpIncreaseMeta.customFormula;
+    dataBuilderOpts.targetLevel = Math.max(...selectedLevelIndices) + 1;
+    dataBuilderOpts.numLevels = dataBuilderOpts.targetLevel - Math.min(...selectedLevelIndices);
+    dataBuilderOpts.numLevelsPrev = UtilActors.getTotalClassLevels(this._actor);
+    dataBuilderOpts.isIncludesLevelOne = cls != null 			&& selectedLevelIndices.includes(0);
+    const {proficiencyImportMode, shouldBeMulticlass} = await this._pImportClass_pGetProficiencyImportMode(cls, dataBuilderOpts);
+    dataBuilderOpts.proficiencyImportMode = proficiencyImportMode;
+    dataBuilderOpts.shouldBeMulticlass = shouldBeMulticlass;
+    if (dataBuilderOpts.isCancelled) return ImportSummary.cancelled();
+    const hpIncreaseMeta = await this._pImportClass_pGetHpImportMode(cls, dataBuilderOpts);
+    if (dataBuilderOpts.isCancelled) return ImportSummary.cancelled();
+    dataBuilderOpts.hpIncreaseMode = hpIncreaseMeta.mode;
+    dataBuilderOpts.hpIncreaseCustomRollFormula = hpIncreaseMeta.customFormula;
 
-  const actUpdate = {
-    system: {},
-  };
+    const actUpdate = {
+      system: {},
+    };
 
-      const hpIncreasePerLevel = await this._pImportEntry_pDoUpdateCharacterHp({actUpdate, cls, dataBuilderOpts});
+        const hpIncreasePerLevel = await this._pImportEntry_pDoUpdateCharacterHp({actUpdate, cls, dataBuilderOpts});
 
-  const curLevelMetaAndExistingClassItem = await this._pImportEntry_pGetCurLevelFillClassData({
-    actUpdate,
-    cls,
-    sc,
-    importOpts,
-    dataBuilderOpts,
-    hpIncreasePerLevel,
-  });
-  if (dataBuilderOpts.isCancelled) return ImportSummary.cancelled();
-  const {curLevel, existingClassItem, existingSubclassItem} = curLevelMetaAndExistingClassItem;
+    const curLevelMetaAndExistingClassItem = await this._pImportEntry_pGetCurLevelFillClassData({
+      actUpdate,
+      cls,
+      sc,
+      importOpts,
+      dataBuilderOpts,
+      hpIncreasePerLevel,
+    });
+    if (dataBuilderOpts.isCancelled) return ImportSummary.cancelled();
+    const {curLevel, existingClassItem, existingSubclassItem} = curLevelMetaAndExistingClassItem;
 
-  this._pImportEntry_setActorFlags(actUpdate, cls, sc, curLevel, dataBuilderOpts);
+    this._pImportEntry_setActorFlags(actUpdate, cls, sc, curLevel, dataBuilderOpts);
 
-  await this._pImportEntry_pDoUpdateCharacter(actUpdate, cls, sc, curLevel, existingClassItem, existingSubclassItem, dataBuilderOpts);
-  if (dataBuilderOpts.isCancelled) return ImportSummary.cancelled();
+    await this._pImportEntry_pDoUpdateCharacter(actUpdate, cls, sc, curLevel, existingClassItem, existingSubclassItem, dataBuilderOpts);
+    if (dataBuilderOpts.isCancelled) return ImportSummary.cancelled();
 
-  await this._pImportCasterCantrips(cls, sc, curLevel, importOpts, dataBuilderOpts);
+    await this._pImportCasterCantrips(cls, sc, curLevel, importOpts, dataBuilderOpts);
 
-  await this._pImportEntry_pFillItemArrayAdditionalSpells(cls, cls.subclasses, curLevel, importOpts, dataBuilderOpts);
-  if (dataBuilderOpts.isCancelled) return ImportSummary.cancelled();
+    await this._pImportEntry_pFillItemArrayAdditionalSpells(cls, cls.subclasses, curLevel, importOpts, dataBuilderOpts);
+    if (dataBuilderOpts.isCancelled) return ImportSummary.cancelled();
 
-  if (
-    (cls.preparedSpells && !cls.spellsKnownProgressionFixed)
-    || (cls.preparedSpellsProgression && !cls.spellsKnownProgressionFixed)
-  ) await this._pImportPreparedCasterSpells(cls, sc, curLevel, importOpts, dataBuilderOpts);
+    if (
+      (cls.preparedSpells && !cls.spellsKnownProgressionFixed)
+      || (cls.preparedSpellsProgression && !cls.spellsKnownProgressionFixed)
+    ) await this._pImportPreparedCasterSpells(cls, sc, curLevel, importOpts, dataBuilderOpts);
 
-  await this._pImportEntry_pAddUpdateClassItem(cls, sc, importOpts, dataBuilderOpts);
+    await this._pImportEntry_pAddUpdateClassItem(cls, sc, importOpts, dataBuilderOpts);
 
-  await this._pImportEntry_pHandleFeatures(cls, sc, allFeatures, selectedLevelIndices, importOpts, dataBuilderOpts);
-  if (dataBuilderOpts.isCancelled) return ImportSummary.cancelled();
+    await this._pImportEntry_pHandleFeatures(cls, sc, allFeatures, selectedLevelIndices, importOpts, dataBuilderOpts);
+    if (dataBuilderOpts.isCancelled) return ImportSummary.cancelled();
 
-  await this._pImportEntry_pAddUnarmedStrike({importOpts});
+    await this._pImportEntry_pAddUnarmedStrike({importOpts});
 
-  await this._pImportEntry_pAddAdvancements(dataBuilderOpts);
+    await this._pImportEntry_pAddAdvancements(dataBuilderOpts);
 
-  await this._pImportEntry_pFinalise(importOpts, dataBuilderOpts);
+    await this._pImportEntry_pFinalise(importOpts, dataBuilderOpts);
 
-  await actorMultiImportHelper.pRepairMissingConsumes();
+    await actorMultiImportHelper.pRepairMissingConsumes();
 
-  if (this._actor.isToken) this._actor.sheet.render();
+    if (this._actor.isToken) this._actor.sheet.render();
 
-  return new ImportSummary({
-    status: ConstsTaskRunner.TASK_EXIT_COMPLETE,
-    imported: [
-      new ImportedDocument({
-        name: `${cls.name}${sc ? ` (${sc.name})` : ""}`,
-        actor: this._actor,
-      }),
-    ],
-  });
-}
+    return new ImportSummary({
+      status: ConstsTaskRunner.TASK_EXIT_COMPLETE,
+      imported: [
+        new ImportedDocument({
+          name: `${cls.name}${sc ? ` (${sc.name})` : ""}`,
+          actor: this._actor,
+        }),
+      ],
+    });
+  }
 
-async _pGetSelectedLevelIndices (cls, importOpts, allFeatures, dataBuilderOpts, isSubclass) {
-  if (cls._foundrySelectedLevelIndices) return cls._foundrySelectedLevelIndices;
+  async _pGetSelectedLevelIndices (cls, importOpts, allFeatures, dataBuilderOpts, isSubclass) {
+    if (cls._foundrySelectedLevelIndices) return cls._foundrySelectedLevelIndices;
 
-      if (importOpts.levels) return importOpts.levels.map(it => it - 1).filter(it => it >= 0);
+        if (importOpts.levels) return importOpts.levels.map(it => it - 1).filter(it => it >= 0);
 
-  const indicesFormData = await Charactermancer_Class_LevelSelect.pGetUserInput({
-    features: allFeatures,
-    isSubclass,
-    maxPreviousLevel: this._pImportEntry_getApproxPreviousMaxLevel(cls),
-  });
-  if (indicesFormData == null) return dataBuilderOpts.isCancelled = true;
+    const indicesFormData = await Charactermancer_Class_LevelSelect.pGetUserInput({
+      features: allFeatures,
+      isSubclass,
+      maxPreviousLevel: this._pImportEntry_getApproxPreviousMaxLevel(cls),
+    });
+    if (indicesFormData == null) return dataBuilderOpts.isCancelled = true;
 
-  return indicesFormData.data;
-}
+    return indicesFormData.data;
+  }
 
   _pImportEntry_getApproxPreviousMaxLevel (cls) {
   const existingClassItems = this._getExistingClassItems(cls);
   if (!existingClassItems.length) return 0;
   return Math.max(...existingClassItems.map(it => it.system.levels || 0));
-}
+  }
 
-_pImportEntry_setActorFlags (actUpdate, cls, sc, curLevel, dataBuilderOpts) {
-  const flags = {[SharedConsts.SYSTEM_ID_DND5E]: {}};
+  _pImportEntry_setActorFlags (actUpdate, cls, sc, curLevel, dataBuilderOpts) {
+    const flags = {[SharedConsts.SYSTEM_ID_DND5E]: {}};
 
-  
-  if (Object.keys(flags[SharedConsts.SYSTEM_ID_DND5E]).length) actUpdate.flags = flags;
-}
+    
+    if (Object.keys(flags[SharedConsts.SYSTEM_ID_DND5E]).length) actUpdate.flags = flags;
+  }
 
-async _pImportClass_pGetProficiencyImportMode (cls, dataBuilderOpts) {
-  const existingClassItems = this._actor.items.filter(it => it.type === "class");
+  async _pImportClass_pGetProficiencyImportMode (cls, dataBuilderOpts) {
+    const existingClassItems = this._actor.items.filter(it => it.type === "class");
 
-  if (!dataBuilderOpts.isClassImport || !dataBuilderOpts.isIncludesLevelOne || !existingClassItems.length) {
+    if (!dataBuilderOpts.isClassImport || !dataBuilderOpts.isIncludesLevelOne || !existingClassItems.length) {
+      return {
+        proficiencyImportMode: Charactermancer_Class_ProficiencyImportModeSelect.MODE_PRIMARY,
+        shouldBeMulticlass: false,
+      };
+    }
+
+        if (cls._foundryStartingProficiencyMode != null) {
+      return {
+        proficiencyImportMode: cls._foundryStartingProficiencyMode,
+                shouldBeMulticlass: cls._foundryStartingProficiencyMode === Charactermancer_Class_ProficiencyImportModeSelect.MODE_MULTICLASS,
+      };
+    }
+
+        const identifierCls = UtilDocumentItem.getNameAsIdentifier(cls.name);
+    const shouldBeMulticlass = existingClassItems.every(clsItem => clsItem.system.identifier !== identifierCls);
+
+    const out = await Charactermancer_Class_ProficiencyImportModeSelect.pGetUserInput();
+    if (out == null) dataBuilderOpts.isCancelled = true;
+
     return {
-      proficiencyImportMode: Charactermancer_Class_ProficiencyImportModeSelect.MODE_PRIMARY,
-      shouldBeMulticlass: false,
+      proficiencyImportMode: out?.data,
+      shouldBeMulticlass: shouldBeMulticlass && out != null,
     };
   }
 
-      if (cls._foundryStartingProficiencyMode != null) {
-    return {
-      proficiencyImportMode: cls._foundryStartingProficiencyMode,
-              shouldBeMulticlass: cls._foundryStartingProficiencyMode === Charactermancer_Class_ProficiencyImportModeSelect.MODE_MULTICLASS,
-    };
+  async _pImportClass_pGetHpImportMode (cls, dataBuilderOpts) {
+    if (!Charactermancer_Class_HpIncreaseModeSelect.isHpAvailable(cls)) return {mode: ConfigConsts.C_IMPORT_CLASS_HP_INCREASE_MODE__DO_NOT_INCREASE};
+
+        if (cls._foundryHpIncreaseMode != null || cls._foundryHpIncreaseCustomFormula != null) return {mode: cls._foundryHpIncreaseMode, customFormula: cls._foundryHpIncreaseCustomFormula};
+
+    const out = await Charactermancer_Class_HpIncreaseModeSelect.pGetUserInput();
+    if (out == null) return dataBuilderOpts.isCancelled = true;
+    if (out === VeCt.SYM_UI_SKIP) return {mode: ConfigConsts.C_IMPORT_CLASS_HP_INCREASE_MODE__DO_NOT_INCREASE};
+    return out.data;
   }
 
-      const identifierCls = UtilDocumentItem.getNameAsIdentifier(cls.name);
-  const shouldBeMulticlass = existingClassItems.every(clsItem => clsItem.system.identifier !== identifierCls);
-
-  const out = await Charactermancer_Class_ProficiencyImportModeSelect.pGetUserInput();
-  if (out == null) dataBuilderOpts.isCancelled = true;
-
-  return {
-    proficiencyImportMode: out?.data,
-    shouldBeMulticlass: shouldBeMulticlass && out != null,
-  };
-}
-
-async _pImportClass_pGetHpImportMode (cls, dataBuilderOpts) {
-  if (!Charactermancer_Class_HpIncreaseModeSelect.isHpAvailable(cls)) return {mode: ConfigConsts.C_IMPORT_CLASS_HP_INCREASE_MODE__DO_NOT_INCREASE};
-
-      if (cls._foundryHpIncreaseMode != null || cls._foundryHpIncreaseCustomFormula != null) return {mode: cls._foundryHpIncreaseMode, customFormula: cls._foundryHpIncreaseCustomFormula};
-
-  const out = await Charactermancer_Class_HpIncreaseModeSelect.pGetUserInput();
-  if (out == null) return dataBuilderOpts.isCancelled = true;
-  if (out === VeCt.SYM_UI_SKIP) return {mode: ConfigConsts.C_IMPORT_CLASS_HP_INCREASE_MODE__DO_NOT_INCREASE};
-  return out.data;
-}
-
-async _pImportClass_pImportToItems (cls, importOpts, dataOpts) {
-  const duplicateMeta = this._getDuplicateMeta({entity: cls, importOpts});
-  if (duplicateMeta.isSkip) {
-    return new ImportSummary({
-      status: ConstsTaskRunner.TASK_EXIT_SKIPPED_DUPLICATE,
-      imported: [
-        new ImportedDocument({
-          isExisting: true,
-          document: duplicateMeta.existing,
-        }),
-      ],
-    });
-  }
-
-  const clsData = await DataConverterClass.pGetDocumentJsonClass(
-    cls,
-    {
-      filterValues: importOpts.filterValues || this._pageFilter.filterBox.getValues(),
-      ...dataOpts,
-      isAddDefaultOwnershipFromConfig: importOpts.isAddDefaultOwnershipFromConfig ?? true,
-      defaultOwnership: importOpts.defaultOwnership,
-      userOwnership: importOpts.userOwnership,
-      pageFilter: this._pageFilter,
-      taskRunner: importOpts.taskRunner,
-      actorMultiImportHelper: importOpts.actorMultiImportHelper,
-    },
-  );
-
-  const Clazz = this._getDocumentClass();
-
-  if (importOpts.isTemp) {
-    const clsItem = await UtilDocuments.pCreateDocument(Item, clsData, {isRender: false, isTemporary: true});
-    const scItems = await (cls.subclasses || []).pSerialAwaitMap(sc => this.pImportSubclass(cls, sc, importOpts, dataOpts));
-
-    return new ImportSummary({
-      status: ConstsTaskRunner.TASK_EXIT_COMPLETE,
-      imported: [
-        clsItem,
-        ...scItems,
-      ].map(it => new ImportedDocument({document: it, actor: this._actor})),
-    });
-  } else if (this._pack) {
-    if (duplicateMeta.isOverwrite) {
-      const clsItem = await this._pImportEntry_pDoUpdateExistingPackEntity({
-        entity: cls,
-        duplicateMeta,
-        docData: clsData,
-        importOpts,
-      });
-      const scItems = await (cls.subclasses || []).pSerialAwaitMap(sc => this.pImportSubclass(cls, sc, importOpts, dataOpts));
-
+  async _pImportClass_pImportToItems (cls, importOpts, dataOpts) {
+    const duplicateMeta = this._getDuplicateMeta({entity: cls, importOpts});
+    if (duplicateMeta.isSkip) {
       return new ImportSummary({
-        status: ConstsTaskRunner.TASK_EXIT_COMPLETE_UPDATE_OVERWRITE_DUPLICATE,
+        status: ConstsTaskRunner.TASK_EXIT_SKIPPED_DUPLICATE,
         imported: [
-          clsItem,
-          ...scItems,
-        ].map(it => new ImportedDocument({isExisting: true, document: it, actor: this._actor})),
+          new ImportedDocument({
+            isExisting: true,
+            document: duplicateMeta.existing,
+          }),
+        ],
       });
     }
 
-    const clsItem = new Clazz(clsData);
-    await this._pack.importDocument(clsItem);
-    const scItems = await (cls.subclasses || []).pSerialAwaitMap(sc => this.pImportSubclass(cls, sc, importOpts, dataOpts));
+    const clsData = await DataConverterClass.pGetDocumentJsonClass(
+      cls,
+      {
+        filterValues: importOpts.filterValues || this._pageFilter.filterBox.getValues(),
+        ...dataOpts,
+        isAddDefaultOwnershipFromConfig: importOpts.isAddDefaultOwnershipFromConfig ?? true,
+        defaultOwnership: importOpts.defaultOwnership,
+        userOwnership: importOpts.userOwnership,
+        pageFilter: this._pageFilter,
+        taskRunner: importOpts.taskRunner,
+        actorMultiImportHelper: importOpts.actorMultiImportHelper,
+      },
+    );
 
-    await this._pImportEntry_pAddToTargetTableIfRequired([clsItem], duplicateMeta, importOpts);
+    const Clazz = this._getDocumentClass();
 
-    return new ImportSummary({
-      status: ConstsTaskRunner.TASK_EXIT_COMPLETE,
-      imported: [
-        clsItem,
-        ...scItems,
-      ].map(it => new ImportedDocument({document: it, actor: this._actor})),
-    });
-  }
-
-  return this._pImportClass_pImportToItems_toDirectory({
-    duplicateMeta,
-    cls,
-    clsData,
-    importOpts,
-  });
-}
-
-async _pImportClass_pImportToDocData (cls, importOpts, dataOpts) {
-  
-  const duplicateMeta = null; //this._getDuplicateMeta({entity: cls, importOpts});
-  if (duplicateMeta?.isSkip) {
-    return new ImportSummary({
-      status: ConstsTaskRunner.TASK_EXIT_SKIPPED_DUPLICATE,
-      imported: [
-        new ImportedDocument({
-          isExisting: true,
-          document: duplicateMeta.existing,
-        }),
-      ],
-    });
-  }
-
-  const clsData = await DataConverterClass.pGetDocumentJsonClass(
-    cls,
-    {
-      filterValues: importOpts.filterValues || this._pageFilter.filterBox.getValues(),
-      ...dataOpts,
-      isAddDefaultOwnershipFromConfig: importOpts.isAddDefaultOwnershipFromConfig ?? true,
-      defaultOwnership: importOpts.defaultOwnership,
-      userOwnership: importOpts.userOwnership,
-      pageFilter: this._pageFilter,
-      taskRunner: importOpts.taskRunner,
-      actorMultiImportHelper: importOpts.actorMultiImportHelper,
-    },
-  );
-
-  return new ImportSummary({
-    status: ConstsTaskRunner.TASK_EXIT_COMPLETE,
-    imported: [clsData]
-  });
-
-  const Clazz = this._getDocumentClass();
-
-  if (importOpts.isTemp) {
-    const clsItem = await UtilDocuments.pCreateDocument(Item, clsData, {isRender: false, isTemporary: true});
-    const scItems = await (cls.subclasses || []).pSerialAwaitMap(sc => this.pImportSubclass(cls, sc, importOpts, dataOpts));
-
-    return new ImportSummary({
-      status: ConstsTaskRunner.TASK_EXIT_COMPLETE,
-      imported: [
-        clsItem,
-        ...scItems,
-      ].map(it => new ImportedDocument({document: it, actor: this._actor})),
-    });
-  }
-  else if (this._pack) {
-    if (duplicateMeta.isOverwrite) {
-      const clsItem = await this._pImportEntry_pDoUpdateExistingPackEntity({
-        entity: cls,
-        duplicateMeta,
-        docData: clsData,
-        importOpts,
-      });
+    if (importOpts.isTemp) {
+      const clsItem = await UtilDocuments.pCreateDocument(Item, clsData, {isRender: false, isTemporary: true});
       const scItems = await (cls.subclasses || []).pSerialAwaitMap(sc => this.pImportSubclass(cls, sc, importOpts, dataOpts));
 
       return new ImportSummary({
-        status: ConstsTaskRunner.TASK_EXIT_COMPLETE_UPDATE_OVERWRITE_DUPLICATE,
+        status: ConstsTaskRunner.TASK_EXIT_COMPLETE,
         imported: [
           clsItem,
           ...scItems,
-        ].map(it => new ImportedDocument({isExisting: true, document: it, actor: this._actor})),
+        ].map(it => new ImportedDocument({document: it, actor: this._actor})),
+      });
+    } else if (this._pack) {
+      if (duplicateMeta.isOverwrite) {
+        const clsItem = await this._pImportEntry_pDoUpdateExistingPackEntity({
+          entity: cls,
+          duplicateMeta,
+          docData: clsData,
+          importOpts,
+        });
+        const scItems = await (cls.subclasses || []).pSerialAwaitMap(sc => this.pImportSubclass(cls, sc, importOpts, dataOpts));
+
+        return new ImportSummary({
+          status: ConstsTaskRunner.TASK_EXIT_COMPLETE_UPDATE_OVERWRITE_DUPLICATE,
+          imported: [
+            clsItem,
+            ...scItems,
+          ].map(it => new ImportedDocument({isExisting: true, document: it, actor: this._actor})),
+        });
+      }
+
+      const clsItem = new Clazz(clsData);
+      await this._pack.importDocument(clsItem);
+      const scItems = await (cls.subclasses || []).pSerialAwaitMap(sc => this.pImportSubclass(cls, sc, importOpts, dataOpts));
+
+      await this._pImportEntry_pAddToTargetTableIfRequired([clsItem], duplicateMeta, importOpts);
+
+      return new ImportSummary({
+        status: ConstsTaskRunner.TASK_EXIT_COMPLETE,
+        imported: [
+          clsItem,
+          ...scItems,
+        ].map(it => new ImportedDocument({document: it, actor: this._actor})),
       });
     }
 
-    const clsItem = new Clazz(clsData);
-    await this._pack.importDocument(clsItem);
-    const scItems = await (cls.subclasses || []).pSerialAwaitMap(sc => this.pImportSubclass(cls, sc, importOpts, dataOpts));
-
-    await this._pImportEntry_pAddToTargetTableIfRequired([clsItem], duplicateMeta, importOpts);
-
-    return new ImportSummary({
-      status: ConstsTaskRunner.TASK_EXIT_COMPLETE,
-      imported: [
-        clsItem,
-        ...scItems,
-      ].map(it => new ImportedDocument({document: it, actor: this._actor})),
-    });
-  }
-
-  return this._pImportClass_pImportToItems_toDirectory({
-    duplicateMeta,
-    cls,
-    clsData,
-    importOpts,
-  });
-}
-
-async _pImportClass_pImportToItems_toDirectory (
-  {
-    duplicateMeta,
-    cls,
-    clsData,
-    importOpts,
-  },
-) {
-  if (duplicateMeta?.isOverwrite) {
-    const clsItem = await this._pImportEntry_pDoUpdateExistingDirectoryEntity({
-      entity: cls,
+    return this._pImportClass_pImportToItems_toDirectory({
       duplicateMeta,
-      docData: clsData,
-    });
-    const scItems = await (cls.subclasses || []).pSerialAwaitMap(sc => this.pImportSubclass(cls, sc, importOpts));
-
-    return new ImportSummary({
-      status: ConstsTaskRunner.TASK_EXIT_COMPLETE_UPDATE_OVERWRITE_DUPLICATE,
-      imported: [
-        clsItem,
-        ...scItems,
-      ].map(it => new ImportedDocument({isExisting: true, document: it, actor: this._actor})),
+      cls,
+      clsData,
+      importOpts,
     });
   }
 
-  const folderIdMeta = await this._pImportEntry_pImportToDirectoryGeneric_pGetFolderIdMeta({
-    toImport: cls,
-    importOpts,
-  });
-  if (folderIdMeta?.folderId) clsData.folder = folderIdMeta.folderId;
+  async _pImportClass_pImportToDocData (cls, importOpts, dataOpts) {
+    
+    const duplicateMeta = null; //this._getDuplicateMeta({entity: cls, importOpts});
+    if (duplicateMeta?.isSkip) {
+      return new ImportSummary({
+        status: ConstsTaskRunner.TASK_EXIT_SKIPPED_DUPLICATE,
+        imported: [
+          new ImportedDocument({
+            isExisting: true,
+            document: duplicateMeta.existing,
+          }),
+        ],
+      });
+    }
 
-  const clsItem = await UtilDocuments.pCreateDocument(Item, clsData, {isRender: !importOpts.isBatched});
+    const clsData = await DataConverterClass.pGetDocumentJsonClass(
+      cls,
+      {
+        filterValues: importOpts.filterValues || this._pageFilter.filterBox.getValues(),
+        ...dataOpts,
+        isAddDefaultOwnershipFromConfig: importOpts.isAddDefaultOwnershipFromConfig ?? true,
+        defaultOwnership: importOpts.defaultOwnership,
+        userOwnership: importOpts.userOwnership,
+        pageFilter: this._pageFilter,
+        taskRunner: importOpts.taskRunner,
+        actorMultiImportHelper: importOpts.actorMultiImportHelper,
+      },
+    );
 
-  await game.items.set(clsItem.id, clsItem);
+    return new ImportSummary({
+      status: ConstsTaskRunner.TASK_EXIT_COMPLETE,
+      imported: [clsData]
+    });
 
-  const scItems = await (cls.subclasses || [])
-    .pSerialAwaitMap(sc => this.pImportSubclass(
+    const Clazz = this._getDocumentClass();
+
+    if (importOpts.isTemp) {
+      const clsItem = await UtilDocuments.pCreateDocument(Item, clsData, {isRender: false, isTemporary: true});
+      const scItems = await (cls.subclasses || []).pSerialAwaitMap(sc => this.pImportSubclass(cls, sc, importOpts, dataOpts));
+
+      return new ImportSummary({
+        status: ConstsTaskRunner.TASK_EXIT_COMPLETE,
+        imported: [
+          clsItem,
+          ...scItems,
+        ].map(it => new ImportedDocument({document: it, actor: this._actor})),
+      });
+    }
+    else if (this._pack) {
+      if (duplicateMeta.isOverwrite) {
+        const clsItem = await this._pImportEntry_pDoUpdateExistingPackEntity({
+          entity: cls,
+          duplicateMeta,
+          docData: clsData,
+          importOpts,
+        });
+        const scItems = await (cls.subclasses || []).pSerialAwaitMap(sc => this.pImportSubclass(cls, sc, importOpts, dataOpts));
+
+        return new ImportSummary({
+          status: ConstsTaskRunner.TASK_EXIT_COMPLETE_UPDATE_OVERWRITE_DUPLICATE,
+          imported: [
+            clsItem,
+            ...scItems,
+          ].map(it => new ImportedDocument({isExisting: true, document: it, actor: this._actor})),
+        });
+      }
+
+      const clsItem = new Clazz(clsData);
+      await this._pack.importDocument(clsItem);
+      const scItems = await (cls.subclasses || []).pSerialAwaitMap(sc => this.pImportSubclass(cls, sc, importOpts, dataOpts));
+
+      await this._pImportEntry_pAddToTargetTableIfRequired([clsItem], duplicateMeta, importOpts);
+
+      return new ImportSummary({
+        status: ConstsTaskRunner.TASK_EXIT_COMPLETE,
+        imported: [
+          clsItem,
+          ...scItems,
+        ].map(it => new ImportedDocument({document: it, actor: this._actor})),
+      });
+    }
+
+    return this._pImportClass_pImportToItems_toDirectory({
+      duplicateMeta,
+      cls,
+      clsData,
+      importOpts,
+    });
+  }
+
+  async _pImportClass_pImportToItems_toDirectory (
+    {
+      duplicateMeta,
+      cls,
+      clsData,
+      importOpts,
+    },
+  ) {
+    if (duplicateMeta?.isOverwrite) {
+      const clsItem = await this._pImportEntry_pDoUpdateExistingDirectoryEntity({
+        entity: cls,
+        duplicateMeta,
+        docData: clsData,
+      });
+      const scItems = await (cls.subclasses || []).pSerialAwaitMap(sc => this.pImportSubclass(cls, sc, importOpts));
+
+      return new ImportSummary({
+        status: ConstsTaskRunner.TASK_EXIT_COMPLETE_UPDATE_OVERWRITE_DUPLICATE,
+        imported: [
+          clsItem,
+          ...scItems,
+        ].map(it => new ImportedDocument({isExisting: true, document: it, actor: this._actor})),
+      });
+    }
+
+    const folderIdMeta = await this._pImportEntry_pImportToDirectoryGeneric_pGetFolderIdMeta({
+      toImport: cls,
+      importOpts,
+    });
+    if (folderIdMeta?.folderId) clsData.folder = folderIdMeta.folderId;
+
+    const clsItem = await UtilDocuments.pCreateDocument(Item, clsData, {isRender: !importOpts.isBatched});
+
+    await game.items.set(clsItem.id, clsItem);
+
+    const scItems = await (cls.subclasses || [])
+      .pSerialAwaitMap(sc => this.pImportSubclass(
+        cls,
+        sc,
+        new ImportOpts({
+          ...importOpts,
+          folderId: folderIdMeta?.folderId || importOpts.folderId,
+        }),
+      ));
+
+    return new ImportSummary({
+      status: ConstsTaskRunner.TASK_EXIT_COMPLETE,
+      imported: [
+        clsItem,
+        ...scItems,
+      ].map(it => new ImportedDocument({document: it, actor: this._actor})),
+    });
+  }
+
+  async pImportSubclass (cls, sc, importOpts, dataOpts) {
+    return new ImportEntryManagerSubclass({
+      instance: this,
+      ent: sc,
+      cls,
+      importOpts,
+      dataOpts,
+    }).pImportEntry();
+  }
+
+  /**
+   * @param {any} cls a class in 5eTools schema
+   * @param {any} sc a subclass in 5eTools schema
+   * @param {any} importOpts
+   * @param {any} dataOpts
+   * @returns {any}
+   */
+  async _pImportSubclass (cls, sc, importOpts, dataOpts) {
+    importOpts ||= new ImportOpts();
+
+    console.log(...LGT, `Importing subclass "${sc.name}" (from "${Parser.sourceJsonToAbv(sc.source)}")`);
+
+    if (DataConverterClass.isStubClass(cls)) return ImportSummary.completedStub();
+    if (DataConverterClass.isStubSubclass(sc)) return ImportSummary.completedStub();
+
+    if (importOpts.isTemp) return this._pImportSubclass_pImportToItems(cls, sc, importOpts, dataOpts);
+    if (this._actor) return this._pImportSubclass_pImportToActor(cls, sc, importOpts, dataOpts);
+    return this._pImportSubclass_pImportToItems(cls, sc, importOpts, dataOpts);
+  }
+
+  async _pImportSubclass_pImportToActor (cls, sc, importOpts, dataOpts) {
+    const dataBuilderOpts = new ImportListClass.ImportEntryOpts({
+      isClassImport: false,
+      isCharactermancer: importOpts.isCharactermancer,
+    });
+
+        const existingClassItems = this._actor.items.filter(it => it.type === "class");
+    if (!existingClassItems.length) {
+      const isImportSubclassOnly = await InputUiUtil.pGetUserBoolean({
+        title: "Import Class?",
+        htmlDescription: "You have selected a subclass to import, but have no class levels. Would you like to import the class too?",
+        textYes: "Import Class and Subclass",
+        textNo: "Import Only Subclass",
+      });
+
+      if (isImportSubclassOnly == null) {
+        dataBuilderOpts.isCancelled = true;
+        return ImportSummary.cancelled();
+      }
+
+            if (isImportSubclassOnly === true) {
+        const cpyCls = MiscUtil.copyFast(cls);
+        cpyCls.subclasses = [sc];
+        return this.pImportClass(cpyCls, importOpts);
+      }
+    }
+    
+        let allFeatures = MiscUtil.copyFast(sc.subclassFeatures);
+
+    this.constructor._tagFirstSubclassLoaded(cls, allFeatures);
+
+    allFeatures = Charactermancer_Util.getFilteredFeatures(allFeatures, this._pageFilter, importOpts.filterValues || this._pageFilter.filterBox.getValues());
+    
+    return this._pImportClassSubclass_pImportToActor({cls, sc, importOpts, dataBuilderOpts, allFeatures});
+  }
+
+  /**
+   * Description
+   * @param {any} cls a class in 5eTools schema
+   * @param {any} sc a subclass in 5eTools schema
+   * @param {any} importOpts
+   * @param {any} dataOpts={}
+   * @returns {any}
+   */
+  async _pImportSubclass_pImportToItems (cls, sc, importOpts, dataOpts = {}) {
+    const scData = await DataConverterClass.pGetDocumentJsonSubclass(
       cls,
       sc,
-      new ImportOpts({
-        ...importOpts,
-        folderId: folderIdMeta?.folderId || importOpts.folderId,
-      }),
-    ));
+      {
+        filterValues: importOpts.filterValues || this._pageFilter.filterBox.getValues(),
+        ...dataOpts,
+        isAddDefaultOwnershipFromConfig: importOpts.isAddDefaultOwnershipFromConfig ?? true,
+        defaultOwnership: importOpts.defaultOwnership,
+        userOwnership: importOpts.userOwnership,
+        pageFilter: this._pageFilter,
+        taskRunner: importOpts.taskRunner,
+        actorMultiImportHelper: importOpts.actorMultiImportHelper,
+      },
+    );
 
-  return new ImportSummary({
-    status: ConstsTaskRunner.TASK_EXIT_COMPLETE,
-    imported: [
-      clsItem,
-      ...scItems,
-    ].map(it => new ImportedDocument({document: it, actor: this._actor})),
-  });
-}
-
-async pImportSubclass (cls, sc, importOpts, dataOpts) {
-  return new ImportEntryManagerSubclass({
-    instance: this,
-    ent: sc,
-    cls,
-    importOpts,
-    dataOpts,
-  }).pImportEntry();
-}
-
-  async _pImportSubclass (cls, sc, importOpts, dataOpts) {
-  importOpts ||= new ImportOpts();
-
-  console.log(...LGT, `Importing subclass "${sc.name}" (from "${Parser.sourceJsonToAbv(sc.source)}")`);
-
-  if (DataConverterClass.isStubClass(cls)) return ImportSummary.completedStub();
-  if (DataConverterClass.isStubSubclass(sc)) return ImportSummary.completedStub();
-
-  if (importOpts.isTemp) return this._pImportSubclass_pImportToItems(cls, sc, importOpts, dataOpts);
-  if (this._actor) return this._pImportSubclass_pImportToActor(cls, sc, importOpts, dataOpts);
-  return this._pImportSubclass_pImportToItems(cls, sc, importOpts, dataOpts);
-}
-
-async _pImportSubclass_pImportToActor (cls, sc, importOpts, dataOpts) {
-  const dataBuilderOpts = new ImportListClass.ImportEntryOpts({
-    isClassImport: false,
-    isCharactermancer: importOpts.isCharactermancer,
-  });
-
-      const existingClassItems = this._actor.items.filter(it => it.type === "class");
-  if (!existingClassItems.length) {
-    const isImportSubclassOnly = await InputUiUtil.pGetUserBoolean({
-      title: "Import Class?",
-      htmlDescription: "You have selected a subclass to import, but have no class levels. Would you like to import the class too?",
-      textYes: "Import Class and Subclass",
-      textNo: "Import Only Subclass",
+    /* const duplicateMeta = this._getDuplicateMeta({
+      name: scData.name,
+      sourceIdentifier: UtilDocumentSource.getDocumentSourceIdentifierString({doc: scData}),
+      importOpts,
     });
-
-    if (isImportSubclassOnly == null) {
-      dataBuilderOpts.isCancelled = true;
-      return ImportSummary.cancelled();
-    }
-
-          if (isImportSubclassOnly === true) {
-      const cpyCls = MiscUtil.copyFast(cls);
-      cpyCls.subclasses = [sc];
-      return this.pImportClass(cpyCls, importOpts);
-    }
-  }
-  
-      let allFeatures = MiscUtil.copyFast(sc.subclassFeatures);
-
-  this.constructor._tagFirstSubclassLoaded(cls, allFeatures);
-
-  allFeatures = Charactermancer_Util.getFilteredFeatures(allFeatures, this._pageFilter, importOpts.filterValues || this._pageFilter.filterBox.getValues());
-  
-  return this._pImportClassSubclass_pImportToActor({cls, sc, importOpts, dataBuilderOpts, allFeatures});
-}
-
-  async _pImportSubclass_pImportToItems (cls, sc, importOpts, dataOpts = {}) {
-  const scData = await DataConverterClass.pGetDocumentJsonSubclass(
-    cls,
-    sc,
-    {
-      filterValues: importOpts.filterValues || this._pageFilter.filterBox.getValues(),
-      ...dataOpts,
-      isAddDefaultOwnershipFromConfig: importOpts.isAddDefaultOwnershipFromConfig ?? true,
-      defaultOwnership: importOpts.defaultOwnership,
-      userOwnership: importOpts.userOwnership,
-      pageFilter: this._pageFilter,
-      taskRunner: importOpts.taskRunner,
-      actorMultiImportHelper: importOpts.actorMultiImportHelper,
-    },
-  );
-
-  /* const duplicateMeta = this._getDuplicateMeta({
-    name: scData.name,
-    sourceIdentifier: UtilDocumentSource.getDocumentSourceIdentifierString({doc: scData}),
-    importOpts,
-  });
-  if (duplicateMeta.isSkip) {
-    return new ImportSummary({
-      status: ConstsTaskRunner.TASK_EXIT_SKIPPED_DUPLICATE,
-      imported: [
-        new ImportedDocument({
-          isExisting: true,
-          document: duplicateMeta.existing,
-        }),
-      ],
-    });
-  } */
+    if (duplicateMeta.isSkip) {
+      return new ImportSummary({
+        status: ConstsTaskRunner.TASK_EXIT_SKIPPED_DUPLICATE,
+        imported: [
+          new ImportedDocument({
+            isExisting: true,
+            document: duplicateMeta.existing,
+          }),
+        ],
+      });
+    } */
+   const duplicateMeta = {isOverwrite:false};
 
     console.log("SCDATA", scData);
 
-  const Clazz = this._getDocumentClass();
+    const Clazz = Subclass5e;//this._getDocumentClass();
 
-  if (importOpts.isTemp) {
-    const imported = await UtilDocuments.pCreateDocument(Item, scData, {isRender: false, isTemporary: true});
+    //If just a temporary import
+    if (importOpts.isTemp) {
+      const imported = await UtilDocuments.pCreateDocument(Item, scData, {isRender: false, isTemporary: true});
 
-    return new ImportSummary({
-      status: ConstsTaskRunner.TASK_EXIT_COMPLETE,
-      imported: [
-        new ImportedDocument({
-          document: imported,
-        }),
-      ],
-    });
-  } else if (this._pack) {
-    if (duplicateMeta.isOverwrite) {
-      return this._pImportEntry_pDoUpdateExistingPackEntity({
-        entity: sc,
-        duplicateMeta,
-        docData: scData,
-        importOpts,
+      return new ImportSummary({
+        status: ConstsTaskRunner.TASK_EXIT_COMPLETE,
+        imported: [
+          new ImportedDocument({
+            document: imported,
+          }),
+        ],
+      });
+    }
+    //If importing into a compendium
+    else if (this._pack) {
+      if (duplicateMeta.isOverwrite) {
+        return this._pImportEntry_pDoUpdateExistingPackEntity({
+          entity: sc,
+          duplicateMeta,
+          docData: scData,
+          importOpts,
+        });
+      }
+
+      const scItem = new Clazz(scData);
+      await this._pack.importDocument(scItem);
+
+      await this._pImportEntry_pAddToTargetTableIfRequired([scItem], duplicateMeta, importOpts);
+
+      return new ImportSummary({
+        status: ConstsTaskRunner.TASK_EXIT_COMPLETE,
+        imported: [
+          new ImportedDocument({
+            document: scItem,
+          }),
+        ],
       });
     }
 
-    const scItem = new Clazz(scData);
-    await this._pack.importDocument(scItem);
-
-    await this._pImportEntry_pAddToTargetTableIfRequired([scItem], duplicateMeta, importOpts);
-
-    return new ImportSummary({
-      status: ConstsTaskRunner.TASK_EXIT_COMPLETE,
-      imported: [
-        new ImportedDocument({
-          document: scItem,
-        }),
-      ],
+    return this._pImportEntry_pImportToDirectoryGeneric_toDirectory({
+      duplicateMeta,
+      docData: scData,
+      toImport: sc,
+      Clazz,
+      importOpts,
     });
-  }
-
-  return this._pImportEntry_pImportToDirectoryGeneric_toDirectory({
-    duplicateMeta,
-    docData: scData,
-    toImport: sc,
-    Clazz,
-    importOpts,
-  });
 }
 
 async _pImportEntry_pDoUpdateCharacter (actUpdate, cls, sc, curLevel, existingClassItem, existingSubclassItem, dataBuilderOpts) {
@@ -6091,404 +6117,404 @@ ImportListClass.Utils = class {
 //#region ImportListFeature
 class ImportListFeature extends ImportListCharacter {
   static init () {
-  throw new Error(`Unimplemented!`);
-}
-
-constructor (...args) {
-  super(...args);
-
-  this._modalFilterSpells = new ModalFilterSpells({namespace: `${this.constructor.name}.spells`, isRadio: true});
-}
-
-async pInit () {
-  if (await super.pInit()) return true;
-
-  await this._modalFilterSpells.pPreloadHidden();
-}
-
-/**
- * Description
- * @param {any} feature
- * @param {{isLeaf:boolean, featureEntriesPageFilter:any, isPreLoadedFeature:boolean, featureEntriesPageFilterValues:any}} importOpts
- * @param {any} dataOpts
- * @returns {any}
- */
-async _pImportEntry (feature, importOpts, dataOpts) {
-  importOpts ||= new ImportOpts();
-
-  //console.log("IMPORT FEATURE", feature, importOpts, dataOpts);
-  if (!this._actor) {
-    const dereferenced = await this.constructor._DataConverter.pGetDereferencedFeatureItem(feature);
-    return super._pImportEntry(dereferenced, importOpts, dataOpts);
+    throw new Error(`Unimplemented!`);
   }
 
-  if (importOpts.isLeaf) {
-          if (importOpts.isSkippableLeaf && feature.entries?.[0]?.type === "options" && feature.entries?.length === 1) {
-      return new ImportSummary({
-        status: ConstsTaskRunner.TASK_EXIT_SKIPPED_OTHER,
-        entity: feature,
-      });
+  constructor (...args) {
+    super(...args);
+
+    this._modalFilterSpells = new ModalFilterSpells({namespace: `${this.constructor.name}.spells`, isRadio: true});
+  }
+
+  async pInit () {
+    if (await super.pInit()) return true;
+
+    await this._modalFilterSpells.pPreloadHidden();
+  }
+
+  /**
+   * Description
+   * @param {any} feature
+   * @param {{isLeaf:boolean, featureEntriesPageFilter:any, isPreLoadedFeature:boolean, featureEntriesPageFilterValues:any}} importOpts
+   * @param {any} dataOpts
+   * @returns {any}
+   */
+  async _pImportEntry (feature, importOpts, dataOpts) {
+    importOpts ||= new ImportOpts();
+
+    //console.log("IMPORT FEATURE", feature, importOpts, dataOpts);
+    if (!this._actor) {
+      const dereferenced = await this.constructor._DataConverter.pGetDereferencedFeatureItem(feature);
+      return super._pImportEntry(dereferenced, importOpts, dataOpts);
     }
 
-    const out = await super._pImportEntry(feature, importOpts, dataOpts);
-
-    await UtilActors.pLinkTempUuids({actor: this._actor});
-
-    return out;
-  }
-
-  const pageFilter = importOpts.isPreLoadedFeature
-    ? importOpts.featureEntriesPageFilter
-    : this._pageFilter;
-  const filterValues = importOpts.isPreLoadedFeature
-    ? (importOpts.featureEntriesPageFilterValues)
-    : (importOpts.filterValues || (await this._pGetPageFilterValues()));
-
-  let allFeatures;
-  if (importOpts.isPreLoadedFeature) {
-    allFeatures = [feature];
-  }
-  else {
-    const wrappedFeature = await this.constructor._DataConverter.pGetInitFeatureLoadeds(feature, {actor: this._actor});
-    allFeatures = [wrappedFeature];
-  }
-
-  allFeatures = Charactermancer_Util.getFilteredFeatures(
-    allFeatures,
-    pageFilter,
-    filterValues,
-  );
-
-  if (!allFeatures.length) return ImportSummary.cancelled({entity: feature});
-
-  allFeatures = Charactermancer_Util.getImportableFeatures(allFeatures);
-
-  Charactermancer_Util.doApplyFilterToFeatureEntries_bySource(
-    allFeatures,
-    pageFilter,
-    filterValues,
-  );
-
-  const allFeaturesGrouped = Charactermancer_Util.getFeaturesGroupedByOptionsSet(allFeatures);
-  const actorUpdate = {};
-
-  const importSummariesSub = [];
-
-  for (const topLevelFeatureMeta of allFeaturesGrouped) {
-    const {topLevelFeature, optionsSets} = topLevelFeatureMeta;
-
-    for (let ixOptionSet = 0; ixOptionSet < optionsSets.length; ++ixOptionSet) {
-      const optionsSet = optionsSets[ixOptionSet];
-
-      const formDataOptionSet = await Charactermancer_FeatureOptionsSelect.pGetUserInput({
-        actor: this._actor,
-        optionsSet,
-        level: topLevelFeature.level,
-        existingFeatureChecker: importOpts.existingFeatureChecker,
-        isSkipCharactermancerHandled: importOpts.isCharactermancer,
-        modalFilterSpells: this._modalFilterSpells,
-      });
-
-      if (!formDataOptionSet) return ImportSummary.cancelled({entity: feature});
-      if (formDataOptionSet === VeCt.SYM_UI_SKIP) continue;
-
-      await Charactermancer_FeatureOptionsSelect.pDoApplyResourcesFormDataToActor({
-        actor: this._actor,
-        formData: formDataOptionSet,
-      });
-
-      await Charactermancer_FeatureOptionsSelect.pDoApplySensesFormDataToActor({
-        actor: this._actor,
-        actorUpdate,
-        formData: formDataOptionSet,
-        configGroup: this._configGroup,
-      });
-
-      for (const loaded of (formDataOptionSet.data?.features || [])) {
-        const {entity, type} = loaded;
-
-                  const cpyEntity = MiscUtil.copyFast(entity);
-        delete cpyEntity.additionalSpells;
-
-        const isSkippableLeaf = ixOptionSet === 0 && optionsSets.length > 1;
-
-        switch (type) {
-          case "classFeature":
-          case "subclassFeature": {
-            const importResult = await this.pImportEntry(cpyEntity, new ImportOpts({...importOpts, isLeaf: true, isSkippableLeaf}));
-            if (importResult?.status === ConstsTaskRunner.TASK_EXIT_CANCELLED) return importResult;
-            importSummariesSub.push(importResult);
-            break;
-          }
-
-          case "optionalfeature": {
-            const importResult = await this._pImportEntry_pHandleGenericFeatureIndirect({
-              ClassName: "ImportListOptionalfeature",
-              propInstance: "_IMPORT_LIST_OPTIONAL_FEATURE",
-              importOpts,
-              cpyEntity,
-              isSkippableLeaf,
-            });
-            if (importResult?.status === ConstsTaskRunner.TASK_EXIT_CANCELLED) return importResult;
-            importSummariesSub.push(importResult);
-            break;
-          }
-
-          case "feat": {
-            const importResult = await this._pImportEntry_pHandleGenericFeatureIndirect({
-              ClassName: "ImportListFeat",
-              propInstance: "_IMPORT_LIST_FEAT",
-              importOpts,
-              cpyEntity,
-              isSkippableLeaf,
-            });
-            if (importResult?.status === ConstsTaskRunner.TASK_EXIT_CANCELLED) return importResult;
-            importSummariesSub.push(importResult);
-            break;
-          }
-
-          case "reward": {
-            const importResult = await this._pImportEntry_pHandleGenericFeatureIndirect({
-              ClassName: "ImportListReward",
-              propInstance: "_IMPORT_LIST_REWARD",
-              importOpts,
-              cpyEntity,
-              isSkippableLeaf,
-            });
-            if (importResult?.status === ConstsTaskRunner.TASK_EXIT_CANCELLED) return importResult;
-            importSummariesSub.push(importResult);
-            break;
-          }
-
-          case "charoption": {
-            const importResult = await this._pImportEntry_pHandleGenericFeatureIndirect({
-              ClassName: "ImportListCharCreationOption",
-              propInstance: "_IMPORT_LIST_CHAR_CREATION_OPTION",
-              importOpts,
-              cpyEntity,
-              isSkippableLeaf,
-            });
-            if (importResult?.status === ConstsTaskRunner.TASK_EXIT_CANCELLED) return importResult;
-            importSummariesSub.push(importResult);
-            break;
-          }
-
-                      default: {
-            const importResult = await this._pImportEntry_pHandleGenericFeatureIndirect({
-              ClassName: this.constructor.name,
-              importOpts,
-              cpyEntity,
-              isSkippableLeaf,
-            });
-            if (importResult?.status === ConstsTaskRunner.TASK_EXIT_CANCELLED) return importResult;
-            importSummariesSub.push(importResult);
-            break;
-          }
-        }
-
-                  if (importOpts.existingFeatureChecker) importOpts.existingFeatureChecker.addImportFeature(loaded.page, loaded.source, loaded.hash);
+    if (importOpts.isLeaf) {
+            if (importOpts.isSkippableLeaf && feature.entries?.[0]?.type === "options" && feature.entries?.length === 1) {
+        return new ImportSummary({
+          status: ConstsTaskRunner.TASK_EXIT_SKIPPED_OTHER,
+          entity: feature,
+        });
       }
 
-      await Charactermancer_FeatureOptionsSelect.pDoApplyProficiencyFormDataToActorUpdate(
-        this._actor,
-        actorUpdate,
-        formDataOptionSet,
-      );
+      const out = await super._pImportEntry(feature, importOpts, dataOpts);
 
-      await Charactermancer_FeatureOptionsSelect.pDoApplyAdditionalSpellsFormDataToActor({
-        taskRunner: importOpts.taskRunner,
-        actorMultiImportHelper: importOpts.actorMultiImportHelper,
-        actor: this._actor,
-        formData: formDataOptionSet,
-        abilityAbv: importOpts.spellcastingAbilityAbv,
-      });
-    }
-  }
+      await UtilActors.pLinkTempUuids({actor: this._actor});
 
-  await this._pDoMergeAndApplyActorUpdate(actorUpdate);
-
-  return new ImportSummary({
-    status: ConstsTaskRunner.TASK_EXIT_COMPLETE,
-    imported: [
-      ...importSummariesSub
-        .filter(Boolean)
-        .map(it => it.imported)
-        .filter(Boolean)
-        .flat(),
-    ],
-    entity: feature,
-  });
-}
-
-async _pImportEntry_pHandleGenericFeatureIndirect (
-  {
-    ClassName,
-    propInstance,
-    importOpts,
-    cpyEntity,
-    isSkippableLeaf,
-  },
-) {
-  const isDirectCall = this.constructor.name === ClassName;
-
-  if (!isDirectCall && !propInstance) throw new Error(`Importer instance property must be specified for indirect calls! This is a bug!`);
-
-  if (!isDirectCall && (!ImportListFeature[propInstance] || ImportListFeature[propInstance].actor !== this._actor)) {
-          if (!ClassName.startsWith("ImportList")) throw new Error(`Expected importer to start with "ImportList"!`);
-    const {[ClassName]: Clazz} = await __variableDynamicImportRuntime0__(`./ImportList${ClassName.replace(/^ImportList/, "")}.js`);
-    
-    ImportListFeature[propInstance] = new Clazz({actor: this._actor});
-    await ImportListFeature[propInstance].pInit();
-  }
-
-  const importer = isDirectCall ? this : ImportListFeature[propInstance];
-
-  const nxtImportOpts = new ImportOpts({...importOpts, isLeaf: true, isSkippableLeaf});
-  if (importer !== this) {
-    delete nxtImportOpts.filterValues;
-    delete nxtImportOpts.existingFeatureChecker;
-  }
-
-  return importer.pImportEntry(cpyEntity, nxtImportOpts);
-}
-
-async _pGetPageFilterValues () {
-      if (!this._pageFilter.filterBox) await this._pageFilter.pInitFilterBox();
-  return this._pageFilter.filterBox.getValues();
-}
-
-async _pImportEntry_pImportToActor (entity, importOpts) {
-      const actUpdate = {system: {}};
-
-  const dataBuilderOpts = new ImportListFeature.ImportEntryOpts({
-    chosenAbilityScoreIncrease: entity._foundryChosenAbilityScoreIncrease,
-    isCharactermancer: !!importOpts.isCharactermancer,
-  });
-
-  await this._pImportEntry_pImportToActor_fillFlags(entity, actUpdate, importOpts);
-  await this._pImportEntry_pFillAbilities(entity, actUpdate, dataBuilderOpts);
-  if (dataBuilderOpts.isCancelled) return ImportSummary.cancelled({entity});
-
-      const importedEmbeds = await this._pImportEntry_pFillItems(entity, actUpdate, importOpts, dataBuilderOpts);
-  if (dataBuilderOpts.isCancelled) return ImportSummary.cancelled({entity});
-
-      if (Object.keys(actUpdate.system).length) await UtilDocuments.pUpdateDocument(this._actor, actUpdate);
-
-      await this._pImportEntry_pImportToActor_pAddSubEntities({ent: entity, importOpts});
-
-  if (this._actor.isToken) this._actor.sheet.render();
-
-          const importedOut = importedEmbeds
-    .filter(it => it.document)
-    .map(it => new ImportedDocument({
-      name: it.document.name,
-      actor: this._actor,
-      isExisting: it.isUpdate,
-      embeddedDocument: it.document,
-    }));
-  if (!importedOut.length) {
-    importedOut.push(new ImportedDocument({
-      name: entity.name,
-      actor: this._actor,
-    }));
-  }
-
-  return new ImportSummary({
-    status: ConstsTaskRunner.TASK_EXIT_COMPLETE,
-    imported: importedOut,
-    entity,
-  });
+      return out;
     }
 
-_pImportEntry_pImportToActor_fillFlags (feature, actor, importOpts) {
-  const flags = {};
-  const flagsDnd5e = {};
+    const pageFilter = importOpts.isPreLoadedFeature
+      ? importOpts.featureEntriesPageFilter
+      : this._pageFilter;
+    const filterValues = importOpts.isPreLoadedFeature
+      ? (importOpts.featureEntriesPageFilterValues)
+      : (importOpts.filterValues || (await this._pGetPageFilterValues()));
 
-  this._doPopulateFlags({feature, actor, importOpts});
+    let allFeatures;
+    if (importOpts.isPreLoadedFeature) {
+      allFeatures = [feature];
+    }
+    else {
+      const wrappedFeature = await this.constructor._DataConverter.pGetInitFeatureLoadeds(feature, {actor: this._actor});
+      allFeatures = [wrappedFeature];
+    }
 
-  if (Object.keys(flagsDnd5e).length) flags[SharedConsts.SYSTEM_ID_DND5E] = flagsDnd5e;
-  if (Object.keys(flags).length) actor.flags = flags;
-}
+    allFeatures = Charactermancer_Util.getFilteredFeatures(
+      allFeatures,
+      pageFilter,
+      filterValues,
+    );
 
-_doPopulateFlags ({feature, actor, importOpts, flags, flagsDnd5e}) {  }
+    if (!allFeatures.length) return ImportSummary.cancelled({entity: feature});
 
-async _pImportEntry_pFillAbilities (feature, actUpdate, dataBuilderOpts) {
-  const formData = await Charactermancer_AbilityScoreSelect.pFillActorAbilityData(this._actor, feature.ability, actUpdate, dataBuilderOpts);
-  if (dataBuilderOpts.isCancelled) return;
+    allFeatures = Charactermancer_Util.getImportableFeatures(allFeatures);
 
-      if (formData == null) return;
-  dataBuilderOpts.chosenAbilityScoreIncrease = formData.data;
-}
+    Charactermancer_Util.doApplyFilterToFeatureEntries_bySource(
+      allFeatures,
+      pageFilter,
+      filterValues,
+    );
 
-async _pImportEntry_pFillItems (feature, actUpdate, importOpts, dataBuilderOpts) {
-  await this.constructor._DataConverter.pMutActorUpdateFeature(this._actor, actUpdate, feature, dataBuilderOpts);
-  if (dataBuilderOpts.isCancelled) return;
+    const allFeaturesGrouped = Charactermancer_Util.getFeaturesGroupedByOptionsSet(allFeatures);
+    const actorUpdate = {};
 
-  const spellHashToItemPosMap = {};
+    const importSummariesSub = [];
 
-  await this._pImportEntry_pHandleAdditionalSpells(feature, actUpdate, importOpts, dataBuilderOpts, spellHashToItemPosMap);
-  if (dataBuilderOpts.isCancelled) return;
+    for (const topLevelFeatureMeta of allFeaturesGrouped) {
+      const {topLevelFeature, optionsSets} = topLevelFeatureMeta;
 
-  const tagHashItemIdMap = {};
-  Object.entries(spellHashToItemPosMap)
-    .forEach(([hash, id]) => MiscUtil.set(tagHashItemIdMap, "spell", hash, id));
+      for (let ixOptionSet = 0; ixOptionSet < optionsSets.length; ++ixOptionSet) {
+        const optionsSet = optionsSets[ixOptionSet];
 
-  await DescriptionRenderer.pGetWithDescriptionPlugins(
-    async () => {
-      const featureItem = await this.constructor._DataConverter.pGetDocumentJson(
-        feature,
-        {
+        const formDataOptionSet = await Charactermancer_FeatureOptionsSelect.pGetUserInput({
           actor: this._actor,
+          optionsSet,
+          level: topLevelFeature.level,
+          existingFeatureChecker: importOpts.existingFeatureChecker,
+          isSkipCharactermancerHandled: importOpts.isCharactermancer,
+          modalFilterSpells: this._modalFilterSpells,
+        });
+
+        if (!formDataOptionSet) return ImportSummary.cancelled({entity: feature});
+        if (formDataOptionSet === VeCt.SYM_UI_SKIP) continue;
+
+        await Charactermancer_FeatureOptionsSelect.pDoApplyResourcesFormDataToActor({
+          actor: this._actor,
+          formData: formDataOptionSet,
+        });
+
+        await Charactermancer_FeatureOptionsSelect.pDoApplySensesFormDataToActor({
+          actor: this._actor,
+          actorUpdate,
+          formData: formDataOptionSet,
+          configGroup: this._configGroup,
+        });
+
+        for (const loaded of (formDataOptionSet.data?.features || [])) {
+          const {entity, type} = loaded;
+
+                    const cpyEntity = MiscUtil.copyFast(entity);
+          delete cpyEntity.additionalSpells;
+
+          const isSkippableLeaf = ixOptionSet === 0 && optionsSets.length > 1;
+
+          switch (type) {
+            case "classFeature":
+            case "subclassFeature": {
+              const importResult = await this.pImportEntry(cpyEntity, new ImportOpts({...importOpts, isLeaf: true, isSkippableLeaf}));
+              if (importResult?.status === ConstsTaskRunner.TASK_EXIT_CANCELLED) return importResult;
+              importSummariesSub.push(importResult);
+              break;
+            }
+
+            case "optionalfeature": {
+              const importResult = await this._pImportEntry_pHandleGenericFeatureIndirect({
+                ClassName: "ImportListOptionalfeature",
+                propInstance: "_IMPORT_LIST_OPTIONAL_FEATURE",
+                importOpts,
+                cpyEntity,
+                isSkippableLeaf,
+              });
+              if (importResult?.status === ConstsTaskRunner.TASK_EXIT_CANCELLED) return importResult;
+              importSummariesSub.push(importResult);
+              break;
+            }
+
+            case "feat": {
+              const importResult = await this._pImportEntry_pHandleGenericFeatureIndirect({
+                ClassName: "ImportListFeat",
+                propInstance: "_IMPORT_LIST_FEAT",
+                importOpts,
+                cpyEntity,
+                isSkippableLeaf,
+              });
+              if (importResult?.status === ConstsTaskRunner.TASK_EXIT_CANCELLED) return importResult;
+              importSummariesSub.push(importResult);
+              break;
+            }
+
+            case "reward": {
+              const importResult = await this._pImportEntry_pHandleGenericFeatureIndirect({
+                ClassName: "ImportListReward",
+                propInstance: "_IMPORT_LIST_REWARD",
+                importOpts,
+                cpyEntity,
+                isSkippableLeaf,
+              });
+              if (importResult?.status === ConstsTaskRunner.TASK_EXIT_CANCELLED) return importResult;
+              importSummariesSub.push(importResult);
+              break;
+            }
+
+            case "charoption": {
+              const importResult = await this._pImportEntry_pHandleGenericFeatureIndirect({
+                ClassName: "ImportListCharCreationOption",
+                propInstance: "_IMPORT_LIST_CHAR_CREATION_OPTION",
+                importOpts,
+                cpyEntity,
+                isSkippableLeaf,
+              });
+              if (importResult?.status === ConstsTaskRunner.TASK_EXIT_CANCELLED) return importResult;
+              importSummariesSub.push(importResult);
+              break;
+            }
+
+                        default: {
+              const importResult = await this._pImportEntry_pHandleGenericFeatureIndirect({
+                ClassName: this.constructor.name,
+                importOpts,
+                cpyEntity,
+                isSkippableLeaf,
+              });
+              if (importResult?.status === ConstsTaskRunner.TASK_EXIT_CANCELLED) return importResult;
+              importSummariesSub.push(importResult);
+              break;
+            }
+          }
+
+                    if (importOpts.existingFeatureChecker) importOpts.existingFeatureChecker.addImportFeature(loaded.page, loaded.source, loaded.hash);
+        }
+
+        await Charactermancer_FeatureOptionsSelect.pDoApplyProficiencyFormDataToActorUpdate(
+          this._actor,
+          actorUpdate,
+          formDataOptionSet,
+        );
+
+        await Charactermancer_FeatureOptionsSelect.pDoApplyAdditionalSpellsFormDataToActor({
           taskRunner: importOpts.taskRunner,
           actorMultiImportHelper: importOpts.actorMultiImportHelper,
-        },
-      );
-      dataBuilderOpts.items.push(featureItem);
-      return featureItem;
-    },
+          actor: this._actor,
+          formData: formDataOptionSet,
+          abilityAbv: importOpts.spellcastingAbilityAbv,
+        });
+      }
+    }
+
+    await this._pDoMergeAndApplyActorUpdate(actorUpdate);
+
+    return new ImportSummary({
+      status: ConstsTaskRunner.TASK_EXIT_COMPLETE,
+      imported: [
+        ...importSummariesSub
+          .filter(Boolean)
+          .map(it => it.imported)
+          .filter(Boolean)
+          .flat(),
+      ],
+      entity: feature,
+    });
+  }
+
+  async _pImportEntry_pHandleGenericFeatureIndirect (
     {
-      actorId: this._actor.id,
-      tagHashItemIdMap,
+      ClassName,
+      propInstance,
+      importOpts,
+      cpyEntity,
+      isSkippableLeaf,
     },
-  );
+  ) {
+    const isDirectCall = this.constructor.name === ClassName;
 
-  return UtilDocuments.pCreateEmbeddedDocuments(
-    this._actor,
-    dataBuilderOpts.items,
-    {ClsEmbed: Item, isRender: !importOpts.isBatched},
-  );
-}
+    if (!isDirectCall && !propInstance) throw new Error(`Importer instance property must be specified for indirect calls! This is a bug!`);
 
-async _pImportEntry_pHandleAdditionalSpells (feature, actUpdate, importOpts, dataBuilderOpts, spellHashToItemPosMap) {
-  const maxAbilityScoreIncrease = Object.entries(dataBuilderOpts.chosenAbilityScoreIncrease || {})
-    .sort(([, vA], [, vB]) => SortUtil.ascSort(vB, vA));
-  const parentAbilityAbv = maxAbilityScoreIncrease?.[0]?.[0] || null;
+    if (!isDirectCall && (!ImportListFeature[propInstance] || ImportListFeature[propInstance].actor !== this._actor)) {
+            if (!ClassName.startsWith("ImportList")) throw new Error(`Expected importer to start with "ImportList"!`);
+      const {[ClassName]: Clazz} = await __variableDynamicImportRuntime0__(`./ImportList${ClassName.replace(/^ImportList/, "")}.js`);
+      
+      ImportListFeature[propInstance] = new Clazz({actor: this._actor});
+      await ImportListFeature[propInstance].pInit();
+    }
 
-  const formData = await Charactermancer_AdditionalSpellsSelect.pGetUserInput({
-    additionalSpells: feature.additionalSpells,
-    sourceHintText: feature.name,
-    modalFilterSpells: await Charactermancer_AdditionalSpellsSelect.pGetInitModalFilterSpells(),
+    const importer = isDirectCall ? this : ImportListFeature[propInstance];
 
-          curLevel: 0,
-    targetLevel: Consts.CHAR_MAX_LEVEL,
-    spellLevelLow: 0,
-    spellLevelHigh: 9,
-  });
+    const nxtImportOpts = new ImportOpts({...importOpts, isLeaf: true, isSkippableLeaf});
+    if (importer !== this) {
+      delete nxtImportOpts.filterValues;
+      delete nxtImportOpts.existingFeatureChecker;
+    }
 
-  if (formData == null) return dataBuilderOpts.isCancelled = true;
-  if (formData === VeCt.SYM_UI_SKIP) return;
+    return importer.pImportEntry(cpyEntity, nxtImportOpts);
+  }
 
-  const totalClassLevels = UtilActors.getTotalClassLevels(this._actor);
-  await Charactermancer_AdditionalSpellsSelect.pApplyFormDataToActor(
-    this._actor,
-    formData,
-    {
-      taskRunner: importOpts.taskRunner,
-      actorMultiImportHelper: importOpts.actorMultiImportHelper,
-      parentAbilityAbv: parentAbilityAbv,
-    },
-  );
-}
+  async _pGetPageFilterValues () {
+        if (!this._pageFilter.filterBox) await this._pageFilter.pInitFilterBox();
+    return this._pageFilter.filterBox.getValues();
+  }
+
+  async _pImportEntry_pImportToActor (entity, importOpts) {
+    const actUpdate = {system: {}};
+
+    const dataBuilderOpts = new ImportListFeature.ImportEntryOpts({
+      chosenAbilityScoreIncrease: entity._foundryChosenAbilityScoreIncrease,
+      isCharactermancer: !!importOpts.isCharactermancer,
+    });
+
+    await this._pImportEntry_pImportToActor_fillFlags(entity, actUpdate, importOpts);
+    await this._pImportEntry_pFillAbilities(entity, actUpdate, dataBuilderOpts);
+    if (dataBuilderOpts.isCancelled) return ImportSummary.cancelled({entity});
+
+    const importedEmbeds = await this._pImportEntry_pFillItems(entity, actUpdate, importOpts, dataBuilderOpts);
+    if (dataBuilderOpts.isCancelled) return ImportSummary.cancelled({entity});
+
+    if (Object.keys(actUpdate.system).length) await UtilDocuments.pUpdateDocument(this._actor, actUpdate);
+
+    await this._pImportEntry_pImportToActor_pAddSubEntities({ent: entity, importOpts});
+
+    if (this._actor.isToken) this._actor.sheet.render();
+
+    const importedOut = importedEmbeds
+      .filter(it => it.document)
+      .map(it => new ImportedDocument({
+        name: it.document.name,
+        actor: this._actor,
+        isExisting: it.isUpdate,
+        embeddedDocument: it.document,
+      }));
+    if (!importedOut.length) {
+      importedOut.push(new ImportedDocument({
+        name: entity.name,
+        actor: this._actor,
+      }));
+    }
+
+    return new ImportSummary({
+      status: ConstsTaskRunner.TASK_EXIT_COMPLETE,
+      imported: importedOut,
+      entity,
+    });
+  }
+
+  _pImportEntry_pImportToActor_fillFlags (feature, actor, importOpts) {
+    const flags = {};
+    const flagsDnd5e = {};
+
+    this._doPopulateFlags({feature, actor, importOpts});
+
+    if (Object.keys(flagsDnd5e).length) flags[SharedConsts.SYSTEM_ID_DND5E] = flagsDnd5e;
+    if (Object.keys(flags).length) actor.flags = flags;
+  }
+
+  _doPopulateFlags ({feature, actor, importOpts, flags, flagsDnd5e}) {  }
+
+  async _pImportEntry_pFillAbilities (feature, actUpdate, dataBuilderOpts) {
+    const formData = await Charactermancer_AbilityScoreSelect.pFillActorAbilityData(this._actor, feature.ability, actUpdate, dataBuilderOpts);
+    if (dataBuilderOpts.isCancelled) return;
+
+        if (formData == null) return;
+    dataBuilderOpts.chosenAbilityScoreIncrease = formData.data;
+  }
+
+  async _pImportEntry_pFillItems (feature, actUpdate, importOpts, dataBuilderOpts) {
+    await this.constructor._DataConverter.pMutActorUpdateFeature(this._actor, actUpdate, feature, dataBuilderOpts);
+    if (dataBuilderOpts.isCancelled) return;
+
+    const spellHashToItemPosMap = {};
+
+    await this._pImportEntry_pHandleAdditionalSpells(feature, actUpdate, importOpts, dataBuilderOpts, spellHashToItemPosMap);
+    if (dataBuilderOpts.isCancelled) return;
+
+    const tagHashItemIdMap = {};
+    Object.entries(spellHashToItemPosMap)
+      .forEach(([hash, id]) => MiscUtil.set(tagHashItemIdMap, "spell", hash, id));
+
+    await DescriptionRenderer.pGetWithDescriptionPlugins(
+      async () => {
+        const featureItem = await this.constructor._DataConverter.pGetDocumentJson(
+          feature,
+          {
+            actor: this._actor,
+            taskRunner: importOpts.taskRunner,
+            actorMultiImportHelper: importOpts.actorMultiImportHelper,
+          },
+        );
+        dataBuilderOpts.items.push(featureItem);
+        return featureItem;
+      },
+      {
+        actorId: this._actor.id,
+        tagHashItemIdMap,
+      },
+    );
+
+    return UtilDocuments.pCreateEmbeddedDocuments(
+      this._actor,
+      dataBuilderOpts.items,
+      {ClsEmbed: Item, isRender: !importOpts.isBatched},
+    );
+  }
+
+  async _pImportEntry_pHandleAdditionalSpells (feature, actUpdate, importOpts, dataBuilderOpts, spellHashToItemPosMap) {
+    const maxAbilityScoreIncrease = Object.entries(dataBuilderOpts.chosenAbilityScoreIncrease || {})
+      .sort(([, vA], [, vB]) => SortUtil.ascSort(vB, vA));
+    const parentAbilityAbv = maxAbilityScoreIncrease?.[0]?.[0] || null;
+
+    const formData = await Charactermancer_AdditionalSpellsSelect.pGetUserInput({
+      additionalSpells: feature.additionalSpells,
+      sourceHintText: feature.name,
+      modalFilterSpells: await Charactermancer_AdditionalSpellsSelect.pGetInitModalFilterSpells(),
+
+            curLevel: 0,
+      targetLevel: Consts.CHAR_MAX_LEVEL,
+      spellLevelLow: 0,
+      spellLevelHigh: 9,
+    });
+
+    if (formData == null) return dataBuilderOpts.isCancelled = true;
+    if (formData === VeCt.SYM_UI_SKIP) return;
+
+    const totalClassLevels = UtilActors.getTotalClassLevels(this._actor);
+    await Charactermancer_AdditionalSpellsSelect.pApplyFormDataToActor(
+      this._actor,
+      formData,
+      {
+        taskRunner: importOpts.taskRunner,
+        actorMultiImportHelper: importOpts.actorMultiImportHelper,
+        parentAbilityAbv: parentAbilityAbv,
+      },
+    );
+  }
 }
 ImportListFeature._IMPORT_LIST_FEAT = null;
 ImportListFeature._IMPORT_LIST_OPTIONAL_FEATURE = null;
@@ -6521,182 +6547,182 @@ class ImportListClassSubclassFeature extends ImportListFeature {
   });
 }
 
-static get ID () { return "classes-subclasses-features"; }
-static get DISPLAY_NAME_TYPE_SINGLE () { return "Class or Subclass Feature"; }
-static get DISPLAY_NAME_TYPE_PLURAL () { return "Class & Subclass Features"; }
-static get PROPS () { return ["classFeature", "subclassFeature"]; }
+  static get ID () { return "classes-subclasses-features"; }
+  static get DISPLAY_NAME_TYPE_SINGLE () { return "Class or Subclass Feature"; }
+  static get DISPLAY_NAME_TYPE_PLURAL () { return "Class & Subclass Features"; }
+  static get PROPS () { return ["classFeature", "subclassFeature"]; }
 
-static _ = ImplementationRegistryImportList.get().register(this);
+  static _ = ImplementationRegistryImportList.get().register(this);
 
-_titleSearch = "class and subclass feature";
-_sidebarTab = "items";
-_gameProp = "items";
-_defaultFolderPath = ["Class & Subclass Features"];
-//_pageFilter = new PageFilterClassFeatures();
-_page = UrlUtil.PG_CLASS_SUBCLASS_FEATURES;
-_listInitialSortBy = "className";
-_isPreviewable = true;
-_configGroup = "importClassSubclassFeature";
-//_fnListSort = PageFilterClassFeatures.sortClassFeatures;
-static _DataConverter = DataConverterClassSubclassFeature;
-static _DataPipelinesList = DataPipelinesListClassSubclassFeature;
+  _titleSearch = "class and subclass feature";
+  _sidebarTab = "items";
+  _gameProp = "items";
+  _defaultFolderPath = ["Class & Subclass Features"];
+  //_pageFilter = new PageFilterClassFeatures();
+  _page = UrlUtil.PG_CLASS_SUBCLASS_FEATURES;
+  _listInitialSortBy = "className";
+  _isPreviewable = true;
+  _configGroup = "importClassSubclassFeature";
+  //_fnListSort = PageFilterClassFeatures.sortClassFeatures;
+  static _DataConverter = DataConverterClassSubclassFeature;
+  static _DataPipelinesList = DataPipelinesListClassSubclassFeature;
 
-constructor (...args) {
-  super(...args);
+  constructor (...args) {
+    super(...args);
 
-  this._contentDereferenced = null;
-}
-
-_colWidthName = 5;
-_colWidthSource = 1;
-
-_getData_cols_other () {
-  return [
-    {
-      name: "Class",
-      width: 2,
-      field: "className",
-    },
-    {
-      name: "Subclass",
-      width: 2,
-      field: "subclassShortName",
-    },
-    {
-      name: "Level",
-      width: 1,
-      field: "level",
-      rowClassName: "ve-text-center",
-    },
-  ];
-}
-
-_getData_row_mutGetAdditionalValues ({it, ix}) {
-  return {
-    className: it.className,
-    subclassShortName: it.subclassShortName || "\u2014",
-    level: it.level,
-  };
-}
-
-_renderInner_absorbListItems_fnGetValues (it) {
-  return {
-    ...super._renderInner_absorbListItems_fnGetValues(it),
-    className: it.className,
-    subclassShortName: it.subclassShortName || "",
-    level: it.level,
-  };
-}
-
-_renderInner_initPreviewButton (item, btnShowHidePreview) {
-  ListUiUtil.bindPreviewButton(this._page, this._contentDereferenced, item, btnShowHidePreview);
-}
-
-
-getFolderPathMeta () {
-  return {
-    ...super.getFolderPathMeta(),
-    class: {
-      label: "Class",
-      getter: it => it.className,
-    },
-    subclassShortName: {
-      label: "Subclass",
-      getter: it => it.subclassShortName || "\u2014",
-    },
-    level: {
-      label: "Level",
-      getter: it => it.level,
-    },
-  };
-}
-
-async pSetContent (val) {
-  await super.pSetContent(val);
-  this._contentDereferenced = await this._content
-    .pMap(feature => DataConverterClassSubclassFeature.pGetDereferencedFeatureItem(feature));
-}
-
-
-async _pHandleClickRunButton_pGetSelectedListItems () {
-  const listItems = await super._pHandleClickRunButton_pGetSelectedListItems();
-
-  if (Config.get(this._configGroup, "deduplicateRefSelectionMode") === ConfigConsts.C_IMPORT_CLASS_FEATURE_MODE_ALLOW) return listItems;
-
-  const refHashes = new Set();
-  const handlers = {
-    object: (obj) => {
-      switch (obj.type) {
-        case "refClassFeature": {
-          const unpacked = DataUtil.class.unpackUidClassFeature(obj.classFeature);
-          refHashes.add(UrlUtil.URL_TO_HASH_BUILDER["classFeature"](unpacked));
-          break;
-        }
-        case "refSubclassFeature": {
-          const unpacked = DataUtil.class.unpackUidSubclassFeature(obj.subclassFeature);
-          refHashes.add(UrlUtil.URL_TO_HASH_BUILDER["subclassFeature"](unpacked));
-          break;
-        }
-      }
-      return obj;
-    },
-  };
-
-  listItems
-    .forEach(li => {
-      const entry = this._content[li.ix];
-      if (!entry?.entries) return;
-
-      UtilDataConverter.WALKER_READONLY_GENERIC
-        .walk(entry.entries, handlers);
-    });
-
-  const listItemsDeduped = listItems
-    .filter(li => {
-      const entry = this._content[li.ix];
-
-      const hash = UrlUtil.URL_TO_HASH_BUILDER[entry.__prop](entry);
-      return !refHashes.has(hash);
-    });
-
-  const lenDelta = listItems.length - listItemsDeduped.length;
-
-  if (
-    !lenDelta
-    || Config.get(this._configGroup, "deduplicateRefSelectionMode") === ConfigConsts.C_IMPORT_CLASS_FEATURE_MODE_DEDUPLICATE
-  ) return listItemsDeduped;
-
-      if (Config.get(this._configGroup, "deduplicateRefSelectionMode") !== ConfigConsts.C_IMPORT_CLASS_FEATURE_MODE_PROMPT) throw new Error(`Unhandled "deduplicateRefSelectionMode"!`);
-
-  const isDedupe = await InputUiUtil.pGetUserBoolean({
-    title: `Duplicate Features Selected`,
-    htmlDescription: `You have selected ${lenDelta} feature${lenDelta === 1 ? "" : "s"} which ${lenDelta === 1 ? "is" : "are"} included in ${lenDelta === 1 ? "another" : "other"} selected feature${lenDelta === 1 ? "" : "s"}.<br>Do you wish to continue?`,
-    textYesRemember: "Deduplicate and Remember",
-    textYes: "Deduplicate",
-    textNo: "Continue",
-    fnRemember: val => {
-      if (val === true) Config.set(this._configGroup, "deduplicateRefSelectionMode", ConfigConsts.C_IMPORT_CLASS_FEATURE_MODE_DEDUPLICATE);
-    },
-  });
-  if (isDedupe == null) return null;
-
-  return isDedupe ? listItemsDeduped : listItems;
-}
-
-
-_getAsTag (listItem) {
-  const tag = Parser.getPropTag(this._content[listItem.ix].__prop);
-  const ptUid = this._getUid(this._content[listItem.ix]);
-  return `@${tag}[${ptUid}]`;
-}
-
-_getUid (feature) {
-  switch (feature.__prop) {
-    case "classFeature": return DataUtil.class.packUidClassFeature(feature);
-    case "subclassFeature": return DataUtil.class.packUidSubclassFeature(feature);
-    default: throw new Error(`Unhandled feature prop "${feature.__prop}"`);
+    this._contentDereferenced = null;
   }
-}
+
+  _colWidthName = 5;
+  _colWidthSource = 1;
+
+  _getData_cols_other () {
+    return [
+      {
+        name: "Class",
+        width: 2,
+        field: "className",
+      },
+      {
+        name: "Subclass",
+        width: 2,
+        field: "subclassShortName",
+      },
+      {
+        name: "Level",
+        width: 1,
+        field: "level",
+        rowClassName: "ve-text-center",
+      },
+    ];
+  }
+
+  _getData_row_mutGetAdditionalValues ({it, ix}) {
+    return {
+      className: it.className,
+      subclassShortName: it.subclassShortName || "\u2014",
+      level: it.level,
+    };
+  }
+
+  _renderInner_absorbListItems_fnGetValues (it) {
+    return {
+      ...super._renderInner_absorbListItems_fnGetValues(it),
+      className: it.className,
+      subclassShortName: it.subclassShortName || "",
+      level: it.level,
+    };
+  }
+
+  _renderInner_initPreviewButton (item, btnShowHidePreview) {
+    ListUiUtil.bindPreviewButton(this._page, this._contentDereferenced, item, btnShowHidePreview);
+  }
+
+
+  getFolderPathMeta () {
+    return {
+      ...super.getFolderPathMeta(),
+      class: {
+        label: "Class",
+        getter: it => it.className,
+      },
+      subclassShortName: {
+        label: "Subclass",
+        getter: it => it.subclassShortName || "\u2014",
+      },
+      level: {
+        label: "Level",
+        getter: it => it.level,
+      },
+    };
+  }
+
+  async pSetContent (val) {
+    await super.pSetContent(val);
+    this._contentDereferenced = await this._content
+      .pMap(feature => DataConverterClassSubclassFeature.pGetDereferencedFeatureItem(feature));
+  }
+
+
+  async _pHandleClickRunButton_pGetSelectedListItems () {
+    const listItems = await super._pHandleClickRunButton_pGetSelectedListItems();
+
+    if (Config.get(this._configGroup, "deduplicateRefSelectionMode") === ConfigConsts.C_IMPORT_CLASS_FEATURE_MODE_ALLOW) return listItems;
+
+    const refHashes = new Set();
+    const handlers = {
+      object: (obj) => {
+        switch (obj.type) {
+          case "refClassFeature": {
+            const unpacked = DataUtil.class.unpackUidClassFeature(obj.classFeature);
+            refHashes.add(UrlUtil.URL_TO_HASH_BUILDER["classFeature"](unpacked));
+            break;
+          }
+          case "refSubclassFeature": {
+            const unpacked = DataUtil.class.unpackUidSubclassFeature(obj.subclassFeature);
+            refHashes.add(UrlUtil.URL_TO_HASH_BUILDER["subclassFeature"](unpacked));
+            break;
+          }
+        }
+        return obj;
+      },
+    };
+
+    listItems
+      .forEach(li => {
+        const entry = this._content[li.ix];
+        if (!entry?.entries) return;
+
+        UtilDataConverter.WALKER_READONLY_GENERIC
+          .walk(entry.entries, handlers);
+      });
+
+    const listItemsDeduped = listItems
+      .filter(li => {
+        const entry = this._content[li.ix];
+
+        const hash = UrlUtil.URL_TO_HASH_BUILDER[entry.__prop](entry);
+        return !refHashes.has(hash);
+      });
+
+    const lenDelta = listItems.length - listItemsDeduped.length;
+
+    if (
+      !lenDelta
+      || Config.get(this._configGroup, "deduplicateRefSelectionMode") === ConfigConsts.C_IMPORT_CLASS_FEATURE_MODE_DEDUPLICATE
+    ) return listItemsDeduped;
+
+        if (Config.get(this._configGroup, "deduplicateRefSelectionMode") !== ConfigConsts.C_IMPORT_CLASS_FEATURE_MODE_PROMPT) throw new Error(`Unhandled "deduplicateRefSelectionMode"!`);
+
+    const isDedupe = await InputUiUtil.pGetUserBoolean({
+      title: `Duplicate Features Selected`,
+      htmlDescription: `You have selected ${lenDelta} feature${lenDelta === 1 ? "" : "s"} which ${lenDelta === 1 ? "is" : "are"} included in ${lenDelta === 1 ? "another" : "other"} selected feature${lenDelta === 1 ? "" : "s"}.<br>Do you wish to continue?`,
+      textYesRemember: "Deduplicate and Remember",
+      textYes: "Deduplicate",
+      textNo: "Continue",
+      fnRemember: val => {
+        if (val === true) Config.set(this._configGroup, "deduplicateRefSelectionMode", ConfigConsts.C_IMPORT_CLASS_FEATURE_MODE_DEDUPLICATE);
+      },
+    });
+    if (isDedupe == null) return null;
+
+    return isDedupe ? listItemsDeduped : listItems;
+  }
+
+
+  _getAsTag (listItem) {
+    const tag = Parser.getPropTag(this._content[listItem.ix].__prop);
+    const ptUid = this._getUid(this._content[listItem.ix]);
+    return `@${tag}[${ptUid}]`;
+  }
+
+  _getUid (feature) {
+    switch (feature.__prop) {
+      case "classFeature": return DataUtil.class.packUidClassFeature(feature);
+      case "subclassFeature": return DataUtil.class.packUidSubclassFeature(feature);
+      default: throw new Error(`Unhandled feature prop "${feature.__prop}"`);
+    }
+  }
 }
 //ImportListClassSubclassFeature.UserChoose = class extends MixinUserChooseImporter(ImportListClassSubclassFeature) {};
 

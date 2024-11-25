@@ -4,7 +4,7 @@ class DataConverter {
 	static _SideDataInterface;
 	static _ImageFetcher;
 
-		static async pGetDocumentJson (ent, opts) { throw new Error("Unimplemented!"); }
+	static async pGetDocumentJson (ent, opts) { throw new Error("Unimplemented!"); }
 
 	static isStubEntity (ent) { return false; }
 
@@ -15,7 +15,7 @@ class DataConverter {
 		return out;
 	}
 
-		static getCombinedFoundrySystem (foundrySystem, _foundryData) {
+	static getCombinedFoundrySystem (foundrySystem, _foundryData) {
 		if (!_foundryData && !foundrySystem) return {};
 
 		const combinedFoundrySystem = MiscUtil.copyFast(_foundryData || {});
@@ -24,7 +24,7 @@ class DataConverter {
 		return combinedFoundrySystem;
 	}
 
-		static getCombinedFoundryFlags (foundryFlags, _foundryFlags) {
+	static getCombinedFoundryFlags (foundryFlags, _foundryFlags) {
 		if (!foundryFlags && !_foundryFlags) return {};
 
 		const combinedFoundryFlags = MiscUtil.copyFast(_foundryFlags || {});
@@ -34,7 +34,7 @@ class DataConverter {
 		return combinedFoundryFlags;
 	}
 
-		static async pGetEntryDescription (entry, opts) {
+	static async pGetEntryDescription (entry, opts) {
 		opts = opts || {};
 		opts.prop = opts.prop || "entries";
 
@@ -99,7 +99,14 @@ class DataConverter {
 		return displayText;
 	}
 
-		static mutActorUpdate (actor, actorUpdate, entry, opts) {
+ /**
+  * @param {any} actor
+  * @param {any} actorUpdate
+  * @param {any} entry
+  * @param {sideData:any} opts
+  * @returns {any}
+  */
+	static mutActorUpdate (actor, actorUpdate, entry, opts) {
 		opts = opts || {};
 
 		this._mutActorUpdate_mutFromSideDataMod(actor, actorUpdate, opts);
@@ -110,10 +117,24 @@ class DataConverter {
 		return this._mutActorUpdate_mutFromSideMod(actor, actorUpdate, opts, "actorDataMod", "data");
 	}
 
+ /**
+  * @param {any} actor
+  * @param {any} actorUpdate
+  * @param {{sideData:any}} opts
+  * @returns {any}
+  */
 	static _mutActorUpdate_mutFromSideTokenMod (actor, actorUpdate, opts) {
 		return this._mutActorUpdate_mutFromSideMod(actor, actorUpdate, opts, "actorTokenMod", "token");
 	}
 
+ /**
+  * @param {any} actor
+  * @param {any} actorUpdate
+  * @param {{sideData:any}} opts
+  * @param {string} sideProp
+  * @param {string} actorProp
+  * @returns {any}
+  */
 	static _mutActorUpdate_mutFromSideMod (actor, actorUpdate, opts, sideProp, actorProp) {
 		if (!opts.sideData || !opts.sideData[sideProp]) return;
 
@@ -2946,6 +2967,11 @@ class DataConverterClass extends DataConverter {
 			.map(([fvttKey]) => fvttKey);
 	}
 
+	/**
+	 * @param {any} cls a class in 5eTools schema
+	 * @param {any} sc a subclass in 5eTools schema
+	 * @param {any} opts
+	 */
 	static async pGetDocumentJsonSubclass (cls, sc, opts) {
 		opts = opts || {};
 		if (opts.actor) opts.isActorItem = true;
@@ -2981,7 +3007,7 @@ class DataConverterClass extends DataConverter {
 		const identifierCls = UtilDocumentItem.getNameAsIdentifier(cls.name);
 		const identifierSc = UtilDocumentItem.getNameAsIdentifier(sc.name);
 
-				const imgMetaSc = null; //await this._ImageFetcher.pGetSaveImagePathMeta(sc, {propCompendium: "subclass", fluff, taskRunner: opts.taskRunner});
+		const imgMetaSc = null; //await this._ImageFetcher.pGetSaveImagePathMeta(sc, {propCompendium: "subclass", fluff, taskRunner: opts.taskRunner});
 		const imgMetaCls = (Config.get("importClass", "isUseDefaultSubclassImage") || (imgMetaSc && !imgMetaSc.isFallback))
 			? null
 			: await this._ImageFetcher.pGetSaveImagePathMeta(cls, {propCompendium: "class", fluff: await Renderer.class.pGetFluff(cls), taskRunner: opts.taskRunner});
@@ -3051,6 +3077,7 @@ class DataConverterClass extends DataConverter {
 
 		this._mutApplyDocOwnership(out, opts);
 
+		console.log("CHECK FLAGS", out);
 		return out;
 	}
 
@@ -3335,6 +3362,13 @@ class DataConverterFeature extends DataConverter {
         };
     }
 
+    /**
+     * @param {any} actor
+     * @param {any} actorUpdate
+     * @param {any} ent an entity in 5eTools schema
+     * @param {any} dataBuilderOpts
+     * @returns {any}
+     */
     static async pMutActorUpdateFeature(actor, actorUpdate, ent, dataBuilderOpts) {
         const sideData = await this._SideDataInterface.pGetSideLoaded(ent);
         this.mutActorUpdate(actor, actorUpdate, ent, {
@@ -3425,7 +3459,7 @@ class DataConverterClassSubclassFeature extends DataConverterFeature {
 			}
 			default: throw new Error(`Unhandled feature type "${type}"`);
 		}
-	}
+	}§§
 
 	static async pGetClassSubclassFeatureIgnoredLookup ({data}) {
 		if (!data.classFeature?.length && !data.subclassFeature?.length) return {};
@@ -3464,7 +3498,7 @@ class DataConverterClassSubclassFeature extends DataConverterFeature {
 		return isIgnoredLookup;
 	}
 
-		static async pGetDocumentJson (feature, opts) {
+	static async pGetDocumentJson (feature, opts) {
 		opts = opts || {};
 		if (opts.actor) opts.isActorItem = true;
 

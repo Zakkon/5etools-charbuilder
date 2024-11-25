@@ -28,8 +28,7 @@ class SideDataInterfaceBase {
      */
     static _getResolvedOpts({ent, propOpts="_SIDE_LOAD_OPTS"}={}) {
         const out = this._getSideLoadOpts(ent) || this[propOpts];
-        if (out.propsMatch)
-            return out;
+        if (out.propsMatch){return out;}
         return {
             ...out,
             propsMatch: ["source", "name"],
@@ -85,13 +84,17 @@ class SideDataInterfaceBase {
         });
     }
 
+    /**
+     * Get sideloaded flags
+     * @param {any} ent an entity in 5eTools schema
+     * @param {any} {propOpts="_SIDE_LOAD_OPTS"
+     * @param {any} actorType=undefined}={}
+     * @returns {any}
+     */
     static async pGetFlagsSideLoaded(ent, {propOpts="_SIDE_LOAD_OPTS", actorType=undefined}={}) {
-        const opts = this._getResolvedOpts({
-            ent,
-            propOpts
-        });
-        if (!opts)
-            return null;
+        //Look for a fnLoadJson function in inherited class
+        const opts = this._getResolvedOpts({ent, propOpts});
+        if (!opts) {return null;}
 
         const {propBrew, fnLoadJson, propJson, propsMatch} = opts;
         return this._pGetStarSideLoaded(ent, {
@@ -283,18 +286,13 @@ class SideDataInterfaceBase {
             base,
             actorType
         });
-        return this._pGetStarSideLoaded_found(ent, {
-            propFromEntity,
-            propFromSideLoaded,
-            found
-        });
+        return this._pGetStarSideLoaded_found(ent, { propFromEntity, propFromSideLoaded, found });
     }
 
     static async _pGetStarSideLoaded_found(ent, {propFromEntity, propFromSideLoaded, found}) {
         const fromEntity = ent[propFromEntity];
 
-        if ((!found || !found[propFromSideLoaded]) && !fromEntity)
-            return null;
+        if ((!found || !found[propFromSideLoaded]) && !fromEntity) return null;
 
         const out = MiscUtil.copy(found?.[propFromSideLoaded] ? found[propFromSideLoaded] : fromEntity);
         if (found?.[propFromSideLoaded] && fromEntity) {
@@ -342,14 +340,11 @@ class SideDataInterfaceBase {
         if (fnLoadJson && propJson) {
             const sideJson = await fnLoadJson();
             const found = (sideJson[propJson] || []).find(it=>this._pGetAdditional_fnMatch(propsMatch, ent, it));
-            if (found)
-                founds.push(found);
+            if (found) founds.push(found);
         }
 
-        if (!founds.length)
-            return null;
-        if (founds.length === 1)
-            return founds[0];
+        if (!founds.length) return null;
+        if (founds.length === 1) return founds[0];
 
         const out = MiscUtil.copy(founds[0]);
         this._pGetSideLoaded_match_mutMigrateData(out);
@@ -380,8 +375,7 @@ class SideDataInterfaceBase {
                 out[prop] = foundry.utils.mergeObject(v, out[prop]);
             }
             );
-        }
-        );
+        });
 
         return out;
     }

@@ -6380,9 +6380,10 @@ class UtilDocuments {
 	static async pCreateDocument (Clazz, docData, {isRender = true, isKeepId = true, isTemporary = false} = {}) {
 		if (Config.get("misc", "isDebugDocumentOperations")) console.debug(...LGTD, `Creating "${Clazz.metadata.name}" document: ${docData.name || "(Unnamed)"}`, docData);
 
-		docData = foundry.utils.flattenObject(docData);
+        console.warn("todo: flatten doc data");
+		//docData = foundry.utils.flattenObject(docData);
 
-						const out = await Clazz.create(docData, {renderSheet: false, render: isRender, keepId: isKeepId, temporary: isTemporary});
+		const out = await Clazz.create(docData, {renderSheet: false, render: isRender, keepId: isKeepId, temporary: isTemporary});
 
 		if (isTemporary) out._isTempImportedDoc = true;
 
@@ -6396,14 +6397,14 @@ class UtilDocuments {
 
 		if (Config.get("misc", "isSetDocumentOperationsCanaryFlags")) MiscUtil.set(docUpdate, "flags", "canary", "coalmine", Date.now());
 
-				if (this.isTempDocument({doc, isTemporary})) {
+            if (this.isTempDocument({doc, isTemporary})) {
 						if (isDiff != null || isRecursive != null || isNoHook != null) {
 								throw new Error(`Extra options ("isDiff", "isRecursive", "isNoHook") in temporary document updates are not supported!`);
 			}
 
-						foundry.utils.mergeObject(doc.system, docUpdate);
+            foundry.utils.mergeObject(doc.system, docUpdate);
 
-						return doc;
+            return doc;
 		}
 
 		const opts = {render: isRender};

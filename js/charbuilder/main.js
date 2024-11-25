@@ -417,6 +417,9 @@ class SETTINGS{
     static ENABLE_SOURCE_CUSTOM_URL = false;
     static SHEET_ISEDITABLE = false;
     static SHEET_MANCER_RECREATES_SHEET = true;
+     //Set this to true if you want to import one big subclassFeature detailing several subclassFeatures (gained at the same level, likely) within itself,
+    //set it to false if you want to import each subclassFeature individually
+    static SUBCLASS_IMPORT_LOADEDS = true;
 }
 class CharacterBuilder {
     tabButtonParent;
@@ -945,7 +948,7 @@ class CharacterBuilder {
   static getSubclassFeatureByUid(hash, className, classSource, subclassName, subclassSource){
     const scls = this.getSubclass(className, classSource, subclassName, subclassSource);
     let matches = [];
-    if(SubclassFeature5e.useLoadeds){
+    if(SETTINGS.SUBCLASS_IMPORT_LOADEDS){
       for(let f of scls.subclassFeatures){
         matches = matches.concat(f.loadeds.filter(e => e.hash.toLowerCase() == hash));
       }
@@ -1233,8 +1236,10 @@ class CharacterBuilder {
       classItem.targetLevel = cls.targetLevel;
       totalLevel += cls.targetLevel;
       //Subclass
+
       const hasSubclass = cls.ixSubclass != null;
       if(hasSubclass){
+
         sclsData = CharacterBuilder._getEntityByUid(clsData.subclasses, {uid: cls.subclassUid});
         //Add subclass's additionalSpells
         for(let addSpells of sclsData.additionalSpells??[]){
@@ -1247,6 +1252,13 @@ class CharacterBuilder {
           }
         }
         console.log("SUBCLASS DATA", sclsData);
+        
+        //Try to import the subclass itself (TEST)
+        let subclassItem = await addFeatureItem("subclass", cls.subclassUid, null,
+          {className: clsData.name, classSource: clsData.source,
+            subclassName: sclsData.name, subclassSource: sclsData.source});
+          
+
         //Go through scData's features and add them to the inventory (the ones that were not added by FOS)
         for(let f of sclsData.subclassFeatures){
           //console.log(f);
@@ -1256,8 +1268,8 @@ class CharacterBuilder {
         }
 
         //We need to get senses from hardcodings, unfortunately
-        const senses = Hardcodings.getSenses("subclass", sclsData);
-        pullSenses(senses);
+        //const senses = Hardcodings.getSenses("subclass", sclsData);
+        //pullSenses(senses);
       }
 
 
@@ -1287,7 +1299,7 @@ class CharacterBuilder {
         for(let feature of fos.data.features??[]){
           //.isRequiredOption is a good teller if they want us to load a subclassFeature from within a loadeds
           if(feature.type == "subclassFeature" && (feature.isRequiredOption === false
-            && feature.isRequiredOption !== null) && !SubclassFeature5e.useLoadeds){continue;}
+            && feature.isRequiredOption !== null) && !SETTINGS.SUBCLASS_IMPORT_LOADEDS){continue;}
           const featureItem = await addFeatureItem(feature.type, feature.hash, cls.path,
             {className:clsData.name.toLowerCase(), classSource:clsData.source.toLowerCase(),
               subclassName:sclsData?.name.toLowerCase(), subclassSource:sclsData?.source.toLowerCase()});

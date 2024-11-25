@@ -37,6 +37,7 @@ class ImportTester{
 				
 				//This is what we want. Tell the importlist to import ent (an obj in 5etools schema)
 				const summary = await imp.pImportEntry(ent, {filterValues: flags.filterValues, isDataOnly:true});
+				console.log("SUMMARY", summary);
 				return summary._imported[0].document;
 			}
 
@@ -1163,6 +1164,13 @@ class UtilVersions {
 	}
 }
 class ImportEntryManager {
+ /**
+  * @param {any} {instance
+  * @param {any} ent an entity in 5eTools schema
+  * @param {any} importOpts
+  * @param {any} dataOpts}
+  * @returns {any}
+  */
 	constructor ({instance, ent, importOpts, dataOpts}) {
 		this._instance = instance;
 		this._ent = ent;
