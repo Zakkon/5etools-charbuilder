@@ -6160,6 +6160,8 @@ globalThis.DataUtil = {
 					subclass: MiscUtil.copyFast(allData.map(it => it.subclass || []).flat()),
 					classFeature: allData.map(it => it.classFeature || []).flat(),
 					subclassFeature: allData.map(it => it.subclassFeature || []).flat(),
+					foundryClassFeature: allData.map(it => it.foundryClassFeature || []).flat(),
+					foundrySubclassFeature: allData.map(it => it.foundrySubclassFeature || []).flat(),
 				};
 			})();
 		}

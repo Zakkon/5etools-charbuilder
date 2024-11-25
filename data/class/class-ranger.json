@@ -4374,5 +4374,42 @@
 				"When you take damage, you can take a {@variantrule Reaction|XPHB} to give yourself {@variantrule Resistance|XPHB} to that damage and any other damage of the same type until the end of the current turn."
 			]
 		}
+	],
+	"foundrySubclassFeature": [
+		{
+			"name": "Umbral Sight",
+			"source": "XGE",
+			"subclassName": "Gloom Stalker",
+			"className": "Ranger",
+			"classSource": "PHB",
+			"level": 3,
+			"entryData": {
+				"senses": [
+					{
+						"grantMode": "conditionals",
+						"conditionals": [
+								{
+									"condition": "!actor.senses?.darkvision",
+									"mod": {
+										"senses.darkvision": {
+											"value": 60,
+											"mode": "set"
+										}
+									}
+								},
+								{
+									"condition": "actor.senses?.darkvision > 0",
+									"mod": {
+										"senses.darkvision": {
+											"value": 30,
+											"mode": "add"
+										}
+									}
+								}
+						]
+					}
+				]
+			}
+		}
 	]
 }

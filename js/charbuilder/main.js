@@ -901,10 +901,22 @@ class CharacterBuilder {
     else if(matches.length < 1){return null;}
     else{return matches[0];}
   }
+  /**
+   * @param {string} type
+   * @param {{key:value}} propMatches
+   * @param {{caseInsensitive:boolean}} options
+   * @returns {Entity5e}
+   */
   static getEntityByProps(type, propMatches, options){
     const datas = CharacterBuilder.instance._data[type];
     return this._getEntityByProps(datas, propMatches, options);
   }
+  /**
+   * @param {any} from
+   * @param {any} propMatches
+   * @param {{caseInsensitive:boolean}} options
+   * @returns {Entity5e}
+   */
   static _getEntityByProps(from, propMatches, options){
     const matches = from.filter(e => Object.entries(propMatches).every(([key, value]) => {
       const itemValue = e[key];
@@ -957,6 +969,29 @@ class CharacterBuilder {
       matches = scls.subclassFeatures.filter(e => e.hash.toLowerCase() == hash);
     }
     if(matches.length > 1){console.error("More than one subclass feature found with hash", hash); return matches[0];s}
+    else if(matches.length < 1){return null;}
+    else{return matches[0];}
+  }
+  static getFeatureByUid(featureType, hash, data){
+    const match = (a, b, propName, caseInsensitive = true) => {
+        let _a = a[propName];
+        let _b = b[propName];
+        if(caseInsensitive){_a = _a.toLowerCase(); _b = _b.toLowerCase();}
+        return _a === _b;
+    }
+    let matches = [];
+    if(featureType == "subclassFeature"){
+      return this.getSubclassFeatureByUid(hash, data.className, data.classSource, data.subclassName, data.subclassSource);
+    }
+    else if(featureType == "classFeature"){
+      return this.getClassFeatureByUid(hash, data.className, data.classSource);
+    }
+    else if(featureType == "foundrySubclassFeature"){
+      const from = CharacterBuilder.instance._data.foundrySubclassFeature;
+      
+      matches = from.filter(e => match(e, data, "name") && match(e, data, "source") && match(e, data, "className") && match(e, data, "classSource"));
+    }
+    if(matches.length > 1){console.error("More than one feature found with hash", hash); return matches[0];s}
     else if(matches.length < 1){return null;}
     else{return matches[0];}
   }
@@ -1019,8 +1054,9 @@ class CharacterBuilder {
     let raceData = await this.compRace.getChoiceData();
     let backgroundData = await this.compBackground.getChoiceData();
     let abilityData = await this.compAbility.getChoiceData();
+    let featData = await this.compFeat.getChoiceData();
     let targetData = {};
-    targetData = Object.assign(targetData, classData, raceData, backgroundData, abilityData);
+    targetData = Object.assign(targetData, classData, raceData, backgroundData, abilityData, featData);
     return targetData;
   }
   //#region Parse Mancher Choice Data
@@ -1174,6 +1210,28 @@ class CharacterBuilder {
       return spellItem;
     }
 
+    const handleConditionals = (conditionals) => {
+      
+      for(let cond of conditionals){
+        //If this conditional has a condition, try to evaluate. If we fail, abort
+        if(cond.condition != null)
+        {
+          console.log("Resolve", cond.condition, "on", actor);
+          const func = new Function("actor", `return ${cond.condition}`);
+          if(!func(actor)){continue;}
+        }
+        //Since we succeeded, look for a "mod" object, and the entries within
+        for(let [modName, mod] of Object.entries(cond.mod ?? {})){
+          const val = mod.value;
+          console.log("apply mod", mod);
+          switch(mod.mode.toLowerCase()){
+            case "set": updatePool[modName] = val; break;
+            case "add": updatePool[modName] = (updatePool[modName] ?? 0) + val; break;
+            default: continue;
+          }
+        }
+      }
+    }
     //Reset actor if settings demand it
     if(SETTINGS.SHEET_MANCER_RECREATES_SHEET){
       actor = new Actor5e();
@@ -1227,10 +1285,13 @@ class CharacterBuilder {
     //#endregion
     //#region Parse Ability Scores
     //#region Parse Classes
+    console.log(updatePool);
+    actor.update(updatePool, {doNotFireUpdate:true}); //Test update before class
     let totalLevel = 0;
     for(let cls of choiceData.classes){
       let addedFeatureHashes = [];
       const clsData = CharacterBuilder.getEntityByUid("class", {uid: cls.uid});
+      console.log("CLASS DATA", clsData);
       let sclsData = null;
       let classItem = await addFeatureItem("class", cls.uid, cls.path); //Add the class item itself to our sheet
       classItem.targetLevel = cls.targetLevel;
@@ -1303,6 +1364,18 @@ class CharacterBuilder {
           const featureItem = await addFeatureItem(feature.type, feature.hash, cls.path,
             {className:clsData.name.toLowerCase(), classSource:clsData.source.toLowerCase(),
               subclassName:sclsData?.name.toLowerCase(), subclassSource:sclsData?.source.toLowerCase()});
+          //if(!!featureItem.actorTokenMod){parseActorTokenMod(featureItem.actorTokenMod);}
+
+          if(featureItem.name == "Umbral Sight"){
+            //Try to load it from cache
+            const foundryItem = CharacterBuilder.getFeatureByUid("foundrySubclassFeature",
+              null, {name:featureItem.name, source:featureItem.subclassSource, subclassName:feature.subclassName,
+                className:featureItem.className, classSource:featureItem.classSource});
+            console.log("Foundry Item", foundryItem, featureItem);
+
+            handleConditionals(foundryItem.entryData.senses[0].conditionals);
+          }
+          
           addedFeatureHashes.push(feature.hash);
         }
         pullSkillProperties(fos.data.formDatasExpertise, true);
@@ -1321,9 +1394,6 @@ class CharacterBuilder {
         //saving throw proficiencies
         //additional spells
       }
-
-      
-      
     }
     updatePool["system.details.level"] = totalLevel;
     updatePool["system.attributes.prof"] = System5e.calcProficiencyBonus(totalLevel);
@@ -1342,6 +1412,7 @@ class CharacterBuilder {
       if(!isVerified){console.log(it.uid, "remains unverified!"); removeFeatureItem(it);}
     }
     
+    console.log(updatePool);
     //TODO: check for language duplicates
     actor.update(updatePool, {doNotFireUpdate:true});
     //Movement speed?

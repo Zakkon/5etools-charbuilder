@@ -1739,10 +1739,17 @@ class ActorCharactermancerClass extends ActorCharactermancerBaseComponent {
                     for(let [knownType, array1] of Object.entries(merged)){
                         for(let [lvlGained, spellNames] of Object.entries(array1)){
                             for(let ix = 0; ix < spellNames.length; ++ix){
-                                //Get real spell
-                                const spellData = CharacterBuilder.getEntityByProps("spell", {name:spellNames[ix]}, {caseInsensitive:true});
-                                if(spellData == null){console.error("Could not find spell with name", spellNames[ix]);}
-                                merged[knownType][lvlGained][ix] = UrlUtil.URL_TO_HASH_GENERIC({name: spellData.name.toLowerCase(), source:spellData.source.toLowerCase()}); //Switch from name to hash
+                                let spellName = spellNames[ix];
+                                let hash = spellName;
+                                const isHash = spellName.includes("_");
+                                if(!isHash){
+                                    //Get real spell
+                                    const decodedName = decodeURI(spellNames[ix]);
+                                    const spellData = CharacterBuilder.getEntityByProps("spell", {name:decodedName}, {caseInsensitive:true});
+                                    if(spellData == null){console.error("Could not find spell with name", decodedName, CharacterBuilder.instance._data.spell);}
+                                    hash = UrlUtil.URL_TO_HASH_GENERIC({name: spellData.name.toLowerCase(), source:spellData.source.toLowerCase()}); //Switch from name to hash
+                                }
+                                merged[knownType][lvlGained][ix] = hash;
                             }
                         }
                     }
@@ -14758,6 +14765,18 @@ class ActorCharactermancerFeat extends ActorCharactermancerBaseComponent {
         output = output.concat(searchFeatsForSpells(result.race, "race", this));
         output = output.concat(searchFeatsForSpells(result.custom, "custom", this));
         return output;
+    }
+
+    async getChoiceData(){
+        
+        console.log("FEAT COMP", this);
+        const actor = CharacterBuilder.instance._actor;
+        let updatePool = {};
+        const state = this.__state;
+        let out = {};
+        out.feats = [];
+        if(Object.entries(updatePool).length > 0){actor.update(updatePool);}
+        return out;
     }
 }
 ActorCharactermancerFeat._NAMESPACES_STATGEN = new Set(['ability', "race", "background", "custom"]);

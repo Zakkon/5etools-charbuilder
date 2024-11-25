@@ -746,6 +746,7 @@ class SubclassFeature5e extends Feature5e{
         if(!original){console.error("Failed to load feature using hash", hash, className, classSource, subclassName, subclassSource);}
         this.name = SETTINGS.SUBCLASS_IMPORT_LOADEDS? original.entity.name : original.name;
         this.system = structuredClone(original.system);
+        this.actorTokenMod = structuredClone(original.actorTokenMod);
         //this.entries = structuredClone(CharacterBuilder.getClassFeatureEntries(original.name, original.source));
         let entr = [];
         if(SETTINGS.SUBCLASS_IMPORT_LOADEDS){
@@ -783,6 +784,7 @@ class SubclassFeature5e extends Feature5e{
         try{
             let imported = await SourceManager.plutoniumConvertData(existingData, "subclassFeature");
             existingData.system = imported.system;
+            existingData.actorTokenMod = imported.actorTokenMod;
         }
         catch(e){
             console.log("hash:", hash, "class name & source:", className, classSource, "subclass name & source:", subclassName, subclassSource);
@@ -901,7 +903,6 @@ class Actor5e {
     }
     setProp(path, value, toOverride=Entity5e.use_overrides){
         Entity5e.setp(this, path, value, toOverride);
-
     }
     _createFakeCharacterData(){
 
