@@ -972,39 +972,39 @@ preLocalize("activityConsumptionTypes", { key: "label" });
  */
 DND5E.actorSizes = {
   tiny: {
-    label: "DND5E.SizeTiny",
+    label: "Tiny",
     abbreviation: "DND5E.SizeTinyAbbr",
     hitDie: 4,
     token: 0.5,
     capacityMultiplier: 0.5
   },
   sm: {
-    label: "DND5E.SizeSmall",
+    label: "Small",
     abbreviation: "DND5E.SizeSmallAbbr",
     hitDie: 6,
     dynamicTokenScale: 0.8
   },
   med: {
-    label: "DND5E.SizeMedium",
+    label: "Medium",
     abbreviation: "DND5E.SizeMediumAbbr",
     hitDie: 8
   },
   lg: {
-    label: "DND5E.SizeLarge",
+    label: "Large",
     abbreviation: "DND5E.SizeLargeAbbr",
     hitDie: 10,
     token: 2,
     capacityMultiplier: 2
   },
   huge: {
-    label: "DND5E.SizeHuge",
+    label: "Huge",
     abbreviation: "DND5E.SizeHugeAbbr",
     hitDie: 12,
     token: 3,
     capacityMultiplier: 4
   },
   grg: {
-    label: "DND5E.SizeGargantuan",
+    label: "Gargantuan",
     abbreviation: "DND5E.SizeGargantuanAbbr",
     hitDie: 20,
     token: 4,
