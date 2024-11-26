@@ -296,7 +296,7 @@ class SheetApplier {
             await Subclass5e.verifySystemData(data.className, data.classSource, data.subclassName, data.subclassSource);
             let subclassItem = new Subclass5e(hash, null, false);
             //subclassItem.markMancerDependency(new MancerDependencyLink(dependencyPath));
-            System5e.tryAddToInventory(actor, subclassItem, "passive", {doNotRender:true});
+            System5e.tryAddToInventory(actor, subclassItem, "class", {doNotRender:true});
             return subclassItem;
           case "background":
             //await Class5e.verifySystemData(hash);
@@ -314,25 +314,35 @@ class SheetApplier {
             await ClassFeature5e.verifySystemData(hash, data.className, data.classSource);
             let clsFeatureItem = new ClassFeature5e(hash, data.className, data.classSource, null, false);
             clsFeatureItem.markMancerDependency(new MancerDependencyLink(dependencyPath));
-            System5e.tryAddToInventory(actor, clsFeatureItem, "passive", {doNotRender:true});
+            System5e.tryAddToInventory(actor, clsFeatureItem, this.isActivePassive(clsFeatureItem), {doNotRender:true});
             return clsFeatureItem;
           case "subclassFeature":
             await SubclassFeature5e.verifySystemData(hash, data.className, data.classSource, data.subclassName, data.subclassSource);
             let sclsFeatureItem = new SubclassFeature5e(hash, data.className, data.classSource, data.subclassName, data.subclassSource, null, false);
             sclsFeatureItem.markMancerDependency(new MancerDependencyLink(dependencyPath));
-            System5e.tryAddToInventory(actor, sclsFeatureItem, "passive", {doNotRender:true});
+            System5e.tryAddToInventory(actor, sclsFeatureItem, this.isActivePassive(sclsFeatureItem), {doNotRender:true});
             return sclsFeatureItem;
         case "feat":
             //await Feat5e.verifySystemData(hash);
             let featItem = new Feat5e(hash, null, false); //TODO: apply ixFeatAbility
             //featItem.markMancerDependency(new MancerDependencyLink(dependencyPath));
-            System5e.tryAddToInventory(actor, featItem, "passive", {doNotRender:true});
+            System5e.tryAddToInventory(actor, featItem, this.isActivePassive(featItem), {doNotRender:true});
             return featItem;
         default:
             console.error("Could not recognize entity type", type);
             return null;
         }
         
+    }
+    static isActivePassive(feature){
+        switch(feature.system.activation?.type){
+            case "action":
+            case "bonus":
+            case "reaction":
+                return "active";
+            default: break;
+        }
+        return "passive";
     }
     static async addSpellItem(actor, hash, preparationMode, dependencyPath){
 

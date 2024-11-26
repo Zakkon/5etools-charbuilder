@@ -109,74 +109,6 @@ class System5e{
         console.log(formula);
     }
 
-    /**
-     * @param {Character} character
-     * @param {System} system
-     * @returns {Character}
-     */
-    static extendSchema_Character(character, system=null){
-        let newSystem = {
-            inventory: {
-                items:[],
-                currency:{}
-            },
-            override: {
-            },
-        }
-        if(system != null){ //Just load from existing system if one was specified
-            newSystem = System5e.loadSchemaExtension(character, system);
-            newSystem.inventory.items ??= []; //Make sure items isnt null
-            for(let i = 0; i < newSystem.inventory.items.length; ++i){
-                newSystem.inventory.items[i] = Item5e.recast(newSystem.inventory.items[i]);
-            }
-            newSystem.inventory.currency ??= {};
-            newSystem.override ??= {};
-        }
-        character.system = newSystem;
-        return character;
-    }
-    static extendSchema_Item(item, state=null){
-        if(state != null){ //Just load from existing state
-            return System5e.loadSchemaExtension(item, state);
-        }
-        item.system = {
-            isEquipped: false,
-            identified: true,
-            quantity: 1,
-            uses: {
-                max: "",
-                spent: 0,
-                recovery: [],
-            },
-            container: null,
-            override: {},
-        }
-        return item;
-    }
-    static ensureProperties(obj, template) {
-
-
-
-        properties.forEach(prop => {
-            if (!(prop.name in obj)) {
-                obj[prop.name] = {};
-            }
-            if (prop.children) {
-                ensureProperties(obj[prop.name], prop.children);
-            }
-        });
-    }
-    static loadSchemaExtension(schema, state){
-        if(typeof(state) === "String"){state = JSON.parse(state);}
-        console.log("LOADED STATE", state);
-        return state;
-        //schema.system = state;
-        //return schema;
-    }
-    static serializeSchemaExtension(schema){
-        return JSON.stringify(schema.system);
-    }
-
     //Deprecated
     static async tryAddToInventory_Item(actor, collectionId, itemUid, quantity, itemType="weapon"){
         //Try to see if this item already exists in the character inventory
@@ -476,6 +408,7 @@ class Entity5e {
 
     _prepareLabels(){
         this.labels = {};
+        if(this.system?.activation?.type){this.labels.activation = `${this.system.activation.cost} ${this.system.activation.type}`;}
     }
 
     
@@ -489,6 +422,9 @@ class Entity5e {
         return (this.system.actionType === "heal") && this.hasDamage;
     }
     
+    getContext(){
+        return {};
+    }
 }
 class Item5e extends Entity5e{
     constructor(itemUid, quantity=1, collectionId=null, isCustom=false){
@@ -507,6 +443,11 @@ class Item5e extends Entity5e{
         if(!Entity5e.use_overrides){return this;}
         return this._createProxy();
     }
+    /**
+     * Recast a plain object into an instance of an Item5e.
+     * @param {any} inputObj
+     * @returns {Item5e}
+     */
     static recast(inputObj){
         let item5e = new Item5e(inputObj.uid, inputObj.quantity, inputObj.collectionId, inputObj.isCustom);
         inputObj && Object.assign(item5e, inputObj);
@@ -517,16 +458,6 @@ class Item5e extends Entity5e{
     get isCostlessAction(){return false;/* this.system.activation?.type in DND5E.staticAbilityActivationTypes; */}
     get isCrewed(){return this.system.activation?.type === "crew";}
     get isFormulaRecharge(){ !!DND5E.limitedUsePeriods[this.system.uses?.per]?.formula;}
-    async importSystemData(){
-        //First, check if system data isn't already imported
-        //TODO: after system data is imported, cache the UID in character builder, and just do string matching instead
-        let existingData = CharacterBuilder.getItemByUid(this.uid);
-        if(existingData.system){return;}
-        //No system data exists, go ahead and import
-        let imported = await SourceManager.plutoniumConvertData(existingData, "item");
-        existingData.system = imported.system;
-        this.system = imported.system; //TEMPFIX
-    }
     static async verifySystemData(hash){
         console.log(CharacterBuilder.instance._data);
         let existingData = CharacterBuilder.getEntityByUid("item", hash);
@@ -567,10 +498,68 @@ class Feature5e extends Entity5e{
         super(hash, collectionId, isCustom);
         this.entityType = "feature";
     }
+
+    /**
+     * Recast a plain object into an instance of a class inheriting Feature5e.
+     * @param {any} inputObj
+     * @returns {Feature5e}
+     */
+    static recast(inputObj){
+        let item = null;
+        switch(inputObj.type){
+            case "race":
+                item = new Race5e(inputObj.uid, inputObj.collectionId, inputObj.isCustom);
+                break;
+            case "class":
+                item = new Class5e(inputObj.uid, inputObj.collectionId, inputObj.isCustom);
+                break;
+            case "subclass":
+                item = new Subclass5e(inputObj.uid, inputObj.collectionId, inputObj.isCustom);
+                break;
+            case "background":
+                item = new Background5e(inputObj.uid, inputObj.collectionId, inputObj.isCustom);
+                break;
+            default: break;
+        }
+        if(item == null && inputObj.entityType == "feature"){
+            switch(inputObj.featureType){
+                case "classFeature":
+                    item = new ClassFeature5e();
+                    break;
+                case "subclassFeature":
+                    item = new SubclassFeature5e();
+                    break;
+                case "optionalFeature":
+                    item = new OptionalFeature5e();
+                    break;
+                case "feat":
+                    item = new Feat5e();
+                    break;
+            }
+        }
+        if(item == null){console.error("failed to recast", inputObj); return null;}
+        inputObj && Object.assign(item, inputObj);
+        return item;
+    }
+    
+    getContext(){
+        try {
+            return {
+                hasUses: !!this.system.uses?.max
+            }
+        }
+        
+        catch(e){
+            console.error("failed to get context", this);
+            console.error(e);
+            return null;
+        }
+    }
 }
 class Class5e extends Feature5e{
     constructor(itemUid, collectionId=null, isCustom=false){
         super(itemUid, collectionId, isCustom);
+        if(!itemUid){return this;}
         this.type = "class";
         if(!this.isCustom){this._tryCloneOriginal(CharacterBuilder.getEntityByUid("class", {uid: this.uid}));}
 
@@ -580,8 +569,12 @@ class Class5e extends Feature5e{
     _tryCloneOriginal(original){
         super._tryCloneOriginal(original);
         if(original == null){return;}
+        //TODO: Somehow get class description in here. The original doesn't have a system, so we can't get the description from there
         this.source = original.source;
         this.classFeatures = original.classFeatures;
+    }
+    getContext(){ //We don't have a system, so no point in providing a context
+        return null;
     }
 }
 class Subclass5e extends Feature5e{
@@ -659,6 +652,8 @@ class Background5e extends Feature5e{
 class OptionalFeature5e extends Feature5e{
     constructor(hash, collectionId=null, isCustom){
         super(hash, collectionId, isCustom);
+        if(!hash){return this;}
+        this.featureType = "optionalFeature";
         //if(!this.isCustom){this._tryCloneOriginal(CharacterBuilder.getClassFeatureByUid(hash, className, classSource));}
         const original = CharacterBuilder.getEntityByUid("optionalfeature", {uid:hash});
         if(!original){console.error("Failed to load feature using hash", hash);}
@@ -687,7 +682,8 @@ class OptionalFeature5e extends Feature5e{
 class ClassFeature5e extends Feature5e{
     constructor(hash, className, classSource, collectionId=null, isCustom){
         super(hash, collectionId, isCustom);
-        
+        if(!hash){return this;}
+        this.featureType = "classFeature";
         this.className = className;
         this.classSource = classSource;
         //if(!this.isCustom){this._tryCloneOriginal(CharacterBuilder.getClassFeatureByUid(hash, className, classSource));}
@@ -699,6 +695,7 @@ class ClassFeature5e extends Feature5e{
         let entr = []; for(let l of original.loadeds){for(let e of l.entity.entries){entr.push(e);}} this.entries = entr;
         const classDatas = CharacterBuilder.instance._data;
         this.properties = {concentration:{label:"Concentration", selected:true}};
+        this._prepareLabels();
 
         if(!Entity5e.use_overrides){return this;}
         return this._createProxy();
@@ -736,7 +733,8 @@ class ClassFeature5e extends Feature5e{
 class SubclassFeature5e extends Feature5e{
     constructor(hash, className, classSource, subclassName, subclassSource, collectionId=null, isCustom){
         super(hash, collectionId, isCustom);
-        
+        if(!hash){return this;}
+        this.featureType = "subclassFeature";
         this.className = className;
         this.classSource = classSource;
         this.subclassName = subclassName;
@@ -784,6 +782,8 @@ class SubclassFeature5e extends Feature5e{
 class Feat5e extends Feature5e {
     constructor(hash, collectionId=null, isCustom){
         super(hash, collectionId, isCustom);
+        if(!hash){return this;}
+        this.featureType = "feat";
         //if(!this.isCustom){this._tryCloneOriginal(CharacterBuilder.getClassFeatureByUid(hash, className, classSource));}
         const original = CharacterBuilder.getEntityByUid("feat", {uid:hash});
         if(!original){console.error("Failed to load feature using hash", hash);}
@@ -834,7 +834,7 @@ class Spell5e extends Entity5e{
     _prepareLabels(){
         super._prepareLabels();
         this.labels.school = this.system.school;
-        this.labels.activation = `${this.system.activation.cost} ${this.system.activation.type}`;
+        
     }
 
     static recast(inputObj){
@@ -911,6 +911,12 @@ class Actor5e {
         for(let [key, value] of Object.entries(this.inventory)){
             for(let i = 0; i < this.inventory[key].items.length; ++i){
                 this.inventory[key].items[i] = Item5e.recast(this.inventory[key].items[i]);
+            }
+        }
+        //Recast features
+        for(let [key, value] of Object.entries(this.features)){
+            for(let i = 0; i < this.features[key].items.length; ++i){
+                this.features[key].items[i] = Feature5e.recast(this.features[key].items[i]);
             }
         }
         //recast spells
@@ -1221,7 +1227,7 @@ class Actor5e {
         //Search spells
         for(let section in this.spellbook){ func(this.spellbook[section].spells);}
     }
-    async getItemByCollectionId(collectionId, errorIfNotFound=false){
+    getItemByCollectionId(collectionId, errorIfNotFound=false){
         let matches = [];
         const runMatching = (searchIn) => {
             matches = matches.concat(searchIn.filter(f => {return f.collectionId == collectionId;}));
@@ -1629,6 +1635,12 @@ class Actor5e {
 
     static getProperty(data, term){
 
+    }
+
+    itemContext(collectionId){
+        const item = this.getItemByCollectionId(collectionId, false);
+        if(item == null){return null;}
+        return item.getContext();
     }
 }
 

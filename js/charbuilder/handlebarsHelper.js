@@ -83,7 +83,7 @@ class HandlebarsHelper{
             selected = selected instanceof Array ? selected.map(String) : [String(selected)];
             let myOptions = [];
             //Blank option
-            if(blank != null){options.push({label:blank, name:""});}
+            if(blank != null){myOptions.push({label:blank, name:""});}
             if(choices instanceof Array){
                 console.assert(nameAttr != null, "selectOptions requires a nameAttr if choices is an array!");
                 for(let c of choices){
@@ -158,7 +158,7 @@ class HandlebarsHelper{
         if ( //foundry.utils.getType(context)
             typeof(context)
              === "function" ) {context = context.call(this);}
-        const ctx = options.data.root.itemContext?.[context.collectionId];//[context.id];
+        const ctx = options.data.root.itemContext(context.collectionId);
         if ( !ctx ) {
             const inverse = options.inverse(this);
             if ( inverse ) return options.inverse(this);

@@ -42,20 +42,6 @@ class C5e_Inventory{
     static deleteItem(id){
         $(`.item-list .item[data-item-id=${id}]`).remove();
     }
-    test_populate(){
-
-        let category_weapons = new C5e_InventoryCategory();
-        this.categories["weapons"] = category_weapons;
-        category_weapons.render({label:"Weapons", id:"weapons"});
-        category_weapons.addTo(this.rootElement);
-
-        let category_cantrips = new C5e_SpellbookCategory();
-        //category_cantrips.render();
-
-        this.renderSpellbook();
-        
-        
-    }
     
     elementsInCreation = 0;
     rebuildUi(){
@@ -278,44 +264,6 @@ class C5e_Inventory{
     //#endregion
 
     //#region Spellbook
-    clearSpellbook(){
-
-    }
-    renderSpellbook(){
-
-        //Grab a spell
-        let spell = CharacterBuilder.getSpellByUid("aid_phb", "Aid", "PHB");
-        //Import it
-        const spell5e = System5e.tryAddToInventory_Spell(CharacterBuilder.instance.actor, null, "aid_phb").then((result)=>{
-
-            console.log("SPELL5E", result);
-        //Create an itemsContext
-        let itemContext = [];
-        itemContext[result.collectionId] = {labels: {activation:`${result.system.activation.type} hey`}, name:result.name};
-        //let context = {labels:{activation:}}
-        let fakeData = {spellbook:[
-            {
-                label:"1st Level",
-                usesSlots: true,
-                prop: "spell1",
-                slots: 2,
-                uses: 2,
-                canCreate: true,
-                dataset: {},
-                spells: [result],
-            }
-        ], itemContext};
-
-        let temp = new LoadTemplate(null, "parts/spellbook-list", fakeData);
-        temp.createAndCompile((text)=>{
-            const el = $$`${text}`;
-            $("#inventory_root").append(el);
-        });
-
-        });
-        
-
-    }
     createSpellElement(spell5e){
         console.log("SPELL5E", spell5e);
         //Create an itemsContext
