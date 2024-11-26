@@ -1323,7 +1323,7 @@
 			"edition": "classic",
 			"additionalSpells": [
 				{
-					"known": {
+					"innate": {
 						"14": [
 							"alter self"
 						]
