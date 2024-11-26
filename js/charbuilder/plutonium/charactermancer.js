@@ -1706,6 +1706,34 @@ class ActorCharactermancerClass extends ActorCharactermancerBaseComponent {
       };
     }
 
+    _grabAdditionalSpells(subclassData){
+        if(subclassData.additionalSpells.length > 0){return [];}
+        for(let choiceColumn of subclassData.additionalSpells) {
+            for(let [knownType, knownArray] of Object.entries(choiceColumn)){
+                for(let [lvlGained, spellNames] of Object.entries(knownArray)){
+                    for(let ix = 0; ix < spellNames.length; ++ix){
+                        //Check to see if this is a hash of a spell. Else, we need to create a full hash out of just a name
+                        const spellName = spellNames[ix];
+                        let hash = spellName;
+                        const isHash = spellName.includes("_");
+                        if(!isHash){
+                            //Try to find the full spell, then grab the hash from that
+                            let decodedName = decodeURI(spellNames[ix]); //In case the spell name contains "%20" or something like that
+                            const parts = decodedName.split("#"); //If a spell ends with #c or #3, the symbol after # signals the intended level the spell is cast at
+                            if(parts.length > 1){decodedName = parts[0];} //Only search for a spell without the # suffix
+                            const spellData = CharacterBuilder.getEntityByProps("spell", {name:decodedName}, {caseInsensitive:true});
+                            if(spellData == null){console.error("Could not find spell with name", decodedName, CharacterBuilder.instance._data.spell);}
+                            hash = UrlUtil.URL_TO_HASH_GENERIC({name: spellData.name.toLowerCase(), source:spellData.source.toLowerCase()}); //Switch from name to hash
+                            if(parts.length > 1){hash += `#${parts[1]}`;} //Add the # suffix back, in case we removed it
+                        }
+                        choiceColumn[knownType][lvlGained][ix] = hash;
+                    }
+                }
+            }
+        }
+        return subclassData.additionalSpells;
+    }
+
     async getChoiceData(){
         
         const actor = CharacterBuilder.instance._actor;
@@ -1733,31 +1761,7 @@ class ActorCharactermancerClass extends ActorCharactermancerBaseComponent {
                 cls.subclassUid = UrlUtil.URL_TO_HASH_GENERIC({name:scData.name, source:scData.source}).toLowerCase();
                 //Try to include additional spells
                 if(scData.additionalSpells != null){
-                    let merged = {};
-                    //First, just do some basic array merging. merged will now contain properties like "known", which specify knownType
-                    for(let addSpells of scData.additionalSpells){ Object.assign(merged, addSpells);}
-                    for(let [knownType, array1] of Object.entries(merged)){
-                        for(let [lvlGained, spellNames] of Object.entries(array1)){
-                            for(let ix = 0; ix < spellNames.length; ++ix){
-                                let spellName = spellNames[ix];
-                                let hash = spellName;
-                                const isHash = spellName.includes("_");
-                                if(!isHash){
-                                    //Get real spell
-                                    let decodedName = decodeURI(spellNames[ix]);
-                                    const parts = decodedName.split("#");
-                                    if(parts.length > 1){decodedName = parts[0];}
-                                    const spellData = CharacterBuilder.getEntityByProps("spell", {name:decodedName}, {caseInsensitive:true});
-                                    if(spellData == null){console.error("Could not find spell with name", decodedName, CharacterBuilder.instance._data.spell);}
-                                    hash = UrlUtil.URL_TO_HASH_GENERIC({name: spellData.name.toLowerCase(), source:spellData.source.toLowerCase()}); //Switch from name to hash
-                                    if(parts.length > 1){hash += `#${parts[1]}`;}
-                                }
-                                console.log("spell hash out:", hash);
-                                merged[knownType][lvlGained][ix] = hash;
-                            }
-                        }
-                    }
-                    cls.additionalSpells = merged;
+                    cls.additionalSpells = this._grabAdditionalSpells(scData);
                 }
             }
             
@@ -20315,6 +20319,7 @@ class Charactermancer_FeatureOptionsSelect extends BaseComponent {
     }
 
     async pGetFormData() {
+        console.log("FEATUREOPTIONSELECT", this, this._optionsSet);
         if (await this.pIsNoChoice() && !await this.pIsAvailable()) {
             const sideDatas = await this._pGetLoadedsSideDataRaws();
             const cpyOptionsSet = MiscUtil.copy(this._optionsSet);

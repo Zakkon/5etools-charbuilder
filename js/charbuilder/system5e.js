@@ -866,6 +866,7 @@ class Spell5e extends Entity5e{
     }
     static async verifySystemData(hash){
         let existingData = CharacterBuilder.getEntityByUid("spell", hash);
+        if(!existingData){console.error("Could not find spell entity with hash", hash);}
         if(existingData.system){return;}
         //No system data exists, go ahead and import
         let imported = await SourceManager.plutoniumConvertData(existingData, "spell");
@@ -1027,6 +1028,7 @@ class Actor5e {
                 uses:"-", slots:"-",
                 spells:[] //spell5e[]
             },
+            0:createSpellCategory("Cantrips", "always", 0),
             1:createSpellCategory("1st Level", "prepared", 1),
             2:createSpellCategory("2nd Level", "prepared", 2),
             3:createSpellCategory("3rd Level", "prepared", 3),
@@ -1158,6 +1160,7 @@ class Actor5e {
             let subType = it.type;
             switch(it.entityType){
                 case "spell":
+                    console.log(it.system.level, it.name);
                     if(it.system.preparationMode=="innate"){subType = it.system.preparationMode;}
                     else{subType = it.system.level;}
                 break;

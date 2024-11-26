@@ -2804,6 +2804,22 @@
 							]
 						}
 					}
+				],
+				"additionalSpells": [
+					{
+						"known": {
+							"3": [
+								"prestidigitation|phb"
+							]
+						}
+					},
+					{
+						"known": {
+							"3": [
+								"druidcraft|phb"
+							]
+						}
+					}
 				]
 			}
 		},

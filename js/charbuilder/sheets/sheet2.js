@@ -109,6 +109,7 @@ class ActorCharactermancerSheet2 extends ActorCharactermancerSheet {
             let grandparent = markerDiv.parentNode.parentNode;
             //Get some data from the parent
             const dataset = grandparent.dataset;
+            if(dataset == null || Object.entries(dataset).length < 1){continue;}
             //lets say lvl 1 has 2 spell slots
             let contents = "";
             if(dataset.preparationMode != "innate" || dataset.level < 1){

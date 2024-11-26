@@ -1152,12 +1152,16 @@ class CharacterBuilder {
         updatePool[`senses.${senseKey}`] = nextVal;
       }
     }
-    const addSpellItem = async (hash, preparationMode) => {
-      await Spell5e.verifySystemData(hash);
-      let spellItem = new Spell5e(hash, null, false);
-      spellItem.system.preparationMode = preparationMode;
-      System5e.tryAddToInventory(actor, spellItem, "spell", {doNotRender:true});
-      return spellItem;
+    const pullAdditionalSpells = (forms) => {
+      if(!forms){return;}
+      for(let form of forms){
+        for(let spell of form.data){
+          let hash = spell.uid;
+          const hashNeedsConversion = hash.includes("|");
+          if(hashNeedsConversion){hash = hash.replace("|", "_");}
+          SheetApplier.addSpellItem(actor, hash, spell.preparationMode, null);
+        }
+      }
     }
 
     
@@ -1303,6 +1307,7 @@ class CharacterBuilder {
         //resources
         //saving throw proficiencies
         //additional spells
+        pullAdditionalSpells(fos.data.formDatasAdditionalSpells);
       }
     }
     updatePool["system.details.level"] = totalLevel;

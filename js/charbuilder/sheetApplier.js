@@ -435,11 +435,21 @@ class SheetApplier {
         //updatePool["attributes.hd"] = ???
     }
     static async handleSubclassAdditionalSpells(subclass, actor, targetLevel){
-        for(let addSpells of subclass.additionalSpells??[]){
-            for(let [knownType, value] of Object.entries(addSpells)){
+        
+        let pool = {};
+
+        if(subclass.additionalSpells.length > 1){
+            //Make a choice between the different spell lists
+            //have foundry.json sort this out
+            return;
+        }
+
+        for(let i = 0; i < subclass.additionalSpells.length; ++i){
+            const choiceColumn = subclass.additionalSpells[i];
+            for(let [knownType, value] of Object.entries(choiceColumn)){
                 for(let [gainedAtLvl, spellHashes] of Object.entries(value)){
                     if(targetLevel < gainedAtLvl){continue;} //Must be high enough level
-                    let preparationMode = knownType; if(knownType == "known"){preparationMode = "alwaysKnown";} //Assume they mean alwaysKnown when they say known
+                    let preparationMode = knownType; if(knownType == "known"){preparationMode = "always";} //Assume they mean always when they say known
                     for(let hash of spellHashes){
                         console.log("hash", hash);
                         //a spell that ends in #c is a cantrip
@@ -448,10 +458,17 @@ class SheetApplier {
                         if(parts.length > 1){hash = parts[0];}
                         console.warn("TODO: make sure that this spell is upgraded to a higher level, unless it is a cantrip");
                         await this.addSpellItem(actor, hash, preparationMode);
+
+                        //First, just add each spell to a pool of spells, and we will see later if there are multiple choices
+                        const columnKey = `${i}_${knownType}_${gainedAtLvl}`;
+                        if(!pool[columnKey]){pool[columnKey] = [];}
+                        pool[columnKey].push({hash, knownType});
                     }
                 }
             }
         }
+
+        
     }
 }
 
