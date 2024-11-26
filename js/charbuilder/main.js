@@ -894,9 +894,13 @@ class CharacterBuilder {
     return this._getEntityByUid(datas, options);
   }
   static _getEntityByUid(from, options){
+    const match = (e, hash) => {
+      const hash2 = UrlUtil.URL_TO_HASH_GENERIC(e).toLowerCase();
+      return hash2 == hash;
+    }
     if(typeof options === "string"){options = {uid:options};}
     const hash = (options.uid ?? UrlUtil.URL_TO_HASH_GENERIC(options)).toLowerCase();
-    const matches = from.filter(e => UrlUtil.URL_TO_HASH_GENERIC(e).toLowerCase() == hash);
+    const matches = from.filter(e => match(e, hash));
     if(matches.length > 1){console.error("More than one of", type, "found with hash", hash); return matches[0];s}
     else if(matches.length < 1){return null;}
     else{return matches[0];}
