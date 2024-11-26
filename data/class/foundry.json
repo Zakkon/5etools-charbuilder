@@ -2068,6 +2068,22 @@
 			"subclassSource": "PHB",
 			"level": 2,
 			"entryData": {
+				"maxCantripBonus": [
+					{
+						"2": 1
+					}
+				]
+			}
+		},
+		{
+			"name": "Circle Spells",
+			"source": "PHB",
+			"className": "Druid",
+			"classSource": "PHB",
+			"subclassShortName": "Land",
+			"subclassSource": "PHB",
+			"level": 2,
+			"entryData": {
 				"additionalSpells": [
 					{
 						"name": "Arctic",
@@ -3700,6 +3716,32 @@
 											"scalar": 30
 										}
 									]
+								}
+							}
+						]
+					}
+				]
+			},
+			"entryData": {
+				"senses": [
+					{
+						"conditionals": [
+							{
+								"condition": "!actor.senses?.darkvision",
+								"mod": {
+									"senses.darkvision": {
+										"value": 60,
+										"mode": "set"
+									}
+								}
+							},
+							{
+								"condition": "!!actor.senses?.darkvision",
+								"mod": {
+									"senses.darkvision": {
+										"value": 30,
+										"mode": "add"
+									}
 								}
 							}
 						]

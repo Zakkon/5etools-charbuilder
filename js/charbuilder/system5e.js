@@ -746,7 +746,6 @@ class SubclassFeature5e extends Feature5e{
         if(!original){console.error("Failed to load feature using hash", hash, className, classSource, subclassName, subclassSource);}
         this.name = SETTINGS.SUBCLASS_IMPORT_LOADEDS? original.entity.name : original.name;
         this.system = structuredClone(original.system);
-        this.actorTokenMod = structuredClone(original.actorTokenMod);
         //this.entries = structuredClone(CharacterBuilder.getClassFeatureEntries(original.name, original.source));
         let entr = [];
         if(SETTINGS.SUBCLASS_IMPORT_LOADEDS){
@@ -761,17 +760,6 @@ class SubclassFeature5e extends Feature5e{
     }
     get itemData(){return this;}
     get hash(){return this.uid;}
-
-    async importSystemData(){
-        //First, check if system data isn't already imported
-        //TODO: after system data is imported, cache the UID in character builder, and just do string matching instead
-        let existingData = CharacterBuilder.getSubclassFeatureByUid(this.hash, this.className, this.classSource, this.subclassName, this.subclassSource);
-        if(existingData.system){this.system = existingData.system; return;}
-        //No system data exists, go ahead and import
-        let imported = await SourceManager.plutoniumConvertData(existingData, "classFeature");
-        existingData.system = imported.system;
-        this.system = imported.system; //TEMPFIX
-    }
     static async verifySystemData(hash, className, classSource, subclassName, subclassSource){
         console.assert(className != null, "Class name is null!");
         console.assert(classSource != null, "Class source is null!");
@@ -782,9 +770,10 @@ class SubclassFeature5e extends Feature5e{
         if(existingData.system){return;}
         //No system data exists, go ahead and import
         try{
-            let imported = await SourceManager.plutoniumConvertData(existingData, "subclassFeature");
+            const imported = await SourceManager.plutoniumConvertData(existingData, "subclassFeature");
             existingData.system = imported.system;
             existingData.actorTokenMod = imported.actorTokenMod;
+            existingData.entryData = imported.entryData;
         }
         catch(e){
             console.log("hash:", hash, "class name & source:", className, classSource, "subclass name & source:", subclassName, subclassSource);
@@ -854,19 +843,9 @@ class Spell5e extends Entity5e{
         spell5e._prepareLabels();
         return spell5e;
     }
-    async importSystemData(){
-        //First, check if system data isn't already imported
-        //TODO: after system data is imported, cache the UID in character builder, and just do string matching instead
-        let existingData = CharacterBuilder.getSpellByUid(this.uid);
-        if(existingData.system){this.system = existingData.system; return;}
-        //No system data exists, go ahead and import
-        let imported = await SourceManager.plutoniumConvertData(existingData, "spell");
-        existingData.system = imported.system;
-        this.system = imported.system; //TEMPFIX
-    }
     static async verifySystemData(hash){
         let existingData = CharacterBuilder.getEntityByUid("spell", hash);
-        if(!existingData){console.error("Could not find spell entity with hash", hash);}
+        if(existingData == null){console.error("Could not find spell entity with hash", hash);}
         if(existingData.system){return;}
         //No system data exists, go ahead and import
         let imported = await SourceManager.plutoniumConvertData(existingData, "spell");

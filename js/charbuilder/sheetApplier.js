@@ -55,13 +55,6 @@ class SheetApplier {
             updatePool[`senses.${senseKey}`] = nextVal;
           }
         }
-        const addSpellItem = async (hash, preparationMode) => {
-          await Spell5e.verifySystemData(hash);
-          let spellItem = new Spell5e(hash, null, false);
-          spellItem.system.preparationMode = preparationMode;
-          System5e.tryAddToInventory(actor, spellItem, "spell", {doNotRender:true});
-          return spellItem;
-        }
     
         const handleConditionals = (conditionals) => {
           
@@ -335,6 +328,22 @@ class SheetApplier {
         
     }
     static async addSpellItem(actor, hash, preparationMode, dependencyPath){
+
+        hash = hash.replace("|", "_");
+        const hashIncludesSource = hash.includes("_");
+        const hashIncludesSuffix = hash.includes("#");
+        let suffix;
+        if(hashIncludesSuffix){
+            const parts = hash.split("#");
+            hash = parts[0]; suffix = parts[1];
+        }
+        if(!hashIncludesSource){
+            const spell = CharacterBuilder.getEntityByProps("spell", {name:hash}, {caseInsensitive:true});
+            hash = UrlUtil.URL_TO_HASH_GENERIC(spell).toLowerCase();
+        }
+        //Make sure hash doesn't include spaces
+        hash = encodeURI(hash);
+
         console.log("Add spell", hash);
         await Spell5e.verifySystemData(hash);
         let spellItem = new Spell5e(hash, null, false);
@@ -350,8 +359,6 @@ class SheetApplier {
           {
             console.log("Resolve", cond.condition, "on", actor);
             const func = new Function("actor", `return ${cond.condition}`);
-            console.log(!actor.senses.darkvision);
-            console.log(!!actor.senses.darkvision);
             if(!func(actor)){continue;}
           }
           //Since we succeeded, look for a "mod" object, and the entries within
@@ -434,15 +441,20 @@ class SheetApplier {
         updatePool[`hp.max`] = hpNum;
         //updatePool["attributes.hd"] = ???
     }
-    static async handleSubclassAdditionalSpells(subclass, actor, targetLevel){
-        
-        let pool = {};
 
-        if(subclass.additionalSpells.length > 1){
-            //Make a choice between the different spell lists
-            //have foundry.json sort this out
-            return;
-        }
+
+    /**
+     * Adds spells granted by subclass.additionalSpells.
+     * Aborts if additionalSpells.length > 1, as that case should be handled by "foundrySubclassFeature" objects instead
+     * @param {{additionalSpells:any[]}} subclass
+     * @param {Actor} actor
+     * @param {number} targetLevel
+     */
+    static async handleSubclassAdditionalSpells(subclass, actor, targetLevel){
+
+        //If our subclass has more than one additionalSpells object, it indicates that there is a choice to be made between different spell lists
+        //We won't try to handle that choice here. It is better to handle that in a "foundrySubclassFeature" object in the class json instead, where we can be more specific
+        if(subclass.additionalSpells.length > 1){ return; }
 
         for(let i = 0; i < subclass.additionalSpells.length; ++i){
             const choiceColumn = subclass.additionalSpells[i];
@@ -458,11 +470,6 @@ class SheetApplier {
                         if(parts.length > 1){hash = parts[0];}
                         console.warn("TODO: make sure that this spell is upgraded to a higher level, unless it is a cantrip");
                         await this.addSpellItem(actor, hash, preparationMode);
-
-                        //First, just add each spell to a pool of spells, and we will see later if there are multiple choices
-                        const columnKey = `${i}_${knownType}_${gainedAtLvl}`;
-                        if(!pool[columnKey]){pool[columnKey] = [];}
-                        pool[columnKey].push({hash, knownType});
                     }
                 }
             }

@@ -925,7 +925,16 @@ class CharacterBuilder {
       }
       return itemValue === value;
     }));
-    if(matches.length > 1){console.error("More than one result matches props", propMatches); return matches[0];s}
+    if(matches.length > 1){
+      if(matches.length == 2){ //If two objects were found, and the difference is classic vs 2024 rules, default to classic
+        const a = matches[0].source.toLowerCase();
+        const b = matches[1].source.toLowerCase();
+        if(a == "phb" && b == "xphb"){return matches[0];}
+        if(a == "xphb" && b == "phb"){return matches[1];}
+      }
+      console.error("More than one result matches props", propMatches, matches);
+      return matches[0];
+    }
     else if(matches.length < 1){return null;}
     else{return matches[0];}
   }
@@ -988,7 +997,7 @@ class CharacterBuilder {
     }
     else if(featureType == "foundrySubclassFeature"){
       const from = CharacterBuilder.instance._data.foundrySubclassFeature;
-      
+      if(!from){return null;}
       matches = from.filter(e => match(e, data, "name") && match(e, data, "source") && match(e, data, "className") && match(e, data, "classSource"));
     }
     if(matches.length > 1){console.error("More than one feature found with hash", hash); return matches[0];s}
@@ -1047,6 +1056,7 @@ class CharacterBuilder {
     }
     return matches[0];
   }
+  
   //#endregion
 
   async getChoiceData(){
@@ -1143,13 +1153,22 @@ class CharacterBuilder {
         }
       }
     }
-    const pullSenses = (data) => {
-      for(let [senseKey, input] of Object.entries(data)){
-        let currentVal = updatePool[`senses.${senseKey}`] ?? 0;
-        let nextVal = currentVal;
-        if(currentVal > 0 && input.bonus_hasFromRaceAlready != null){nextVal = currentVal + input.bonus_hasFromRaceAlready;}
-        else{nextVal = input.value;}
-        updatePool[`senses.${senseKey}`] = nextVal;
+    const handleEntryData = (entryData) => {
+
+      const tryConditionals = (array) => {
+        for(let entry of array){
+          if(entry.conditionals){
+            SheetApplier.handleConditionals(entry.conditionals, actor, updatePool);
+          }
+        }
+      }
+
+      for (let [arrayName, array] of Object.entries(entryData)){
+        if(!Array.isArray(array)){continue;}
+        switch(arrayName){
+          case "senses": tryConditionals(array);break;
+          default: break;
+        }
       }
     }
     const pullAdditionalSpells = (forms) => {
@@ -1241,8 +1260,7 @@ class CharacterBuilder {
       const hasSubclass = cls.ixSubclass != null;
       if(hasSubclass){
         sclsData = CharacterBuilder._getEntityByUid(clsData.subclasses, {uid: cls.subclassUid});
-        //Add subclass's additionalSpells
-        console.log("Subclass Data", sclsData);
+        //Add subclass's additionalSpells, unless there is more than one spell list
         SheetApplier.handleSubclassAdditionalSpells(sclsData, actor, cls.targetLevel);
         
         //Try to import the subclass itself (TEST)
@@ -1250,7 +1268,6 @@ class CharacterBuilder {
           {className: clsData.name, classSource: clsData.source,
             subclassName: sclsData.name, subclassSource: sclsData.source}); */
       }
-
 
       //HIT POINTS
       SheetApplier.handleHitPoints(cls.hpInfo[0], actor, updatePool);
@@ -1275,22 +1292,21 @@ class CharacterBuilder {
           //.isRequiredOption is a good teller if they want us to load a subclassFeature from within a loadeds
           if(feature.type == "subclassFeature" && (feature.isRequiredOption === false
             && feature.isRequiredOption !== null) && !SETTINGS.SUBCLASS_IMPORT_LOADEDS){continue;}
+          
           const featureItem = await addFeatureItem(feature.type, feature.hash, cls.path,
             {className:clsData.name.toLowerCase(), classSource:clsData.source.toLowerCase(),
               subclassName:sclsData?.name.toLowerCase(), subclassSource:sclsData?.source.toLowerCase()});
-          //if(!!featureItem.actorTokenMod){parseActorTokenMod(featureItem.actorTokenMod);}
-
-          if(featureItem.name == "Umbral Sight"){
-            //Try to load it from cache
-            const foundryItem = CharacterBuilder.getFeatureByUid("foundrySubclassFeature",
-              null, {name:featureItem.name, source:featureItem.subclassSource, subclassName:feature.subclassName,
-                className:featureItem.className, classSource:featureItem.classSource});
-            console.log("Foundry Item", foundryItem, featureItem);
-
-            SheetApplier.handleConditionals(foundryItem.entryData.senses[0].conditionals, actor, updatePool);
-          }
-          
           addedFeatureHashes.push(feature.hash);
+
+          //Try to read the feature's entrydata
+          if(!!feature.entity?.entryData){handleEntryData(feature.entity.entryData);}
+
+          //Try to load a foundrySubclassFeature
+          const foundryItem = CharacterBuilder.getFeatureByUid("foundrySubclassFeature",
+            null, {name:featureItem.name, source:featureItem.subclassSource, subclassName:feature.subclassName,
+              className:featureItem.className, classSource:featureItem.classSource});
+          //And try to read .entryData from that
+          if(!!foundryItem){handleEntryData(foundryItem.entryData);}
         }
         pullSkills(fos.data.formDatasExpertise, true);
         pullSkills(fos.data.formDatasSkillProficiencies);

@@ -1706,34 +1706,6 @@ class ActorCharactermancerClass extends ActorCharactermancerBaseComponent {
       };
     }
 
-    _grabAdditionalSpells(subclassData){
-        if(subclassData.additionalSpells.length > 0){return [];}
-        for(let choiceColumn of subclassData.additionalSpells) {
-            for(let [knownType, knownArray] of Object.entries(choiceColumn)){
-                for(let [lvlGained, spellNames] of Object.entries(knownArray)){
-                    for(let ix = 0; ix < spellNames.length; ++ix){
-                        //Check to see if this is a hash of a spell. Else, we need to create a full hash out of just a name
-                        const spellName = spellNames[ix];
-                        let hash = spellName;
-                        const isHash = spellName.includes("_");
-                        if(!isHash){
-                            //Try to find the full spell, then grab the hash from that
-                            let decodedName = decodeURI(spellNames[ix]); //In case the spell name contains "%20" or something like that
-                            const parts = decodedName.split("#"); //If a spell ends with #c or #3, the symbol after # signals the intended level the spell is cast at
-                            if(parts.length > 1){decodedName = parts[0];} //Only search for a spell without the # suffix
-                            const spellData = CharacterBuilder.getEntityByProps("spell", {name:decodedName}, {caseInsensitive:true});
-                            if(spellData == null){console.error("Could not find spell with name", decodedName, CharacterBuilder.instance._data.spell);}
-                            hash = UrlUtil.URL_TO_HASH_GENERIC({name: spellData.name.toLowerCase(), source:spellData.source.toLowerCase()}); //Switch from name to hash
-                            if(parts.length > 1){hash += `#${parts[1]}`;} //Add the # suffix back, in case we removed it
-                        }
-                        choiceColumn[knownType][lvlGained][ix] = hash;
-                    }
-                }
-            }
-        }
-        return subclassData.additionalSpells;
-    }
-
     async getChoiceData(){
         
         const actor = CharacterBuilder.instance._actor;
@@ -1759,10 +1731,7 @@ class ActorCharactermancerClass extends ActorCharactermancerBaseComponent {
             if(hasSubclass){
                 const scData = this._getSubclass({cls:data, ix:cls.ixSubclass});
                 cls.subclassUid = UrlUtil.URL_TO_HASH_GENERIC({name:scData.name, source:scData.source}).toLowerCase();
-                //Try to include additional spells
-                if(scData.additionalSpells != null){
-                    cls.additionalSpells = this._grabAdditionalSpells(scData);
-                }
+                cls.additionalSpells = scData.additionalSpells;
             }
             
             /*Information we need to pull:
@@ -11637,6 +11606,7 @@ class Charactermancer_Spell_Util {
         if (!cls || targetLevel == null){return null;}
 
         let cantripProgression = DataConverter.getMaxCantripProgression(cls.cantripProgression, sc?.cantripProgression);
+        let flatCantripBonus = sc? DataConverter.getMaxCantripBonus(sc, targetLevel) : 0;
 
         if (PrereleaseUtil.hasSourceJson(cls.source) || (sc && PrereleaseUtil.hasSourceJson(sc.source)))
             cantripProgression = cantripProgression || this._getApproximateCantripProgression({
@@ -11649,10 +11619,10 @@ class Charactermancer_Spell_Util {
                 sc
             });
 
-        if (!cantripProgression)
-            return null;
+        //TODO: If the class doesn't have a cantrip progression, we won't be getting the bonus cantrip here anyway. Fix this
+        if (!cantripProgression){return null;}
 
-        return cantripProgression[targetLevel - 1];
+        return cantripProgression[targetLevel - 1] + flatCantripBonus;
     }
 
     static _getApproximateCantripProgression({cls, sc}) {

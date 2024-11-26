@@ -1432,8 +1432,23 @@ class DataConverter {
 			});
 		return out;
 	}
+	static getMaxCantripBonus(subclass, curLevel){
+		let totalBonus = 0;
+		for(let feature of subclass.subclassFeatures){
+			if(feature.level > curLevel){continue;}
+			for(let loaded of feature.loadeds){
+				if(!loaded?.entity?.entryData){continue;}
+				for(let bonuses of (loaded.entity.entryData.maxCantripBonus??[])){
+					for(let [level, bonus] of Object.entries(bonuses)){
+						if(level <= curLevel){totalBonus += bonus;}
+					}
+				}
+			}
+		}
+		return totalBonus;
+	}
 
-		static async pFillActorSkillToolLanguageData (
+	static async pFillActorSkillToolLanguageData (
 		{
 			existingProficienciesSkills,
 			existingProficienciesTools,
