@@ -30,7 +30,7 @@
         </a>
         <ul class="traits-list">
         {{#each senses as |v k|}}
-            <li class="tag {{k}}">{{v}}</li>
+            <li class="tag {{k}}">{{stringFormat k capWords=true}} {{v}} ft</li>
         {{/each}}
         </ul>
     </div>

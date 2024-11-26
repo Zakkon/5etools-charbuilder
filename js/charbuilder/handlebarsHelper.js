@@ -68,6 +68,11 @@ class HandlebarsHelper{
             const formatter = new Intl.NumberFormat("en-IN", opts);
             return formatter.format(value);
         });
+        Handlebars.registerHelper("stringFormat", function (value, options){
+            let opts = HandlebarsHelper.getAttributes(options);
+            if(opts.capWords){ return value.capitalizeEachWord();}
+            return value;
+        });
         Handlebars.registerHelper('select', function (value, options) {
             return options.fn(this)
               .split('\n')
