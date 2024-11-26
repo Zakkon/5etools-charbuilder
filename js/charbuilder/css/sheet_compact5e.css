@@ -163,6 +163,9 @@ a {
 .item-list .item.active .item-row {
     background: linear-gradient(to right,rgba(50, 205, 50, 0.1),transparent 120%);
 }
+.item-list .item.innate .item-row {
+    background: linear-gradient(to right,rgba(205, 50, 50, 0.1),transparent 120%);
+}
 .item-list .item-name {
     flex: 1;
     margin: 0;

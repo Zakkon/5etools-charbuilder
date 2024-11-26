@@ -73,51 +73,53 @@
     <ol class="item-list">
     {{#each section.spells as |item i|}}
     {{#dnd5e-itemContext item as |ctx|}}
-        <li class="item flexrow {{#if ctx.isExpanded}}expanded{{/if}}" data-item-id="{{item.collectionId}}">
-            <div class="item-name flexrow rollable">
-                <div class="item-image item-action" data-action="use" tabindex="0" role="button"
-                     aria-label="{{item.name}}" style="background-image: url('{{item.img}}')"></div>
-                <h4 class="item-action" data-action="expand">{{item.name}}</h4>
-                {{#if item.hasLimitedUses}}
-                <div class="item-detail spell-uses">
-                  Uses {{#if item.system.uses.value}}{{item.system.uses.value}}{{else}}0{{/if}} / {{item.system.uses.max}}
+        <li class="item flexrow {{#if ctx.isExpanded}}expanded{{/if}}{{#if item.canToggle}}{{item.toggleClass}}{{/if}}{{item.alwaysClass}}" data-item-id="{{item.collectionId}}">
+            <div class="item-row flexrow">
+                <div class="item-name flexrow rollable">
+                    <div class="item-image item-action" data-action="use" tabindex="0" role="button"
+                        aria-label="{{item.name}}" style="background-image: url('{{item.img}}')"></div>
+                    <h4 class="item-action" data-action="expand">{{item.name}}</h4>
+                    {{#if item.hasLimitedUses}}
+                    <div class="item-detail spell-uses">
+                    Uses {{#if item.system.uses.value}}{{item.system.uses.value}}{{else}}0{{/if}} / {{item.system.uses.max}}
+                    </div>
+                    {{/if}}
+                    <div class="spell-comps">
+                        {{#each item.labels.components.all}}
+                        <span class="spell-component{{#if tag}} tag{{/if}}">{{abbr}}</span>
+                        {{/each}}
+                    </div>
+                </div>
+                <div class="spell-school">{{item.labels.school}}</div>
+                <div class="spell-action">{{item.labels.activation}}</div>
+                <div class="spell-target" data-tooltip="Range: {{item.labels.range}}">
+                    {{#if item.labels.target}}
+                    {{item.labels.target}}
+                    {{else}}None
+                    {{/if}}
+                </div>
+
+                {{#if @root.owner}}
+                <div class="item-controls flexrow">
+                    {{#if section.canPrepare}}
+                    <a class="item-control item-action {{ctx.toggleClass}}" data-action="prepare"
+                    data-tooltip="{{ctx.toggleTitle}}">
+                        <i class="fas fa-sun"></i>
+                    </a>
+                    {{/if}}
+                    <a class="item-control item-action" data-action="edit" data-tooltip="DND5E.ItemEdit">
+                        <i class="fas fa-edit"></i>
+                    </a>
+                    <a class="item-control item-action" data-action="delete" data-tooltip="DND5E.ItemDelete">
+                        <i class="fas fa-trash"></i>
+                    </a>
                 </div>
                 {{/if}}
-                <div class="spell-comps">
-                    {{#each item.labels.components.all}}
-                    <span class="spell-component{{#if tag}} tag{{/if}}">{{abbr}}</span>
-                    {{/each}}
-                </div>
-            </div>
-            <div class="spell-school">{{item.labels.school}}</div>
-            <div class="spell-action">{{item.labels.activation}}</div>
-            <div class="spell-target" data-tooltip="Range: {{item.labels.range}}">
-                {{#if item.labels.target}}
-                {{item.labels.target}}
-                {{else}}None
+
+                {{#if ctx.isExpanded}}
+                    {{> "dnd5e.item-summary" (lookup @root.expandedData item.id)}}
                 {{/if}}
             </div>
-
-            {{#if @root.owner}}
-            <div class="item-controls flexrow">
-                {{#if section.canPrepare}}
-                <a class="item-control item-action {{ctx.toggleClass}}" data-action="prepare"
-                   data-tooltip="{{ctx.toggleTitle}}">
-                    <i class="fas fa-sun"></i>
-                </a>
-                {{/if}}
-                <a class="item-control item-action" data-action="edit" data-tooltip="DND5E.ItemEdit">
-                    <i class="fas fa-edit"></i>
-                </a>
-                <a class="item-control item-action" data-action="delete" data-tooltip="DND5E.ItemDelete">
-                    <i class="fas fa-trash"></i>
-                </a>
-            </div>
-            {{/if}}
-
-            {{#if ctx.isExpanded}}
-                {{> "dnd5e.item-summary" (lookup @root.expandedData item.id)}}
-            {{/if}}
         </li>
     {{/dnd5e-itemContext}}
     {{/each}}

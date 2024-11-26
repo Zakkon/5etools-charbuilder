@@ -38,7 +38,7 @@
      <ol class="item-list"></ol>
     {{#each section.spells as |item i|}}
     {{#dnd5e-itemContext item as |ctx|}}
-        <li class="item flexrow {{#if ctx.isExpanded}}expanded{{/if}}" data-item-id="{{item.id}}">
+        <li class="item flexrow {{#if ctx.isExpanded}}expanded{{/if}}{{#if item.canToggle}}{{item.toggleClass}}{{/if}}{{item.alwaysClass}}" data-item-id="{{item.id}}">
             <div class="item-name flexrow rollable">
                 <div class="item-image item-action" data-action="use" tabindex="0" role="button"
                      aria-label="{{item.name}}" style="background-image: url('{{item.img}}')"></div>

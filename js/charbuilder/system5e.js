@@ -873,6 +873,22 @@ class Spell5e extends Entity5e{
             ]
         }
     }
+
+    get canToggle(){
+        console.log("prepMode", this.system.preparationMode);
+        switch(this.system.preparationMode){
+            case "innate":
+            return false;
+
+            default: return true;
+        }
+    }
+    get toggleClass(){
+        return this.system.equipped? "active" : "";
+    }
+    get alwaysClass(){
+        return this.system.preparationMode == "innate"? "innate" : "";
+    }
 }
 
 class Actor5e {
@@ -881,7 +897,7 @@ class Actor5e {
         this._mancerDependencies = {};
         if(saveData != null){this._loadFromSaveData(saveData);}
         else{this._createFakeCharacterData();}
-        this.owner = SETTINGS.SHEET_ISEDITABLE;
+        this.owner = true;//SETTINGS.SHEET_ISEDITABLE;
         this.config = CONFIG.DND5E;
         this.isCharacter = true;
     }
