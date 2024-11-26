@@ -1250,8 +1250,10 @@ class CharacterBuilder {
     //#region Parse Classes
     //Do a small update on the actor already, since some subclass features can vary depending on what powers were given by race (Umbral Sight, for example)
     actor.update(updatePool, {doNotFireUpdate:true});
+    let spellcastingAbility = null;
     let totalLevel = 0;
-    for(let cls of choiceData.classes){
+    for(let clsIx = 0; clsIx < choiceData.classes.length; ++clsIx){
+      const cls = choiceData.classes[clsIx];
       let addedFeatureHashes = [];
       const clsData = CharacterBuilder.getEntityByUid("class", {uid: cls.uid});
       console.log("CLASS DATA", clsData);
@@ -1259,6 +1261,7 @@ class CharacterBuilder {
       let classItem = await addFeatureItem("class", cls.uid, cls.path); //Add the class item itself to our sheet
       classItem.targetLevel = cls.targetLevel;
       totalLevel += cls.targetLevel;
+      if(spellcastingAbility == null){spellcastingAbility = clsData.spellcastingAbility;}
       //Subclass
 
       const hasSubclass = cls.ixSubclass != null;
@@ -1330,6 +1333,7 @@ class CharacterBuilder {
         pullAdditionalSpells(fos.data.formDatasAdditionalSpells);
       }
     }
+    updatePool["system.attributes.spellcasting"] = spellcastingAbility;
     updatePool["system.details.level"] = totalLevel;
     updatePool["system.attributes.prof"] = System5e.calcProficiencyBonus(totalLevel);
     //#endregion
