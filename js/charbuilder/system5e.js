@@ -1054,6 +1054,7 @@ class Actor5e {
             active: {
                 label: "Active Abilities",
                 dataset: {type: "active"},
+                hasActions:true,
                 items: [],
             },
             passive: {

@@ -69,7 +69,8 @@
             </div>
 
             {{else if (eq item.type "class")}}
-            <div class="item-detail item-action">
+            {{#if @root.owner}}
+            {{!-- <div class="item-detail item-action">
                 <select class="level-selector">
                     {{#select 0}}
                     {{#each ctx.availableLevels}}
@@ -80,7 +81,8 @@
                     {{/each}}
                     {{/select}}
                 </select>
-            </div>
+            </div> --}}
+            {{/if}}
             {{/if}}
 
             {{#if section.columns}}
