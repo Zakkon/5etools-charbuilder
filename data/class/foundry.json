@@ -2060,6 +2060,91 @@
 			}
 		},
 		{
+			"name": "Circle Spells",
+			"source": "PHB",
+			"className": "Druid",
+			"classSource": "PHB",
+			"subclassShortName": "Land",
+			"subclassSource": "PHB",
+			"level": 2,
+			"entryData": {
+				"additionalSpells": [
+					{
+						"name": "Arctic",
+						"known": {
+							"3": ["hold person", "spike growth"],
+							"5": ["sleet storm", "slow"],
+							"7": ["freedom of movement", "ice storm"],
+							"9": ["commune with nature", "cone of cold"]
+						}
+					},
+					{
+						"name": "Coast",
+						"known": {
+							"3": ["mirror image", "misty step"],
+							"5": ["water breathing", "water walk"],
+							"7": ["control water", "freedom of movement"],
+							"9": ["conjure elemental", "scrying"]
+						}
+					},
+					{
+						"name": "Desert",
+						"known": {
+							"3": ["blur", "silence"],
+							"5": ["create food and water", "protection from energy"],
+							"7": ["blight", "hallucinatory terrain"],
+							"9": ["insect plague", "wall of stone"]
+						}
+					},
+					{
+						"name": "Forest",
+						"known": {
+							"3": ["barkskin", "spider climb"],
+							"5": ["call lightning", "plant growth"],
+							"7": ["divination", "freedom of movement"],
+							"9": ["commune with nature", "tree stride"]
+						}
+					},
+					{
+						"name": "Grassland",
+						"known": {
+							"3": ["invisibility", "pass without trace"],
+							"5": ["daylight", "haste"],
+							"7": ["divination", "freedom of movement"],
+							"9": ["dream", "insect plague"]
+						}
+					},
+					{
+						"name": "Mountain",
+						"known": {
+							"3": ["spider climb", "spike growth"],
+							"5": ["lightning bolt", "meld into stone"],
+							"7": ["stone shape", "stoneskin"],
+							"9": ["passwall", "wall of stone"]
+						}
+					},
+					{
+						"name": "Swamp",
+						"known": {
+							"3": ["darkness", "Melf's acid arrow"],
+							"5": ["water walk", "stinking cloud"],
+							"7": ["freedom of movement", "locate creature"],
+							"9": ["insect plague", "scrying"]
+						}
+					},
+					{
+						"name": "Underdark",
+						"known": {
+							"3": ["spider climb", "web"],
+							"5": ["gaseous form", "stinking cloud"],
+							"7": ["greater invisibility", "stone shape"],
+							"9": ["cloudkill", "insect plague"]
+						}
+					}
+				]
+			}
+		},
+		{
 			"name": "Nature's Ward",
 			"source": "PHB",
 			"className": "Druid",
