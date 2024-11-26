@@ -1028,6 +1028,11 @@ class Actor5e {
             2:createSpellCategory("2nd Level", "prepared", 2),
             3:createSpellCategory("3rd Level", "prepared", 3),
             4:createSpellCategory("4th Level", "prepared", 4),
+            5:createSpellCategory("5th Level", "prepared", 5),
+            6:createSpellCategory("6th Level", "prepared", 6),
+            7:createSpellCategory("7th Level", "prepared", 7),
+            8:createSpellCategory("8th Level", "prepared", 8),
+            9:createSpellCategory("9th Level", "prepared", 9),
         }
 
         this.features = {

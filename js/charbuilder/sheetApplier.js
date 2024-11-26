@@ -268,10 +268,17 @@ class SheetApplier {
         ActorCharactermancerSheet2.instance.setup(actor);
     }
 
+    /**
+     * Adds a feature item to the character sheet.
+     * @param {Actor5e} actor
+     * @param {string} type
+     * @param {string} hash
+     * @param {any} dependencyPath
+     * @param {any} data={}
+     * @returns {Feature5e}
+     */
     static async addFeatureItem(actor, type, hash, dependencyPath, data={}) {
-        //Add new feature item to update pool
         //f.type should be either "optionalfeature"(lowercase spelling), "feat", "classFeature", or "subclassFeature"
-        
         switch(type){
           case "optionalfeature":
             await OptionalFeature5e.verifySystemData(hash);
@@ -451,7 +458,7 @@ class SheetApplier {
      * @param {number} targetLevel
      */
     static async handleSubclassAdditionalSpells(subclass, actor, targetLevel){
-
+        if(!subclass.additionalSpells){return;}
         //If our subclass has more than one additionalSpells object, it indicates that there is a choice to be made between different spell lists
         //We won't try to handle that choice here. It is better to handle that in a "foundrySubclassFeature" object in the class json instead, where we can be more specific
         if(subclass.additionalSpells.length > 1){ return; }
