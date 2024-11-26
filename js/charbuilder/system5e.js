@@ -993,7 +993,7 @@ class Actor5e {
             }
             
         };
-        const createSpellCategory = (label, preparationMode, level, usesSlots=false) => {
+        const createSpellCategory = (label, preparationMode, level, usesSlots=true) => {
             return {
                 label: label,
                 canCreate:true,
@@ -1023,7 +1023,7 @@ class Actor5e {
                 uses:"-", slots:"-",
                 spells:[] //spell5e[]
             },
-            0:createSpellCategory("Cantrips", "always", 0),
+            0:createSpellCategory("Cantrips", "always", 0, false),
             1:createSpellCategory("1st Level", "prepared", 1),
             2:createSpellCategory("2nd Level", "prepared", 2),
             3:createSpellCategory("3rd Level", "prepared", 3),
