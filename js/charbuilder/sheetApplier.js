@@ -345,7 +345,6 @@ class SheetApplier {
         return "passive";
     }
     static async addSpellItem(actor, hash, preparationMode, dependencyPath){
-
         hash = hash.replace("|", "_");
         const hashIncludesSource = hash.includes("_");
         const hashIncludesSuffix = hash.includes("#");
@@ -361,9 +360,11 @@ class SheetApplier {
         //Make sure hash doesn't include spaces
         if(hash.includes(" ")){hash = encodeURI(hash);}
 
-        console.log("Add spell", hash);
+        console.log("Add spell", hash, preparationMode);
         await Spell5e.verifySystemData(hash);
         let spellItem = new Spell5e(hash, null, false);
+        //If spell is a cantrip, assume that anyone claiming it should be "known" mean it to be "prepared" (which means always prepared)
+        if(spellItem.system.level == 0 && preparationMode == "known"){preparationMode = "prepared";}
         spellItem.system.preparationMode = preparationMode;
         System5e.tryAddToInventory(actor, spellItem, "spell", {doNotRender:true});
         return spellItem;
@@ -478,9 +479,8 @@ class SheetApplier {
             for(let [knownType, value] of Object.entries(choiceColumn)){
                 for(let [gainedAtLvl, spellHashes] of Object.entries(value)){
                     if(targetLevel < gainedAtLvl){continue;} //Must be high enough level
-                    let preparationMode = knownType; if(knownType == "known"){preparationMode = "always";} //Assume they mean always when they say known
+                    let preparationMode = knownType;
                     for(let hash of spellHashes){
-                        console.log("hash", hash);
                         //a spell that ends in #c is a cantrip
                         //you can also do #3 for a spell that is always cast at third level which happens on some races
                         let parts = hash.split("#");

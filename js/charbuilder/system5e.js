@@ -587,13 +587,12 @@ class Subclass5e extends Feature5e{
         return this._createProxy();
     }
     _tryCloneOriginal(original){
-        super._tryCloneOriginal(original);
+        //super._tryCloneOriginal(original);
         if(original == null){console.error("Failed to find subclass entity", this.uid); return;}
+        this.name = original.name;
         DataLoader.pCacheAndGet("subclass", original.source, UrlUtil.URL_TO_HASH_BUILDER.subclass(original)).then((subclassInfo) => {
-            console.log("SUBCLASS INFO", subclassInfo);
             this.system = {description:subclassInfo.subclassFeatures[0].entries};
         });
-        console.log("SUBCLASS LOAD FROM ORIGINAL", original);
         this.source = original.source;
         //this.classFeatures = original.classFeatures;
     }
@@ -892,6 +891,7 @@ class Spell5e extends Entity5e{
         switch(this.system.preparationMode){
             case "innate":
             case "prepared": //always prepared
+            case "always":
             return false;
 
             default: return true;
@@ -901,8 +901,15 @@ class Spell5e extends Entity5e{
         return this.system.equipped? "active" : "";
     }
     get alwaysClass(){
+        /*    "prepared" — spells which are always prepared
+    "innate" — Spells which can be innately cast, without expending normal spell resources
+    "known" — Spells which are always known
+    "expanded" — Expansions to a class’ default spell list, from which spells can be chosen (e.g. Warlock Patron spells)
+    "ability" — Optionally specify the ability score used for e.g. racial spellcasting
+    "resourceName" — Optional resource name for resource-cast spells in this group
+    */
         if(this.system.preparationMode == "innate")return "innate";
-        if(this.system.preparationMode == "prepared")return "alwaysPrepared";
+        if(this.system.preparationMode == "prepared")return "alwaysPrepared"; //alwaysPrepared
         return "";
     }
 }
@@ -1183,7 +1190,6 @@ class Actor5e {
             let subType = it.type;
             switch(it.entityType){
                 case "spell":
-                    console.log(it.system.level, it.name);
                     if(it.system.preparationMode=="innate"){subType = it.system.preparationMode;}
                     else{subType = it.system.level;}
                 break;
