@@ -1,0 +1,20 @@
+CLASS CONVERSION NOTES
+Unmentioned subclass features mean that we didn't see a point writing *new* specific imlpementations for it
+
+DRUID
+----------------------------
+Circle of Dreams:
+- "Balm of the Summer Court": would like to support this somehow, but not worth it atm
+- "Walker in Dreams": Choosing not to add this via additionalSpells, as these spells are very specific in how they are cast, and how often
+Circle of Spores:
+
+Circle of Stars:
+- "Circle of Stars": Core feature is given @prof uses. This seems strange? Also, Guiding bolt isn't given with any uses limitation.
+
+Circle of the Land:
+- "Bonus Cantrip": specified a maxCantripBonus in foundry.json. Sheet adds that into the max cantrip amount.
+- "Circle Spells": specified additonalSpells in foundry.json. class-druid.json's additionalSpells are ignored since there are more than 1 object.
+
+Circle of the Moon:
+- "Combat Wild Shape": not sure how to implement this. needs to overwrite the activation type of the Wild Shape feature somehow
+- "Thousand Forms": changed spell in additionalSpells from "known" to "always" in class-druid.json since it should always be available
