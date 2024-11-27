@@ -9,7 +9,7 @@ Circle of Dreams:
 Circle of Spores:
 
 Circle of Stars:
-- "Circle of Stars": Core feature is given @prof uses. This seems strange? Also, Guiding bolt isn't given with any uses limitation.
+- "Circle of Stars": Guiding Bolt is specified as "prepared", without any reference to the @prof free uses per LR. Might in the future want to add a second Guiding Bolt which is "innate", with @prof uses per LR
 
 Circle of the Land:
 - "Bonus Cantrip": specified a maxCantripBonus in foundry.json. Sheet adds that into the max cantrip amount.
@@ -17,4 +17,4 @@ Circle of the Land:
 
 Circle of the Moon:
 - "Combat Wild Shape": not sure how to implement this. needs to overwrite the activation type of the Wild Shape feature somehow
-- "Thousand Forms": changed spell in additionalSpells from "known" to "innate" in class-druid.json since it should always be available
+- "Thousand Forms": changed spell in additionalSpells from "known" to "innate" in class-druid.json since it should be casted at will

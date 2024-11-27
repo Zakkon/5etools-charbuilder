@@ -407,8 +407,9 @@ class Entity5e {
     }
 
     _prepareLabels(){
-        this.labels = {};
-        if(this.system?.activation?.type){this.labels.activation = `${this.system.activation.cost} ${this.system.activation.type}`;}
+        const labels = {};
+        if(this.system?.activation?.type){labels.activation = `${this.system.activation.cost} ${this.system.activation.type}`;}
+        this.labels = labels;
     }
 
     
@@ -569,7 +570,8 @@ class Class5e extends Feature5e{
     _tryCloneOriginal(original){
         super._tryCloneOriginal(original);
         if(original == null){return;}
-        //TODO: Somehow get class description in here. The original doesn't have a system, so we can't get the description from there
+        //Not sure how to get any class descriptions
+        this.system = {description:{value: ""}}; //Overwrite system since we can't load any system from original anyway
         this.source = original.source;
         this.classFeatures = original.classFeatures;
     }
@@ -591,7 +593,11 @@ class Subclass5e extends Feature5e{
         if(original == null){console.error("Failed to find subclass entity", this.uid); return;}
         this.name = original.name;
         DataLoader.pCacheAndGet("subclass", original.source, UrlUtil.URL_TO_HASH_BUILDER.subclass(original)).then((subclassInfo) => {
-            this.system = {description:subclassInfo.subclassFeatures[0].entries};
+            let description = "";
+            for(let e of subclassInfo.subclassFeatures[0][0].entries){
+                if(typeof e == "string"){description += e;}
+            }
+            this.system = {description:{value: description}};
         });
         this.source = original.source;
         //this.classFeatures = original.classFeatures;
@@ -764,6 +770,7 @@ class SubclassFeature5e extends Feature5e{
         else{for(let l of original.loadeds){for(let e of l.entity.entries){entr.push(e);}}}
         
         this.entries = entr;
+        this._prepareLabels();
 
         if(!Entity5e.use_overrides){return this;}
         return this._createProxy();
