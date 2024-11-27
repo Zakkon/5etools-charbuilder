@@ -335,13 +335,7 @@ class SheetApplier {
         
     }
     static isActivePassive(feature){
-        switch(feature.system.activation?.type){
-            case "action":
-            case "bonus":
-            case "reaction":
-                return "active";
-            default: break;
-        }
+        if(feature.system.activation?.type){return "active";}
         return "passive";
     }
     static async addSpellItem(actor, hash, preparationMode, dependencyPath){

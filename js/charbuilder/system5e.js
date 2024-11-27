@@ -408,7 +408,15 @@ class Entity5e {
 
     _prepareLabels(){
         const labels = {};
-        if(this.system?.activation?.type){labels.activation = `${this.system.activation.cost} ${this.system.activation.type}`;}
+        if(this.system?.activation?.type){
+            labels.activation = `${this.system.activation.cost ?? ""}`;
+            labels.activation += (labels.activation.length > 0? " " : "") + `${this.system.activation.type}`;
+        }
+        if(this.system?.uses?.max){
+            //Evaluate
+            let val = Roll.replaceFormulaData(this.system.uses.max.toString(), CharacterBuilder.instance._actor.system.attributes, {});
+            labels.uses = {max: val};
+        }
         this.labels = labels;
     }
 

@@ -18,3 +18,7 @@ Circle of the Land:
 Circle of the Moon:
 - "Combat Wild Shape": not sure how to implement this. needs to overwrite the activation type of the Wild Shape feature somehow
 - "Thousand Forms": changed spell in additionalSpells from "known" to "innate" in class-druid.json since it should be casted at will
+
+Circle of the Shepherd:
+
+Circle of Wildfire:
