@@ -514,7 +514,7 @@ class Feature5e extends Entity5e{
                 item = new Class5e(inputObj.uid, inputObj.collectionId, inputObj.isCustom);
                 break;
             case "subclass":
-                item = new Subclass5e(inputObj.uid, inputObj.collectionId, inputObj.isCustom);
+                item = new Subclass5e();
                 break;
             case "background":
                 item = new Background5e(inputObj.uid, inputObj.collectionId, inputObj.isCustom);
@@ -578,7 +578,7 @@ class Class5e extends Feature5e{
     }
 }
 class Subclass5e extends Feature5e{
-    constructor(itemUid, collectionId=null, isCustom=false){
+    constructor(itemUid, className, classSource, collectionId=null, isCustom=false){
         super(itemUid, collectionId, isCustom);
         this.type = "subclass";
         if(!this.isCustom){this._tryCloneOriginal(CharacterBuilder.getEntityByUid("subclass", {uid: this.uid}));}
@@ -588,10 +588,27 @@ class Subclass5e extends Feature5e{
     }
     _tryCloneOriginal(original){
         super._tryCloneOriginal(original);
-        if(original == null){return;}
+        if(original == null){console.error("Failed to find subclass entity", this.uid); return;}
+        DataLoader.pCacheAndGet("subclass", original.source, UrlUtil.URL_TO_HASH_BUILDER.subclass(original)).then((subclassInfo) => {
+            console.log("SUBCLASS INFO", subclassInfo);
+            this.system = {description:subclassInfo.subclassFeatures[0].entries};
+        });
         console.log("SUBCLASS LOAD FROM ORIGINAL", original);
         this.source = original.source;
         //this.classFeatures = original.classFeatures;
+    }
+    /**
+     * Used by subclass importer
+     * @param {any} docData
+     * @param {any} options
+     * @returns {any}
+     */
+    static create(docData, options){
+        const source = docData.flags.plutonium.source;
+        const hash = UrlUtil.URL_TO_HASH_GENERIC({name:docData.name, source:source}).toLowerCase();
+        //TODO: try making this not custom
+        let ent = new Subclass5e(hash, docData.id, true);
+        return ent;
     }
     static async verifySystemData(className, classSource, subclassName, subclassSource){
         console.assert(className != null, "Class name is null!");
@@ -612,12 +629,8 @@ class Subclass5e extends Feature5e{
             console.error(e);
         }
     }
-    static create(docData, options){
-        const source = docData.flags.plutonium.source;
-        const hash = UrlUtil.URL_TO_HASH_GENERIC({name:docData.name, source:source}).toLowerCase();
-        //TODO: try making this not custom
-        let ent = new Subclass5e(hash, docData.id, true);
-        return ent;
+    getContext(){ //We don't have a system, so no point in providing a context
+        return null;
     }
 }
 class Race5e extends Feature5e{
@@ -878,6 +891,7 @@ class Spell5e extends Entity5e{
         console.log("prepMode", this.system.preparationMode);
         switch(this.system.preparationMode){
             case "innate":
+            case "prepared": //always prepared
             return false;
 
             default: return true;
@@ -887,7 +901,9 @@ class Spell5e extends Entity5e{
         return this.system.equipped? "active" : "";
     }
     get alwaysClass(){
-        return this.system.preparationMode == "innate"? "innate" : "";
+        if(this.system.preparationMode == "innate")return "innate";
+        if(this.system.preparationMode == "prepared")return "alwaysPrepared";
+        return "";
     }
 }
 

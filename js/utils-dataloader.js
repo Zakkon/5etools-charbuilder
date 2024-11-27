@@ -2018,7 +2018,7 @@ class DataLoader {
 	 * @param [isRequired] If an error should be thrown on a missing entity.
 	 * @param [isSilent] If errors should not be thrown on a missing implementation.
 	 * @param [lockToken2] Post-process lock token for recursive calls.
-	 * @returns {{name:string, source:string, page:number}}
+	 * @returns {Promise<{name:string, source:string, page:number}>}
 	 */
 	static async pCacheAndGet (page, source, hash, {isCopy = false, isRequired = false, isSilent = false, lockToken2} = {}) {
 		const fromCache = this.getFromCache(page, source, hash, {isCopy, _isReturnSentinel: true});

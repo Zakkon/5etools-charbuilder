@@ -890,6 +890,16 @@ class CharacterBuilder {
    * @returns {object}
    */
   static getEntityByUid(type, options){
+    if(type == "subclass"){
+      //Subclasses are stored within the .subclasses array of each class, so search there instead
+      const classDatas = CharacterBuilder.instance._data["class"];
+      for(let cls of classDatas){ //Search through each class
+        if(!cls?.subclasses){continue;}
+        const match = this._getEntityByUid(cls.subclasses, options);
+        if(match){return match;}
+      }
+      return null;
+    }
     const datas = CharacterBuilder.instance._data[type];
     return this._getEntityByUid(datas, options);
   }
@@ -1265,15 +1275,17 @@ class CharacterBuilder {
       //Subclass
 
       const hasSubclass = cls.ixSubclass != null;
+      let subclassName = null;
       if(hasSubclass){
         sclsData = CharacterBuilder._getEntityByUid(clsData.subclasses, {uid: cls.subclassUid});
+        subclassName = sclsData.name;
         //Add subclass's additionalSpells, unless there is more than one spell list
         SheetApplier.handleSubclassAdditionalSpells(sclsData, actor, cls.targetLevel);
         
-        //Try to import the subclass itself (TEST)
-        /* let subclassItem = await addFeatureItem("subclass", cls.subclassUid, null,
+        //Try to import the subclass itself
+        let subclassItem = await addFeatureItem("subclass", cls.subclassUid, null,
           {className: clsData.name, classSource: clsData.source,
-            subclassName: sclsData.name, subclassSource: sclsData.source}); */
+            subclassName: sclsData.name, subclassSource: sclsData.source});
       }
 
       //HIT POINTS
@@ -1299,21 +1311,26 @@ class CharacterBuilder {
           //.isRequiredOption is a good teller if they want us to load a subclassFeature from within a loadeds
           if(feature.type == "subclassFeature" && (feature.isRequiredOption === false
             && feature.isRequiredOption !== null) && !SETTINGS.SUBCLASS_IMPORT_LOADEDS){continue;}
-          
-          const featureItem = await addFeatureItem(feature.type, feature.hash, cls.path,
-            {className:clsData.name.toLowerCase(), classSource:clsData.source.toLowerCase(),
-              subclassName:sclsData?.name.toLowerCase(), subclassSource:sclsData?.source.toLowerCase()});
-          addedFeatureHashes.push(feature.hash);
+
+          const isCoreSubclassFeature = feature.type == "subclassFeature" && feature.entity.name == subclassName;
+          if(!isCoreSubclassFeature){
+            //If this is the core subclass feature, we should just avoid importing the feature item to the sheet. But we can still do the rest
+            const sheetItem = await addFeatureItem(feature.type, feature.hash, cls.path,
+              {className:clsData.name.toLowerCase(), classSource:clsData.source.toLowerCase(),
+                subclassName:sclsData?.name.toLowerCase(), subclassSource:sclsData?.source.toLowerCase()});
+            addedFeatureHashes.push(feature.hash);
+          }
 
           //Try to read the feature's entrydata
           if(!!feature.entity?.entryData){handleEntryData(feature.entity.entryData);}
 
           //Try to load a foundrySubclassFeature
           const foundryItem = CharacterBuilder.getFeatureByUid("foundrySubclassFeature",
-            null, {name:featureItem.name, source:featureItem.subclassSource, subclassName:feature.subclassName,
-              className:featureItem.className, classSource:featureItem.classSource});
+            null, {name:sclsData.name, source:sclsData.source, subclassName:sclsData.name,
+              className:clsData.name, classSource:clsData.source});
           //And try to read .entryData from that
           if(!!foundryItem){handleEntryData(foundryItem.entryData);}
+
         }
         pullSkills(fos.data.formDatasExpertise, true);
         pullSkills(fos.data.formDatasSkillProficiencies);

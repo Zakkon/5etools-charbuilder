@@ -9,7 +9,6 @@
                       placeholder="0" min=0 step=1 disabled=classSpellcasting}}
         {{/unless}}
         <select name="system.attributes.spellcasting" data-type="String">
-            {{log system.abilities}}
             {{#select system.attributes.spellcasting}}
             <option value="">None</option>
             {{#each system.abilities as |abl a|}}

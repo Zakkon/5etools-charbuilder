@@ -17,6 +17,8 @@ class ImportTester{
         //const actor = item.parent;
         const actor = null;
 
+		await this.handleReady();
+
 
         if (isUseImporter) {
             //const actorMultiImportHelper = new ActorMultiImportHelper({actor});
@@ -296,9 +298,10 @@ class ImportTester{
 		return out;
 	}
     async handleReady () {
-        /* await Config.pInit();
+        /* await Config.pInit();*/
     
         UtilActors.init();
+		/*
     
         Vetools.init();
         UtilPrereleaseBrewIndices.doPreload();
@@ -310,11 +313,11 @@ class ImportTester{
         SideDataInterfaces.init();
         ImportList.init();
         ImportListBackground.init();*/
-        ImportListClass.init();
+        //ImportListClass.init();
         //ImportListFeat.init(); 
-        ImportListItem.init();
-        ImportListClassSubclassFeature.init();
-        ImportListOptionalfeature.init();
+        //ImportListItem.init();
+        //ImportListClassSubclassFeature.init();
+        //ImportListOptionalfeature.init();
         /*ImportListPsionic.init();
         ImportListRace.init();
         ImportListReward.init();
@@ -365,7 +368,7 @@ class ImportTester{
     
         //Api.init();
     
-        console.log(`Initialization complete!`);
+        //console.log(`Initialization complete!`);
     }
 }
 

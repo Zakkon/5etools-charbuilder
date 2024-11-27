@@ -294,7 +294,7 @@ class SheetApplier {
             return classItem;
           case "subclass":
             await Subclass5e.verifySystemData(data.className, data.classSource, data.subclassName, data.subclassSource);
-            let subclassItem = new Subclass5e(hash, null, false);
+            let subclassItem = new Subclass5e(hash, data.className, data.classSource, null, false);
             //subclassItem.markMancerDependency(new MancerDependencyLink(dependencyPath));
             System5e.tryAddToInventory(actor, subclassItem, "class", {doNotRender:true});
             return subclassItem;
