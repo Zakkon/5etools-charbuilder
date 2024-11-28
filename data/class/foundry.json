@@ -3023,6 +3023,18 @@
 			}
 		},
 		{
+			"name": "Unwavering Mark",
+			"source": "XGE",
+			"className": "Fighter",
+			"classSource": "PHB",
+			"subclassShortName": "Cavalier",
+			"subclassSource": "XGE",
+			"level": 3,
+			"system": {
+				"uses": {"maxFormula": "max(1, @abilities.str.mod)", "per": "lr"}
+			}
+		},
+		{
 			"name": "Bonus Proficiency",
 			"source": "XGE",
 			"className": "Fighter",

@@ -286,6 +286,7 @@ class TestInventoryElement {
             const chatData = {description: //JSON.stringify(item)
                 item.system.description.value
             };
+            console.log(item);
             let template = new LoadTemplate(null, "parts/item-summary", chatData);
             template.createAndCompile((innerHTML)=>{
                 const summary = $$`${innerHTML}`;

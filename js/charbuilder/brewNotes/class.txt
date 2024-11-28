@@ -1,24 +1,45 @@
 CLASS CONVERSION NOTES
 Unmentioned subclass features mean that we didn't see a point writing *new* specific imlpementations for it
+*- means that the feature could use some improvement
+**- means that the feature really needs improvement
+Things checked for:
+- If feature ends up in "active" or "passive" features
+- Feature max usage
+- Feature action cost and type
+- Added spells
 
 DRUID
 ----------------------------
 Circle of Dreams:
-- "Balm of the Summer Court": would like to support this somehow, but not worth it atm
+*- "Balm of the Summer Court": would like to support this somehow, but not worth it atm
 - "Walker in Dreams": Choosing not to add this via additionalSpells, as these spells are very specific in how they are cast, and how often
 Circle of Spores:
 
 Circle of Stars:
-- "Circle of Stars": Guiding Bolt is specified as "prepared", without any reference to the @prof free uses per LR. Might in the future want to add a second Guiding Bolt which is "innate", with @prof uses per LR
+*- "Circle of Stars": Guiding Bolt is specified as "prepared", without any reference to the @prof free uses per LR. Might in the future want to add a second Guiding Bolt which is "innate", with @prof uses per LR
 
 Circle of the Land:
 - "Bonus Cantrip": specified a maxCantripBonus in foundry.json. Sheet adds that into the max cantrip amount.
 - "Circle Spells": specified additonalSpells in foundry.json. class-druid.json's additionalSpells are ignored since there are more than 1 object.
 
 Circle of the Moon:
-- "Combat Wild Shape": not sure how to implement this. needs to overwrite the activation type of the Wild Shape feature somehow
-- "Thousand Forms": changed spell in additionalSpells from "known" to "innate" in class-druid.json since it should be casted at will
+*- "Combat Wild Shape": not sure how to implement this. needs to overwrite the activation type of the Wild Shape feature somehow
+- "Thousand Forms": changed alter self spell in Circle of the Moon's additionalSpells from "known" to "innate" in class-druid.json since it should be casted at will
 
 Circle of the Shepherd:
 
 Circle of Wildfire:
+
+FIGHTER
+----------------------------
+Arcane Archer:
+- "Arcane Archer Lore": specified additonalSpells in foundry.json. class-fighter.json's additionalSpells are ignored since there are more than 1 object.
+*- "Arcane Shot": Might specify this ability activation type as "special", so it appears under active abilities. Might specify it as 2 uses per SR (and let user manually refill it upon rolling initiative).
+
+Battle Master:
+*- "Combat Superiority": Might create a resource for the superiority dice
+TODO: check maneuvers
+
+Cavalier:
+- "Unwavering Mark": max uses should be tied to STR modifier, minimum of 1. added to foundry.json a max() formula that works
+**- "Warding Maneuver": max uses should be tied to CON modifier, minimum of 1

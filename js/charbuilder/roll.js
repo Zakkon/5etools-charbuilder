@@ -61,14 +61,14 @@ class Roll{
      */
     static replaceFormulaData(formula, data, {missing, warn=true}={}) {
         let dataRgx = new RegExp(/@([a-z.0-9_-]+)/gi);
-        return formula.replace(dataRgx, (match, term) => {
+        return this.evaluateMathAndReplace(formula.replace(dataRgx, (match, term) => {
             let value = PropUtils.getProperty(data, term);
             if ( value == null ) {
                 if (warn) console.error("Missing data!", "match:", match, "term:", term, "data:", data);
                 return (missing !== undefined) ? String(missing) : match;
             }
             return String(value).trim();
-        });
+        }));
     }
     /**
      * Convert a bonus value to a simple integer for displaying on the sheet.
@@ -89,4 +89,32 @@ class Roll{
             return 0;
         }
     }
+    static evaluateMathAndReplace(formula){
+
+        console.log(formula);
+        // Define a mapping of supported functions
+        const functions = {
+            min: Math.min,
+            max: Math.max,
+        };
+
+        // Use a regular expression to match keywords followed by parentheses
+        return formula.replace(/(\w+)\(([^)]+)\)/g, (match, funcName, params) => {
+            if (functions[funcName]) {
+                // Split the parameters by commas and convert them to numbers
+                const args = params.split(",").map((param) => parseFloat(param.trim()));
+
+                console.log("args", ...args);
+                // Call the corresponding function with the arguments
+                const result = functions[funcName](...args);
+
+                // Replace the matched part with the result
+                return result;
+            } else {
+                // If the function is not recognized, leave the match unchanged
+                return match;
+            }
+        });
+    }
+
 }

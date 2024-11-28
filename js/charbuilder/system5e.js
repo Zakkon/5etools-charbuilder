@@ -415,11 +415,23 @@ class Entity5e {
         if(this.system?.uses?.max){
             //Evaluate
             let val = Roll.replaceFormulaData(this.system.uses.max.toString(), CharacterBuilder.instance._actor.system.attributes, {});
-            labels.uses = {max: val};
+            labels.uses = {max: val}; //Remember, just a label
         }
         this.labels = labels;
     }
-
+    prepareActorDerivedData(actor, rollData){
+        this.calculateMaxUses(rollData);
+        this._prepareLabels();
+    }
+    calculateMaxUses(rollData){
+        if(!this.system?.uses){return;}
+        if(!!this.system.uses.maxFormula){
+            console.log(rollData);
+            let val = Roll.replaceFormulaData(this.system.uses.maxFormula, rollData, {});
+            this.system.uses.max = val;
+        }
+        this.system.uses.value = this.system.uses.max;
+    }
     
     get hasAttack() {
         return ["mwak", "rwak", "msak", "rsak"].includes(this.system.actionType);
@@ -600,12 +612,13 @@ class Subclass5e extends Feature5e{
         //super._tryCloneOriginal(original);
         if(original == null){console.error("Failed to find subclass entity", this.uid); return;}
         this.name = original.name;
+        if(!this.system){this.system = {};}
         DataLoader.pCacheAndGet("subclass", original.source, UrlUtil.URL_TO_HASH_BUILDER.subclass(original)).then((subclassInfo) => {
             let description = "";
             for(let e of subclassInfo.subclassFeatures[0][0].entries){
                 if(typeof e == "string"){description += e;}
             }
-            this.system = {description:{value: description}};
+            this.system.description = {value: description};
         });
         this.source = original.source;
         //this.classFeatures = original.classFeatures;
@@ -770,6 +783,7 @@ class SubclassFeature5e extends Feature5e{
         if(!original){console.error("Failed to load feature using hash", hash, className, classSource, subclassName, subclassSource);}
         this.name = SETTINGS.SUBCLASS_IMPORT_LOADEDS? original.entity.name : original.name;
         this.system = structuredClone(original.system);
+        if(!this.isCustom){this._tryCloneOriginal(CharacterBuilder.getSubclassFeatureByUid(hash, className, classSource, subclassName, subclassSource));}
         //this.entries = structuredClone(CharacterBuilder.getClassFeatureEntries(original.name, original.source));
         let entr = [];
         if(SETTINGS.SUBCLASS_IMPORT_LOADEDS){
@@ -785,6 +799,13 @@ class SubclassFeature5e extends Feature5e{
     }
     get itemData(){return this;}
     get hash(){return this.uid;}
+    _tryCloneOriginal(original){
+        super._tryCloneOriginal(original);
+        if(original == null){console.error("Failed to find subclass feature", this.uid); return;}
+        this.name = SETTINGS.SUBCLASS_IMPORT_LOADEDS? original.entity.name : original.name;
+        this.source = original.source;
+        //this.classFeatures = original.classFeatures;
+    }
     static async verifySystemData(hash, className, classSource, subclassName, subclassSource){
         console.assert(className != null, "Class name is null!");
         console.assert(classSource != null, "Class source is null!");
@@ -1367,6 +1388,13 @@ class Actor5e {
         this.movement = this._getMovementSpeed(this.system, false);
 
         this.prepareSheetDetails();
+
+        //Go through inventory items and prepare derived data
+        for(let [categoryName, category] of Object.entries(this.features)){
+            for(let item of category.items){
+                item.prepareActorDerivedData(this, rollData);
+            }
+        }
     }
     /**
      * Prepare modifiers and other values for abilities.
