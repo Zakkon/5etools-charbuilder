@@ -1290,6 +1290,10 @@ class CharacterBuilder {
         let subclassItem = await addFeatureItem("subclass", cls.subclassUid, null,
           {className: clsData.name, classSource: clsData.source,
             subclassName: sclsData.name, subclassSource: sclsData.source});
+
+            
+        let slotsAtLvl1 = ActorCharactermancerSheet.getSpellSlotsAtLvl(1, cls.targetLevel, clsData, sclsData);
+        console.log("Spell slots at lvl 1:", slotsAtLvl1);
       }
 
       //HIT POINTS
@@ -1358,6 +1362,7 @@ class CharacterBuilder {
     updatePool["system.attributes.spellcasting"] = spellcastingAbility;
     updatePool["system.details.level"] = totalLevel;
     updatePool["system.attributes.prof"] = System5e.calcProficiencyBonus(totalLevel);
+    
     //#endregion
 
     //This should be done after class, we need the proficiency modifier (based on class level)

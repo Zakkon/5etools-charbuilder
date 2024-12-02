@@ -1078,19 +1078,7 @@ class Actor5e {
         }
 
         this.spellbook = {
-            innate: {
-                label:"Innate Spellcasting",
-                canCreate:true,
-                level: 1,
-                dataset: {
-                    level: 1,
-                    preparationMode: "innate",
-                    type: "spell",
-                },
-                usesSlots:false,
-                uses:"-", slots:"-",
-                spells:[] //spell5e[]
-            },
+            innate:createSpellCategory("Innate Spellcasting", "innate", 1, false),
             0:createSpellCategory("Cantrips", "always", 0, false),
             1:createSpellCategory("1st Level", "prepared", 1),
             2:createSpellCategory("2nd Level", "prepared", 2),

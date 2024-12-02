@@ -2370,34 +2370,29 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
       return spellsByLevel_innate; //{innate:spellsByLevel_innate}
       
     }
-    static getSpellSlotsAtLvl(spellLevel, compClass){
+    static getSpellSlotsAtLvl(spellLevel, classLevel, classData, subclassData){
       
       let total = 0;
-      let classData = ActorCharactermancerSheet.getClassData(compClass);
-      for(let d of classData){
-
-        //Ask class for spellslots
-        if(d.cls?.classTableGroups){
-          //What is the level we have achieved for this class?
-          let classLevel = d.targetLevel; //this is base 1, so value 1 = level 1
-          let foundSpellSlotsTable = false;
-          for(let i = 0; i < d.cls.classTableGroups.length && !foundSpellSlotsTable; ++i){
-            const t = d.cls.classTableGroups[i];
-            if(!t.rowsSpellProgression){continue;}
-            foundSpellSlotsTable = true;
-            total += t.rowsSpellProgression[classLevel-1][spellLevel-1]; //0 is level 1, 1 is level 2, etc (this applies for both)
-          }
+      //Ask class for spellslots
+      if(classData.classTableGroups){
+        //What is the level we have achieved for this class?
+        let foundSpellSlotsTable = false;
+        for(let i = 0; i < classData.classTableGroups.length && !foundSpellSlotsTable; ++i){
+          const t = classData.classTableGroups[i];
+          if(!t.rowsSpellProgression){continue;}
+          foundSpellSlotsTable = true;
+          total += t.rowsSpellProgression[classLevel-1][spellLevel-1]; //0 is level 1, 1 is level 2, etc (this applies for both)
         }
-        //TODO: Ask subclass for spells lots
-        /* if(d.sc?.classTableGroups){
-          let foundSpellSlotsTable = false;
-          for(let i = 0; i < d.cls.classTableGroups.length && !foundSpellSlotsTable; ++i){
-            const t = d.cls.classTableGroups[i];
-            if(!t.rowsSpellProgression){continue;}
-            foundSpellSlotsTable = true;
-            total += t.rowsSpellProgression[level-1]; //0 is level 1, 1 is level 2, etc
-          }
-        } */
+      }
+      //TODO: Ask subclass for spells lots
+      if(subclassData && subclassData.classTableGroups){
+        let foundSpellSlotsTable = false;
+        for(let i = 0; i < subclassData.classTableGroups.length && !foundSpellSlotsTable; ++i){
+          const t = subclassData.classTableGroups[i];
+          if(!t.rowsSpellProgression){continue;}
+          foundSpellSlotsTable = true;
+          total += t.rowsSpellProgression[level-1]; //0 is level 1, 1 is level 2, etc
+        }
       }
       return total;
     }
