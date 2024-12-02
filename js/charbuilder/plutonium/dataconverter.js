@@ -408,7 +408,13 @@ class DataConverter {
 		}
 	};
 
-		static async _pGetItemActorPassive (entry, opts) {
+ /**
+  * @param {EntityObj} entry
+  * @param {object} opts
+  * @param {string} opts.mode
+  * @param {Actor5e} opts.actor
+  */
+	static async _pGetItemActorPassive (entry, opts) {
 		opts = opts || {};
 
 		if (opts.additionalSystem && opts.pFnGetAdditionalSystem) throw new Error(`Arguments "additionalSystem" and "pFnGetAdditionalSystem" are mutually exclusive!`);
@@ -417,7 +423,7 @@ class DataConverter {
 
 		opts.modeOptions = opts.modeOptions || {};
 
-				if (opts.mode === "object") opts.mode = "creature";
+		if (opts.mode === "object") opts.mode = "creature";
 
 		const state = new this._PassiveEntryParseState(
 			{
@@ -441,7 +447,7 @@ class DataConverter {
 		this._pGetItemActorPassive_mutProperties({entry, opts, state});
 		this._pGetItemActorPassive_mutEffects({entry, opts, state});
 
-				try { state.activationCondition = Renderer.stripTags(state.activationCondition); } catch (e) { console.error(...LGT, e); }
+		try { state.activationCondition = Renderer.stripTags(state.activationCondition); } catch (e) { console.error(...LGT, e); }
 
 		state.name = state.name.trim().replace(/\s+/g, " ");
 		if (!state.name) state.name = "(Unnamed)"; 
@@ -887,6 +893,13 @@ class DataConverter {
 		else state.saveScaling = "flat";
 			}
 
+ /**
+  * @param {object} options
+  * @param {EntityObj} options.entry
+  * @param {object} options.opts
+  * @param {string[]} options.strEntries
+  * @param {object} options.state
+  */
 	static _pGetItemActorPassive_mutUses ({entry, opts, strEntries, state}) {
 		this._pGetItemActorPassive_mutUses_creature({entry, opts, strEntries, state});
 		this._pGetItemActorPassive_mutUses_player({entry, opts, strEntries, state});
@@ -964,13 +977,25 @@ class DataConverter {
 			if (state.activationCondition === undefined) state.activationCondition = entry.entries[0].trim();
 		}
 	}
-
+/**
+  * @param {object} options
+  * @param {EntityObj} options.entry
+  * @param {object} options.opts
+  * @param {string} options.opts.mode
+  * @param {Actor5e} options.opts.actor
+  * @param {string[]} options.strEntries
+  * @param {object} options.state
+  * @param {string} options.state.consumeType
+  * @param {string} options.state.usesValue
+  * @param {string} options.state.usesMax
+  * @param {string} options.state.usesPer
+  */
 	static _pGetItemActorPassive_mutUses_player ({entry, opts, strEntries, state}) {
 		if (opts.mode !== "player" || !entry.entries) return;
 
-				if (state.consumeType === "charges") return;
+		if (state.consumeType === "charges") return;
 
-				const isShortRest = /\b(?:finish|complete) a short rest\b/.test(strEntries) || /\b(?:finish|complete) a short or long rest\b/.test(strEntries) || /\b(?:finish|complete) a short rest or a long rest\b/.test(strEntries) || /\b(?:finish|complete) a short or long rest\b/.test(strEntries);
+		const isShortRest = /\b(?:finish|complete) a short rest\b/.test(strEntries) || /\b(?:finish|complete) a short or long rest\b/.test(strEntries) || /\b(?:finish|complete) a short rest or a long rest\b/.test(strEntries) || /\b(?:finish|complete) a short or long rest\b/.test(strEntries);
 		const isLongRest = !isShortRest && /\b(?:finish|complete) a long rest\b/.test(strEntries);
 
 		if (state.usesPer === undefined) {
@@ -978,7 +1003,7 @@ class DataConverter {
 			else if (isLongRest) state.usesPer = "lr";
 		}
 		
-				const mAbilModifier = new RegExp(`a number of times equal to(?: (${Consts.TERMS_COUNT.map(it => it.tokens.join("")).join("|")}))? your (Strength|Dexterity|Constitution|Intelligence|Wisdom|Charisma) modifier(?: \\(minimum of (${Consts.TERMS_COUNT.map(it => it.tokens.join("")).join("|")})\\))?`, "i").exec(strEntries);
+		const mAbilModifier = new RegExp(`a number of times equal to(?: (${Consts.TERMS_COUNT.map(it => it.tokens.join("")).join("|")}))? your (Strength|Dexterity|Constitution|Intelligence|Wisdom|Charisma) modifier(?: \\(minimum of (${Consts.TERMS_COUNT.map(it => it.tokens.join("")).join("|")})\\))?`, "i").exec(strEntries);
 		if (mAbilModifier && opts.actor) {
 			const abv = mAbilModifier[2].slice(0, 3).toLowerCase();
 			const abilScore = MiscUtil.get(opts.actor, "system", "abilities", abv, "value");
@@ -1017,11 +1042,11 @@ class DataConverter {
 			if (state.usesMax === undefined) state.usesMax = mult;
 		});
 
-				if (state.usesPer && !state.usesValue && (!state.usesMax || state.usesMax === "0")) {
+		if (state.usesPer && !state.usesValue && (!state.usesMax || state.usesMax === "0")) {
 			if (state.usesValue === undefined) state.usesValue = 1;
 			if (state.usesMax === undefined) state.usesMax = `${state.usesValue}`;
 		}
-			}
+	}
 
 	static _pGetItemActorPassive_mutDuration ({entry, opts, state}) {
 		this._pGetItemActorPassive_mutDuration_creature({entry, opts, state});
@@ -3525,6 +3550,12 @@ class DataConverterClassSubclassFeature extends DataConverterFeature {
 		return isIgnoredLookup;
 	}
 
+ /**
+  * Gets document json for a feature.
+  * @param {Feature5e} feature
+  * @param {object} opts
+  * @param {Actor5e} opts.actor
+  */
 	static async pGetDocumentJson (feature, opts) {
 		opts = opts || {};
 		if (opts.actor) opts.isActorItem = true;
@@ -3644,14 +3675,19 @@ class DataConverterClassSubclassFeature extends DataConverterFeature {
 		);
 	}
 
+ /**
+  * Create a subclass feature item
+  * @param {SublassFeatureObj} feature
+  * @param {{actor:Actor5e}} opts
+  */
 	static async _pGetClassSubclassFeatureItem (feature, opts) {
 		opts = opts || {};
-
 		let {type = null, actor} = opts;
-		type = type || UtilEntityClassSubclassFeature.getEntityType(feature);
+		type = type || UtilEntityClassSubclassFeature.getEntityType(feature); //string
 
 		const subclassNameLookup = await DataUtil.class.pGetSubclassLookup();
 
+		//Tries to pull the item from an existing srd compendium
 		const srdData = await CompendiumCache.pGetAdditionalDataDoc(
 			type,
 			feature,
@@ -3661,8 +3697,9 @@ class DataConverterClassSubclassFeature extends DataConverterFeature {
 				taskRunner: opts.taskRunner,
 			},
 		);
-
+		//If we pulled it from an srd compendium, we need to parse it slightly different, by attaching the srd data
 		if (srdData) return this._pGetClassSubclassFeatureItem_fromSrd(feature, type, actor, srdData, opts);
+		//Otherwise we just parse it another way
 		return this._pGetClassSubclassFeatureItem_other(feature, type, actor, opts);
 	}
 
@@ -3740,6 +3777,13 @@ class DataConverterClassSubclassFeature extends DataConverterFeature {
 		return out;
 	}
 
+ /**
+  * Parse a subclass feature object that isn't from an srd compendium.
+  * @param {SublassFeatureObj} feature
+  * @param {string} type
+  * @param {Actor5e} actor
+  * @param {{actor:Actor5e, actorMultiImportHelper:any}} opts
+  */
 	static async _pGetClassSubclassFeatureItem_other (feature, type, actor, opts) {
 		const idObj = UtilFoundryId.getIdObj({id: feature._foundryId});
 
@@ -3759,6 +3803,7 @@ class DataConverterClassSubclassFeature extends DataConverterFeature {
 		effectsSideTuples.push(...this._getUnarmoredDefenseEffectSideTuples({actor, feature, img}));
 		effectsSideTuples.forEach(({effect, effectRaw}) => UtilActiveEffects.mutEffectDisabledTransfer(effect, "importClassSubclassFeature", UtilActiveEffects.getDisabledTransferHintsSideData(effectRaw)));
 
+		//Call base dataconverter to parse this for us
 		return this._pGetItemActorPassive(
 			feature,
 			{

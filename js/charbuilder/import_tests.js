@@ -22,7 +22,7 @@ class ImportTester{
 
         if (isUseImporter) {
             //const actorMultiImportHelper = new ActorMultiImportHelper({actor});
-			//First, we have to create an ImportListItem, which sadly does contain some UI elements, but whatever
+			//First, we have to create an ImportList, which uses a DataConverter object specialized in parsing plaintext
 			//If actor exists, the item will be imported unto the actor. If none exists, it will go to a generic directory
             let imp = null;
 			if(type == "classFeature"){imp = new ImportListClassSubclassFeature({actor}); }
@@ -536,7 +536,15 @@ class CompendiumCacheBackendBase {
 	}
 
 	
-		async pCacheAndGet (
+  /**
+   * Will return null if entity or the compendiums array is null
+   * @param {object} options
+   * @param {EntityObj} options.entity
+   * @param {any[]} options.compendiums
+   * @param {any} options.keyProvider=null
+   * @param {any} options.taskRunner=null
+   */
+	async pCacheAndGet (
 		{
 			entity,
 			compendiums,
@@ -567,7 +575,7 @@ class CompendiumCacheBackendBase {
 		}
 	}
 
-		async _pCacheAndGet (
+	async _pCacheAndGet (
 		{
 			compendiums,
 			keyProvider,
@@ -672,9 +680,20 @@ class CompendiumCache {
 	//static _CACHE_ACTOR_ITEM_IMAGES = new CompendiumCacheBackendEmbeddedImage({name: "actorItemImages"});
 
 	
-		static async pGetAdditionalDataDoc (entityType, entity, {isSrdOnly = false, keyProvider, taskRunner} = {}) {
+ /**
+  * Attempts to get the data doc from an existing srd compendium. Can return null.
+  * Will return null if entity.srd is falsy and isSrdOnly is set to true.
+  * @param {string} entityType
+  * @param {EntityObj} entity
+  * @param {object} options
+  * @param {boolean} options.isSrdOnly defaults to false
+  * @param {any} options.keyProvider
+  * @param {any} options.taskRunner
+  */
+	static async pGetAdditionalDataDoc (entityType, entity, {isSrdOnly = false, keyProvider, taskRunner} = {}) {
 		if (!entity.srd && isSrdOnly) return null;
 
+		//Try to see if this entity exists in an srd compendium
 		const docMeta = await this._CACHE_DATA.pCacheAndGet({
 			entity,
 			compendiums: CompendiumCacheUtil.getAdditionalDataCompendiums({entityType}),
@@ -686,7 +705,7 @@ class CompendiumCache {
 		return docMeta.docData;
 	}
 
-		static async gGetReplacementDataDocMeta (entityType, entity, {keyProvider, taskRunner} = {}) {
+	static async gGetReplacementDataDocMeta (entityType, entity, {keyProvider, taskRunner} = {}) {
 		const docMeta = await this._CACHE_DATA.pCacheAndGet({
 			entity,
 			compendiums: CompendiumCacheUtil.getReplacementDataCompendiums({entityType}),
@@ -1179,11 +1198,12 @@ class UtilVersions {
 }
 class ImportEntryManager {
  /**
-  * @param {any} {instance
-  * @param {any} ent an entity in 5eTools schema
-  * @param {any} importOpts
-  * @param {any} dataOpts}
-  * @returns {any}
+  * @param {object} options
+  * @param {ImportList} options.instance
+  * @param {EntityObj} options.ent an entity in 5eTools schema
+  * @param {any} options.importOpts
+  * @param {any} options.dataOpts
+  * @returns {ImportEntryManager}
   */
 	constructor ({instance, ent, importOpts, dataOpts}) {
 		this._instance = instance;

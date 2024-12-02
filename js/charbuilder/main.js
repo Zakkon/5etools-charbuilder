@@ -1079,7 +1079,7 @@ class CharacterBuilder {
     let backgroundData = await this.compBackground.getChoiceData();
     let abilityData = await this.compAbility.getChoiceData();
     let featData = await this.compFeat.getChoiceData();
-    let spellData = await this.compSpell.getChoiceData();
+    let spellData = await this.compSpell? this.compAbility.getChoiceData() : {};
     let targetData = {};
     targetData = Object.assign(targetData, classData, raceData, backgroundData, abilityData, featData, spellData);
     return targetData;
@@ -1258,7 +1258,7 @@ class CharacterBuilder {
     //#endregion
 
     //#region Spells
-    SheetApplier.handleKnownSpells(choiceData.spells, actor);
+    if(choiceData?.spells){SheetApplier.handleKnownSpells(choiceData?.spells, actor);}
     //#endregion
 
     //#region Parse Classes
@@ -1292,8 +1292,8 @@ class CharacterBuilder {
             subclassName: sclsData.name, subclassSource: sclsData.source});
 
             
-        let slotsAtLvl1 = ActorCharactermancerSheet.getSpellSlotsAtLvl(1, cls.targetLevel, clsData, sclsData);
-        console.log("Spell slots at lvl 1:", slotsAtLvl1);
+        //let slotsAtLvl1 = ActorCharactermancerSheet.getSpellSlotsAtLvl(1, cls.targetLevel, clsData, sclsData);
+        //console.log("Spell slots at lvl 1:", slotsAtLvl1);
       }
 
       //HIT POINTS

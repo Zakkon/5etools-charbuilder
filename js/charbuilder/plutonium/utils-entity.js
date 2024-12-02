@@ -40,6 +40,10 @@ class UtilEntityClassSubclassFeature extends UtilEntityBase {
 		}
 	}
 
+ /**
+  * @param {FeatureObj} feature
+  * @returns {string}
+  */
 	static getEntityType (feature) {
 		if (feature.subclassShortName) return "subclassFeature";
 		if (feature.className) return "classFeature";

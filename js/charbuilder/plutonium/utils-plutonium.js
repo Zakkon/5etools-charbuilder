@@ -5456,13 +5456,25 @@ class UtilDataConverter {
 		return (actor?.items?.contents || [])
 			.find(it => it.type === "feat" && lookupNames.includes(it.name.toLowerCase().trim()));
 	}
-
-	static _ConsumeMeta = class {
+/**
+ * @typedef {object} _ConsumeMeta
+ * @property {boolean} isConsumes
+ * @property {boolean} isFound
+ * @property {{type:string, amount:number, target:string}} consume
+ */
+static _ConsumeMeta = class {
 		isConsumes = false;
 		isFound = false;
 		consume = {};
 
-		constructor (
+  /**
+   * @param {object} options
+   * @param {boolean} options.isConsumes=false
+   * @param {boolean} options.isFound=false
+   * @param {{type:string, amount:number, target:string}} options.consume={}
+   * @returns {_ConsumeMeta}
+   */
+	constructor (
 			{
 				isConsumes = false,
 				isFound = false,
@@ -5475,6 +5487,11 @@ class UtilDataConverter {
 		}
 	};
 
+ /**
+  * @param {EntityObj} ent
+  * @param {Actor5e} actor
+  * @returns {_ConsumeMeta}
+  */
 	static getConsumeMeta ({ent, actor}) {
 		if (!ent?.consumes) return new this._ConsumeMeta();
 
@@ -5492,7 +5509,7 @@ class UtilDataConverter {
 			consume: {
 				type: "charges",
 				amount: ent.consumes.amount ?? 1,
-				target: sheetItem.id,
+				target: sheetItem.id, //string, pretty sure
 			},
 		});
 	}

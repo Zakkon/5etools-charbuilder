@@ -141,6 +141,31 @@ function MixinFolderPathBuilder (Cls) {
 class EmptyClass{
     
 }
+
+/**
+ * @typedef {Object} EntityObj
+ * @property {string} name
+ * @property {string} source
+ * @property {number} page
+ * @property {string[]} entries
+ * @property {boolean} srd
+ * @property {boolean} basicRules
+ * @property {string} __prop
+ */
+
+/**
+ * @typedef {EntityObj} ClassFeatureObj
+ * @property {string} className
+ * @property {string} classSource
+ * @property {number} level
+ */
+
+/**
+ * @typedef {ClassFeatureObj} SublassFeatureObj
+ * @property {string} subclassShortName
+ */
+
+
 //#region DataPrimer
 class DataPrimerBase {
 	static async pGetPrimed ({json, propsCopied}) { return json; }
@@ -1103,7 +1128,6 @@ async _pHandleClickRunButton_pIsLargeImportCancel_pack ({listItems}) {
   return isContinue == null || isContinue === false;
 }
 
-
 async _pImportListItems (
   {
     listItems,
@@ -1297,7 +1321,7 @@ _handleFilterChange () {
 
   /**
    * Create a wrapper for our own _pImportEntry
-   * @param {any} ent An entity in 5etools schema
+   * @param {EntityObj} ent An entity in 5etools schema
    * @param {ImportOpts} importOpts
    * @param {any} dataOpts={}
    * @returns {Promise<ImportSummary>}
@@ -1313,7 +1337,8 @@ _handleFilterChange () {
 
 
   /**
-   * @param {any} ent An entity in 5etools schema
+   * Main function for importing a base entity.
+   * @param {EntityObj} ent An entity in 5etools schema
    * @param {ImportOpts} importOpts
    * @param {any} dataOpts
    * @returns {Promise<ImportSummary>}
@@ -1340,6 +1365,7 @@ _handleFilterChange () {
         status: ConstsTaskRunner.TASK_EXIT_COMPLETE_DATA_ONLY,
         imported: [
           new ImportedDocument({
+            //Call the class that inherits us, and use their _DataConverter to get document json
             document: await this.constructor._DataConverter.pGetDocumentJson(
               ent,
               {
@@ -3681,7 +3707,7 @@ async _pEnsureFilterBoxInit () {
 }
 
   /**
-   * @param {any} cls a subclass in 5eTools schema
+   * @param {Class5e} cls a subclass in 5eTools schema
    * @param {any} importOpts
    * @param {any} dataOpts
    * @returns {any}
@@ -6133,8 +6159,8 @@ class ImportListFeature extends ImportListCharacter {
   }
 
   /**
-   * Description
-   * @param {any} feature
+   * Main import function for parsing features.
+   * @param {Feature5e} feature
    * @param {{isLeaf:boolean, featureEntriesPageFilter:any, isPreLoadedFeature:boolean, featureEntriesPageFilterValues:any}} importOpts
    * @param {any} dataOpts
    * @returns {any}
@@ -6447,7 +6473,7 @@ class ImportListFeature extends ImportListCharacter {
   }
 
   /**
-   * @param {any} feature a feature in 5eTools schema
+   * @param {Feature5e} feature a feature in 5eTools schema
    * @param {{system:any}} actUpdate
    * @param {any} importOpts
    * @param {any} dataBuilderOpts
@@ -6571,7 +6597,7 @@ class ImportListClassSubclassFeature extends ImportListFeature {
   _isPreviewable = true;
   _configGroup = "importClassSubclassFeature";
   //_fnListSort = PageFilterClassFeatures.sortClassFeatures;
-  static _DataConverter = DataConverterClassSubclassFeature;
+  static _DataConverter = DataConverterClassSubclassFeature; //This marks the specialized code to convert plaintext that we will use
   static _DataPipelinesList = DataPipelinesListClassSubclassFeature;
 
   constructor (...args) {
