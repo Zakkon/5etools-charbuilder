@@ -77,7 +77,7 @@
                     <h4 class="item-action" data-action="expand">{{item.name}}</h4>
                     {{#if item.hasLimitedUses}}
                     <div class="item-detail spell-uses">
-                    Uses {{#if item.system.uses.value}}{{item.system.uses.value}}{{else}}0{{/if}} / {{item.system.uses.max}}
+                    {{#if item.system.uses.value}}{{item.system.uses.value}}{{else}}0{{/if}} / {{item.system.uses.max}}
                     </div>
                     {{/if}}
                     <div class="spell-comps">

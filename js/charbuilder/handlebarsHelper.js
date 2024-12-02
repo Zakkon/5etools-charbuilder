@@ -142,7 +142,6 @@ class HandlebarsHelper{
 
         fetch("dnd5e.item-activation", "parts/edit/item-activation");
         fetch("dnd5e.item-action", "parts/edit/item-action");
-        fetch("dnd5e.spellbook-item", "parts/spellbook-item");
         fetch("dnd5e.ability-scores", "parts/ability-scores");
         fetch("dnd5e.item-description", "parts/item-description");
         fetch("dnd5e.item-source", "parts/item-source");

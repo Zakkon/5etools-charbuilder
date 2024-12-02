@@ -1325,12 +1325,13 @@ class CharacterBuilder {
           if(!!feature.entity?.entryData){handleEntryData(feature.entity.entryData);}
 
           //Try to load a foundrySubclassFeature
-          const foundryItem = CharacterBuilder.getFeatureByUid("foundrySubclassFeature",
-            null, {name:sclsData.name, source:sclsData.source, subclassName:sclsData.name,
-              className:clsData.name, classSource:clsData.source});
-          //And try to read .entryData from that
-          if(!!foundryItem){handleEntryData(foundryItem.entryData);}
-
+          if(feature.type == "subclassFeature"){
+            const foundryItem = CharacterBuilder.getFeatureByUid("foundrySubclassFeature",
+              null, {name:sclsData.name, source:sclsData.source, subclassName:sclsData.name,
+                className:clsData.name, classSource:clsData.source});
+            //And try to read .entryData from that
+            if(!!foundryItem){handleEntryData(foundryItem.entryData);}
+          }
         }
         pullSkills(fos.data.formDatasExpertise, true);
         pullSkills(fos.data.formDatasSkillProficiencies);

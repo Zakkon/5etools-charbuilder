@@ -338,7 +338,7 @@ class SheetApplier {
         if(feature.system.activation?.type){return "active";}
         return "passive";
     }
-    static async addSpellItem(actor, hash, preparationMode, dependencyPath){
+    static async addSpellItem(actor, hash, preparationMode, usagePeriod, maxUses, dependencyPath){
         hash = hash.replace("|", "_");
         const hashIncludesSource = hash.includes("_");
         const hashIncludesSuffix = hash.includes("#");
@@ -360,6 +360,14 @@ class SheetApplier {
         //If spell is a cantrip, assume that anyone claiming it should be "known" mean it to be "prepared" (which means always prepared)
         if(spellItem.system.level == 0 && preparationMode == "known"){preparationMode = "prepared";}
         spellItem.system.preparationMode = preparationMode;
+        if(maxUses != null){
+          spellItem.system.uses.max = maxUses;
+        }
+        if(usagePeriod != null){
+          spellItem.system.uses.per = usagePeriod;
+        }
+        //TODO: include usagePeriod, maxUses
+        console.log("Added spell", spellItem);
         System5e.tryAddToInventory(actor, spellItem, "spell", {doNotRender:true});
         return spellItem;
     }
@@ -468,22 +476,70 @@ class SheetApplier {
         //We won't try to handle that choice here. It is better to handle that in a "foundrySubclassFeature" object in the class json instead, where we can be more specific
         if(subclass.additionalSpells.length > 1){ return; }
 
+        const addSpell = async(hash, args) => {
+
+          if(args.levelGained > targetLevel){return;}
+
+          //a spell that ends in #c is a cantrip
+          //you can also do #3 for a spell that is always cast at third level which happens on some races
+          if(typeof hash == "object"){
+            //This probably contains the "all" property
+            console.error("Cannot handle ", hash); return;
+          }
+          else{
+            let parts;
+            try{parts = hash.split("#");}
+            catch(e){console.error(e); console.log(hash);}
+            if(parts.length > 1){hash = parts[0];}
+            console.warn("TODO: make sure that this spell is upgraded to a higher level, unless it is a cantrip");
+          }
+
+          //Figure out what to do with the hashes
+          //TODO: include usagePeriod, maxUses
+          
+          await this.addSpellItem(actor, hash, args.knownType, args.usagePeriod, args.maxUses);
+        }
+        const parseHashes = async(spellHashes, args, level=0) => {
+          if(!Array.isArray(spellHashes)){
+            if(typeof spellHashes == "object"){
+              for(let [key, value] of Object.entries(spellHashes)){
+                let newArgs = {};
+                newArgs = Object.assign(newArgs, args);
+                if(level == 0){
+                  //Parse knowntype
+                  newArgs.knownType = key;
+                }
+                else if(level == 1){
+                  //Parse level learned
+                  newArgs.levelGained = key;
+                }
+                else if(level == 2){
+                  //parse usage per "daily/monthly,etc"
+                  newArgs.usagePeriod = key;
+                }
+                else if(level == 3){
+                  //Parse max usage
+                  newArgs.maxUses = key;
+                }
+                else{
+                  throw new Error("AdditionalSpells configuration too complicated");
+                }
+                
+                parseHashes(value, newArgs, level+1); 
+              }
+            }
+            else{
+              throw new Error("Expected spellhashes to be type object");
+            }
+          }
+          else{
+            for(let hash of spellHashes){addSpell(hash, args);}
+          }
+        }
+
         for(let i = 0; i < subclass.additionalSpells.length; ++i){
             const choiceColumn = subclass.additionalSpells[i];
-            for(let [knownType, value] of Object.entries(choiceColumn)){
-                for(let [gainedAtLvl, spellHashes] of Object.entries(value)){
-                    if(targetLevel < gainedAtLvl){continue;} //Must be high enough level
-                    let preparationMode = knownType;
-                    for(let hash of spellHashes){
-                        //a spell that ends in #c is a cantrip
-                        //you can also do #3 for a spell that is always cast at third level which happens on some races
-                        let parts = hash.split("#");
-                        if(parts.length > 1){hash = parts[0];}
-                        console.warn("TODO: make sure that this spell is upgraded to a higher level, unless it is a cantrip");
-                        await this.addSpellItem(actor, hash, preparationMode);
-                    }
-                }
-            }
+            await parseHashes(choiceColumn, {}, 0);
         }
 
         

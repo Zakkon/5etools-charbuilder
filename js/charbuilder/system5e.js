@@ -442,6 +442,9 @@ class Entity5e {
     get isHealing() {
         return (this.system.actionType === "heal") && this.hasDamage;
     }
+    get hasLimitedUses(){
+        return (this.system.uses.max != null);
+    }
     
     getContext(){
         return {};
@@ -888,7 +891,7 @@ class Spell5e extends Entity5e{
     static recast(inputObj){
         let spell5e = new Spell5e(inputObj.uid, inputObj.collectionId, inputObj.isCustom);
         inputObj && Object.assign(spell5e, inputObj);
-        spell5e._prepareLabels();
+        //spell5e._prepareLabels();
         return spell5e;
     }
     static async verifySystemData(hash){
