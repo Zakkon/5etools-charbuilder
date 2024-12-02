@@ -11521,7 +11521,48 @@ class ActorCharactermancerSpell extends ActorCharactermancerBaseComponent {
         }
         return matches[0];
     }
-    
+    async getChoiceData(){
+        
+        console.log("SPELL COMP", this);
+        const actor = CharacterBuilder.instance._actor;
+        let updatePool = {};
+        const state = this.__state;
+        let out = {};
+
+        let spells = [];
+        //Get the comps
+        const filterValues = this.filterValuesSpellsCache || this.filterBoxSpells.getValues();
+        for(let compSpell of this._compsSpellSpells){
+
+
+            
+            const form = await compSpell.pGetFormData(filterValues);
+            console.log("FORM", form);
+            for(let sp of form.data.spells){
+                spells.push(sp);
+            }
+        }
+        out.spells = spells;
+
+        /* out.featFromAsi = [];
+        out.featsFromBackground = [];
+        out.featsFromRace = [];
+        out.featsFromCustom = [];
+        //Get the ASI component
+        const compAsi = CharacterBuilder.instance.compAbility._compStatgen;
+        for(let i = 0; i < 999; ++i){
+            const path = `common_asi_custom_${i}_`;
+            const ixFeat = compAsi.__state[`${path}ixFeat`];
+            if(ixFeat == null){break;} //end loop
+            //Get feat
+            const feat = compAsi._feats[ixFeat];
+            //Get feat chosen ability
+            const ixFeatAbility = compAsi.__state[`${path}ixFeatAbility`];
+            out.featsFromCustom.push({hash:feat._hash, ixFeatAbility});
+        }
+        if(Object.entries(updatePool).length > 0){actor.update(updatePool);} */
+        return out;
+    }
 }
 class Charactermancer_Spell_Util {
     /**
@@ -13336,6 +13377,8 @@ class Charactermancer_Spell extends BaseComponent {
         }
         return matches[0];
     }
+
+    
 }
 Charactermancer_Spell._IMPORT_LIST_SPELL = null;
 Charactermancer_Spell._CLASS_MAP = {

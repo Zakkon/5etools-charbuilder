@@ -1079,8 +1079,9 @@ class CharacterBuilder {
     let backgroundData = await this.compBackground.getChoiceData();
     let abilityData = await this.compAbility.getChoiceData();
     let featData = await this.compFeat.getChoiceData();
+    let spellData = await this.compSpell.getChoiceData();
     let targetData = {};
-    targetData = Object.assign(targetData, classData, raceData, backgroundData, abilityData, featData);
+    targetData = Object.assign(targetData, classData, raceData, backgroundData, abilityData, featData, spellData);
     return targetData;
   }
   //#region Parse Mancher Choice Data
@@ -1091,7 +1092,6 @@ class CharacterBuilder {
    * @returns {any}
    */
   static async parseMancerChoiceData(actor, choiceData){
-
     console.log("ChoiceData", choiceData);
     //System5e.applyClassChoiceData(actor, choiceData);
     const addFeatureItem = async(type, hash, dependencyPath, data={}) => {
@@ -1255,6 +1255,10 @@ class CharacterBuilder {
     for(let f of choiceData.featsFromCustom){
       await SheetApplier.addFeatureItem(actor, "feat", f.hash, null, f);
     }
+    //#endregion
+
+    //#region Spells
+    SheetApplier.handleKnownSpells(choiceData.spells, actor);
     //#endregion
 
     //#region Parse Classes

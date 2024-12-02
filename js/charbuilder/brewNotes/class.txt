@@ -42,4 +42,4 @@ TODO: check maneuvers
 
 Cavalier:
 - "Unwavering Mark": max uses should be tied to STR modifier, minimum of 1. added to foundry.json a max() formula that works
-**- "Warding Maneuver": max uses should be tied to CON modifier, minimum of 1
+- "Warding Maneuver": max uses should be tied to CON modifier, minimum of 1. added to foundry.json a max() formula that works
