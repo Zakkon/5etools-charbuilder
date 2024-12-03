@@ -61,14 +61,14 @@ class Roll{
      */
     static replaceFormulaData(formula, data, {missing, warn=true}={}) {
         let dataRgx = new RegExp(/@([a-z.0-9_-]+)/gi);
-        return this.evaluateMathAndReplace(formula.replace(dataRgx, (match, term) => {
+        return formula.replace(dataRgx, (match, term) => {
             let value = PropUtils.getProperty(data, term);
             if ( value == null ) {
                 if (warn) console.error("Missing data!", "match:", match, "term:", term, "data:", data);
                 return (missing !== undefined) ? String(missing) : match;
             }
             return String(value).trim();
-        }));
+        });
     }
     /**
      * Convert a bonus value to a simple integer for displaying on the sheet.
@@ -89,32 +89,37 @@ class Roll{
             return 0;
         }
     }
-    static evaluateMathAndReplace(formula){
-
-        console.log(formula);
-        // Define a mapping of supported functions
+    /**
+     * Evaluates a mathematical expression string with support for specific functions.
+     *
+     * @param {string} expression - The mathematical expression to evaluate.
+     * @returns {number} The result of the evaluated expression.
+     * @throws {Error} If the expression contains unsupported functions or invalid syntax.
+     */
+    static evaluateExpression(expression) {
+        // Define supported math functions
         const functions = {
-            min: Math.min,
             max: Math.max,
+            min: Math.min,
+            floor: Math.floor,
+            ceil: Math.ceil,
+            abs: Math.abs,
+            round: Math.round,
         };
 
-        // Use a regular expression to match keywords followed by parentheses
-        return formula.replace(/(\w+)\(([^)]+)\)/g, (match, funcName, params) => {
-            if (functions[funcName]) {
-                // Split the parameters by commas and convert them to numbers
-                const args = params.split(",").map((param) => parseFloat(param.trim()));
+        // Create a safe execution environment
+        const safeEval = new Function(
+            ...Object.keys(functions), // Pass function names as arguments
+            `return (${expression});` // Evaluate the expression safely
+        );
 
-                console.log("args", ...args);
-                // Call the corresponding function with the arguments
-                const result = functions[funcName](...args);
-
-                // Replace the matched part with the result
-                return result;
-            } else {
-                // If the function is not recognized, leave the match unchanged
-                return match;
-            }
-        });
+        try {
+            // Call the safe evaluator with the provided functions
+            return safeEval(...Object.values(functions));
+        } catch (err) {
+            throw new Error(`Error evaluating expression: ${err.message}`);
+        }
     }
+
 
 }

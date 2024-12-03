@@ -415,6 +415,7 @@ class Entity5e {
         if(this.system?.uses?.max){
             //Evaluate
             let val = Roll.replaceFormulaData(this.system.uses.max.toString(), CharacterBuilder.instance._actor.system, {});
+            val = Roll.evaluateExpression(val);
             console.log("Max uses:", val);
             labels.uses = {max: val}; //Remember, just a label
         }
@@ -426,12 +427,10 @@ class Entity5e {
     }
     calculateMaxUses(rollData){
         if(!this.system?.uses){return;}
-        if(!!this.system.uses.maxFormula){
-            console.log(rollData);
-            let val = Roll.replaceFormulaData(this.system.uses.maxFormula, rollData, {});
-            this.system.uses.max = val;
-        }
-        this.system.uses.value = this.system.uses.max;
+        if(!this.system?.uses.max){return;}
+        let val = Roll.replaceFormulaData(this.system.uses.max.toString(), rollData, {});
+        val = Roll.evaluateExpression(val);
+        this.system.uses.value = val;
     }
     
     get hasAttack() {
