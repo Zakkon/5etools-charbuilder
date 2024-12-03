@@ -1,6 +1,6 @@
 class ImportTester{
 
-    async runTest(item, type, additionalData){
+    async runTest(item, type, actor, additionalData){
         let flags = null;
 		if(type == "classFeature"){flags = this._getClassSubclassFeatureFlags(item);}
 		else if(type == "subclass"){flags = this._getClassSubclassFlags(item, additionalData.cls);}
@@ -15,7 +15,7 @@ class ImportTester{
         const isUseImporter = true;
         const pFnImport = null;
         //const actor = item.parent;
-        const actor = null;
+        //const actor = null;
 
 		await this.handleReady();
 
@@ -371,7 +371,84 @@ class ImportTester{
         //console.log(`Initialization complete!`);
     }
 }
+class ImportOpts {
+	constructor (
+	{
+		isTemp = false,
+		folderId,
+		taskRunner,
+		actorMultiImportHelper,
+		filterValues,
+		isDataOnly = false,
+		isCharactermancer = false,
+		isImportToTempDirectory = false,
+		duplicateMeta = null,
+		isAddDefaultOwnershipFromConfig,
+		defaultOwnership,
+		userOwnership,
+		isBatched = false,
 
+								spellSlotLevelSelection,
+		levels,
+		
+								isLeaf = false,
+		isSkippableLeaf = false,
+		isPreLoadedFeature = false,
+		featureEntriesPageFilter,
+		featureEntriesPageFilterValues,
+		existingFeatureChecker,
+		spellcastingAbilityAbv,
+		
+								vetAreaIdToFoundryJournalMeta,
+		
+								isImportAsJournalEntry = false,
+		
+								sheetPb,
+		pb,
+		spellAbility,
+		resourceSheetItemMetas,
+		
+		...rest
+	} = {},
+) {
+	this.isTemp = isTemp;
+	this.folderId = folderId;
+	this.taskRunner = taskRunner;
+	this.actorMultiImportHelper = actorMultiImportHelper;
+	this.filterValues = filterValues;
+	this.isDataOnly = isDataOnly;
+	this.isCharactermancer = isCharactermancer;
+	this.isImportToTempDirectory = isImportToTempDirectory;
+	this.duplicateMeta = duplicateMeta;
+	this.isAddDefaultOwnershipFromConfig = isAddDefaultOwnershipFromConfig;
+	this.defaultOwnership = defaultOwnership;
+	this.userOwnership = userOwnership;
+	this.isBatched = isBatched;
+
+	this.spellSlotLevelSelection = spellSlotLevelSelection;
+	this.levels = levels;
+
+	this.isLeaf = isLeaf;
+	this.isSkippableLeaf = isSkippableLeaf;
+	this.isPreLoadedFeature = isPreLoadedFeature;
+	this.featureEntriesPageFilter = featureEntriesPageFilter;
+	this.featureEntriesPageFilterValues = featureEntriesPageFilterValues;
+	this.existingFeatureChecker = existingFeatureChecker;
+	this.spellcastingAbilityAbv = spellcastingAbilityAbv;
+
+	this.vetAreaIdToFoundryJournalMeta = vetAreaIdToFoundryJournalMeta;
+
+	this.isImportAsJournalEntry = isImportAsJournalEntry;
+
+	this.sheetPb = sheetPb;
+	this.pb = pb;
+	this.spellAbility = spellAbility;
+	this.resourceSheetItemMetas = resourceSheetItemMetas;
+
+	if (Object.keys(rest).length) console.warn(...LGT, `Unhandled import options provided; this is likely a bug! Options were: "${Object.keys(rest).join(", ")}"`);
+	Object.assign(this, rest);
+}
+}
 class UtilPrereleaseBrewIndices {
     static PRERELEASE_INDEX__SOURCE = {};
 static PRERELEASE_INDEX__PROP = {};

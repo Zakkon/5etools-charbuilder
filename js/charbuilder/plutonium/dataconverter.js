@@ -40,15 +40,18 @@ class DataConverter {
 
 		if (!entry[opts.prop]) return "";
 
+
+		console.log("BEFORE", entry);
+
 		Renderer.get().setFirstSection(true).resetHeaderIndex();
 
 		let cpyEntries = MiscUtil.copyFast(entry[opts.prop]);
-		cpyEntries = UtilDataConverter.WALKER_GENERIC.walk(
-			cpyEntries,
+
+		cpyEntries = UtilDataConverter.WALKER_GENERIC.walk(cpyEntries,
 			{
 				string: (str) => {
 					return str
-												.replace(/{@hitYourSpellAttack}/gi, () => `{@dice 1d20 + @${SharedConsts.MODULE_ID_FAKE}.userchar.spellAttackRanged|your spell attack modifier}`)
+						.replace(/{@hitYourSpellAttack}/gi, () => `{@dice 1d20 + @${SharedConsts.MODULE_ID_FAKE}.userchar.spellAttackRanged|your spell attack modifier}`)
 						.replace(/{(@dice|@damage|@scaledice|@scaledamage|@hit) ([^}]+)}/gi, (...m) => {
 							const [, tag, text] = m;
 							let [rollText, displayText, name, ...others] = Renderer.splitTagByPipe(text);
@@ -261,6 +264,14 @@ class DataConverter {
 	}
 
 	static _PassiveEntryParseState = class {
+  /**
+   * @param {object} o
+   * @param {EntityObj} o.entry
+   * @param {any} o.img
+   * @param {any} o.name
+   * @param {any} opts
+   * @returns {any}
+   */
 		constructor ({entry, img, name}, opts) {
 			this._entry = entry;
 			this._opts = opts;
@@ -268,7 +279,7 @@ class DataConverter {
 			this.name = name;
 			this.img = img;
 
-						let {
+			let {
 				id,
 
 				description,
@@ -392,14 +403,15 @@ class DataConverter {
 
 			this.properties = properties;
 			
-						this.effectsParsed = [];
+			this.effectsParsed = [];
 
-						this.flagsParsed = {};
+			this.flagsParsed = {};
 		}
 
 		async pInit ({isSkipDescription = false, isSkipImg = false} = {}) {
 			if (!isSkipDescription && !this.description && !this._opts.isSkipDescription) {
 				this.description = await DataConverter.pGetEntryDescription(this._entry, {depth: this._opts.renderDepth, summonSpellLevel: this._opts.summonSpellLevel});
+				console.log("SET DESCR", this.description);
 			}
 
 			if (!isSkipImg && this._opts.img) {
@@ -412,6 +424,7 @@ class DataConverter {
   * @param {EntityObj} entry
   * @param {object} opts
   * @param {string} opts.mode
+  * @param {object} opts.modeOptions
   * @param {Actor5e} opts.actor
   */
 	static async _pGetItemActorPassive (entry, opts) {
@@ -428,7 +441,8 @@ class DataConverter {
 		const state = new this._PassiveEntryParseState(
 			{
 				entry,
-				name: UtilApplications.getCleanEntityName(UtilDataConverter.getNameWithSourcePart(entry, {displayName: opts.displayName, isActorItem: opts.isActorItem ?? true})),
+				name: UtilApplications.getCleanEntityName(
+					UtilDataConverter.getNameWithSourcePart(entry, {displayName: opts.displayName, isActorItem: opts.isActorItem ?? true})),
 			},
 			opts,
 		);
@@ -462,6 +476,10 @@ class DataConverter {
 			name: state.name,
 			description: state.description,
 		});
+
+		console.log("Translated description", state.description);
+		console.log("ENTRY", entry);
+		console.log("OPTS", opts);
 
 		const systemBase = {
 			source: opts.fvttSource !== undefined
@@ -579,8 +597,7 @@ class DataConverter {
 			]),
 		};
 
-				if (
-			!foundry.utils.getProperty(out, "system.activation.type")
+		if (!foundry.utils.getProperty(out, "system.activation.type")
 			&& (
 				foundry.utils.getProperty(out, "system.uses.per")
 				|| foundry.utils.getProperty(out, "system.consume.type")

@@ -388,9 +388,9 @@ Renderer.spell.populateBrewLookup(await BrewUtil2.pGetBrewProcessed(), {isForce:
         //data.class[i].system = result.system;
     }
   }
-  static async plutoniumConvertData(data, type, additionalData){
+  static async plutoniumConvertData(data, type, actor, additionalData){
     const tester = new ImportTester();
-    let result = await tester.runTest(data, type, additionalData);
+    let result = await tester.runTest(data, type, actor, additionalData);
     return result;
   }
 }
@@ -603,7 +603,6 @@ class CharacterBuilder {
           createRightSideBtn("Finalize", "glyphicon-floppy-disk").click(()=>{
             //Exit charactermancer, go to sheet view
             console.log("mancer", this.compClass);
-            
 
             this.getChoiceData().then((choiceData)=>{
               CharacterBuilder.parseMancerChoiceData(this._actor, choiceData).then(()=>{
@@ -1085,6 +1084,23 @@ class CharacterBuilder {
     return targetData;
   }
   //#region Parse Mancher Choice Data
+
+  static async testAddToActor(actor){
+    actor.items = [];
+    CharacterBuilder.instance._actor = actor;
+    let newClass = CharacterBuilder.getEntityByUid("class", "fighter_phb");
+    let subclass = CharacterBuilder.getEntityByUid("subclass", "cavalier_xge");
+    console.log(subclass);
+    //Try adding it to the actor
+    const targetLevel = 3;
+    const subclassFeature = await SheetApplier.addFeatureItem(actor, "subclassFeature", "warding%20maneuver_fighter_phb_cavalier_xge_7_xge", null, {
+      className:"fighter", classSource:"phb",
+      subclassName:"cavalier", subclassSource:"xge"
+    });
+
+    console.log("ACTOR", actor, subclassFeature);
+  }
+
   /**
    * Parses choices made in the charactermancer, and applies them to the sheet
    * @param {Actor5e} actor

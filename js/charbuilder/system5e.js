@@ -414,7 +414,8 @@ class Entity5e {
         }
         if(this.system?.uses?.max){
             //Evaluate
-            let val = Roll.replaceFormulaData(this.system.uses.max.toString(), CharacterBuilder.instance._actor.system.attributes, {});
+            let val = Roll.replaceFormulaData(this.system.uses.max.toString(), CharacterBuilder.instance._actor.system, {});
+            console.log("Max uses:", val);
             labels.uses = {max: val}; //Remember, just a label
         }
         this.labels = labels;
@@ -620,6 +621,7 @@ class Subclass5e extends Feature5e{
             let description = "";
             for(let e of subclassInfo.subclassFeatures[0][0].entries){
                 if(typeof e == "string"){description += e;}
+                console.log("ENTRY", e);
             }
             this.system.description = {value: description};
         });
@@ -639,7 +641,7 @@ class Subclass5e extends Feature5e{
         let ent = new Subclass5e(hash, docData.id, true);
         return ent;
     }
-    static async verifySystemData(className, classSource, subclassName, subclassSource){
+    static async verifySystemData(actor, className, classSource, subclassName, subclassSource){
         console.assert(className != null, "Class name is null!");
         console.assert(classSource != null, "Class source is null!");
         console.assert(subclassName != null, "Subclass name is null!");
@@ -650,7 +652,7 @@ class Subclass5e extends Feature5e{
         if(subclassData.system){return;}
         //No system data exists, go ahead and import
         try{
-            let imported = await SourceManager.plutoniumConvertData(subclassData, "subclass", {cls: classData});
+            let imported = await SourceManager.plutoniumConvertData(subclassData, "subclass", actor, {cls: classData});
             subclassData.system = imported.system;
         }
         catch(e){
@@ -712,12 +714,12 @@ class OptionalFeature5e extends Feature5e{
     get itemData(){return this;}
     get hash(){return this.uid;}
 
-    static async verifySystemData(hash){
+    static async verifySystemData(hash, actor){
         const existingData = CharacterBuilder.getEntityByUid("optionalfeature", {uid:hash});
         if(existingData == null){console.error("No existing data found for optionalfeature", hash);}
         if(existingData.system){return;}
         //No system data exists, go ahead and import
-        let imported = await SourceManager.plutoniumConvertData(existingData, "optionalfeature");
+        let imported = await SourceManager.plutoniumConvertData(existingData, "optionalfeature", actor);
         existingData.system = imported.system;
     }
 }
@@ -755,7 +757,7 @@ class ClassFeature5e extends Feature5e{
         existingData.system = imported.system;
         this.system = imported.system; //TEMPFIX
     }
-    static async verifySystemData(hash, className, classSource){
+    static async verifySystemData(hash, actor, className, classSource){
         console.assert(className != null, "Class name is null!");
         console.assert(classSource != null, "Class source is null!");
         console.assert(hash != null, "Class Feature hash is null!");
@@ -763,7 +765,7 @@ class ClassFeature5e extends Feature5e{
         if(existingData.system){return;}
         //No system data exists, go ahead and import
         try{
-        let imported = await SourceManager.plutoniumConvertData(existingData, "classFeature");
+        let imported = await SourceManager.plutoniumConvertData(existingData, "classFeature", actor);
         existingData.system = imported.system;
         }
         catch(e){
@@ -808,8 +810,15 @@ class SubclassFeature5e extends Feature5e{
         this.name = SETTINGS.SUBCLASS_IMPORT_LOADEDS? original.entity.name : original.name;
         this.source = original.source;
         //this.classFeatures = original.classFeatures;
+
+        const entries = original.entries ?? original.entity.entries;
+        let description = "";
+        for(let e of entries){
+            if(typeof e == "string"){description += e;}
+        }
+        this.system.description = {value: description};
     }
-    static async verifySystemData(hash, className, classSource, subclassName, subclassSource){
+    static async verifySystemData(actor, hash, className, classSource, subclassName, subclassSource){
         console.assert(className != null, "Class name is null!");
         console.assert(classSource != null, "Class source is null!");
         console.assert(subclassName != null, "Subclass name is null!");
@@ -819,7 +828,7 @@ class SubclassFeature5e extends Feature5e{
         if(existingData.system){return;}
         //No system data exists, go ahead and import
         try{
-            const imported = await SourceManager.plutoniumConvertData(existingData, "subclassFeature");
+            const imported = await SourceManager.plutoniumConvertData(existingData, "subclassFeature", actor);
             existingData.system = imported.system;
             existingData.actorTokenMod = imported.actorTokenMod;
             existingData.entryData = imported.entryData;
@@ -963,6 +972,8 @@ class Actor5e {
         this.config = CONFIG.DND5E;
         this.isCharacter = true;
     }
+    get _source(){return this;} //Used by charactermancer to access the object which holds .system
+    get skills(){return this.system.skills;}
 
     _loadFromSaveData(data){
         for(let [key, value] of Object.entries(data)){
@@ -1009,6 +1020,7 @@ class Actor5e {
         this.system = schema;
 
         this.system.abilities = {};
+        this.items = [];
         
         const addAbility = (label, abbr, value=10, baseProf=0) => {
             //baseProf is either 0, 1, or 2 (none, proficient, expertise)
@@ -1025,7 +1037,7 @@ class Actor5e {
         addAbility("Charisma", "cha");
 
         //SKILLS
-        this.skills = {};
+        this.system.skills = {};
         for(const [key, value] of Object.entries(CONFIG.DND5E.skills)){
             this.skills[key] = System5e.calcSkillEmbed({
                 label: value.label,

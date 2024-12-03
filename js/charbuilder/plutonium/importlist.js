@@ -6160,15 +6160,20 @@ class ImportListFeature extends ImportListCharacter {
 
   /**
    * Main import function for parsing features.
-   * @param {Feature5e} feature
-   * @param {{isLeaf:boolean, featureEntriesPageFilter:any, isPreLoadedFeature:boolean, featureEntriesPageFilterValues:any}} importOpts
-   * @param {any} dataOpts
+   * @param {FeatureObj} feature
+   * @param {object} importOpts
+   * @param {boolean} importOpts.isLeaf
+   * @param {boolean} importOpts.isPreLoadedFeature
+   * @param {any} importOpts.featureEntriesPageFilter
+   * @param {any} importOpts.featureEntriesPageFilterValues
+   * @param {any} importOpts.filterValues
+   * @param {object} dataOpts
    * @returns {any}
    */
   async _pImportEntry (feature, importOpts, dataOpts) {
     importOpts ||= new ImportOpts();
 
-    //console.log("IMPORT FEATURE", feature, importOpts, dataOpts);
+    console.log("IMPORT FEATURE", feature, importOpts, dataOpts);
     if (!this._actor) {
       const dereferenced = await this.constructor._DataConverter.pGetDereferencedFeatureItem(feature);
       return super._pImportEntry(dereferenced, importOpts, dataOpts);
@@ -6189,17 +6194,13 @@ class ImportListFeature extends ImportListCharacter {
       return out;
     }
 
-    const pageFilter = importOpts.isPreLoadedFeature
-      ? importOpts.featureEntriesPageFilter
-      : this._pageFilter;
+    const pageFilter = importOpts.isPreLoadedFeature ? importOpts.featureEntriesPageFilter : this._pageFilter;
     const filterValues = importOpts.isPreLoadedFeature
       ? (importOpts.featureEntriesPageFilterValues)
       : (importOpts.filterValues || (await this._pGetPageFilterValues()));
 
     let allFeatures;
-    if (importOpts.isPreLoadedFeature) {
-      allFeatures = [feature];
-    }
+    if (importOpts.isPreLoadedFeature) { allFeatures = [feature]; }
     else {
       const wrappedFeature = await this.constructor._DataConverter.pGetInitFeatureLoadeds(feature, {actor: this._actor});
       allFeatures = [wrappedFeature];
@@ -6226,20 +6227,42 @@ class ImportListFeature extends ImportListCharacter {
 
     const importSummariesSub = [];
 
+    const getFOSForOptionsSet = (optionsSet) => {
+      const comps = CharacterBuilder.instance.compClass._compsClassFeatureOptionsSelect;
+      console.assert(Array.isArray(optionsSet) && optionsSet.length == 1, "expected optionsSet to be an array of length 1");
+      for(let metaArray of comps)
+      {
+        for(let comp of metaArray){
+          for(let set of comp._optionsSet?? []){
+            //Try to match this set with optionsSet[0]
+            if(set.hash === optionsSet[0].hash){return comp;}
+          }
+        }
+      }
+      
+      console.error("Failed to find FOS component for optionsSet", optionsSet, comps);
+      return null;
+    }
+
     for (const topLevelFeatureMeta of allFeaturesGrouped) {
       const {topLevelFeature, optionsSets} = topLevelFeatureMeta;
 
       for (let ixOptionSet = 0; ixOptionSet < optionsSets.length; ++ixOptionSet) {
         const optionsSet = optionsSets[ixOptionSet];
 
-        const formDataOptionSet = await Charactermancer_FeatureOptionsSelect.pGetUserInput({
+        //Try getting the form data from the charactermancer
+        const comp = getFOSForOptionsSet(optionsSet);
+        const formDataOptionSet = await comp.pGetFormData();
+
+        //Show a popup window with choices
+        /* const formDataOptionSet = await Charactermancer_FeatureOptionsSelect.pGetUserInput({
           actor: this._actor,
           optionsSet,
           level: topLevelFeature.level,
           existingFeatureChecker: importOpts.existingFeatureChecker,
           isSkipCharactermancerHandled: importOpts.isCharactermancer,
           modalFilterSpells: this._modalFilterSpells,
-        });
+        }); */
 
         if (!formDataOptionSet) return ImportSummary.cancelled({entity: feature});
         if (formDataOptionSet === VeCt.SYM_UI_SKIP) continue;
@@ -6259,7 +6282,7 @@ class ImportListFeature extends ImportListCharacter {
         for (const loaded of (formDataOptionSet.data?.features || [])) {
           const {entity, type} = loaded;
 
-                    const cpyEntity = MiscUtil.copyFast(entity);
+          const cpyEntity = MiscUtil.copyFast(entity);
           delete cpyEntity.additionalSpells;
 
           const isSkippableLeaf = ixOptionSet === 0 && optionsSets.length > 1;
@@ -6325,7 +6348,7 @@ class ImportListFeature extends ImportListCharacter {
               break;
             }
 
-                        default: {
+            default: {
               const importResult = await this._pImportEntry_pHandleGenericFeatureIndirect({
                 ClassName: this.constructor.name,
                 importOpts,
@@ -6338,7 +6361,7 @@ class ImportListFeature extends ImportListCharacter {
             }
           }
 
-                    if (importOpts.existingFeatureChecker) importOpts.existingFeatureChecker.addImportFeature(loaded.page, loaded.source, loaded.hash);
+          if (importOpts.existingFeatureChecker) importOpts.existingFeatureChecker.addImportFeature(loaded.page, loaded.source, loaded.hash);
         }
 
         await Charactermancer_FeatureOptionsSelect.pDoApplyProficiencyFormDataToActorUpdate(
@@ -6591,7 +6614,7 @@ class ImportListClassSubclassFeature extends ImportListFeature {
   _sidebarTab = "items";
   _gameProp = "items";
   _defaultFolderPath = ["Class & Subclass Features"];
-  //_pageFilter = new PageFilterClassFeatures();
+  _pageFilter = new PageFilterClassFeatures();
   _page = UrlUtil.PG_CLASS_SUBCLASS_FEATURES;
   _listInitialSortBy = "className";
   _isPreviewable = true;

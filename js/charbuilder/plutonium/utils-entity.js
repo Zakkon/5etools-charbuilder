@@ -117,6 +117,10 @@ class UtilEntityBackground extends UtilEntityBase {
 }
 
 class UtilEntityGeneric extends UtilEntityBase {
+    /**
+     * @param {EntityObj} ent
+     * @returns {string}
+     */
     static getName(ent) {
         if (ent._fvttCustomizerState) {
             const rename = CustomizerStateBase.fromJson(ent._fvttCustomizerState)?.rename?.rename;

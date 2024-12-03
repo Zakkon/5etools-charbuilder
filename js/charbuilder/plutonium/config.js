@@ -4279,5 +4279,25 @@ class foundry {
 			recursiveSearch(obj, path);
 			return;
 		},
+//Flatten a possibly multi-dimensional object to a one-dimensional one by converting all nested keys to dot notation
+//obj = The object to flatten
+//_d = Track the recursion depth to prevent overflow
+//returns a flattened object
+		flattenObject(obj, _d=0) { 
+			const flat = {};
+			if ( _d > 100 ) { throw new Error("Maximum depth exceeded"); }
+			for ( let [k, v] of Object.entries(obj) ) {
+			let t = typeof v;//getType(v);
+			if ( t === "Object" ) {
+				if ( isEmpty(v) ) flat[k] = v;
+				let inner = flattenObject(v, _d+1);
+				for ( let [ik, iv] of Object.entries(inner) ) {
+				flat[`${k}.${ik}`] = iv;
+				}
+			}
+			else flat[k] = v;
+			}
+			return flat;
+		}
     }
 }
