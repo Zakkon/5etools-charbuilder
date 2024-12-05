@@ -1079,7 +1079,7 @@ class CharacterBuilder {
     let backgroundData = await this.compBackground.getChoiceData();
     let abilityData = await this.compAbility.getChoiceData();
     let featData = await this.compFeat.getChoiceData();
-    let spellData = await this.compSpell? this.compSpell.getChoiceData() : {};
+    let spellData = await this.compSpell.getChoiceData();
     let targetData = {};
     targetData = Object.assign(targetData, classData, raceData, backgroundData, abilityData, featData, spellData);
     return targetData;
@@ -1277,7 +1277,7 @@ class CharacterBuilder {
     //#region Spells
     //TODO: add spells chosen in spell tab
     //if(choiceData?.spells){SheetApplier.handleKnownSpells(choiceData.spells, actor);}
-    for(let hash of choiceData.additionalSpellHashes ?? []){
+    for(let hash of choiceData.additionalSpellHashes){
       await SheetApplier.addSpellItem(actor, hash, "known");
     }
     //#endregion
