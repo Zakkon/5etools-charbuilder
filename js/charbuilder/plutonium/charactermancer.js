@@ -11558,14 +11558,27 @@ class ActorCharactermancerSpell extends ActorCharactermancerBaseComponent {
         const state = this.__state;
         let out = {};
 
+        const hashSanityCheck = (hash) => {
+            if(hash.includes("|")){
+                let parts = hash.split("|");
+                hash = parts[0] + "_" + parts[1];
+            }
+            return hash;
+        }
+        const makeHash = (sp) => {
+            return  UrlUtil.URL_TO_HASH_BUILDER[UrlUtil.PG_SPELLS](sp).toLowerCase();
+        }
+
         let spells = [];
         //Get the comps
         const filterValues = this.filterValuesSpellsCache || this.filterBoxSpells.getValues();
         for(let compSpell of this._compsSpellSpells){
             const form = await compSpell.pGetFormData(filterValues);
-            for(let sp of form.data.spells){
-                spells.push(sp);
-            }
+            console.log("form of spells", form);
+            spells = form.data.spells.filter(sp => (sp.isLearned || sp.isPrepared)).map(sp => ({
+                hash: makeHash(sp.spell),
+                prepMode: sp.preparedMode,
+            }));
         }
         out.spells = spells;
 
@@ -11574,20 +11587,10 @@ class ActorCharactermancerSpell extends ActorCharactermancerBaseComponent {
             const form = await comp.pGetFormData({level: actor.system.details.level});
             for(let sp of form.data){
                 if(sp.type == "choose" && sp.uid != null){
-                    let hash = sp.uid;
-                    if(hash.includes("|")){
-                        let parts = sp.uid.split("|");
-                        hash = parts[0] + "_" + parts[1];
-                    }
-                    additionalSpellSubclass.push({hash: hash, prepMode:sp.preparationMode});
+                    additionalSpellSubclass.push({hash: hashSanityCheck(sp.uid), prepMode:sp.preparationMode});
                 }
                 else if(sp.type == "spell" && sp.uid != null){
-                    let hash = sp.uid;
-                    if(hash.includes("|")){
-                        let parts = sp.uid.split("|");
-                        hash = parts[0] + "_" + parts[1];
-                    }
-                    additionalSpellSubclass.push({hash: hash, prepMode:sp.preparationMode});
+                    additionalSpellSubclass.push({hash: hashSanityCheck(sp.uid), prepMode:sp.preparationMode});
                 }
             }
         }

@@ -1276,7 +1276,9 @@ class CharacterBuilder {
     //#endregion
 
     //#region Spells
-    //if(choiceData?.spells){SheetApplier.handleKnownSpells(choiceData?.spells, actor);}
+    for(let sp of choiceData.spells ?? []){
+      SheetApplier.addSpellItem(actor, sp.hash, sp.prepMode);
+    }
     for(let sp of choiceData.additionalSpells?.fromSubclass ?? []){
       SheetApplier.addSpellItem(actor, sp.hash, sp.prepMode);
     }
