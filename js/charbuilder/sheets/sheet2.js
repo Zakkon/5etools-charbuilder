@@ -158,7 +158,6 @@ class ActorCharactermancerSheet2 extends ActorCharactermancerSheet {
             if(dataset == null || Object.entries(dataset).length < 1){continue;}
             if(dataset.preparationMode == "innate" || dataset.level != level){continue;}
             let slotsTextValueInput = $(grandparent).find(".spell-slots > input");
-            console.log("obj", slotsTextValueInput);
             slotsTextValueInput[0].value = slotsRemaining;
 
             for(let i = 0; i < m.children.length; ++i){
