@@ -135,7 +135,9 @@ class ActorCharactermancerSheet2 extends ActorCharactermancerSheet {
                     const sectionInfo = this.actor.spellbook[dataset.level];
                     const slotsRemaining = isNumeric(sectionInfo.uses)? sectionInfo.uses : 0;
                     const isAlreadyFilled = (i+1) <= slotsRemaining;
-                    this._setSpellMarkersRemaining(dataset.level, isAlreadyFilled? i:i+1);
+                    //this._setSpellMarkersRemaining(dataset.level, isAlreadyFilled? i:i+1);
+                    this.actor.spellbook[dataset.level].uses = isAlreadyFilled? i:i+1;
+                    this.actor.update(); //Forces render
                 });
             }
 
@@ -147,7 +149,8 @@ class ActorCharactermancerSheet2 extends ActorCharactermancerSheet {
         const sectionInfo = this.actor.spellbook[level];
         //const maxSpellSlots = isNumeric(sectionInfo.slots)? sectionInfo.slots : 0;
         //const slotsRemainingOld = isNumeric(sectionInfo.uses)? sectionInfo.uses : 0;
-        this.actor.spellbook[level].uses = slotsRemaining;
+        //this.actor.spellbook[level].uses = slotsRemaining;
+
 
         const markers = this.element.find(".spellSlotMarker");
         for(let m of markers){
@@ -157,8 +160,9 @@ class ActorCharactermancerSheet2 extends ActorCharactermancerSheet {
             const dataset = grandparent.dataset;
             if(dataset == null || Object.entries(dataset).length < 1){continue;}
             if(dataset.preparationMode == "innate" || dataset.level != level){continue;}
-            let slotsTextValueInput = $(grandparent).find(".spell-slots > input");
+            let slotsTextValueInput = $(grandparent).find(".spell-slots > .spell-uses");
             slotsTextValueInput[0].value = slotsRemaining;
+            return;
 
             for(let i = 0; i < m.children.length; ++i){
                 let dot = $(m.children[i]);

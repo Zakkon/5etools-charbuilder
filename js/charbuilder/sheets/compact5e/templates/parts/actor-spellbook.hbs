@@ -37,8 +37,9 @@
             <div class="spellSlotMarker"></div>
             <div class="spell-slots">
                 {{#if section.usesSlots}}
-                <input type="text" name="system.spells.{{section.prop}}.value" value="{{section.uses}}" placeholder="0"
-                       data-dtype="Number">
+                {{!-- <input class="spell-uses" type="text" name="system.spells.{{section.prop}}.value" value="{{section.uses}}" placeholder="0"
+                       data-dtype="Number"> --}}
+                <span class="spell-uses", type="text" name="system.spells.{{section.prop}}.value">{{section.uses}}</span>
                 <span class="sep"> / </span>
                 <span class="spell-max" data-level="{{section.prop}}" data-slots="{{section.slots}}">
                     {{{section.slots}}}
