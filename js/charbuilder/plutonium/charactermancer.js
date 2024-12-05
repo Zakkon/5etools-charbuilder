@@ -8013,7 +8013,17 @@ class ActorCharactermancerBackground extends ActorCharactermancerBaseComponent {
       const background = this._data.background[this._state.background_ixBackground];
       parentDiv.empty();
       if (background) {
-        parentDiv.append(Renderer.hover.$getHoverContent_stats(UrlUtil.PG_BACKGROUNDS, this._getRenderableBackground()));
+        let content = Renderer.hover.$getHoverContent_stats(UrlUtil.PG_BACKGROUNDS, this._getRenderableBackground());
+        parentDiv.append(content);
+
+        //Load fluff text async
+        Renderer.background.pGetFluff(background).then((fluff) => {
+            //Convert entries to rendered html
+            let rendered = fluff?.entries?.length ?
+            Renderer.get().setFirstSection(true).render({type: "entries", entries: fluff?.entries}) : "";
+            //Prepend it to the content
+            content.find("td").eq(0).prepend(rendered);
+        });
       }
     }
     _getDefaultState() {

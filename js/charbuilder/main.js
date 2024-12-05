@@ -23,6 +23,7 @@ window.addEventListener('load', function () {
   }));
 });
 async function handleInit(){
+  console.log("Init begin");
   //UtilGameSettings.prePreInit();
   //Vetools.doMonkeyPatchPreConfig();
   Config.prePreInit(); //Important
