@@ -984,6 +984,7 @@ class Spell5e extends Entity5e{
     */
         if(this.system.preparationMode == "innate")return "innate";
         if(this.system.preparationMode == "prepared")return "alwaysPrepared"; //alwaysPrepared
+        if(this.system.preparationMode == "always")return "alwaysPrepared"; //alwaysPrepared
         return "";
     }
 }
