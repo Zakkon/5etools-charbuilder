@@ -3272,7 +3272,9 @@ class DataPipelinesListOptionalfeature extends DataPipelinesListGeneric {
 
 	static _CONFIG = CONFIG_OPTIONALFEATURE;
 }
+//#endregion
 
+//#region Background
 class DataSourceBackgroundOfficialAll extends DataSourceGenericOfficialAll {
 	constructor () {
 		super(
@@ -7446,6 +7448,10 @@ async pSetContent (val) {
   await this._modalFilterBackgrounds.pPreloadHidden();
 }
 
+/**
+ * @param {EntityObj} bg
+ * @param {any} importOpts
+ */
 async _pImportEntry_pImportToActor (bg, importOpts) {
       const actUpdate = {system: {}};
 
@@ -7698,6 +7704,16 @@ async _pImportEntry_pFillDetails (bg, actUpdate, opts) {
   await Charactermancer_Background_Characteristics.pFillActorCharacteristicsData(bg.entries, actUpdate, opts);
 }
 
+/**
+ * Description
+ * @param {EntityObj} bgCustomized
+ * @param {any} actUpdate
+ * @param {any} formDataFeatures
+ * @param {any} importOpts
+ * @param {any} dataBuilderOpts
+ * @param {any} importSummariesAdditionalSpells}
+ * @returns {any}
+ */
 async _pImportEntry_pFillItems ({bgCustomized, actUpdate, formDataFeatures, importOpts, dataBuilderOpts, importSummariesAdditionalSpells}) {
   const tagHashItemIdMap = {};
   this._applyAdditionalSpellImportSummariesToTagHashItemIdMap({tagHashItemIdMap, importSummariesAdditionalSpells});

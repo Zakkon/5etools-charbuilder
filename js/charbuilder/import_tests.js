@@ -32,6 +32,7 @@ class ImportTester{
 			else if(type == "optionalfeature"){imp = new ImportListOptionalfeature({actor});}
 			else if(type == "spell"){imp = new ImportListSpell({actor}); }
 			else if(type == "race"){imp = new ImportListRace({actor}); }
+			else if(type == "background"){imp = new ImportListBackground({actor}); }
 			else {imp = new ImportListItem({actor}); }
             await imp.pInit(); //Initialize the importer
 

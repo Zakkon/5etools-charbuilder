@@ -6359,7 +6359,7 @@ class PageFilterRaces extends PageFilter {
 //#endregion
 
 //#region PageFilterBackgrounds
-let PageFilterBackgrounds$1 = class PageFilterBackgrounds extends PageFilter {
+class PageFilterBackgrounds extends PageFilter {
     static _getToolDisplayText(tool) {
         if (tool === "anyTool")
             return "Any Tool";
@@ -6379,7 +6379,7 @@ let PageFilterBackgrounds$1 = class PageFilterBackgrounds extends PageFilter {
         });
         this._toolFilter = new Filter({
             header: "Tool Proficiencies",
-            displayFn: PageFilterBackgrounds$1._getToolDisplayText.bind(PageFilterBackgrounds$1)
+            displayFn: PageFilterBackgrounds._getToolDisplayText.bind(PageFilterBackgrounds)
         });
         this._languageFilter = new Filter({
             header: "Language Proficiencies",
@@ -6463,7 +6463,6 @@ let PageFilterBackgrounds$1 = class PageFilterBackgrounds extends PageFilter {
         return this._filterBox.toDisplay(values, bg._fSources, bg._fSkills, bg._fTools, bg._fLangs, bg.ability, bg._fOtherBenifits, bg._fMisc, );
     }
 }
-;
 //#endregion
 
 //#region PageFilterSpells
@@ -7847,6 +7846,7 @@ toDisplay (values, it) {
 };
 //#endregion
 
+
 class VariantClassFilter extends Filter {
     constructor(opts) {
         super({
@@ -9071,7 +9071,7 @@ class ModalFilterBackgrounds extends ModalFilter {
         super({
             ...opts,
             modalTitle: `Background${opts.isRadio ? "" : "s"}`,
-            pageFilter: new PageFilterBackgrounds$1(),
+            pageFilter: new PageFilterBackgrounds(),
         });
     }
 

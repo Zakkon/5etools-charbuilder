@@ -6942,13 +6942,20 @@ DataConverterRace.STUB_RACE = {
 	_isStub: true,
 };
 
+//#region Background
 class DataConverterBackground extends DataConverter {
 	static _configGroup = "importBackground";
 
 	static _SideDataInterface = SideDataInterfaceBackground;
 	static _ImageFetcher = null;//ImageFetcherBackground;
 
-		static async pGetDocumentJson (bg, opts) {
+ /**
+  * @param {EntityObj} bg
+  * @param {object} opts
+  * @param {Actor5e} opts.actor
+  * @param {boolean} opts.fluff
+  */
+	static async pGetDocumentJson (bg, opts) {
 		opts = opts || {};
 		if (opts.actor) opts.isActorItem = true;
 
@@ -6956,6 +6963,7 @@ class DataConverterBackground extends DataConverter {
 
 		const fluff = opts.fluff || await Renderer.background.pGetFluff(bg);
 
+		//Load description
 		const description = Config.get("importBackground", "isImportDescription")
 			? await DescriptionRenderer.pGetWithDescriptionPlugins(() => {
 				const rendered = [
@@ -7044,13 +7052,11 @@ class DataConverterBackground extends DataConverter {
 		return MiscUtil.copyFast(DataConverterBackground.STUB_BACKGROUND);
 	}
 }
-
 DataConverterBackground.STUB_BACKGROUND = {
 	name: "Unknown Background",
 	source: Parser.SRC_PHB,
 	_isStub: true,
 };
-
 class DataConverterBackgroundFeature extends DataConverterFeature {
 	static _configGroup = "importBackgroundFeature";
 
@@ -7076,7 +7082,7 @@ class DataConverterBackgroundFeature extends DataConverterFeature {
 		};
 	}
 
-		static async pGetDocumentJson (featureEntry, opts) {
+	static async pGetDocumentJson (featureEntry, opts) {
 		opts = opts || {};
 
 		Renderer.get().setFirstSection(true).resetHeaderIndex();
@@ -7111,3 +7117,4 @@ class DataConverterBackgroundFeature extends DataConverterFeature {
 		);
 	}
 }
+//#endregion

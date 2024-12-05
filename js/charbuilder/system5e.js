@@ -690,25 +690,6 @@ class Background5e extends Feature5e{
         if(!Entity5e.use_overrides){return this;}
         return this._createProxy();
     }
-
-    _tryCloneOriginal(original){
-        super._tryCloneOriginal(original);
-        if(original == null || original.fluff == null){return;}
-
-        //Read find any string not labeled "type" in background fluff, and insert it at the start of the description
-        let txt = "";
-        const deepSearchStrings = (item) => {
-            if (typeof item === 'string') { txt += `<p>${item}</p>`; }
-            else {
-                for (let key in item) {
-                    if(key == "type"){continue;}
-                    if (item.hasOwnProperty(key)) { deepSearchStrings(item[key]); }
-                }
-            }
-        }
-        deepSearchStrings(original.fluff.entries);
-        this.system.description.value = txt + this.system.description.value;
-    }
     static async verifySystemData(hash){
         const existingData = CharacterBuilder.getEntityByUid("background", {uid:hash});
         if(existingData == null){console.error("No existing data found for background", hash);}
@@ -717,8 +698,8 @@ class Background5e extends Feature5e{
         let imported = await SourceManager.plutoniumConvertData(existingData, "background");
         existingData.system = imported.system;
         //Since the actual flavor text for background is stored in fluff, we need to load the fluff also
-        const fluff = await Renderer.background.pGetFluff(existingData);
-        existingData.fluff = fluff;
+        /* const fluff = await Renderer.background.pGetFluff(existingData);
+        existingData.fluff = fluff; */
     }
 }
 class OptionalFeature5e extends Feature5e{
