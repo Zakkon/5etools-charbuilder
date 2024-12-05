@@ -18484,7 +18484,6 @@ class Charactermancer_ImmResVulnSelect extends BaseComponent {
     pGetFormData() {
         let isFormComplete = true;
 
-        console.log("DAM RES IMM", this);
 
         return {
             isFormComplete,
@@ -20332,7 +20331,6 @@ class Charactermancer_FeatureOptionsSelect extends BaseComponent {
     }
 
     async pGetFormData() {
-        console.log("FEATUREOPTIONSELECT", this, this._optionsSet);
         if (await this.pIsNoChoice() && !await this.pIsAvailable()) {
             const sideDatas = await this._pGetLoadedsSideDataRaws();
             const cpyOptionsSet = MiscUtil.copy(this._optionsSet);

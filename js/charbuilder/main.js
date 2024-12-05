@@ -420,6 +420,7 @@ class SETTINGS{
      //Set this to true if you want to import one big subclassFeature detailing several subclassFeatures (gained at the same level, likely) within itself,
     //set it to false if you want to import each subclassFeature individually
     static SUBCLASS_IMPORT_LOADEDS = true;
+    static PLUT_IMPORT_ADDITIONALSPELLS_TO_ACTOR = false;
 }
 class CharacterBuilder {
     tabButtonParent;

@@ -41,7 +41,6 @@ class DataConverter {
 		if (!entry[opts.prop]) return "";
 
 
-		console.log("BEFORE", entry);
 
 		Renderer.get().setFirstSection(true).resetHeaderIndex();
 
@@ -411,7 +410,7 @@ class DataConverter {
 		async pInit ({isSkipDescription = false, isSkipImg = false} = {}) {
 			if (!isSkipDescription && !this.description && !this._opts.isSkipDescription) {
 				this.description = await DataConverter.pGetEntryDescription(this._entry, {depth: this._opts.renderDepth, summonSpellLevel: this._opts.summonSpellLevel});
-				console.log("SET DESCR", this.description);
+				
 			}
 
 			if (!isSkipImg && this._opts.img) {
@@ -476,10 +475,6 @@ class DataConverter {
 			name: state.name,
 			description: state.description,
 		});
-
-		console.log("Translated description", state.description);
-		console.log("ENTRY", entry);
-		console.log("OPTS", opts);
 
 		const systemBase = {
 			source: opts.fvttSource !== undefined
@@ -2812,8 +2807,6 @@ class DataConverterClass extends DataConverter {
 
 		const additionalSystem = await this._SideDataInterface.pGetSystemSideLoaded(cls, {systemBase});
 
-		console.log("additionalAdvancement", additionalAdvancement, additionalFlags);
-
 		const out = {
 			id: itemId,
 			_id: itemId,
@@ -3146,7 +3139,6 @@ class DataConverterClass extends DataConverter {
 
 		this._mutApplyDocOwnership(out, opts);
 
-		console.log("CHECK FLAGS", out);
 		return out;
 	}
 

@@ -620,7 +620,6 @@ class Subclass5e extends Feature5e{
             let description = "";
             for(let e of subclassInfo.subclassFeatures[0][0].entries){
                 if(typeof e == "string"){description += e;}
-                console.log("ENTRY", e);
             }
             this.system.description = {value: description};
         });
@@ -896,6 +895,23 @@ class Spell5e extends Entity5e{
         
     }
 
+     /**
+     * Used by spell importer
+     * @param {{name:string, id:string, flags:{plutonium:{source:string}}}[]} docData
+     * @param {any} options
+     * @returns {any}
+     */
+     static create(docData, options){
+        let response = [];
+        for(let data of docData){
+            const source = data.flags.plutonium.source;
+            const hash = UrlUtil.URL_TO_HASH_GENERIC({name:data.name, source:source}).toLowerCase();
+            //TODO: try making this not custom
+            let ent = new Spell5e(hash, data.id, true);
+            response.push(ent);
+        }
+        return response;
+    }
     static recast(inputObj){
         let spell5e = new Spell5e(inputObj.uid, inputObj.collectionId, inputObj.isCustom);
         inputObj && Object.assign(spell5e, inputObj);

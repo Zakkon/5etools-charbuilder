@@ -1825,7 +1825,6 @@ _pImportEntry_pDoUpdateExisting_maintainImg ({duplicateMeta, docData}) {
     }
 
     
-    console.log("DOC DATA", docData, toImport, importOpts, dataOpts);
 
     //Defined by foundry. Item, Journal, Scene, Cards, etc
     const Clazz = this._getDocumentClass();
@@ -4318,7 +4317,6 @@ async _pEnsureFilterBoxInit () {
     } */
    const duplicateMeta = {isOverwrite:false};
 
-    console.log("SCDATA", scData);
 
     const Clazz = Subclass5e;//this._getDocumentClass();
 
@@ -6173,7 +6171,6 @@ class ImportListFeature extends ImportListCharacter {
   async _pImportEntry (feature, importOpts, dataOpts) {
     importOpts ||= new ImportOpts();
 
-    console.log("IMPORT FEATURE", feature, importOpts, dataOpts);
     if (!this._actor) {
       const dereferenced = await this.constructor._DataConverter.pGetDereferencedFeatureItem(feature);
       return super._pImportEntry(dereferenced, importOpts, dataOpts);
@@ -6370,13 +6367,15 @@ class ImportListFeature extends ImportListCharacter {
           formDataOptionSet,
         );
 
-        await Charactermancer_FeatureOptionsSelect.pDoApplyAdditionalSpellsFormDataToActor({
-          taskRunner: importOpts.taskRunner,
-          actorMultiImportHelper: importOpts.actorMultiImportHelper,
-          actor: this._actor,
-          formData: formDataOptionSet,
-          abilityAbv: importOpts.spellcastingAbilityAbv,
-        });
+        if(SETTINGS.PLUT_IMPORT_ADDITIONALSPELLS_TO_ACTOR){
+          await Charactermancer_FeatureOptionsSelect.pDoApplyAdditionalSpellsFormDataToActor({
+            taskRunner: importOpts.taskRunner,
+            actorMultiImportHelper: importOpts.actorMultiImportHelper,
+            actor: this._actor,
+            formData: formDataOptionSet,
+            abilityAbv: importOpts.spellcastingAbilityAbv,
+          });
+        }
       }
     }
 
@@ -7030,7 +7029,7 @@ class ImportListSpell extends ImportList {
 			const importedMetas = await UtilDocuments.pCreateEmbeddedDocuments(
 				this._actor,
 				[spellData],
-				{ClsEmbed: Item, isRender: !importOpts.isBatched},
+				{ClsEmbed: Spell5e, isRender: !importOpts.isBatched},
 			);
 			embeddedDocument = importedMetas[0]?.document;
 		}

@@ -6058,7 +6058,6 @@ class UtilDataConverter {
   * @param {boolean} options.isActorItem=false
   */
 	static getNameWithSourcePart (ent, {displayName = null, isActorItem = false} = {}) {
-        console.log("addSourceToName ", Config.get("import", "isAddSourceToName"));
 		return `${displayName || `${ent.type === "variant" ? "Variant: " : ""}${
             Renderer.stripTags(UtilEntityGeneric.getName(ent))}`}${
                 !isActorItem && ent.source && Config.get("import", "isAddSourceToName") ? ` (${Parser.sourceJsonToAbv(ent.source)})` : ""}`;
@@ -7199,6 +7198,18 @@ class UtilDocuments {
 						|| doc?._isTempImportedDoc;
 	}
 
+ /**
+  * @param {any} doc actor
+  * @param {EntityObj[]} embedArray
+  * @param {object} opts
+  * @param {boolean} opts.isTemporary=false
+  * @param {any} opts.ClsEmbed
+  * @param {boolean} opts.isKeepId=true
+  * @param {boolean} opts.isKeepEmbeddedIds=true
+  * @param {boolean} opts.isRender=true
+  * @param {boolean} opts.optionsCreateEmbeddedDocuments=null
+  * @returns {any}
+  */
 	static async pCreateEmbeddedDocuments (
 		doc,
 		embedArray,
