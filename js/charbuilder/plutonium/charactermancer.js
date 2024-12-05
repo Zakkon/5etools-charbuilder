@@ -2959,8 +2959,20 @@ class Charactermancer_AdditionalSpellsSelect extends BaseComponent {
         });
     }
 
-    getFormData() {
+    getFormData(opts) {
+        let backup = {};
+        if(opts && opts.level){
+            backup.curLevel = this.__state.curLevel;
+            this.__state.curLevel = 0;
+            backup.targetLevel = this.__state.targetLevel;
+            this.__state.targetLevel = opts.level;
+        }
         let flatSpellsInRange = this._getFlatSpellsInRange().map(it=>it.getCopy());
+
+        if(opts && opts.level){
+            this.__state.curLevel = backup.curLevel;
+            this.__state.targetLevel = backup.targetLevel;
+        }
 
         const chooseFromGroups = {};
         flatSpellsInRange.forEach(flat=>{
@@ -3059,8 +3071,8 @@ class Charactermancer_AdditionalSpellsSelect extends BaseComponent {
         };
     }
 
-    pGetFormData() {
-        return this.getFormData();
+    pGetFormData(opts={}) {
+        return this.getFormData(opts);
     }
 
     _getDefaultState() {
@@ -3081,6 +3093,13 @@ class Charactermancer_AdditionalSpellsSelect extends BaseComponent {
 
             pulseChoose: false,
         };
+    }
+
+    loadFromSavedState(inputState){
+        for(let [key, value] of Object.entries(inputState)){
+            this._state[key] = value;
+        }
+        this._state.pulseChoose = !this._state.pulseChoose;
     }
 }
 class Charactermancer_Class_LevelSelect extends BaseComponent {
@@ -10581,7 +10600,10 @@ class ActorCharactermancerSpell extends ActorCharactermancerBaseComponent {
         }
         /* this._setSpellAsLearned(0, {name:"Guidance", source:"PHB"});
         this._setSpellAsLearned(0, {name:"Goodberry", source:"PHB"}); */
-        
+        for(let i = 0; i < this._compsSpellAdditionalSpellSubclass.length; ++i){
+            let state = JSON.parse(actor.additionalSpellSubclass[i]);
+            this._compsSpellAdditionalSpellSubclass[i].loadFromSavedState(state);
+        }
     }
     /**
         * @param {{name:string, source:string, school:string}} spell
@@ -11540,16 +11562,36 @@ class ActorCharactermancerSpell extends ActorCharactermancerBaseComponent {
         //Get the comps
         const filterValues = this.filterValuesSpellsCache || this.filterBoxSpells.getValues();
         for(let compSpell of this._compsSpellSpells){
-
-
-            
             const form = await compSpell.pGetFormData(filterValues);
-            console.log("FORM", form);
             for(let sp of form.data.spells){
                 spells.push(sp);
             }
         }
         out.spells = spells;
+
+        let additionalSpellSubclass = [];
+        for(let comp of this.compsSpellAdditionalSpellSubclass){
+            const form = await comp.pGetFormData({level: actor.system.details.level});
+            for(let sp of form.data){
+                if(sp.type == "choose" && sp.uid != null){
+                    let hash = sp.uid;
+                    if(hash.includes("|")){
+                        let parts = sp.uid.split("|");
+                        hash = parts[0] + "_" + parts[1];
+                    }
+                    additionalSpellSubclass.push({hash: hash, prepMode:sp.preparationMode});
+                }
+                else if(sp.type == "spell" && sp.uid != null){
+                    let hash = sp.uid;
+                    if(hash.includes("|")){
+                        let parts = sp.uid.split("|");
+                        hash = parts[0] + "_" + parts[1];
+                    }
+                    additionalSpellSubclass.push({hash: hash, prepMode:sp.preparationMode});
+                }
+            }
+        }
+        out.additionalSpells = {fromSubclass:additionalSpellSubclass};
 
         /* out.featFromAsi = [];
         out.featsFromBackground = [];
@@ -13384,8 +13426,6 @@ class Charactermancer_Spell extends BaseComponent {
         }
         return matches[0];
     }
-
-    
 }
 Charactermancer_Spell._IMPORT_LIST_SPELL = null;
 Charactermancer_Spell._CLASS_MAP = {

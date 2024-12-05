@@ -1080,7 +1080,7 @@ class CharacterBuilder {
     let backgroundData = await this.compBackground.getChoiceData();
     let abilityData = await this.compAbility.getChoiceData();
     let featData = await this.compFeat.getChoiceData();
-    let spellData = await this.compSpell? this.compAbility.getChoiceData() : {};
+    let spellData = await this.compSpell.getChoiceData();
     let targetData = {};
     targetData = Object.assign(targetData, classData, raceData, backgroundData, abilityData, featData, spellData);
     return targetData;
@@ -1276,7 +1276,10 @@ class CharacterBuilder {
     //#endregion
 
     //#region Spells
-    if(choiceData?.spells){SheetApplier.handleKnownSpells(choiceData?.spells, actor);}
+    //if(choiceData?.spells){SheetApplier.handleKnownSpells(choiceData?.spells, actor);}
+    for(let sp of choiceData.additionalSpells?.fromSubclass ?? []){
+      SheetApplier.addSpellItem(actor, sp.hash, sp.prepMode);
+    }
     //#endregion
 
     //#region Parse Classes
@@ -1302,12 +1305,14 @@ class CharacterBuilder {
         sclsData = CharacterBuilder._getEntityByUid(clsData.subclasses, {uid: cls.subclassUid});
         subclassName = sclsData.name;
         //Add subclass's additionalSpells, unless there is more than one spell list
-        SheetApplier.handleSubclassAdditionalSpells(sclsData, actor, cls.targetLevel);
+        //SheetApplier.handleSubclassAdditionalSpells(sclsData, actor, cls.targetLevel);
         
         //Try to import the subclass itself
         let subclassItem = await addFeatureItem("subclass", cls.subclassUid, null,
           {className: clsData.name, classSource: clsData.source,
             subclassName: sclsData.name, subclassSource: sclsData.source});
+
+        
 
         for(let i = 1; i <= 9; ++i){
           //TODO: make this be combinable with other classes
