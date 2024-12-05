@@ -2072,18 +2072,7 @@
 					{
 						"2": 1
 					}
-				]
-			}
-		},
-		{
-			"name": "Circle Spells",
-			"source": "PHB",
-			"className": "Druid",
-			"classSource": "PHB",
-			"subclassShortName": "Land",
-			"subclassSource": "PHB",
-			"level": 2,
-			"entryData": {
+				],
 				"additionalSpells": [
 					{
 						"name": "Arctic",
