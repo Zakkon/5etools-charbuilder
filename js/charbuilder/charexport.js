@@ -145,6 +145,7 @@ class CharacterExportFvtt{
             spellSources[srcIx] = spellSource;
         }
         _char.spellsBySource = spellSources;
+
         //#endregion
 
         //#region FEATS
@@ -718,6 +719,15 @@ class CharacterExportFvtt{
                     isLearned:spell.isLearned, isPrepared:spell.isPrepared, spell:spell.spell};}
             ));
             spellsBySource.push({className: className, classSource:classSource, ix:classIx, spellsByLvl: spellsByLvl});
+        }
+        for(let j = 0; j < compSpell.compsSpellAdditionalSpellSubclass.length; ++j){
+            //Assume this component handles spells for a certain class
+            let comp = compSpell.compsSpellAdditionalSpellSubclass[j];
+            if(!comp){continue;}
+            let classIx = j; //TODO: verify if this is the correct way to assume class index
+            const state = comp.__state;
+            const arrIndex = spellsBySource.findIndex(item => item.ix === classIx);
+            spellsBySource[arrIndex].additionalSpellsSubclass = JSON.stringify(state);
         }
         return spellsBySource;
     }

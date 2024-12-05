@@ -2644,7 +2644,8 @@ class Charactermancer_AdditionalSpellsSelect extends BaseComponent {
             flatsFilterChoose.forEach(flat=>{
                 const $dispSpell = $(`<div class="ve-flex-v-center"></div>`);
                 const hkChosenSpell = ()=>{
-                    $dispSpell.html(this._state[flat.key] != null && this._state.ixSet === ix ? `<div>${Renderer.get().render(`{@spell ${this._state[flat.key].toLowerCase()}}`)}</div>` : `<div class="italic ve-muted">(select a spell)</div>`, );
+                    $dispSpell.html(this._state[flat.key] != null && this._state.ixSet === ix ? `<div>${Renderer.get().render(`{@spell ${this._state[flat.key].toLowerCase()}}`)}</div>`
+                    : `<div class="italic ve-muted">(select a spell)</div>`, );
                 }
                 ;
                 this._addHookBase(flat.key, hkChosenSpell);
@@ -3081,6 +3082,18 @@ class Charactermancer_AdditionalSpellsSelect extends BaseComponent {
 
             pulseChoose: false,
         };
+    }
+
+    /**
+     * Import chosen additional spells. Only used when loading from a save file.
+     * @param {object} inputState state
+     */
+    loadFromSaveData(inputState){
+        for(let [key, value] of Object.entries(inputState)){
+            this._state[key] = value;
+        }
+
+        this._state.pulseChoose = !this._state.pulseChoose; //trigger hook
     }
 }
 class Charactermancer_Class_LevelSelect extends BaseComponent {
@@ -10552,25 +10565,31 @@ class ActorCharactermancerSpell extends ActorCharactermancerBaseComponent {
             </div>`.appendTo(wrpTab);
     }
 
-        /**
-         * Sets the state of the component and subcomponents based on a save file. This should be called just after first render.
-         * @param {{spellsBySource:{className: string, classSource: string, spellsByLvl: Charactermancer_Spell_SpellMeta[][]}} actor
-        */
+    /**
+     * Sets the state of the component and subcomponents based on a save file. This should be called just after first render.
+     * @param {{spellsBySource:{className: string, classSource: string, spellsByLvl: Charactermancer_Spell_SpellMeta[][],
+     * additionalSpellsSubclass:string}} actor
+    */
     setStateFromSaveFile(actor){
         const data = actor.spellsBySource; //This needs to be updated whenever a class is removed from the character
         
         for(let j = 0; j < data.length; ++j){
-                //Assume this is for a class, and it is going to _compsSpellSpells
-                //const ix = this._getIxOfSpell(src.spellsByLvl[0][0].spell);
+            //Assume this is for a class, and it is going to _compsSpellSpells
+            //const ix = this._getIxOfSpell(src.spellsByLvl[0][0].spell);
 
-                //WARNING: Not 100% sure about this one
-                const classIx = data[j].ix;
+            //WARNING: Not 100% sure about this one
+            const classIx = data[j].ix;
 
-                for(let lvlIx = 0; lvlIx < data[j].spellsByLvl.length; ++lvlIx){
-                    for(let sp of  data[j].spellsByLvl[lvlIx]){
-                        this.markSpellAsLearnedKnown(classIx, sp);
-                    }
+            for(let lvlIx = 0; lvlIx < data[j].spellsByLvl.length; ++lvlIx){
+                for(let sp of  data[j].spellsByLvl[lvlIx]){
+                    this.markSpellAsLearnedKnown(classIx, sp);
                 }
+            }
+
+            if(data[j].additionalSpellsSubclass != null){
+                const state = JSON.parse(data[j].additionalSpellsSubclass);
+                this._compsSpellAdditionalSpellSubclass[j].loadFromSaveData(state);
+            }
         }
         /* this._setSpellAsLearned(0, {name:"Guidance", source:"PHB"});
         this._setSpellAsLearned(0, {name:"Goodberry", source:"PHB"}); */
@@ -10587,10 +10606,10 @@ class ActorCharactermancerSpell extends ActorCharactermancerBaseComponent {
             return ix;
     }
     /**
-        * Mark a spell as prepared or learned. Only used when loading from a save file.
-        * @param {number} classIx Index of the class we are learning the spell on
-        * @param {{name:string, source:string}} spellStub
-        */
+    * Mark a spell as prepared or learned. Only used when loading from a save file.
+    * @param {number} classIx Index of the class we are learning the spell on
+    * @param {{name:string, source:string}} spellStub
+    */
     markSpellAsLearnedKnown(classIx, spellStub){
             //Get the uid index of the spells
             const ix = this._getIxOfSpell(spellStub);
@@ -11530,19 +11549,31 @@ class ActorCharactermancerSpell extends ActorCharactermancerBaseComponent {
         let out = {};
 
         let spells = [];
+        let additionalSpellHashes = [];
         //Get the comps
         const filterValues = this.filterValuesSpellsCache || this.filterBoxSpells.getValues();
         for(let compSpell of this._compsSpellSpells){
-
-
-            
             const form = await compSpell.pGetFormData(filterValues);
             console.log("FORM", form);
             for(let sp of form.data.spells){
                 spells.push(sp);
             }
         }
+
+        for(let compAdd of this._compsSpellAdditionalSpellSubclass){
+            for(let [key, value] of Object.entries(compAdd.__state)){
+                if(typeof value != "string" || !key.startsWith("known__")){continue;}
+                if(value.length < 1){continue;}
+                if(value.includes("|")){
+                    let parts = value.split("|");
+                    value = `${parts[0]}_${parts[1]}`;
+                }
+                additionalSpellHashes.push(value);
+            }
+        }
+
         out.spells = spells;
+        out.additionalSpellHashes = additionalSpellHashes;
 
         /* out.featFromAsi = [];
         out.featsFromBackground = [];
