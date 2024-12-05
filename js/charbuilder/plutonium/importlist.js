@@ -3272,6 +3272,56 @@ class DataPipelinesListOptionalfeature extends DataPipelinesListGeneric {
 
 	static _CONFIG = CONFIG_OPTIONALFEATURE;
 }
+
+class DataSourceBackgroundOfficialAll extends DataSourceGenericOfficialAll {
+	constructor () {
+		super(
+			{
+				url: Vetools.DATA_URL_BACKGROUNDS,
+			},
+		);
+	}
+}
+class DataSourceBackgroundFeatureOfficialAll extends DataSourceGenericOfficialAll {
+	constructor () {
+		super(
+			{
+				url: Vetools.DATA_URL_BACKGROUNDS,
+			},
+		);
+	}
+}
+class DataPostLoaderBackgroundFeature extends DataPostLoaderBase {
+	static async pMutPostLoad (json) {
+		if (!json.background?.length) return;
+
+				json.backgroundFeature = json.background.flatMap(bg => Charactermancer_Background_Features.getFeatureEntries(bg));
+	}
+}
+class DataPipelineConfigBackground extends DataPipelineConfig {
+	_DIRS_HOMEBREW = ["background"];
+
+	_ClsDataSourceOfficialAll = DataSourceBackgroundOfficialAll;
+}
+const CONFIG_BACKGROUND = new DataPipelineConfigBackground();
+class DataPipelinesListBackground extends DataPipelinesListGeneric {
+	static _ = ImplementationRegistryDataPipelinesList.get().register(this);
+
+	static _CONFIG = CONFIG_BACKGROUND;
+}
+class DataPipelineConfigBackgroundFeature extends DataPipelineConfig {
+	_DIRS_HOMEBREW = ["background"];
+
+	_ClsDataSourceOfficialAll = DataSourceBackgroundFeatureOfficialAll;
+
+	_ClsDataPostLoader = DataPostLoaderBackgroundFeature;
+}
+const CONFIG_BACKGROUND_FEATURE = new DataPipelineConfigBackgroundFeature();
+class DataPipelinesListBackgroundFeature extends DataPipelinesListGeneric {
+	static _ = ImplementationRegistryDataPipelinesList.get().register(this);
+
+	static _CONFIG = CONFIG_BACKGROUND_FEATURE;
+}
 //#endregion
 
 //#region ImportListClass
@@ -7320,6 +7370,447 @@ var ImportListOptionalfeature$1 = /*#__PURE__*/Object.freeze({
   ImportListOptionalfeature: ImportListOptionalfeature
 });
 /* ImportListOptionalfeature.UserChoose = class extends MixinUserChooseImporter(ImportListOptionalfeature) {}; */
+
+
+class ImportListBackground extends ImportListCharacter {
+  static init () {
+  this._initCreateSheetItemHook({
+    prop: "background",
+    importerName: "Background",
+  });
+}
+
+static get ID () { return "backgrounds"; }
+static get DISPLAY_NAME_TYPE_PLURAL () { return "Backgrounds"; }
+static get PROPS () { return ["background"]; }
+
+static _ = ImplementationRegistryImportList.get().register(this);
+
+_titleSearch = "background";
+_sidebarTab = "items";
+_gameProp = "items";
+_defaultFolderPath = ["Backgrounds"];
+_pageFilter = new PageFilterBackgrounds();
+_page = UrlUtil.PG_BACKGROUNDS;
+_isPreviewable = true;
+_configGroup = "importBackground";
+_pFnGetFluff = Renderer.background.pGetFluff.bind(Renderer.background);
+_isActorRadio = true;
+static _DataConverter = DataConverterBackground;
+static _DataPipelinesList = DataPipelinesListBackground;
+
+constructor (...args) {
+  super(...args);
+
+  this._modalFilterBackgrounds = null;
+}
+
+_colWidthName = 4;
+_colWidthSource = 1;
+
+_getData_cols_other () {
+  return [
+    {
+      name: "Skills",
+      width: 6,
+      field: "skills",
+    },
+  ];
+}
+
+_getData_row_mutGetAdditionalValues ({it, ix}) {
+  return {
+    skills: it._skillDisplay,
+  };
+}
+
+get _renderInner_absorbListItems_isRadio () { return !!this._actor; }
+
+_renderInner_absorbListItems_fnGetValues (it) {
+  return {
+    ...super._renderInner_absorbListItems_fnGetValues(it),
+    skills: it._skillDisplay,
+    normalisedTime: it._normalisedTime,
+    normalisedRange: it._normalisedRange,
+  };
+}
+
+async pSetContent (val) {
+  await super.pSetContent(val);
+
+      this._modalFilterBackgrounds = new ModalFilterBackgroundsFvtt({
+    namespace: "ImportListBackground.customFeatures",
+    isRadio: true,
+    allData: this._content?.filter(ent => !UtilEntityBackground.isCustomBackground(ent)),
+  });
+  await this._modalFilterBackgrounds.pPreloadHidden();
+}
+
+async _pImportEntry_pImportToActor (bg, importOpts) {
+      const actUpdate = {system: {}};
+
+  const dataBuilderOpts = new ImportListBackground.ImportEntryOpts({
+    fluff: await Renderer.background.pGetFluff(bg),
+  });
+
+  await this._pImportEntry_pImportToActor_pLoadModalFilter({bg, dataBuilderOpts});
+  if (dataBuilderOpts.isCancelled) return ImportSummary.cancelled({entity: bg});
+
+  const formDataFeatures = bg._foundryFormDataFeatures ??
+    await Charactermancer_Background_Features.pGetUserInput({
+      background: bg,
+      modalFilter: this._modalFilterBackgrounds,
+      isUnskippable: true,
+    });
+  if (!formDataFeatures) return ImportSummary.cancelled({entity: bg});
+  const {data: {background: bgCustomized}} = formDataFeatures;
+
+  await this._pImportEntry_pFillProficiencies(bgCustomized, actUpdate.system, dataBuilderOpts);
+  if (dataBuilderOpts.isCancelled) return ImportSummary.cancelled({entity: bg});
+  await this._pImportEntry_pFillAbilities(bgCustomized, actUpdate, dataBuilderOpts);
+  if (dataBuilderOpts.isCancelled) return ImportSummary.cancelled({entity: bg});
+  await this._pImportEntry_pFillDetails(bgCustomized, actUpdate, dataBuilderOpts);
+  if (dataBuilderOpts.isCancelled) return ImportSummary.cancelled({entity: bg});
+  const importSummariesAdditionalSpells = await this._pApplyAllAdditionalSpellsToActor({entity: bgCustomized, importOpts, dataBuilderOpts});
+  if (dataBuilderOpts.isCancelled) return ImportSummary.cancelled({entity: bg});
+  await this._pImportEntry_pFillItems({bgCustomized, actUpdate, formDataFeatures, importOpts, dataBuilderOpts, importSummariesAdditionalSpells});
+  if (dataBuilderOpts.isCancelled) return ImportSummary.cancelled({entity: bg});
+
+      const formDataEquipment = await this._pImportEntry_pImportToActor_pImportStartingEquipment(bg, dataBuilderOpts);
+  if (dataBuilderOpts.isCancelled) return ImportSummary.cancelled({entity: bg});
+
+      if (formDataEquipment?.data?.currency) MiscUtil.set(actUpdate, "system", "currency", formDataEquipment.data.currency);
+
+      MiscUtil.set(actUpdate, "system", "details", "background", dataBuilderOpts.backgroundItemToCreate.id);
+
+      await UtilDocuments.pUpdateDocument(this._actor, actUpdate);
+
+      await Charactermancer_StartingEquipment.pImportEquipmentItemEntries(
+    this._actor,
+    formDataEquipment,
+    {
+      taskRunner: importOpts.taskRunner,
+      actorMultiImportHelper: importOpts.actorMultiImportHelper,
+    },
+  );
+
+      await this._pImportActorAdditionalFeats(bgCustomized, importOpts, dataBuilderOpts);
+  if (dataBuilderOpts.isCancelled) return ImportSummary.cancelled({entity: bg});
+
+      await this._pImportEntry_pImportToActor_pAddSubEntities({ent: bgCustomized, importOpts});
+
+  if (this._actor.isToken) this._actor.sheet.render();
+
+  return new ImportSummary({
+    status: ConstsTaskRunner.TASK_EXIT_COMPLETE,
+    imported: [
+      new ImportedDocument({
+        name: bg.name,
+        actor: this._actor,
+      }),
+    ],
+    entity: bg,
+  });
+}
+
+async _pImportEntry_pImportToActor_pLoadModalFilter ({bg, dataBuilderOpts}) {
+  if (this._modalFilterBackgrounds) return;
+  if (bg._foundryFormDataFeatures) return;
+
+          const appSourceSelector = new AppSourceSelectorMulti({
+    title: `Select Background Sources for Customizing Features`,
+    filterNamespace: `ImportListBackground_filter`,
+    savedSelectionKey: `ImportListBackground_savedSelection`,
+    pipelinesToDisplay: await DataPipelinesListBackground.pGetPipelines(),
+  });
+
+  const allData = await appSourceSelector.pWaitForUserInput();
+  if (allData == null) return dataBuilderOpts.isCancelled = true;
+
+  this._modalFilterBackgrounds = new ModalFilterBackgroundsFvtt({
+    namespace: "ImportListBackground.customFeatures",
+    isRadio: true,
+    allData: allData.background,
+  });
+  await this._modalFilterBackgrounds.pPreloadHidden();
+}
+
+async _pImportEntry_pImportToActor_pImportStartingEquipment (bg, opts) {
+  if (!bg.startingEquipment) return;
+
+  const clsStyleData = {
+    defaultData: bg.startingEquipment,
+  };
+  const startingEquipment = new Charactermancer_StartingEquipment({
+    actor: this._actor,
+    startingEquipment: clsStyleData,
+    appSubTitle: bg.name,
+    equiSpecialSource: bg.source,
+    equiSpecialPage: bg.page,
+  });
+  const formData = await startingEquipment.pWaitForUserInput();
+  if (formData == null) {
+    opts.isCancelled = true;
+    return null;
+  }
+  return formData;
+}
+
+async _pImportEntry_pFillProficiencies (bg, sys, dataBuilderOpts) {
+  const isCustomizeSkills = !bg._foundryIsSkipCustomizeSkills
+    && (
+      UtilEntityBackground.isCustomBackground(bg)
+      || await InputUiUtil.pGetUserBoolean({
+        title: `Customize Background: Skills`,
+        htmlDescription: `<div class="w-640p">${Renderer.get().render(`Would you like to {@book customize your skill selection|phb|4|backgrounds|customizing a background}?<br>This allows you to choose any two skills to gain from your background, rather than gaining the defaults.`)}</div>`,
+        textNo: "Use Default",
+        textYes: "Customize",
+      })
+    );
+  dataBuilderOpts.isCustomize = dataBuilderOpts.isCustomize || !!isCustomizeSkills;
+
+  if (isCustomizeSkills) {
+    await DataConverter.pFillActorSkillData(
+      MiscUtil.get(this._actor, "_source", "system", "skills"),
+      UtilActors.BG_SKILL_PROFS_CUSTOMIZE,
+      sys,
+      dataBuilderOpts,
+    );
+  } else {
+    await DataConverter.pFillActorSkillData(
+      MiscUtil.get(this._actor, "_source", "system", "skills"),
+      bg.skillProficiencies,
+      sys,
+      dataBuilderOpts,
+    );
+  }
+  if (dataBuilderOpts.isCancelled) return;
+
+  const isCustomizeLangsTools = !bg._foundryIsSkipCustomizeLanguagesTools
+    && (
+      UtilEntityBackground.isCustomBackground(bg)
+      || await InputUiUtil.pGetUserBoolean({
+        title: `Customize Background: Languages & Tools`,
+        htmlDescription: `<div class="w-640p">${Renderer.get().render(`Would you like to {@book customize your language and tool selection|phb|4|backgrounds|customizing a background}?<br>This allows you to choose a total of any two languages and/or tool proficiencies to gain from your background, rather than gaining the defaults.`)}</div>`,
+        textNo: "Use Default",
+        textYes: "Customize",
+      })
+    );
+  dataBuilderOpts.isCustomize = dataBuilderOpts.isCustomize || !!isCustomizeLangsTools;
+
+  if (isCustomizeLangsTools) {
+    await DataConverter.pFillActorSkillToolLanguageData(
+      {
+        existingProficienciesSkills: MiscUtil.get(this._actor, "_source", "system", "skills"),
+        existingProficienciesTools: MiscUtil.get(this._actor, "_source", "system", "tools"),
+        existingProficienciesLanguages: MiscUtil.get(this._actor, "_source", "system", "traits", "languages"),
+        skillToolLanguageProficiencies: UtilActors.LANG_TOOL_PROFS_CUSTOMIZE,
+        actorData: sys,
+        importOpts: dataBuilderOpts,
+      },
+    );
+    if (dataBuilderOpts.isCancelled) return;
+  } else {
+          await DataConverter.pFillActorSkillToolLanguageData(
+      {
+        existingProficienciesSkills: MiscUtil.get(this._actor, "_source", "system", "skills"),
+        existingProficienciesTools: MiscUtil.get(this._actor, "_source", "system", "tools"),
+        existingProficienciesLanguages: MiscUtil.get(this._actor, "_source", "system", "traits", "languages"),
+        languageProficiencies: bg.languageProficiencies,
+        toolProficiencies: bg.toolProficiencies,
+        skillToolLanguageProficiencies: bg.skillToolLanguageProficiencies,
+        actorData: sys,
+        importOpts: dataBuilderOpts,
+      },
+    );
+    if (dataBuilderOpts.isCancelled) return;
+  }
+
+          await DataConverter.pFillActorArmorProfData(
+    MiscUtil.get(this._actor, "_source", "system", "traits", "armorProf"),
+    bg.armorProficiencies,
+    sys,
+    dataBuilderOpts,
+  );
+  if (dataBuilderOpts.isCancelled) return;
+
+  await DataConverter.pFillActorWeaponProfData(
+    MiscUtil.get(this._actor, "_source", "system", "traits", "weaponProf"),
+    bg.weaponProficiencies,
+    sys,
+    dataBuilderOpts,
+  );
+  if (dataBuilderOpts.isCancelled) return;
+
+  await DataConverter.pFillActorImmunityData(
+    MiscUtil.get(this._actor, "_source", "system", "traits", "di"),
+    bg.immune,
+    sys,
+    dataBuilderOpts,
+  );
+  if (dataBuilderOpts.isCancelled) return;
+
+  await DataConverter.pFillActorResistanceData(
+    MiscUtil.get(this._actor, "_source", "system", "traits", "dr"),
+    bg.resist,
+    sys,
+    dataBuilderOpts,
+  );
+  if (dataBuilderOpts.isCancelled) return;
+
+  await DataConverter.pFillActorVulnerabilityData(
+    MiscUtil.get(this._actor, "_source", "system", "traits", "dv"),
+    bg.vulnerable,
+    sys,
+    dataBuilderOpts,
+  );
+  if (dataBuilderOpts.isCancelled) return;
+
+  await DataConverter.pFillActorConditionImmunityData(
+    MiscUtil.get(this._actor, "_source", "system", "traits", "ci"),
+    bg.conditionImmune,
+    sys,
+    dataBuilderOpts,
+  );
+  if (dataBuilderOpts.isCancelled) return;
+
+  await DataConverter.pFillActorExpertiseData(
+    {
+      existingProficienciesSkills: MiscUtil.get(this._actor, "_source", "system", "skills"),
+      existingProficienciesTools: MiscUtil.get(this._actor, "_source", "system", "tools"),
+      expertise: bg.expertise,
+      actorData: sys,
+      importOpts: dataBuilderOpts,
+    },
+  );
+    }
+
+async _pImportEntry_pFillAbilities (background, actUpdate, dataBuilderOpts) {
+  await Charactermancer_AbilityScoreSelect.pFillActorAbilityData(this._actor, background.ability, actUpdate, dataBuilderOpts);
+}
+
+async _pImportEntry_pFillDetails (bg, actUpdate, opts) {
+  if (bg._foundryIsSkipImportCharacteristics) return;
+
+      Charactermancer_Background_Characteristics.applyExistingActorDataToActorUpdate(actUpdate, this._actor);
+
+  if (bg._foundryFormDataCharacteristics) return Charactermancer_Background_Characteristics.applyFormDataToActorUpdate(actUpdate, bg._foundryFormDataCharacteristics);
+  await Charactermancer_Background_Characteristics.pFillActorCharacteristicsData(bg.entries, actUpdate, opts);
+}
+
+async _pImportEntry_pFillItems ({bgCustomized, actUpdate, formDataFeatures, importOpts, dataBuilderOpts, importSummariesAdditionalSpells}) {
+  const tagHashItemIdMap = {};
+  this._applyAdditionalSpellImportSummariesToTagHashItemIdMap({tagHashItemIdMap, importSummariesAdditionalSpells});
+
+  await DescriptionRenderer.pGetWithDescriptionPlugins(
+    async () => {
+      dataBuilderOpts.isCustomize = dataBuilderOpts.isCustomize || formDataFeatures.data?.isCustomize;
+
+      const backgroundItem = await DataConverterBackground.pGetDocumentJson(
+        bgCustomized,
+        {
+          actor: this._actor,
+          fluff: dataBuilderOpts.fluff,
+          taskRunner: importOpts.taskRunner,
+          actorMultiImportHelper: importOpts.actorMultiImportHelper,
+        },
+      );
+      dataBuilderOpts.backgroundItemToCreate = backgroundItem;
+      dataBuilderOpts.items.push(backgroundItem);
+
+      for (const entry of formDataFeatures?.data?.entries || []) {
+        dataBuilderOpts.items.push(await DataConverterBackgroundFeature.pGetDocumentJson(
+          entry,
+          {
+            actor: this._actor,
+            taskRunner: importOpts.taskRunner,
+            actorMultiImportHelper: importOpts.actorMultiImportHelper,
+          },
+        ));
+      }
+    },
+    {
+      actorId: this._actor.id,
+      tagHashItemIdMap,
+    },
+  );
+
+  if (dataBuilderOpts.isCancelled) return;
+
+  const importedMetas = await UtilDocuments.pCreateEmbeddedDocuments(
+    this._actor,
+    dataBuilderOpts.items,
+    {ClsEmbed: Item, isRender: !importOpts.isBatched},
+  );
+  const [importedMetaBackground, ...importedMetasFeatures] = importedMetas;
+
+  await UtilAdvancements.pAddItemGrantAdvancementLinks({
+    actor: this._actor,
+    parentEmbeddedDocument: importedMetaBackground.document,
+    childLevelledEmbeddedDocuments: importedMetasFeatures
+      .map(importedMeta => new UtilAdvancements.LevelledEmbeddedDocument_MinLevel0({
+        embeddedDocument: importedMeta.document,
+      })),
+  });
+
+  if (importSummariesAdditionalSpells?.length) {
+    await UtilAdvancements.pAddItemGrantAdvancementLinks({
+      actor: this._actor,
+      parentEmbeddedDocument: importedMetaBackground.document,
+      childLevelledEmbeddedDocuments: importSummariesAdditionalSpells
+        .filter(importSummary => importSummary.getPrimaryDocument())
+        .map(importSummary => new UtilAdvancements.LevelledEmbeddedDocument_MinLevel0({
+          embeddedDocument: importSummary.getPrimaryDocument(),
+        })),
+    });
+  }
+}
+}
+
+class ImportListBackgroundFeature extends ImportListFeature {
+	static get ID () { return "background-features"; }
+	static get DISPLAY_NAME_TYPE_PLURAL () { return "Background Features"; }
+	static get PROPS () { return ["backgroundFeature"]; }
+
+	static _ = ImplementationRegistryImportList.get().register(this);
+
+	_titleSearch = "background feature";
+	_sidebarTab = "items";
+	_gameProp = "items";
+	_defaultFolderPath = ["Background Features"];
+	_pageFilter = new PageFilterBackgroundFeature();
+	_page = "backgroundFeature";
+	_isPreviewable = true;
+	_configGroup = "importBackgroundFeature";
+	static _DataConverter = DataConverterBackgroundFeature;
+	static _DataPipelinesList = DataPipelinesListBackgroundFeature;
+
+	_colWidthName = 5;
+	_colWidthSource = 1;
+
+	_getData_cols_other () {
+		return [
+			{
+				name: "Background",
+				width: 5,
+				field: "backgroundName",
+			},
+		];
+	}
+
+	_getData_row_mutGetAdditionalValues ({it, ix}) {
+		return {
+			backgroundName: it.backgroundName,
+		};
+	}
+
+	_renderInner_absorbListItems_fnGetValues (it) {
+		return {
+			...super._renderInner_absorbListItems_fnGetValues(it),
+			backgroundName: it.backgroundName,
+		};
+	}
+}
 
 //#region Race
 class _DataPostLoaderRaceFeaturePrereleaseBrew extends DataPostLoaderBase {

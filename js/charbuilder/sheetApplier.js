@@ -299,7 +299,7 @@ class SheetApplier {
             System5e.tryAddToInventory(actor, subclassItem, "class", {doNotRender:true});
             return subclassItem;
           case "background":
-            //await Class5e.verifySystemData(hash);
+            await Background5e.verifySystemData(hash);
             let backgroundItem = new Background5e(hash, null, false);
             backgroundItem.markMancerDependency(new MancerDependencyLink(dependencyPath));
             System5e.tryAddToInventory(actor, backgroundItem, "background", {doNotRender:true});

@@ -665,6 +665,30 @@ var SideDataInterfaceRace$1 = /*#__PURE__*/Object.freeze({
     SideDataInterfaceRace: SideDataInterfaceRace
 });
 
+class SideDataInterfaceBackground extends SideDataInterfaceBase {
+	static _SIDE_LOAD_OPTS = {
+		propBrew: "foundryBackground",
+		fnLoadJson: async () => this.pPreloadSideData(),
+		propJson: "background",
+	};
+
+	static async _pGetPreloadSideData () {
+		return Vetools.pGeBackgroundSideData();
+	}
+}
+class SideDataInterfaceBackgroundFeature extends SideDataInterfaceBase {
+	static _SIDE_LOAD_OPTS = {
+		propBrew: "foundryBackgroundFeature",
+		fnLoadJson: async () => this.pPreloadSideData(),
+		propJson: "backgroundFeature",
+		propsMatch: ["backgroundSource", "backgroundName", "source", "name"],
+	};
+
+	static async _pGetPreloadSideData () {
+		return Vetools.pGeBackgroundSideData();
+	}
+}
+
 class SideDataInterfaces {
     static init() {
         SideDataInterfaceClass.init();

@@ -7,6 +7,7 @@ class ImportTester{
 		else if(type == "subclassFeature"){flags = this._getClassSubclassFeatureFlags(item);}
 		else if(type == "spell"){flags = this._getSpellFlags(item);}
 		else if(type == "race"){flags = this._getRaceFlags(item);}
+		else if(type == "background"){flags = this._getBackgroundFlags(item);}
 		else if(type == "optionalfeature"){flags = this._getOptionalFeatureFlags(item);}
 		else{flags = this.getFlags_Item(item);}
 		//Try to load the entity from the cache
@@ -208,6 +209,21 @@ class ImportTester{
 			/* } */
 	
 			return out;
+	}
+	_getBackgroundFlags (bg, opts) {
+		const out = {
+			/* [SharedConsts.MODULE_ID]: { */
+				page: UrlUtil.PG_BACKGROUNDS,
+				source: bg.source,
+				hash: UrlUtil.URL_TO_HASH_BUILDER[UrlUtil.PG_BACKGROUNDS](bg),
+				propDroppable: "background",
+				/* filterValues: opts.filterValues, */
+			/* }, */
+		};
+
+		//if (opts.isActorItem) out[SharedConsts.MODULE_ID].isDirectImport = true;
+
+		return out;
 	}
 	async runTest2(cls){
 		/*  this.handleReady().then(() => {

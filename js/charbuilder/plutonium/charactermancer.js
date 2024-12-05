@@ -7981,38 +7981,35 @@ class ActorCharactermancerBackground extends ActorCharactermancerBaseComponent {
     }
     _getRenderableBackground() {
       const bk = this._data.background[this._state.background_ixBackground];
-      const background = MiscUtil.copy(bk);
-      const walker = MiscUtil.getWalker({
-        'keyBlocklist': MiscUtil.GENERIC_WALKER_ENTRIES_KEY_BLOCKLIST,
-        'isAllowDeleteArrays': true,
-        'isAllowDeleteObjects': true
-      });
-      background.entries = walker.walk(background.entries || [], {
-        'array': ar => {
-          ar = ar.filter(entry => entry != null && !entry?.["data"]?.["isFeature"]);
-          if (!ar.length) {
-            return undefined;
-          }
-          return ar;
-        },
-        'object': ar => {
-          if (ar.type === "list") {
-            ar.items = (ar.items || []).filter(it => {
-              const nameLower = (it.name || '').trim().toLowerCase();
-              return !(it.type === "item" && (/^skill/.test(nameLower) || /^language/.test(nameLower) || /^tool/.test(nameLower)));
-            });
-            if (!ar.items.length) {
-              return undefined;
-            }
-          }
-          return ar;
-        }
-      });
-      return background;
+      return ActorCharactermancerBackground.__getRenderableBackground(bk);
     }
-    _hk_shared_doRenderBackground({
-      $dispBackground: parentDiv
-    }) {
+    static __getRenderableBackground(bk){
+        const background = MiscUtil.copy(bk);
+        const walker = MiscUtil.getWalker({
+            'keyBlocklist': MiscUtil.GENERIC_WALKER_ENTRIES_KEY_BLOCKLIST,
+            'isAllowDeleteArrays': true,
+            'isAllowDeleteObjects': true
+        });
+        background.entries = walker.walk(background.entries || [], {
+            'array': ar => {
+            ar = ar.filter(entry => entry != null && !entry?.["data"]?.["isFeature"]);
+            if (!ar.length) {return undefined;}
+            return ar;
+            },
+            'object': ar => {
+            if (ar.type === "list") {
+                ar.items = (ar.items || []).filter(it => {
+                const nameLower = (it.name || '').trim().toLowerCase();
+                return !(it.type === "item" && (/^skill/.test(nameLower) || /^language/.test(nameLower) || /^tool/.test(nameLower)));
+                });
+                if (!ar.items.length) {return undefined;}
+            }
+            return ar;
+            }
+        });
+        return background;
+    }
+    _hk_shared_doRenderBackground({$dispBackground: parentDiv}) {
       const background = this._data.background[this._state.background_ixBackground];
       parentDiv.empty();
       if (background) {
