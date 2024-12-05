@@ -583,33 +583,3 @@ class C5e_EditWindow {
         return foundItem;
     }
 }
-
-class C5e_SpellbookCategory extends C5e_InventoryCategory {
-    render(categoryData){
-        this.categoryId = categoryData.id;
-        this.itemList = $$`<ol class="item-list" data-category-id="${categoryData.id}"></ol>`;
-
-        //Create header template
-        const header = `
-        <li class="items-header spellbook-header flexrow">
-            <span class="item-name flexrow">${categoryData.label}</span>
-        
-            <div class="item-detail item-weight">Weight</div>
-        
-            <div class="item-detail item-uses">Charges</div>
-            <div class="item-detail item-action">Usage</div>
-        
-            <div class="item-controls">
-              <a class="item-control item-action" data-action="create" data-tooltip="itemCreate">
-                <i class="fas fa-plus"></i> Add
-              </a>
-            </div>
-          </li>
-        `;
-        this.header = $$`${header}`;
-
-    }
-}
-class C5e_SpellbookItem {
-
-}

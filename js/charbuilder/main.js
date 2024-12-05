@@ -1307,9 +1307,13 @@ class CharacterBuilder {
           {className: clsData.name, classSource: clsData.source,
             subclassName: sclsData.name, subclassSource: sclsData.source});
 
-            
-        //let slotsAtLvl1 = ActorCharactermancerSheet.getSpellSlotsAtLvl(1, cls.targetLevel, clsData, sclsData);
-        //console.log("Spell slots at lvl 1:", slotsAtLvl1);
+        for(let i = 1; i <= 9; ++i){
+          //TODO: make this be combinable with other classes
+          let slots = ActorCharactermancerSheet.getSpellSlotsAtLvl(i, cls.targetLevel, clsData, sclsData);
+          updatePool[`spellbook.${i}.uses`] = slots;
+          updatePool[`spellbook.${i}.slots`] = slots;
+        }
+        
       }
 
       //HIT POINTS

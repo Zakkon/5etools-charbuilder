@@ -110,23 +110,76 @@ class ActorCharactermancerSheet2 extends ActorCharactermancerSheet {
             //Get some data from the parent
             const dataset = grandparent.dataset;
             if(dataset == null || Object.entries(dataset).length < 1){continue;}
-            //lets say lvl 1 has 2 spell slots
             let contents = "";
-            if(dataset.preparationMode != "innate" || dataset.level < 1){
-                //We now have to get the actual category of the inventory, and from there get max & current spell slots
-                const sectionInfo = this.actor.spellbook[dataset.level];
-                const maxSpellSlots = isNumeric(sectionInfo.slots)? sectionInfo.slots : 0;
-                const spellSlotsRemaining = isNumeric(sectionInfo.uses)? sectionInfo.uses : 0;
-                for (let i = 1; i <= maxSpellSlots; i++) {
-                    if (i <= spellSlotsRemaining) {
-                        contents += `<span class="dot"></span>`;
-                    }
-                    else {
-                        contents += `<span class="dot empty"></span>`;
-                    }
+
+            if(dataset.preparationMode == "innate" || dataset.level < 1){continue;}
+            //We now have to get the actual category of the inventory, and from there get max & current spell slots
+            const sectionInfo = this.actor.spellbook[dataset.level];
+            const maxSpellSlots = isNumeric(sectionInfo.slots)? sectionInfo.slots : 0;
+            const spellSlotsRemaining = isNumeric(sectionInfo.uses)? sectionInfo.uses : 0;
+
+            for (let i = 1; i <= maxSpellSlots; i++) {
+                if (i <= spellSlotsRemaining) {
+                    contents += `<span class="dot"></span>`;
+                }
+                else {
+                    contents += `<span class="dot empty"></span>`;
                 }
             }
+
             $(markerDiv).html(contents);
+
+            for(let i = 0; i < markerDiv.children.length; ++i){
+                let dot = markerDiv.children[i];
+                $(dot).click(evt=>{
+                    this._setSpellMarkersRemaining(dataset.level, i+1);
+                });
+            }
+
+            this._setSpellMarkersRemaining(dataset.level, spellSlotsRemaining, true);
+        }
+    }
+
+    _setSpellMarkersRemaining(level, slotsRemaining, isResetMarkers=false){
+        const sectionInfo = this.actor.spellbook[level];
+        //const maxSpellSlots = isNumeric(sectionInfo.slots)? sectionInfo.slots : 0;
+        const spellSlotsRemaining = isNumeric(sectionInfo.uses)? sectionInfo.uses : 0;
+        const isFilled = (slotsRemaining) <= spellSlotsRemaining;
+        this.actor.spellbook[level].uses = slotsRemaining;
+
+        const markers = this.element.find(".spellSlotMarker");
+        for(let m of markers){
+            //get grandparent
+            let grandparent = m.parentNode.parentNode;
+            //Get some data from the parent
+            const dataset = grandparent.dataset;
+            if(dataset == null || Object.entries(dataset).length < 1){continue;}
+            if(dataset.preparationMode == "innate" || dataset.level != level){continue;}
+            let slotsTextValueInput = $(grandparent).find(".spell-slots > input");
+            slotsTextValueInput.value = slotsRemaining;
+
+            for(let i = 0; i < m.children.length; ++i){
+                let dot = $(m.children[i]);
+                let ix = i+1;
+                if(ix < slotsRemaining){
+                    if(dot.hasClass("empty")){dot.toggleClass("empty");} //mark as filled
+                }
+                if(ix == slotsRemaining){
+                    if(isResetMarkers){
+                        if(dot.hasClass("empty")){dot.toggleClass("empty");} //mark as filled
+                    }
+                    else{
+                        if(isFilled && !dot.hasClass("empty")){dot.toggleClass("empty");} //mark as empty if it was filled
+                        if(!isFilled && dot.hasClass("empty")){dot.toggleClass("empty");} //mark as filled if it was empty
+                    }
+                }
+                if(ix > slotsRemaining)
+                {
+                    if(!dot.hasClass("empty")){dot.toggleClass("empty");} //mark as empty
+                }
+            }
+
+           
         }
     }
 
