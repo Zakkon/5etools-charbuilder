@@ -6970,7 +6970,7 @@ class DataConverterBackground extends DataConverter {
 					fluff?.entries?.length ? Renderer.get().setFirstSection(true).render({type: "entries", entries: fluff?.entries}) : "",
 					Renderer.get().setFirstSection(true).render({type: "entries", entries: bg.entries}),
 				].filter(Boolean);
-				return `<div>${rendered.join("<hr>")}</div>`;
+				return `<div>${rendered/* .join("<hr>") */}</div>`;
 			})
 			: "";
 
