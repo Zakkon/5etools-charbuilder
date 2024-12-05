@@ -19,7 +19,7 @@ Circle of Stars:
 *- "Circle of Stars": Guiding Bolt is specified as "prepared", without any reference to the @prof free uses per LR. Might in the future want to add a second Guiding Bolt which is "innate", with @prof uses per LR
 
 Circle of the Land:
-- "Bonus Cantrip": specified a maxCantripBonus in foundry.json. Sheet adds that into the max cantrip amount.
+- "Bonus Cantrip": already handled by a FOS component in the spell selection tab
 - "Circle Spells": specified additonalSpells in foundry.json. class-druid.json's additionalSpells are ignored since there are more than 1 object.
 
 Circle of the Moon:

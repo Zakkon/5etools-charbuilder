@@ -2068,11 +2068,6 @@
 			"subclassSource": "PHB",
 			"level": 2,
 			"entryData": {
-				"maxCantripBonus": [
-					{
-						"2": 1
-					}
-				],
 				"additionalSpells": [
 					{
 						"name": "Arctic",
