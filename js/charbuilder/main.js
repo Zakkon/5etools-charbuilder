@@ -1383,7 +1383,7 @@ class CharacterBuilder {
         //resources
         //saving throw proficiencies
         //additional spells
-        pullAdditionalSpells(fos.data.formDatasAdditionalSpells);
+        //pullAdditionalSpells(fos.data.formDatasAdditionalSpells);
       }
     }
     updatePool["system.attributes.spellcasting"] = spellcastingAbility;
