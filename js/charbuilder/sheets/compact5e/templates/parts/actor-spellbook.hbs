@@ -98,10 +98,10 @@
 
                 {{#if @root.owner}}
                 <div class="item-controls flexrow">
-                    {{#if section.canPrepare}}
-                    <a class="item-control item-action {{ctx.toggleClass}}" data-action="prepare"
+                    {{#if (and section.canPrepare item.canToggle)}}
+                    <a class="item-control item-action {{item.toggleClass}}" data-action="equip"
                     data-tooltip="{{ctx.toggleTitle}}">
-                        <i class="fas fa-sun"></i>
+                        <i class="fas fa-book"></i>
                     </a>
                     {{/if}}
                     <a class="item-control item-action" data-action="edit" data-tooltip="DND5E.ItemEdit">

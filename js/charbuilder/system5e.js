@@ -1100,7 +1100,7 @@ class Actor5e {
             }
             
         };
-        const createSpellCategory = (label, preparationMode, level, usesSlots=true) => {
+        const createSpellCategory = (label, preparationMode, level, canPrepare=true, usesSlots=true) => {
             return {
                 label: label,
                 canCreate:true,
@@ -1110,6 +1110,7 @@ class Actor5e {
                     preparationMode: preparationMode,
                     type: "spell",
                 },
+                canPrepare,
                 usesSlots,
                 uses:"-", slots:"-",
                 spells:[] //spell5e[]
@@ -1117,8 +1118,8 @@ class Actor5e {
         }
 
         this.spellbook = {
-            innate:createSpellCategory("Innate Spellcasting", "innate", 1, false),
-            0:createSpellCategory("Cantrips", "always", 0, false),
+            innate:createSpellCategory("Innate Spellcasting", "innate", 1, false, false),
+            0:createSpellCategory("Cantrips", "always", 0, false, false),
             1:createSpellCategory("1st Level", "prepared", 1),
             2:createSpellCategory("2nd Level", "prepared", 2),
             3:createSpellCategory("3rd Level", "prepared", 3),
