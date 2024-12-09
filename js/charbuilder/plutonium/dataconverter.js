@@ -6941,3 +6941,180 @@ DataConverterRace.STUB_RACE = {
 	source: Parser.SRC_PHB,
 	_isStub: true,
 };
+
+//#region Background
+class DataConverterBackground extends DataConverter {
+	static _configGroup = "importBackground";
+
+	static _SideDataInterface = SideDataInterfaceBackground;
+	static _ImageFetcher = null;//ImageFetcherBackground;
+
+ /**
+  * @param {EntityObj} bg
+  * @param {object} opts
+  * @param {Actor5e} opts.actor
+  * @param {boolean} opts.fluff
+  */
+	static async pGetDocumentJson (bg, opts) {
+		opts = opts || {};
+		if (opts.actor) opts.isActorItem = true;
+
+		Renderer.get().setFirstSection(true).resetHeaderIndex();
+
+		const fluff = opts.fluff || await Renderer.background.pGetFluff(bg);
+
+		//Load description
+		const description = Config.get("importBackground", "isImportDescription")
+			? await DescriptionRenderer.pGetWithDescriptionPlugins(() => {
+				const rendered = [
+					fluff?.entries?.length ? Renderer.get().setFirstSection(true).render({type: "entries", entries: fluff?.entries}) : "",
+					Renderer.get().setFirstSection(true).render({type: "entries", entries: bg.entries}),
+				].filter(Boolean);
+				return `<div>${rendered/* .join("<hr>") */}</div>`;
+			})
+			: "";
+
+		const img = null;//await this._ImageFetcher.pGetSaveImagePath(bg, {propCompendium: "background", fluff, taskRunner: opts.taskRunner});
+
+		const additionalAdvancement = await this._SideDataInterface._pGetAdvancementSideLoaded(bg);
+
+		const systemBase = {
+			description: {value: description, chat: ""},
+			source: UtilDocumentSource.getSourceObjectFromEntity(bg),
+
+						damage: {parts: []},
+			activation: {type: "", cost: 0, condition: ""},
+			duration: {value: null, units: ""},
+			target: {value: null, units: "", type: ""},
+			range: {value: null, long: null, units: ""},
+			uses: {value: 0, max: 0, per: null},
+			ability: null,
+			actionType: "",
+			attack: {bonus: null},
+			chatFlavor: "",
+			critical: {threshold: null, damage: ""},
+			formula: "",
+			save: {ability: "", dc: null},
+			requirements: "",
+			recharge: {value: null, charged: false},
+			consume: {type: "", target: "", amount: null},
+			
+			advancement: [
+				...(additionalAdvancement || []),
+			],
+		};
+
+		const additionalSystem = await this._SideDataInterface.pGetSystemSideLoaded(bg, {systemBase});
+		const additionalFlags = await this._SideDataInterface.pGetFlagsSideLoaded(bg);
+
+		const effectsSideTuples = await this._SideDataInterface.pGetEffectsSideLoadedTuples({ent: bg, img, actor: opts.actor});
+		effectsSideTuples.forEach(({effect, effectRaw}) => UtilActiveEffects.mutEffectDisabledTransfer(effect, "importBackground", UtilActiveEffects.getDisabledTransferHintsSideData(effectRaw)));
+
+		const out = {
+			...UtilFoundryId.getIdObj(),
+			name: UtilApplications.getCleanEntityName(UtilDataConverter.getNameWithSourcePart(bg)),
+			type: "background",
+			system: foundry.utils.mergeObject(
+				systemBase,
+				(additionalSystem || {}),
+			),
+			ownership: {default: 0},
+			flags: {
+				...this._getBackgroundFlags(bg, opts),
+				...additionalFlags,
+			},
+			effects: UtilActiveEffects.getEffectsMutDedupeId(effectsSideTuples.map(it => it.effect)),
+			img,
+		};
+
+		this._mutApplyDocOwnership(out, opts);
+
+		return out;
+	}
+
+	static _getBackgroundFlags (bg, opts) {
+		const out = {
+			[SharedConsts.MODULE_ID]: {
+				page: UrlUtil.PG_BACKGROUNDS,
+				source: bg.source,
+				hash: UrlUtil.URL_TO_HASH_BUILDER[UrlUtil.PG_BACKGROUNDS](bg),
+				propDroppable: "background",
+				filterValues: opts.filterValues,
+			},
+		};
+
+		if (opts.isActorItem) out[SharedConsts.MODULE_ID].isDirectImport = true;
+
+		return out;
+	}
+
+	static getBackgroundStub () {
+		return MiscUtil.copyFast(DataConverterBackground.STUB_BACKGROUND);
+	}
+}
+DataConverterBackground.STUB_BACKGROUND = {
+	name: "Unknown Background",
+	source: Parser.SRC_PHB,
+	_isStub: true,
+};
+class DataConverterBackgroundFeature extends DataConverterFeature {
+	static _configGroup = "importBackgroundFeature";
+
+	static _SideDataInterface = SideDataInterfaceBackgroundFeature;
+	static _ImageFetcher = null;//ImageFetcherBackgroundFeature;
+
+	static async pGetInitFeatureLoadeds (feature, {actor = null} = {}) {
+		const hash = UrlUtil.URL_TO_HASH_BUILDER["backgroundFeature"](feature);
+		return {
+			hash,
+			loadeds: [
+				{
+					hash,
+					page: "backgroundFeature",
+					source: feature.source,
+					entity: feature,
+					type: "backgroundFeature",
+				},
+			],
+			name: feature.name,
+			backgroundFeature: `${feature.name}|${feature.backgroundName}|${feature.backgroundSource}|${feature.source}`,
+			source: feature.source,
+		};
+	}
+
+	static async pGetDocumentJson (featureEntry, opts) {
+		opts = opts || {};
+
+		Renderer.get().setFirstSection(true).resetHeaderIndex();
+
+		const img = null; //await this._ImageFetcher.pGetSaveImagePath(featureEntry, {propCompendium: "backgroundFeature"});
+
+		const effectsSideTuples = await this._SideDataInterface.pGetEffectsSideLoadedTuples({ent: featureEntry, img, actor: opts.actor});
+		effectsSideTuples.forEach(({effect, effectRaw}) => UtilActiveEffects.mutEffectDisabledTransfer(effect, "importBackground", UtilActiveEffects.getDisabledTransferHintsSideData(effectRaw)));
+
+		return this._pGetItemActorPassive(
+			featureEntry,
+			{
+				isActorItem: opts.isActorItem,
+				mode: "player",
+				img,
+				fvttType: "feat",
+				typeType: "background",
+				source: featureEntry.source,
+				actor: opts.actor,
+				requirements: featureEntry.backgroundName,
+				pFnGetAdditionalSystem: async (entry, {systemBase}) => this._SideDataInterface.pGetSystemSideLoaded(entry, {systemBase}),
+				additionalFlags: await this._SideDataInterface.pGetFlagsSideLoaded(featureEntry),
+				foundryFlags: {
+					[SharedConsts.MODULE_ID]: {
+						page: "backgroundFeature",
+						source: featureEntry.source,
+						hash: UrlUtil.URL_TO_HASH_BUILDER["backgroundFeature"](featureEntry),
+					},
+				},
+				effects: UtilActiveEffects.getEffectsMutDedupeId(effectsSideTuples.map(it => it.effect)),
+			},
+		);
+	}
+}
+//#endregion

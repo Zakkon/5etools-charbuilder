@@ -132,20 +132,25 @@ class ActorCharactermancerSheet2 extends ActorCharactermancerSheet {
             for(let i = 0; i < markerDiv.children.length; ++i){
                 let dot = markerDiv.children[i];
                 $(dot).click(evt=>{
-                    this._setSpellMarkersRemaining(dataset.level, i+1);
+                    const sectionInfo = this.actor.spellbook[dataset.level];
+                    const slotsRemaining = isNumeric(sectionInfo.uses)? sectionInfo.uses : 0;
+                    const isAlreadyFilled = (i+1) <= slotsRemaining;
+                    //this._setSpellMarkersRemaining(dataset.level, isAlreadyFilled? i:i+1);
+                    this.actor.spellbook[dataset.level].uses = isAlreadyFilled? i:i+1;
+                    this.actor.update(); //Forces render
                 });
             }
 
-            this._setSpellMarkersRemaining(dataset.level, spellSlotsRemaining, true);
+            this._setSpellMarkersRemaining(dataset.level, spellSlotsRemaining);
         }
     }
 
-    _setSpellMarkersRemaining(level, slotsRemaining, isResetMarkers=false){
+    _setSpellMarkersRemaining(level, slotsRemaining){
         const sectionInfo = this.actor.spellbook[level];
         //const maxSpellSlots = isNumeric(sectionInfo.slots)? sectionInfo.slots : 0;
-        const spellSlotsRemaining = isNumeric(sectionInfo.uses)? sectionInfo.uses : 0;
-        const isFilled = (slotsRemaining) <= spellSlotsRemaining;
-        this.actor.spellbook[level].uses = slotsRemaining;
+        //const slotsRemainingOld = isNumeric(sectionInfo.uses)? sectionInfo.uses : 0;
+        //this.actor.spellbook[level].uses = slotsRemaining;
+
 
         const markers = this.element.find(".spellSlotMarker");
         for(let m of markers){
@@ -155,31 +160,23 @@ class ActorCharactermancerSheet2 extends ActorCharactermancerSheet {
             const dataset = grandparent.dataset;
             if(dataset == null || Object.entries(dataset).length < 1){continue;}
             if(dataset.preparationMode == "innate" || dataset.level != level){continue;}
-            let slotsTextValueInput = $(grandparent).find(".spell-slots > input");
-            slotsTextValueInput.value = slotsRemaining;
+            let slotsTextValueInput = $(grandparent).find(".spell-slots > .spell-uses");
+            slotsTextValueInput[0].value = slotsRemaining;
+            return;
 
             for(let i = 0; i < m.children.length; ++i){
                 let dot = $(m.children[i]);
                 let ix = i+1;
-                if(ix < slotsRemaining){
+                if(ix <= slotsRemaining){
                     if(dot.hasClass("empty")){dot.toggleClass("empty");} //mark as filled
                 }
-                if(ix == slotsRemaining){
-                    if(isResetMarkers){
-                        if(dot.hasClass("empty")){dot.toggleClass("empty");} //mark as filled
-                    }
-                    else{
-                        if(isFilled && !dot.hasClass("empty")){dot.toggleClass("empty");} //mark as empty if it was filled
-                        if(!isFilled && dot.hasClass("empty")){dot.toggleClass("empty");} //mark as filled if it was empty
-                    }
-                }
-                if(ix > slotsRemaining)
+                else
                 {
                     if(!dot.hasClass("empty")){dot.toggleClass("empty");} //mark as empty
                 }
             }
-
-           
+            
+            break;
         }
     }
 

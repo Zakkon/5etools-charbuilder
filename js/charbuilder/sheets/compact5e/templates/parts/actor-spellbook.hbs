@@ -37,8 +37,9 @@
             <div class="spellSlotMarker"></div>
             <div class="spell-slots">
                 {{#if section.usesSlots}}
-                <input type="text" name="system.spells.{{section.prop}}.value" value="{{section.uses}}" placeholder="0"
-                       data-dtype="Number">
+                {{!-- <input class="spell-uses" type="text" name="system.spells.{{section.prop}}.value" value="{{section.uses}}" placeholder="0"
+                       data-dtype="Number"> --}}
+                <span class="spell-uses", type="text" name="system.spells.{{section.prop}}.value">{{section.uses}}</span>
                 <span class="sep"> / </span>
                 <span class="spell-max" data-level="{{section.prop}}" data-slots="{{section.slots}}">
                     {{{section.slots}}}
@@ -98,9 +99,9 @@
                 {{#if @root.owner}}
                 <div class="item-controls flexrow">
                     {{#if section.canPrepare}}
-                    <a class="item-control item-action {{ctx.toggleClass}}" data-action="prepare"
+                    <a class="item-control item-action {{item.toggleClass}}" data-action="equip"
                     data-tooltip="{{ctx.toggleTitle}}">
-                        <i class="fas fa-sun"></i>
+                        <i class="fas fa-book"></i>
                     </a>
                     {{/if}}
                     <a class="item-control item-action" data-action="edit" data-tooltip="DND5E.ItemEdit">

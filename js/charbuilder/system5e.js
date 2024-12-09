@@ -690,6 +690,17 @@ class Background5e extends Feature5e{
         if(!Entity5e.use_overrides){return this;}
         return this._createProxy();
     }
+    static async verifySystemData(hash){
+        const existingData = CharacterBuilder.getEntityByUid("background", {uid:hash});
+        if(existingData == null){console.error("No existing data found for background", hash);}
+        if(existingData.system){return;}
+        //No system data exists, go ahead and import
+        let imported = await SourceManager.plutoniumConvertData(existingData, "background");
+        existingData.system = imported.system;
+        //Since the actual flavor text for background is stored in fluff, we need to load the fluff also
+        /* const fluff = await Renderer.background.pGetFluff(existingData);
+        existingData.fluff = fluff; */
+    }
 }
 class OptionalFeature5e extends Feature5e{
     constructor(hash, collectionId=null, isCustom){
@@ -956,13 +967,22 @@ class Spell5e extends Entity5e{
             case "prepared": //always prepared
             case "always":
             return false;
-
             default: return true;
         }
     }
     get toggleClass(){
-        return this.system.equipped? "active" : "";
+        if(this.isPrepared){return "active";}
+        switch(this.system.preparationMode){
+            case "prepared": //always prepared
+            case "always":
+                return "active";
+            default: break;
+        }
+        return "";
     }
+    //not sure which is going to be standardized, "always" or "prepared"
+    get isAlwaysPrepared(){return this.system.preparationMode == "always" || this.system.preparationMode == "prepared";}
+    get isPrepared(){return this.system.equipped ?? false;}
     get alwaysClass(){
         /*    "prepared" — spells which are always prepared
     "innate" — Spells which can be innately cast, without expending normal spell resources
@@ -973,6 +993,7 @@ class Spell5e extends Entity5e{
     */
         if(this.system.preparationMode == "innate")return "innate";
         if(this.system.preparationMode == "prepared")return "alwaysPrepared"; //alwaysPrepared
+        if(this.system.preparationMode == "always")return "alwaysPrepared"; //alwaysPrepared
         return "";
     }
 }
@@ -1077,18 +1098,36 @@ class Actor5e {
             weapon: {
                 label: "Weapons",
                 items: [], //item5e[]
-                dataset: {
-                    type: "weapon",
-                }
+                dataset: {type: "weapon",}
             },
             equipment: {
                 label: "Equipment",
                 dataset: {type:"equipment"},
                 items: []
+            },
+            consumable: {
+                label: "Consumables",
+                dataset: {type:"consumable"},
+                items: []
+            },
+            tool: {
+                label: "Tools",
+                dataset: {type:"tool"},
+                items: []
+            },
+            container: {
+                label: "Containers",
+                dataset: {type:"container"},
+                items: []
+            },
+            loot: {
+                label: "Loot",
+                dataset: {type:"loot"},
+                items: []
             }
             
         };
-        const createSpellCategory = (label, preparationMode, level, usesSlots=true) => {
+        const createSpellCategory = (label, preparationMode, level, canPrepare=true, usesSlots=true) => {
             return {
                 label: label,
                 canCreate:true,
@@ -1098,6 +1137,7 @@ class Actor5e {
                     preparationMode: preparationMode,
                     type: "spell",
                 },
+                canPrepare,
                 usesSlots,
                 uses:"-", slots:"-",
                 spells:[] //spell5e[]
@@ -1105,8 +1145,8 @@ class Actor5e {
         }
 
         this.spellbook = {
-            innate:createSpellCategory("Innate Spellcasting", "innate", 1, false),
-            0:createSpellCategory("Cantrips", "always", 0, false),
+            innate:createSpellCategory("Innate Spellcasting", "innate", 1, false, false),
+            0:createSpellCategory("Cantrips", "always", 0, false, false),
             1:createSpellCategory("1st Level", "prepared", 1),
             2:createSpellCategory("2nd Level", "prepared", 2),
             3:createSpellCategory("3rd Level", "prepared", 3),
@@ -1706,6 +1746,36 @@ class Actor5e {
             proficiency: `+${this.system.attributes.prof}`
         };
     }
+    get numPreparedSpells(){
+        let count = 0;
+        for(let category of this.spellbook){
+            if(!category.canPrepare){continue;}
+            for(let sp of category.spells){
+                if(sp.isAlwaysPrepared){continue;}
+                if(sp.isPrepared){count++;}
+            }
+        }
+        return count;
+    }
+    get numPreparedSpellsMax(){
+        let spellcastingClass = this.primaryClass;
+        //let sc = this.primarySubclass();
+        if(spellcastingClass == null){return 0;}
+        spellcastingClass = CharacterBuilder.getClassByNameSource(spellcastingClass.name, spellcastingClass.source);
+        const abilityScoresFromComp = CharacterBuilder.instance.compAbility.getTotals();
+        return Charactermancer_Spell_Util.getMaxPreparedSpells({
+            cls: spellcastingClass,
+            sc: null,
+            targetLevel: this.system.details.level,
+            existingAbilityScores: {},
+            abilityScoresFromComp: abilityScoresFromComp
+          });
+    }
+    get primaryClass(){
+        //TODO: actually check which class is primary
+        return this.features.class.items[0] ?? null;
+    }
+    get primarySubclass(){}
 
     _mancerDependencies;
     setMancerDependency(path, value){

@@ -2960,8 +2960,20 @@ class Charactermancer_AdditionalSpellsSelect extends BaseComponent {
         });
     }
 
-    getFormData() {
+    getFormData(opts) {
+        let backup = {};
+        if(opts && opts.level){
+            backup.curLevel = this.__state.curLevel;
+            this.__state.curLevel = 0;
+            backup.targetLevel = this.__state.targetLevel;
+            this.__state.targetLevel = opts.level;
+        }
         let flatSpellsInRange = this._getFlatSpellsInRange().map(it=>it.getCopy());
+
+        if(opts && opts.level){
+            this.__state.curLevel = backup.curLevel;
+            this.__state.targetLevel = backup.targetLevel;
+        }
 
         const chooseFromGroups = {};
         flatSpellsInRange.forEach(flat=>{
@@ -3060,8 +3072,8 @@ class Charactermancer_AdditionalSpellsSelect extends BaseComponent {
         };
     }
 
-    pGetFormData() {
-        return this.getFormData();
+    pGetFormData(opts={}) {
+        return this.getFormData(opts);
     }
 
     _getDefaultState() {
@@ -3084,16 +3096,11 @@ class Charactermancer_AdditionalSpellsSelect extends BaseComponent {
         };
     }
 
-    /**
-     * Import chosen additional spells. Only used when loading from a save file.
-     * @param {object} inputState state
-     */
-    loadFromSaveData(inputState){
+    loadFromSavedState(inputState){
         for(let [key, value] of Object.entries(inputState)){
             this._state[key] = value;
         }
-
-        this._state.pulseChoose = !this._state.pulseChoose; //trigger hook
+        this._state.pulseChoose = !this._state.pulseChoose;
     }
 }
 class Charactermancer_Class_LevelSelect extends BaseComponent {
@@ -7994,42 +8001,49 @@ class ActorCharactermancerBackground extends ActorCharactermancerBaseComponent {
     }
     _getRenderableBackground() {
       const bk = this._data.background[this._state.background_ixBackground];
-      const background = MiscUtil.copy(bk);
-      const walker = MiscUtil.getWalker({
-        'keyBlocklist': MiscUtil.GENERIC_WALKER_ENTRIES_KEY_BLOCKLIST,
-        'isAllowDeleteArrays': true,
-        'isAllowDeleteObjects': true
-      });
-      background.entries = walker.walk(background.entries || [], {
-        'array': ar => {
-          ar = ar.filter(entry => entry != null && !entry?.["data"]?.["isFeature"]);
-          if (!ar.length) {
-            return undefined;
-          }
-          return ar;
-        },
-        'object': ar => {
-          if (ar.type === "list") {
-            ar.items = (ar.items || []).filter(it => {
-              const nameLower = (it.name || '').trim().toLowerCase();
-              return !(it.type === "item" && (/^skill/.test(nameLower) || /^language/.test(nameLower) || /^tool/.test(nameLower)));
-            });
-            if (!ar.items.length) {
-              return undefined;
-            }
-          }
-          return ar;
-        }
-      });
-      return background;
+      return ActorCharactermancerBackground.__getRenderableBackground(bk);
     }
-    _hk_shared_doRenderBackground({
-      $dispBackground: parentDiv
-    }) {
+    static __getRenderableBackground(bk){
+        const background = MiscUtil.copy(bk);
+        const walker = MiscUtil.getWalker({
+            'keyBlocklist': MiscUtil.GENERIC_WALKER_ENTRIES_KEY_BLOCKLIST,
+            'isAllowDeleteArrays': true,
+            'isAllowDeleteObjects': true
+        });
+        background.entries = walker.walk(background.entries || [], {
+            'array': ar => {
+            ar = ar.filter(entry => entry != null && !entry?.["data"]?.["isFeature"]);
+            if (!ar.length) {return undefined;}
+            return ar;
+            },
+            'object': ar => {
+            if (ar.type === "list") {
+                ar.items = (ar.items || []).filter(it => {
+                const nameLower = (it.name || '').trim().toLowerCase();
+                return !(it.type === "item" && (/^skill/.test(nameLower) || /^language/.test(nameLower) || /^tool/.test(nameLower)));
+                });
+                if (!ar.items.length) {return undefined;}
+            }
+            return ar;
+            }
+        });
+        return background;
+    }
+    _hk_shared_doRenderBackground({$dispBackground: parentDiv}) {
       const background = this._data.background[this._state.background_ixBackground];
       parentDiv.empty();
       if (background) {
-        parentDiv.append(Renderer.hover.$getHoverContent_stats(UrlUtil.PG_BACKGROUNDS, this._getRenderableBackground()));
+        let content = Renderer.hover.$getHoverContent_stats(UrlUtil.PG_BACKGROUNDS, this._getRenderableBackground());
+        parentDiv.append(content);
+
+        //Load fluff text async
+        Renderer.background.pGetFluff(background).then((fluff) => {
+            //Convert entries to rendered html
+            let rendered = fluff?.entries?.length ?
+            Renderer.get().setFirstSection(true).render({type: "entries", entries: fluff?.entries}) : "";
+            //Prepend it to the content
+            content.find("td").eq(0).prepend(rendered);
+        });
       }
     }
     _getDefaultState() {
@@ -10593,7 +10607,10 @@ class ActorCharactermancerSpell extends ActorCharactermancerBaseComponent {
         }
         /* this._setSpellAsLearned(0, {name:"Guidance", source:"PHB"});
         this._setSpellAsLearned(0, {name:"Goodberry", source:"PHB"}); */
-        
+        for(let i = 0; i < this._compsSpellAdditionalSpellSubclass.length; ++i){
+            let state = JSON.parse(actor.additionalSpellSubclass[i]);
+            this._compsSpellAdditionalSpellSubclass[i].loadFromSavedState(state);
+        }
     }
     /**
         * @param {{name:string, source:string, school:string}} spell
@@ -11548,32 +11565,44 @@ class ActorCharactermancerSpell extends ActorCharactermancerBaseComponent {
         const state = this.__state;
         let out = {};
 
+        const hashSanityCheck = (hash) => {
+            if(hash.includes("|")){
+                let parts = hash.split("|");
+                hash = parts[0] + "_" + parts[1];
+            }
+            return hash;
+        }
+        const makeHash = (sp) => {
+            return  UrlUtil.URL_TO_HASH_BUILDER[UrlUtil.PG_SPELLS](sp).toLowerCase();
+        }
+
         let spells = [];
         let additionalSpellHashes = [];
         //Get the comps
         const filterValues = this.filterValuesSpellsCache || this.filterBoxSpells.getValues();
         for(let compSpell of this._compsSpellSpells){
             const form = await compSpell.pGetFormData(filterValues);
-            console.log("FORM", form);
-            for(let sp of form.data.spells){
-                spells.push(sp);
-            }
+            console.log("form of spells", form);
+            spells = form.data.spells.filter(sp => (sp.isLearned || sp.isPrepared)).map(sp => ({
+                hash: makeHash(sp.spell),
+                prepMode: sp.preparedMode,
+            }));
         }
-
-        for(let compAdd of this._compsSpellAdditionalSpellSubclass){
-            for(let [key, value] of Object.entries(compAdd.__state)){
-                if(typeof value != "string" || !key.startsWith("known__")){continue;}
-                if(value.length < 1){continue;}
-                if(value.includes("|")){
-                    let parts = value.split("|");
-                    value = `${parts[0]}_${parts[1]}`;
-                }
-                additionalSpellHashes.push(value);
-            }
-        }
-
         out.spells = spells;
-        out.additionalSpellHashes = additionalSpellHashes;
+
+        let additionalSpellSubclass = [];
+        for(let comp of this.compsSpellAdditionalSpellSubclass){
+            const form = await comp.pGetFormData({level: actor.system.details.level});
+            for(let sp of form.data){
+                if(sp.type == "choose" && sp.uid != null){
+                    additionalSpellSubclass.push({hash: hashSanityCheck(sp.uid), prepMode:sp.preparationMode});
+                }
+                else if(sp.type == "spell" && sp.uid != null){
+                    additionalSpellSubclass.push({hash: hashSanityCheck(sp.uid), prepMode:sp.preparationMode});
+                }
+            }
+        }
+        out.additionalSpells = {fromSubclass:additionalSpellSubclass};
 
         /* out.featFromAsi = [];
         out.featsFromBackground = [];
@@ -13408,8 +13437,6 @@ class Charactermancer_Spell extends BaseComponent {
         }
         return matches[0];
     }
-
-    
 }
 Charactermancer_Spell._IMPORT_LIST_SPELL = null;
 Charactermancer_Spell._CLASS_MAP = {

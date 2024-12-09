@@ -145,7 +145,12 @@ class CharacterExportFvtt{
             spellSources[srcIx] = spellSource;
         }
         _char.spellsBySource = spellSources;
-
+        let addSpellsSubclass = [];
+        for(let j = 0; j < builder.compSpell._compsSpellAdditionalSpellSubclass.length; ++j){
+            const comp = builder.compSpell._compsSpellAdditionalSpellSubclass[j];
+            addSpellsSubclass.push(JSON.stringify(comp.__state)); //Just stringify the entire state
+        }
+        _char.additionalSpellSubclass = addSpellsSubclass;
         //#endregion
 
         //#region FEATS

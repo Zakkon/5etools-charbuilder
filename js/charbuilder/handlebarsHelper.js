@@ -21,17 +21,20 @@ class HandlebarsHelper{
         });
         Handlebars.registerHelper('not', function (value) {
             var bool = !(value === 'true' || value == true); //inverse it
-            return bool.toString();
+            //return bool.toString();
+            return bool;
         });
         Handlebars.registerHelper('and', function (value1, value2) {
             var bool1 = (value1 === 'true' || value1 == true);
             var bool2 = (value2 === 'true' || value2 == true);
-            return (bool1 && bool2).toString();
+            //return (bool1 && bool2).toString();
+            return bool1 && bool2;
         });
         Handlebars.registerHelper('or', function (value1, value2) {
             var bool1 = (value1 === 'true' || value1 == true);
             var bool2 = (value2 === 'true' || value2 == true);
-            return (bool1 || bool2).toString();
+            //return (bool1 || bool2).toString();
+            return bool1 || bool2;
         });
         Handlebars.registerHelper('eq', function (value1, value2) {
             return value1 === value2;

@@ -23,6 +23,7 @@ window.addEventListener('load', function () {
   }));
 });
 async function handleInit(){
+  console.log("Init begin");
   //UtilGameSettings.prePreInit();
   //Vetools.doMonkeyPatchPreConfig();
   Config.prePreInit(); //Important
@@ -1275,10 +1276,11 @@ class CharacterBuilder {
     //#endregion
 
     //#region Spells
-    //TODO: add spells chosen in spell tab
-    //if(choiceData?.spells){SheetApplier.handleKnownSpells(choiceData.spells, actor);}
-    for(let hash of choiceData.additionalSpellHashes){
-      await SheetApplier.addSpellItem(actor, hash, "known");
+    for(let sp of choiceData.spells ?? []){
+      SheetApplier.addSpellItem(actor, sp.hash, sp.prepMode);
+    }
+    for(let sp of choiceData.additionalSpells?.fromSubclass ?? []){
+      SheetApplier.addSpellItem(actor, sp.hash, sp.prepMode);
     }
     //#endregion
 
@@ -1305,12 +1307,14 @@ class CharacterBuilder {
         sclsData = CharacterBuilder._getEntityByUid(clsData.subclasses, {uid: cls.subclassUid});
         subclassName = sclsData.name;
         //Add subclass's additionalSpells, unless there is more than one spell list
-        SheetApplier.handleSubclassAdditionalSpells(sclsData, actor, cls.targetLevel);
+        //SheetApplier.handleSubclassAdditionalSpells(sclsData, actor, cls.targetLevel);
         
         //Try to import the subclass itself
         let subclassItem = await addFeatureItem("subclass", cls.subclassUid, null,
           {className: clsData.name, classSource: clsData.source,
             subclassName: sclsData.name, subclassSource: sclsData.source});
+
+        
 
         for(let i = 1; i <= 9; ++i){
           //TODO: make this be combinable with other classes
@@ -1381,7 +1385,7 @@ class CharacterBuilder {
         //resources
         //saving throw proficiencies
         //additional spells
-        pullAdditionalSpells(fos.data.formDatasAdditionalSpells);
+        //pullAdditionalSpells(fos.data.formDatasAdditionalSpells);
       }
     }
     updatePool["system.attributes.spellcasting"] = spellcastingAbility;
