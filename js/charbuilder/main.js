@@ -967,8 +967,14 @@ class CharacterBuilder {
    */
   static getClassFeatureByUid(hash, className, classSource){
     const cls = this.getEntityByUid("class", {name:className, source:classSource});
-    const matches = cls.classFeatures.filter(e => e.hash.toLowerCase() == hash);
-    if(matches.length > 1){console.error("More than one class feature found with hash", hash); return matches[0];s}
+    let matches = [];
+    for(let e of cls.classFeatures){
+      if(e.hash.toLowerCase() == hash){matches.push(e); continue;}
+      for(let loaded of e.loadeds ?? []){
+        if(loaded.hash.toLowerCase() == hash){matches.push(loaded); break;}
+      }
+    }
+    if(matches.length > 1){console.error("More than one class feature found with hash", hash); return matches[0];}
     else if(matches.length < 1){return null;}
     else{return matches[0];}
   }

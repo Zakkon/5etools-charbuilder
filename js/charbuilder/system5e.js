@@ -742,10 +742,10 @@ class ClassFeature5e extends Feature5e{
         //if(!this.isCustom){this._tryCloneOriginal(CharacterBuilder.getClassFeatureByUid(hash, className, classSource));}
         const original = CharacterBuilder.getClassFeatureByUid(hash, className, classSource);
         if(!original){console.error("Failed to load feature using hash", hash, className, classSource);}
-        this.name = original.name;
+        this.name = original.name ?? original.entity.name;
         this.system = structuredClone(original.system);
         //this.entries = structuredClone(CharacterBuilder.getClassFeatureEntries(original.name, original.source));
-        let entr = []; for(let l of original.loadeds){for(let e of l.entity.entries){entr.push(e);}} this.entries = entr;
+        let entr = []; for(let l of original.loadeds ?? []){for(let e of l.entity.entries){entr.push(e);}} this.entries = entr;
         const classDatas = CharacterBuilder.instance._data;
         this.properties = {concentration:{label:"Concentration", selected:true}};
         this._prepareLabels();
@@ -771,6 +771,7 @@ class ClassFeature5e extends Feature5e{
         console.assert(classSource != null, "Class source is null!");
         console.assert(hash != null, "Class Feature hash is null!");
         const existingData = CharacterBuilder.getClassFeatureByUid(hash, className, classSource);
+        if(!existingData){console.error("Failed to find class feature", hash, className, classSource, CharacterBuilder.instance._data);}
         if(existingData.system){return;}
         //No system data exists, go ahead and import
         try{
@@ -1748,7 +1749,7 @@ class Actor5e {
     }
     get numPreparedSpells(){
         let count = 0;
-        for(let category of this.spellbook){
+        for(let category of Object.entries(this.spellbook)){
             if(!category.canPrepare){continue;}
             for(let sp of category.spells){
                 if(sp.isAlwaysPrepared){continue;}
@@ -1763,6 +1764,7 @@ class Actor5e {
         if(spellcastingClass == null){return 0;}
         spellcastingClass = CharacterBuilder.getClassByNameSource(spellcastingClass.name, spellcastingClass.source);
         const abilityScoresFromComp = CharacterBuilder.instance.compAbility.getTotals();
+        console.log("abil scores from comp", abilityScoresFromComp);
         return Charactermancer_Spell_Util.getMaxPreparedSpells({
             cls: spellcastingClass,
             sc: null,

@@ -10582,7 +10582,7 @@ class ActorCharactermancerSpell extends ActorCharactermancerBaseComponent {
     /**
      * Sets the state of the component and subcomponents based on a save file. This should be called just after first render.
      * @param {{spellsBySource:{className: string, classSource: string, spellsByLvl: Charactermancer_Spell_SpellMeta[][],
-     * additionalSpellsSubclass:string}} actor
+     * additionalSpellsSubclass:string}[]} actor
     */
     setStateFromSaveFile(actor){
         const data = actor.spellsBySource; //This needs to be updated whenever a class is removed from the character
@@ -10603,13 +10603,8 @@ class ActorCharactermancerSpell extends ActorCharactermancerBaseComponent {
             if(data[j].additionalSpellsSubclass != null){
                 const state = JSON.parse(data[j].additionalSpellsSubclass);
                 this._compsSpellAdditionalSpellSubclass[j].loadFromSaveData(state);
+                //console.error("failed to parse additionalSpellsSubclass state", data[j].additionalSpellsSubclass);
             }
-        }
-        /* this._setSpellAsLearned(0, {name:"Guidance", source:"PHB"});
-        this._setSpellAsLearned(0, {name:"Goodberry", source:"PHB"}); */
-        for(let i = 0; i < this._compsSpellAdditionalSpellSubclass.length; ++i){
-            let state = JSON.parse(actor.additionalSpellSubclass[i]);
-            this._compsSpellAdditionalSpellSubclass[i].loadFromSavedState(state);
         }
     }
     /**
@@ -11592,6 +11587,7 @@ class ActorCharactermancerSpell extends ActorCharactermancerBaseComponent {
 
         let additionalSpellSubclass = [];
         for(let comp of this.compsSpellAdditionalSpellSubclass){
+            if(!comp){continue;}
             const form = await comp.pGetFormData({level: actor.system.details.level});
             for(let sp of form.data){
                 if(sp.type == "choose" && sp.uid != null){

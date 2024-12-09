@@ -148,6 +148,7 @@ class CharacterExportFvtt{
         let addSpellsSubclass = [];
         for(let j = 0; j < builder.compSpell._compsSpellAdditionalSpellSubclass.length; ++j){
             const comp = builder.compSpell._compsSpellAdditionalSpellSubclass[j];
+            if(!comp){continue;}
             addSpellsSubclass.push(JSON.stringify(comp.__state)); //Just stringify the entire state
         }
         _char.additionalSpellSubclass = addSpellsSubclass;
