@@ -11568,7 +11568,7 @@ class ActorCharactermancerSpell extends ActorCharactermancerBaseComponent {
             return hash;
         }
         const makeHash = (sp) => {
-            return  UrlUtil.URL_TO_HASH_BUILDER[UrlUtil.PG_SPELLS](sp).toLowerCase();
+            return  UrlUtil.URL_TO_HASH_GENERIC(sp).toLowerCase();
         }
 
         let spells = [];
@@ -11802,7 +11802,17 @@ class Charactermancer_Spell_Util {
         return totalKnownPerLevel;
     }
 
+    /**
+     * Try to calculate the max number of spells the actor can have at once
+     * @param {object} opts
+     * @param {{source:string, preparedSpellsProgression:any, preparedSpells:any, casterProgression:string, spellsKnownProgression:number[]}} opts.cls
+     * @param {SubclassObj} opts.sc
+     * @param {number} opts.targetLevel
+     * @param {any} opts.existingAbilityScores
+     * @param {{mode:string, totals:object}} opts.abilityScoresFromComp={}
+     */
     static getMaxPreparedSpells({cls, sc, targetLevel, existingAbilityScores, abilityScoresFromComp}={}) {
+        console.log("Get max prepared spells", cls, existingAbilityScores, abilityScoresFromComp);
         if (!cls || targetLevel == null)
             return null;
 
@@ -11954,6 +11964,10 @@ class Charactermancer_Spell_Util {
         return ["cantripProgression", "preparedSpells", "preparedSpellsProgression", "spellsKnownProgression", "spellsKnownProgressionFixed", "spellsKnownProgressionFixedAllowLowerLevel", "spellsKnownProgressionFixedByLevel", ].some(prop=>cls?.[prop] != null || sc?.[prop] != null);
     }
 
+    /**
+     * @param {{casterProgression:string, classTableGroups:any, spellcastingAbility:string}} cls
+     * @param {{casterProgression:string, subclassTableGroups:any}} sc
+     */
     static _getApproximatePreparedFormula(cls, sc) {
         if (!cls)
             return null;
@@ -11979,7 +11993,6 @@ class Charactermancer_Spell_Util {
     }
 
     /**
-     * Description
      * @param {any} {cls
      * @param {any} sc
      * @param {any} actor

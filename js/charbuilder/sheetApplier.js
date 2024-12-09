@@ -109,7 +109,7 @@ class SheetApplier {
             hash = UrlUtil.URL_TO_HASH_GENERIC(spell).toLowerCase();
         }
         //Make sure hash doesn't include spaces
-        if(hash.includes(" ")){hash = encodeURI(hash);}
+        if(hash.includes(" ") || hash.includes("/")){hash = encodeURIComponent(hash).toLowerCase();}
 
         console.log("Add spell", hash, preparationMode);
         await Spell5e.verifySystemData(hash);

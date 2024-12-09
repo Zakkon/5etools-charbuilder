@@ -932,7 +932,7 @@ class Spell5e extends Entity5e{
     }
     static async verifySystemData(hash){
         let existingData = CharacterBuilder.getEntityByUid("spell", hash);
-        if(existingData == null){console.error("Could not find spell entity with hash", hash);}
+        if(existingData == null){console.error("Could not find spell entity with hash", hash, CharacterBuilder.instance._data);}
         if(existingData.system){return;}
         //No system data exists, go ahead and import
         let imported = await SourceManager.plutoniumConvertData(existingData, "spell");
@@ -1769,9 +1769,9 @@ class Actor5e {
             cls: spellcastingClass,
             sc: null,
             targetLevel: this.system.details.level,
-            existingAbilityScores: {},
+            existingAbilityScores: null,
             abilityScoresFromComp: abilityScoresFromComp
-          });
+          }) ?? 0;
     }
     get primaryClass(){
         //TODO: actually check which class is primary
