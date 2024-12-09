@@ -98,7 +98,7 @@
 
                 {{#if @root.owner}}
                 <div class="item-controls flexrow">
-                    {{#if (and section.canPrepare item.canToggle)}}
+                    {{#if section.canPrepare}}
                     <a class="item-control item-action {{item.toggleClass}}" data-action="equip"
                     data-tooltip="{{ctx.toggleTitle}}">
                         <i class="fas fa-book"></i>

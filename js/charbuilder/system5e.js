@@ -967,13 +967,22 @@ class Spell5e extends Entity5e{
             case "prepared": //always prepared
             case "always":
             return false;
-
             default: return true;
         }
     }
     get toggleClass(){
-        return this.system.equipped? "active" : "";
+        if(this.isPrepared){return "active";}
+        switch(this.system.preparationMode){
+            case "prepared": //always prepared
+            case "always":
+                return "active";
+            default: break;
+        }
+        return "";
     }
+    //not sure which is going to be standardized, "always" or "prepared"
+    get isAlwaysPrepared(){return this.system.preparationMode == "always" || this.system.preparationMode == "prepared";}
+    get isPrepared(){return this.system.equipped ?? false;}
     get alwaysClass(){
         /*    "prepared" — spells which are always prepared
     "innate" — Spells which can be innately cast, without expending normal spell resources
@@ -1089,13 +1098,31 @@ class Actor5e {
             weapon: {
                 label: "Weapons",
                 items: [], //item5e[]
-                dataset: {
-                    type: "weapon",
-                }
+                dataset: {type: "weapon",}
             },
             equipment: {
                 label: "Equipment",
                 dataset: {type:"equipment"},
+                items: []
+            },
+            consumable: {
+                label: "Consumables",
+                dataset: {type:"consumable"},
+                items: []
+            },
+            tool: {
+                label: "Tools",
+                dataset: {type:"tool"},
+                items: []
+            },
+            container: {
+                label: "Containers",
+                dataset: {type:"container"},
+                items: []
+            },
+            loot: {
+                label: "Loot",
+                dataset: {type:"loot"},
                 items: []
             }
             
@@ -1719,6 +1746,36 @@ class Actor5e {
             proficiency: `+${this.system.attributes.prof}`
         };
     }
+    get numPreparedSpells(){
+        let count = 0;
+        for(let category of this.spellbook){
+            if(!category.canPrepare){continue;}
+            for(let sp of category.spells){
+                if(sp.isAlwaysPrepared){continue;}
+                if(sp.isPrepared){count++;}
+            }
+        }
+        return count;
+    }
+    get numPreparedSpellsMax(){
+        let spellcastingClass = this.primaryClass;
+        //let sc = this.primarySubclass();
+        if(spellcastingClass == null){return 0;}
+        spellcastingClass = CharacterBuilder.getClassByNameSource(spellcastingClass.name, spellcastingClass.source);
+        const abilityScoresFromComp = CharacterBuilder.instance.compAbility.getTotals();
+        return Charactermancer_Spell_Util.getMaxPreparedSpells({
+            cls: spellcastingClass,
+            sc: null,
+            targetLevel: this.system.details.level,
+            existingAbilityScores: {},
+            abilityScoresFromComp: abilityScoresFromComp
+          });
+    }
+    get primaryClass(){
+        //TODO: actually check which class is primary
+        return this.features.class.items[0] ?? null;
+    }
+    get primarySubclass(){}
 
     _mancerDependencies;
     setMancerDependency(path, value){
