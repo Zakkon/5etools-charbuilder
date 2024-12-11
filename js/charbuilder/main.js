@@ -422,6 +422,7 @@ class SETTINGS{
     //set it to false if you want to import each subclassFeature individually
     static SUBCLASS_IMPORT_LOADEDS = true;
     static PLUT_IMPORT_ADDITIONALSPELLS_TO_ACTOR = false;
+    static SPELLS_TAB_ACCESSED_FROM_SPELLBOOK = true;
 }
 class CharacterBuilder {
     tabButtonParent;
@@ -587,7 +588,7 @@ class CharacterBuilder {
           createTabBtn("Background").click(()=>{ this.e_switchTab("background"); });
           createTabBtn("Starting Equipment").click(()=>{ this.e_switchTab("startingEquipment"); });
           createTabBtn("Equipment Shop").click(()=>{ this.e_switchTab("shop"); });
-          createTabBtn("Spells").click(()=>{ this.e_switchTab("spells"); });
+          if(!SETTINGS.SPELLS_TAB_ACCESSED_FROM_SPELLBOOK){createTabBtn("Spells").click(()=>{ this.e_switchTab("spells"); });}
           createTabBtn("Feats").click(()=>{ this.e_switchTab("feats"); });
           createTabBtn("Description").click(()=>{ this.e_switchTab("description"); });
         }
@@ -746,8 +747,6 @@ class CharacterBuilder {
 
     //#region Events
     e_switchTab(tabName){
-        let newActivePanel = null;
-        let tabIx = 0;
         this.tabButtonParent.children().each(function() {$(this).removeClass("active");});
         this._setActive(this.tabClass.$wrpTab, false);
         this._setActive(this.tabRace.$wrpTab, false);
@@ -760,19 +759,22 @@ class CharacterBuilder {
         this._setActive(this.tabDescription.$wrpTab, false);
         this._setActive(this.tabSheet.$wrpTab, false);
 
+        
+        let newActivePanel = null;
+        let tabString = "";
         switch(tabName){
-            case "race": newActivePanel = this.tabRace; tabIx = 1; break;
-            case "abilities": newActivePanel = this.tabAbilities; tabIx = 2; break;
-            case "background": newActivePanel = this.tabBackground; tabIx = 3; break;
-            case "startingEquipment": newActivePanel = this.tabEquipment; tabIx = 4; break;
-            case "shop": newActivePanel = this.tabShop; tabIx = 5; break;
-            case "spells": newActivePanel = this.tabSpells; tabIx = 6; break;
-            case "feats": newActivePanel = this.tabFeats; tabIx = 7; break;
-            case "description": newActivePanel = this.tabDescription; tabIx = 8; break;
-            case "sheet": newActivePanel = this.tabSheet; tabIx = 9; break;
-            default: newActivePanel = this.tabClass; tabIx = 0; break;
+            case "race": newActivePanel = this.tabRace; tabString = "Race"; break;
+            case "abilities": newActivePanel = this.tabAbilities; tabString = "Abilities"; break;
+            case "background": newActivePanel = this.tabBackground; tabString = "Background"; break;
+            case "startingEquipment": newActivePanel = this.tabEquipment; tabString = "Starting Equipment"; break;
+            case "shop": newActivePanel = this.tabShop; tabString = "Equipment Shop"; break;
+            case "spells": newActivePanel = this.tabSpells; tabString = "Spells"; break;
+            case "feats": newActivePanel = this.tabFeats; tabString = "Feats"; break;
+            case "description": newActivePanel = this.tabDescription; tabString = "Description"; break;
+            case "sheet": newActivePanel = this.tabSheet; tabString = "Sheet"; break;
+            default: newActivePanel = this.tabClass; tabString = "Class"; break;
         }
-        const pressedBtn = this.tabButtonParent.children().eq(tabIx);
+        const pressedBtn = this.tabButtonParent.children().filter(function(){return $(this).html() === tabString});//.eq(tabIx);
         pressedBtn.addClass("active");
         this._setActive(newActivePanel.$wrpTab, true);
 

@@ -195,6 +195,15 @@ class ActorCharactermancerSheet2 extends ActorCharactermancerSheet {
             const targetTab = evt.target.getAttribute("data-tab");
             this.navigation_switchTab(targetTab);
         });
+
+        //Make "Manage Spells" button respond to being clicked
+        const mng = this.$sheet.find(".btn.manage-spells");
+        mng.click(evt=>{
+            evt.stopPropagation();
+            evt.preventDefault();
+
+            CharacterBuilder.instance.e_switchTab("spells");
+        });
     }
 
     navigation_switchTab(activeTabName=null){

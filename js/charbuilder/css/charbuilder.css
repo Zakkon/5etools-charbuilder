@@ -378,6 +378,10 @@ select.chooseAlignment{
     width: 20px;
     display: inline-block;
 }
+.ui-tab__wrp-tab-body .btn.manage-spells-return{
+    flex: 0 150px;
+    margin: 10px auto;
+}
 
 /* NIGHTMODE ------- */
 

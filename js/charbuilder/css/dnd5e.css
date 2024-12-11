@@ -1546,6 +1546,13 @@ h5 {
 .c5e.sheet.actor .tab.spellbook {
   overflow-y: hidden;
 }
+.c5e.sheet.actor .btn.manage-spells {
+  flex: 0 120px;
+  height: 24px;
+  line-height: 10px;
+  align-content: center;
+  margin: 10px auto;
+}
 .c5e.sheet.actor .spellcasting-ability {
   flex: 0 0 240px;
   margin: 0;

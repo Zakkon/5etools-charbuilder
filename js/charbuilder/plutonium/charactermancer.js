@@ -10577,6 +10577,19 @@ class ActorCharactermancerSpell extends ActorCharactermancerBaseComponent {
                     ${dispSpell}
                 </div>
             </div>`.appendTo(wrpTab);
+
+        if(SETTINGS.SPELLS_TAB_ACCESSED_FROM_SPELLBOOK){
+            $$`<div class="flexrow">
+                <h4>Managing Spells</h4>
+                <button class="btn manage-spells-return">Return to Sheet</button>
+            </div>`.prependTo(wrpTab);
+            wrpTab.find(".btn.manage-spells-return").click(evt => {
+                evt.stopPropagation();
+                evt.preventDefault();
+                CharacterBuilder.instance.e_switchTab("sheet");
+                CharacterBuilder.instance.compSheet.navigation_switchTab("spellbook");
+            });
+        }
     }
 
     /**
