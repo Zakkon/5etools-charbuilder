@@ -11581,6 +11581,7 @@ class ActorCharactermancerSpell extends ActorCharactermancerBaseComponent {
             spells = form.data.spells/* .filter(sp => (sp.isLearned || sp.isPrepared)) */.map(sp => ({
                 hash: makeHash(sp.spell),
                 prepMode: sp.preparationMode,
+                isPrepared: sp.isPrepared,
             }));
         }
         out.spells = spells;

@@ -95,7 +95,7 @@ class SheetApplier {
      * @param {string} preparationMode
      * @returns {Spell5e}
      */
-    static async addSpellItem(actor, hash, preparationMode){
+    static async addSpellItem(actor, hash, preparationMode, isPrepared){
         hash = hash.replace("|", "_");
         const hashIncludesSource = hash.includes("_");
         const hashIncludesSuffix = hash.includes("#");
@@ -114,9 +114,10 @@ class SheetApplier {
         console.log("Add spell", hash, preparationMode);
         await Spell5e.verifySystemData(hash);
         let spellItem = new Spell5e(hash, null, false);
-        //If spell is a cantrip, assume that anyone claiming it should be "known" mean it to be "prepared" (which means always prepared)
-        if(spellItem.system.level == 0 && preparationMode == "known"){preparationMode = "prepared";}
+        //If spell is a cantrip, assume that anyone claiming it should be "known" mean it to be "always" (which means always prepared)
+        if(spellItem.system.level == 0 && preparationMode == "known"){preparationMode = "always"; isPrepared=true;}
         spellItem.system.preparationMode = preparationMode;
+        spellItem.system.equipped = isPrepared;
         System5e.tryAddToInventory(actor, spellItem, "spell", {doNotRender:true});
         return spellItem;
     }

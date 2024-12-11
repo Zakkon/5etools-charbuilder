@@ -1283,10 +1283,10 @@ class CharacterBuilder {
 
     //#region Spells
     for(let sp of choiceData.spells ?? []){
-      SheetApplier.addSpellItem(actor, sp.hash, sp.prepMode);
+      SheetApplier.addSpellItem(actor, sp.hash, sp.prepMode, sp.isPrepared);
     }
     for(let sp of choiceData.additionalSpells?.fromSubclass ?? []){
-      SheetApplier.addSpellItem(actor, sp.hash, sp.prepMode);
+      SheetApplier.addSpellItem(actor, sp.hash, sp.prepMode, sp.isPrepared);
     }
     //#endregion
 
