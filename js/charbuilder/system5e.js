@@ -1396,6 +1396,8 @@ class Actor5e {
         let data;
         if ( this.system.getRollData ) data = this.system.getRollData({ deterministic });
         else data = this.system;//{...super.getRollData()};
+
+        data.prof = data.attributes.prof; //double reference
         //data.flags = {...this.flags};
         //data.name = this.name;
         /* data.statuses = {};

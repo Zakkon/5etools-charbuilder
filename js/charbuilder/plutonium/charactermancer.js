@@ -11818,15 +11818,12 @@ class Charactermancer_Spell_Util {
 
         const casterProgression = DataConverter.getMaxCasterProgression(cls.casterProgression, sc?.casterProgression);
 
-        if (!casterProgression || !UtilDataConverter.CASTER_TYPE_TO_PROGRESSION[casterProgression])
-            return null;
+        if (!casterProgression || !UtilDataConverter.CASTER_TYPE_TO_PROGRESSION[casterProgression]){return null;}
 
         const spellSlotsAtLevel = UtilDataConverter.CASTER_TYPE_TO_PROGRESSION[casterProgression][targetLevel - 1];
-        if (!spellSlotsAtLevel)
-            return null;
+        if (!spellSlotsAtLevel){return null;}
 
-        if (!spellSlotsAtLevel.some(Boolean))
-            return null;
+        if (!spellSlotsAtLevel.some(Boolean)){return null;}
 
         if (cls.preparedSpellsProgression || sc?.preparedSpellsProgression)
             return this._getMaxPreparedSpells_preparedSpellsProgression({
@@ -11836,6 +11833,7 @@ class Charactermancer_Spell_Util {
                 existingAbilityScores,
                 abilityScoresFromComp
             });
+        
         return this._getMaxPreparedSpells_preparedSpells({
             cls,
             sc,
@@ -11846,14 +11844,13 @@ class Charactermancer_Spell_Util {
     }
 
     static _getMaxPreparedSpells_preparedSpells({cls, sc, targetLevel, existingAbilityScores, abilityScoresFromComp}) {
-        let preparedSpellExpression = cls.preparedSpells;
+        let preparedSpellExpression = cls.preparedSpells; //should be a string like "<$level$> + <$wis_mod$>"
 
         if ((PrereleaseUtil.hasSourceJson(cls.source) || BrewUtil2.hasSourceJson(cls.source)) && !this._hasWellDefinedSpellData(cls, sc)) {
             preparedSpellExpression = preparedSpellExpression || this._getApproximatePreparedFormula(cls, sc);
         }
 
-        if (!preparedSpellExpression)
-            return null;
+        if (!preparedSpellExpression){return null;}
 
         const totalsAsi = abilityScoresFromComp;
         const preparedSpellExpressionEvaluable = preparedSpellExpression.replace(/<\$([^$]+)\$>/g, (...m)=>{
@@ -11916,43 +11913,6 @@ class Charactermancer_Spell_Util {
         return progression[Math.max(0, targetLevel - 1)] || 0;
     }
 
-    static getMaxPreparedSpellsFormula({cls, sc}={}) {
-        if (!cls)
-            return null;
-
-        const casterProgression = DataConverter.getMaxCasterProgression(cls.casterProgression, sc?.casterProgression);
-
-        if (!casterProgression || !UtilDataConverter.CASTER_TYPE_TO_PROGRESSION[casterProgression])
-            return null;
-
-        let preparedSpellExpression = cls.preparedSpells;
-
-        if ((PrereleaseUtil.hasSourceJson(cls.source) || BrewUtil2.hasSourceJson(cls.source)) && !this._hasWellDefinedSpellData(cls, sc)) {
-            preparedSpellExpression = preparedSpellExpression || this._getApproximatePreparedFormula(cls, sc);
-        }
-
-        if (!preparedSpellExpression)
-            return null;
-
-        const preparedSpellExpressionEvaluable = preparedSpellExpression.replace(/<\$([^$]+)\$>/g, (...m)=>{
-            switch (m[1]) {
-            case "level":
-                return `@classes.${Parser.stringToSlug(cls.name)}.levels`;
-            case "str_mod":
-            case "dex_mod":
-            case "con_mod":
-            case "int_mod":
-            case "wis_mod":
-            case "cha_mod":
-                return `@abilities.${m[1].toLowerCase().slice(0, 3)}.mod`;
-            default:
-                throw new Error(`Unknown variable "${m[1]}"`);
-            }
-        }
-        );
-
-        return `max(1, floor(${preparedSpellExpressionEvaluable}))`;
-    }
 
     static _getMaxPreparedSpells_getAbilityScore({totalsAsi, existingAbilityScores, ability}) {
         if (existingAbilityScores)
@@ -11965,8 +11925,10 @@ class Charactermancer_Spell_Util {
     }
 
     /**
+     * Create a formula for calculating max number of prepared spells
      * @param {{casterProgression:string, classTableGroups:any, spellcastingAbility:string}} cls
      * @param {{casterProgression:string, subclassTableGroups:any}} sc
+     * @returns {string}
      */
     static _getApproximatePreparedFormula(cls, sc) {
         if (!cls)
