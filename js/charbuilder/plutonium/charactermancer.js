@@ -11575,12 +11575,12 @@ class ActorCharactermancerSpell extends ActorCharactermancerBaseComponent {
         let additionalSpellHashes = [];
         //Get the comps
         const filterValues = this.filterValuesSpellsCache || this.filterBoxSpells.getValues();
-        for(let compSpell of this._compsSpellSpells){
+        for(let compSpell of this.compsSpellSpells){
             const form = await compSpell.pGetFormData(filterValues);
-            console.log("form of spells", form);
-            spells = form.data.spells.filter(sp => (sp.isLearned || sp.isPrepared)).map(sp => ({
+            console.log("Spells in form: ", form.data.spells);
+            spells = form.data.spells/* .filter(sp => (sp.isLearned || sp.isPrepared)) */.map(sp => ({
                 hash: makeHash(sp.spell),
-                prepMode: sp.preparedMode,
+                prepMode: sp.preparationMode,
             }));
         }
         out.spells = spells;
@@ -13165,7 +13165,7 @@ class Charactermancer_Spell extends BaseComponent {
 
     /**
      * @param {{name:string, source:string, level:number}} spell
-     * @returns {{isPrepared:boolean, item:{id:any}}}
+     * @returns {{isPrepared:boolean isAlwaysPrepared:boolean, isLearned:boolean, item:{id:any}}}
      */
     getExistingSpellMeta_(spell) {
         if (!this._existingCasterMeta || !this._existingSpellLookup){return null;}
@@ -13317,9 +13317,8 @@ class Charactermancer_Spell extends BaseComponent {
 
     //const filterValues = this._compSpell.filterValuesSpellsCache || this._compSpell.filterBoxSpells.getValues();
     /**
-     * Description
      * @param {any} filterValues
-     * @returns {{isFormComplete:boolean, data:{spells:any[]}}}
+     * @returns {{isFormComplete:boolean, data:{spells:Charactermancer_Spell_SpellMeta[]}}}
      */
     async pGetFormData(filterValues) {
         return {
@@ -13692,9 +13691,10 @@ class Charactermancer_Spell_Level extends BaseComponent {
         && this._spellLevel <= (this._parent.spellLevelHigh ?? Number.MIN_SAFE_INTEGER);
     }
 
+
     /**
      * Create a new list item UI element
-     * @param {{source:string, _isConc:boolean, school:string}} spell
+     * @param {{name:string, source:string, level:number, _isConc:boolean, school:string}} spell
      * @param {number} spI
      * @returns {any}
      */
@@ -13762,6 +13762,7 @@ class Charactermancer_Spell_Level extends BaseComponent {
 				>Prep.</button>` : ""}
 			</div>
 		`;
+        //Set learned/prep buttons to disabled if certain conditions are met, which hides the buttons from view
 
         const elesBtns = eleRow.querySelectorAll("button");
         const [btnLearn,btnPrepare] = elesBtns;
@@ -14135,7 +14136,7 @@ class Charactermancer_Spell_Level extends BaseComponent {
     }
 
     /**
-     * @param {any} filterValues
+     * @param {object} filterValues
      * @returns {Charactermancer_Spell_SpellMeta[]}
      */
     getFormSubData(filterValues) {
@@ -14181,9 +14182,7 @@ class Charactermancer_Spell_Level extends BaseComponent {
             if (this._parent.isPreparedCaster && !isLearned && !isPrepared && !this._parent.pageFilter.toDisplay(filterValues, sp))
                 continue;
 
-            const spellImportOpts = this._getFormSubData_getSpellImportOpts({
-                isLearned
-            });
+            const spellImportOpts = this._getFormSubData_getSpellImportOpts({isLearned});
 
             out.push(new Charactermancer_Spell_SpellMeta({
                 ...spellImportOpts,

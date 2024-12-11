@@ -962,10 +962,8 @@ class Spell5e extends Entity5e{
     }
 
     get canToggle(){
-        console.log("prepMode", this.system.preparationMode);
         switch(this.system.preparationMode){
             case "innate":
-            case "prepared": //always prepared
             case "always":
             return false;
             default: return true;
@@ -974,18 +972,17 @@ class Spell5e extends Entity5e{
     get toggleClass(){
         if(this.isPrepared){return "active";}
         switch(this.system.preparationMode){
-            case "prepared": //always prepared
             case "always":
                 return "active";
             default: break;
         }
         return "";
     }
-    //not sure which is going to be standardized, "always" or "prepared"
-    get isAlwaysPrepared(){return this.system.preparationMode == "always" || this.system.preparationMode == "prepared";}
+    get isAlwaysPrepared(){return this.system.preparationMode == "always";}
     get isPrepared(){return this.system.equipped ?? false;}
     get alwaysClass(){
-        /*    "prepared" — spells which are always prepared
+        /*    "prepared" — Spells which are must be prepared before use
+    "always" - Spells which are always prepared
     "innate" — Spells which can be innately cast, without expending normal spell resources
     "known" — Spells which are always known
     "expanded" — Expansions to a class’ default spell list, from which spells can be chosen (e.g. Warlock Patron spells)
@@ -993,8 +990,7 @@ class Spell5e extends Entity5e{
     "resourceName" — Optional resource name for resource-cast spells in this group
     */
         if(this.system.preparationMode == "innate")return "innate";
-        if(this.system.preparationMode == "prepared")return "alwaysPrepared"; //alwaysPrepared
-        if(this.system.preparationMode == "always")return "alwaysPrepared"; //alwaysPrepared
+        if(this.system.preparationMode == "always")return "alwaysPrepared";
         return "";
     }
 }
