@@ -66,7 +66,10 @@ class C5e_Inventory{
     static tryOpenEditWindow(actor, item=null, itemUid, type, collectionId){
         if(C5e_Inventory._editedCollectionUids.includes(collectionId)){return;}
         C5e_Inventory._editedCollectionUids.push(collectionId);
-        let window = new C5e_EditWindow(actor, itemUid, type, collectionId);
+        let window = null;
+        if(type == "item"){window = new ItemSheet(actor, itemUid, collectionId);}
+        else{window = new BaseSheet(actor, itemUid, type, collectionId);}
+        //let window = new C5e_EditWindow(actor, itemUid, type, collectionId);
         window.render(item);
     }
     static closeEditWindow(window, collectionId){
@@ -415,12 +418,15 @@ class C5e_InventoryItemSummary {
         return foundItem;
     }
 }
-class C5e_EditWindow {
+
+
+class BaseSheet {
+
     collectionId;
     itemUid;
     type;
     element;
-    entity;
+    _entity;
     contentElement;
     tab_details;
     rectWidth = 550;
@@ -428,17 +434,23 @@ class C5e_EditWindow {
     zIndex = 110;
     rectLeft = 400;
     rectTop = 50;
+    startX;
+    startY;
+    startW;
+    startH;
+    get entity(){return this._entity;}
+    set entity(value){this._entity = value;}
     constructor(actor, itemUid, type, collectionId){
         this.actor = actor;
         this.collectionId = collectionId;
         this.itemUid = itemUid;
         this.type = type;
         this.activeTab = "details";
-        this.entity = this.actor.getItemByCollectionId(this.collectionId);
+        this._entity = this.actor.getItemByCollectionId(this.collectionId);
     }
 
-    render(){
-        let entity = this.entity;
+    render(force, templateName){
+        const entity = this.entity;
         console.log("to edit: ", entity);
         const windowHeader = this.windowHeader();
         let window_content = $$`<section class="window-content"></section>`;
@@ -448,14 +460,7 @@ class C5e_EditWindow {
         this.element = window;
         $("body").append(this.element);
 
-        
-        let templateName = entity.entityType;
-        if(entity.type == "spell"){templateName = "spell";}
-        else if(entity.type == "class"){templateName = "class";}
-        else if(entity.type == "race"){templateName = "race";}
-        else if(entity.type == "background"){templateName = "background";}
-        else if(entity.entityType == "feature"){templateName = "feat";}
-        else if(entity.entityType == "item"){templateName = entity.system.type.value;}
+        if(!templateName){templateName = entity.entityType;}
 
         this.templateName = templateName;
         entity.cssClass = "editable";
@@ -525,10 +530,6 @@ class C5e_EditWindow {
 
         return handle;
     }
-    startX;
-    startY;
-    startW;
-    startH;
     resizeDragStart(e){
         this.startX = e.clientX;
         this.startY = e.clientY;
@@ -609,5 +610,24 @@ class C5e_EditWindow {
    */
     _replaceHTML(element, html){
         return element.replaceWith(html);
+    }
+}
+class ItemSheet extends BaseSheet {
+    
+    itemType; //Used to know what category of item this is
+    get item(){return this.entity;}
+    set item(value){this.entity = value;}
+
+    constructor(actor, itemUid, collectionId){
+        super(actor, itemUid, "item", collectionId);
+        this.itemType = this.item.system.type.value;
+    }
+
+    /**
+     * Render the edit window for this sheet
+     * @param {boolean} force
+     */
+    render(force){
+        super.render(force, this.itemType);
     }
 }
