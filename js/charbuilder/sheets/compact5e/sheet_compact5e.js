@@ -420,6 +420,8 @@ class C5e_EditWindow {
     itemUid;
     type;
     element;
+    entity;
+    contentElement;
     tab_details;
     rectWidth = 550;
     rectHeight = 500;
@@ -432,14 +434,15 @@ class C5e_EditWindow {
         this.itemUid = itemUid;
         this.type = type;
         this.activeTab = "details";
+        this.entity = this.actor.getItemByCollectionId(this.collectionId);
     }
 
-    render(entity=null){
-        entity != null? entity : this.actor.getItemByCollectionId(this.collectionId);
-        this.item5e = entity;
+    render(){
+        let entity = this.entity;
         console.log("to edit: ", entity);
         const windowHeader = this.windowHeader();
-        let window_content = $$`<section class="window-content"></section>`
+        let window_content = $$`<section class="window-content"></section>`;
+        this.contentElement = window_content;
         let handle = this.windowDragHandle();
         let window = $$`<div class="c5e app window-app sheet item" style="z-index: 110; width: 550px; height: 500px; left: 400px; top: 50px;">${windowHeader}${window_content}${handle}</div>`;
         this.element = window;
@@ -454,12 +457,23 @@ class C5e_EditWindow {
         else if(entity.entityType == "feature"){templateName = "feat";}
         else if(entity.entityType == "item"){templateName = entity.system.type.value;}
 
+        this.templateName = templateName;
         entity.cssClass = "editable";
         entity.concealDetails = false;//!game.user.isGM && (this.document.system.identified === false)
         let contentTemplate = new LoadTemplate(window_content, "parts/edit/" + templateName, entity);
         contentTemplate.create(()=>{
             this.navigation_switchTab(this.activeTab);
             this.setupListeners(window_content);
+        });
+    }
+    _renderUpdate(){
+        let contentTemplate = new LoadTemplate(this.contentElement, "parts/edit/" + this.templateName, this.entity);
+
+        contentTemplate.createAndCompile((innerHTML)=>{
+            let innerElement = $$`${innerHTML}`;
+            this._replaceHTML(this.contentElement, innerElement);
+            this.navigation_switchTab(this.activeTab);
+            this.setupListeners(this.contentElement);
         });
     }
     close(){
@@ -571,16 +585,29 @@ class C5e_EditWindow {
     }
     setProp(prop, value){
         //Set the value to the item's override
-        let entity = this.item5e;//System5e.getEntityByCollectionId(this.collectionId);
+        let entity = this.entity;//System5e.getEntityByCollectionId(this.collectionId);
         if(typeof(value) == "string" && (value).toLowerCase() === "none"){value = null;}
         entity.setProp(prop, value);
         //Fire a hook to alert other UI that this item has changed
         System5e.hkItemUpdated(this.collectionId);
+        //Update this UI and re-render things
+        this._renderUpdate();
     }
+    
     
     getItemByID(itemUid){
         const itemDatas = CharacterBuilder.instance._data.item;
         const foundItem = ActorCharactermancerEquipment.findItemByUID(itemUid, itemDatas);
         return foundItem;
+    }
+
+    /**
+   * Customize how inner HTML is replaced when the application is refreshed
+   * @param {jQuery} element      The original HTML processed as a jQuery object
+   * @param {jQuery} html         New updated HTML as a jQuery object
+   * @private
+   */
+    _replaceHTML(element, html){
+        return element.replaceWith(html);
     }
 }

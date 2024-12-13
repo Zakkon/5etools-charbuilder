@@ -2,6 +2,9 @@
 <div class="form-group input-select">
     <label>Activation Cost</label>
     <div class="form-fields">
+        {{log system.activation.type}}
+        {{log (not isCostlessAction)}}
+        {{log (and system.activation.type (not isCostlessAction))}}
        {{#if (and system.activation.type (not isCostlessAction))}}
             <input type="number" step="any" name="system.activation.cost"
                    value="{{system.activation.cost}}" placeholder="&mdash;">

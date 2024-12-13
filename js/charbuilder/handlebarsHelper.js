@@ -25,8 +25,8 @@ class HandlebarsHelper{
             return bool;
         });
         Handlebars.registerHelper('and', function (value1, value2) {
-            var bool1 = (value1 === 'true' || value1 == true);
-            var bool2 = (value2 === 'true' || value2 == true);
+            var bool1 = (value1 === 'true' || !!value1);
+            var bool2 = (value2 === 'true' || !!value2);
             //return (bool1 && bool2).toString();
             return bool1 && bool2;
         });

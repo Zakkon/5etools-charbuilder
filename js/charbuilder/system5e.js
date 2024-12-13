@@ -458,8 +458,6 @@ class Item5e extends Entity5e{
         this.quantity = quantity;
         if(!this.isCustom){this._tryCloneOriginal(CharacterBuilder.getEntityByUid("item", this.uid));}
         this.properties = {};
-        this.isPhysical = this.quantity != null;
-        //this.isCostlessAction = this.system.activation?.type in CONFIG.DND5E.staticAbilityActivationTypes;
 
         System5e.addHookBase("item_update", (p, collectionId) => {
             console.log("item update hook fired");
@@ -482,9 +480,10 @@ class Item5e extends Entity5e{
     }
     get itemData(){return CharacterBuilder.getItemByUid(this.uid);}
     /* DND 5E BOOLEANS */
-    get isCostlessAction(){return false;/* this.system.activation?.type in DND5E.staticAbilityActivationTypes; */}
+    get isCostlessAction(){return this.system?.activation?.type in DND5E.staticAbilityActivationTypes;}
     get isCrewed(){return this.system.activation?.type === "crew";}
     get isFormulaRecharge(){ !!DND5E.limitedUsePeriods[this.system.uses?.per]?.formula;}
+    get isPhysical(){return this.quantity != null;}
     static async verifySystemData(hash){
         let existingData = CharacterBuilder.getEntityByUid("item", hash);
         if(!existingData){console.warn("Failed to find item", hash); return false;}
