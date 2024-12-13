@@ -410,8 +410,8 @@ class BaseSheet {
         const entity = this.entity;
         console.log("to edit: ", entity);
         const windowHeader = this.windowHeader();
-        let window_content = $$`<section class="window-content"></section>`;
-        this.contentElement = window_content;
+        this.contentElement = $$`<div></div>`;
+        let window_content = $$`<section class="window-content">${this.contentElement}</section>`;
         let handle = this.windowDragHandle();
         let window = $$`<div class="c5e app window-app sheet item" style="z-index: 110; width: 550px; height: 700px; left: 400px; top: 50px;">${windowHeader}${window_content}${handle}</div>`;
         this.element = window;
@@ -422,11 +422,7 @@ class BaseSheet {
         this.templateName = templateName;
         entity.cssClass = "editable";
         entity.concealDetails = false;//!game.user.isGM && (this.document.system.identified === false)
-        let contentTemplate = new LoadTemplate(window_content, "parts/edit/" + templateName, entity);
-        contentTemplate.create(()=>{
-            this.navigation_switchTab(this.activeTab);
-            this.setupListeners(this.contentElement);
-        });
+        this._renderUpdate();
     }
     _renderUpdate(){
         let contentTemplate = new LoadTemplate(this.contentElement, "parts/edit/" + this.templateName, this.entity);
