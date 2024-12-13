@@ -346,10 +346,10 @@ class TestInventoryElement {
   
         const itemData = {
             name: `New ${type.capitalizeEachWord()}`,//game.i18n.format("DND5E.ItemNew", {type: game.i18n.localize(CONFIG.Item.typeLabels[type])}),
-            type,
+            type, //This will be used by createEmbeddedDocuments to know what kind of entity to create
             system: structuredClone({...dataset})//foundry.utils.expandObject({ ...dataset })
         };
-        delete itemData.system.type;
+        itemData.system.type = {value: type};
         //return this.actor.createEmbeddedDocuments("Item", [itemData]);
         return this.actor.createEmbeddedDocuments("item", [itemData]);
     }

@@ -1248,15 +1248,16 @@ class Actor5e {
                     case "background":
                         entity = new Race5e(null, null, true);
                         break;
-                    default:
+                    default: //Assume Item5e
                         entity = new Item5e(null, d.quantity ?? 1, null, true);
                         d.system.identified = d.identified ?? true;
+                        d.system.type = {value:d.type} //This needs to be set before _addEntities, to know what category of item it is
                         break;
                 }
                 entity.system = d.system;
+                entity.system.description = entity.system.description ?? {value: ""};
                 entity.name = d.name;
-                entity.type = d.type; //weapon/spell/equipment/etc/etc
-                collection.push({entity, _type:d.type});
+                collection.push({entity, _type:d.type}); //weapon/spell/equipment/etc/etc
             }
             if(entities != null){collection = collection.concat(entities);}
             //Add them to the character
@@ -1298,11 +1299,12 @@ class Actor5e {
                 case "item":
                     console.log("ADD ITEM", ent);
                     subType = "loot";
-                    if(["light", "medium", "heavy"].includes(ent.system.type.value)){subType = "equipment";}
-                    else if(["martialM", "simpleM", "martialR", "simpleR"].includes(ent.system.type.value)){subType = "weapon";}
-                    else if(["ammo"].includes(ent.system.type.value)){subType = "consumable";}
-                    else if(!!ent.system.capacity){subType = "container";}
-                    else if(ent.system.poison){subtype = "consumable";}
+                    if(["equipment", "light", "medium", "heavy"].includes(ent.system.type.value)){subType = "equipment";}
+                    else if(["weapon", "martialM", "simpleM", "martialR", "simpleR"].includes(ent.system.type.value)){subType = "weapon";}
+                    else if(["consumable", "ammo"].includes(ent.system.type.value)){subType = "consumable";}
+                    else if(["tool"].includes(ent.system.type.value)){subType = "tool";}
+                    else if(!!ent.system.capacity || ["container"].includes(ent.system.type.value)){subType = "container";}
+                    else if(ent.system.poison || ["consumable"].includes(ent.system.type.value)){subtype = "consumable";}
                     //Hardcoding in a way to put common clothes/fine clothes/adventurer's clothes into the equipment category, not loot
                     else if(ent.system.type.value == "gear"){subType = this._parseAdventuringGearSubType(ent) ?? subType;}
                     ent.equippable = subType != "loot";
