@@ -1870,27 +1870,27 @@ preLocalize("lootTypes", { key: "label" });
  */
 DND5E.currencies = {
   pp: {
-    label: "DND5E.CurrencyPP",
+    label: "Platinum",
     abbreviation: "DND5E.CurrencyAbbrPP",
     conversion: 0.1
   },
   gp: {
-    label: "DND5E.CurrencyGP",
+    label: "Gold",
     abbreviation: "DND5E.CurrencyAbbrGP",
     conversion: 1
   },
   ep: {
-    label: "DND5E.CurrencyEP",
+    label: "Electrum",
     abbreviation: "DND5E.CurrencyAbbrEP",
     conversion: 2
   },
   sp: {
-    label: "DND5E.CurrencySP",
+    label: "Silver",
     abbreviation: "DND5E.CurrencyAbbrSP",
     conversion: 10
   },
   cp: {
-    label: "DND5E.CurrencyCP",
+    label: "Copper",
     abbreviation: "DND5E.CurrencyAbbrCP",
     conversion: 100
   }

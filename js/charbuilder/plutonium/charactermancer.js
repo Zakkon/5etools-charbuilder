@@ -9576,6 +9576,8 @@ Charactermancer_StartingEquipment.ComponentDefault = class extends Charactermanc
         this._fnDoShowShop = opts.fnDoShowShop;
 
         this._fnsUnhook = [];
+
+        this._appliedChosenStarterItems = [];
     }
 
     async pRender($wrpTab) {
@@ -9594,12 +9596,22 @@ Charactermancer_StartingEquipment.ComponentDefault = class extends Charactermanc
             $dispRollOrManual, $btnRoll, $btnManual
         });
 
+        const $btnApplyToSheet = $$`<button class="btn ve-btn-default btn-sx btn-5et" title="Add Starting Equipment">Add Starting Equipment</button>`;
+        $btnApplyToSheet.click(async() => {
+            //Add these items to an update pool, which will be applied to the actor later upon finalization
+            const itemDatasDefault = await this._pGetItemDatasDefault();
+            if (itemDatasDefault) { this._appliedChosenStarterItems.push(...itemDatasDefault); }
+            //TODO: Reset choices
+            //TODO: add a checkmark next to the button, signaling that it was applied? Or maybe some green text at the top?
+        });
+
         this._doBindRollableExpressionHooks({
             $dispRollOrManual, $btnRoll, $btnManual, $wrpRollOrManual
         });
 
         const $rowSkipToShop = $$`<div class="w-100 py-1 ve-flex-v-center">
-			<div class="mr-1">Alternatively, </div>
+            ${$btnApplyToSheet}
+            <div class="mr-1">Alternatively, </div>
 			${$wrpRollOrManual}
 			<div class="ml-1">to skip to the shop.</div>
 		</div>`.appendTo($wrpTabStandard);
@@ -9874,6 +9886,14 @@ Charactermancer_StartingEquipment.ComponentDefault = class extends Charactermanc
                 equipmentItemEntries,
             },
         };
+    }
+
+    async getChoiceData(){
+        let form = await this.pGetFormData();
+        let out = {};
+        //out.startingItems = form.data.equipmentItemEntries;
+        out.startingItems = this._appliedChosenStarterItems;
+        return out;
     }
 
     static _getItemIdWithDisplayName(itemId, displayName) {
@@ -10376,9 +10396,14 @@ Charactermancer_StartingEquipment.ComponentGold = class extends Charactermancer_
         };
     }
 
-   
-
-    
+    async getChoiceData(){
+        let form = await this.pGetFormData();
+        console.log("BOUGHT FORM", form);
+        let out = {};
+        //out.startingItems = form.data.equipmentItemEntries;
+        //out.startingItems = this._appliedChosenStarterItems;
+        return out;
+    }
 
     _isValid_gold() {
         return this._compCurrency.getRemainingCp() >= 0;

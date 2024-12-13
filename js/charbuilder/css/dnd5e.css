@@ -2742,6 +2742,9 @@ h5 {
   padding: 0;
   font-size: var(--font-size-12);
 }
+.c5e .inventory-element .inventory-header .currency .currency-header {
+  font-size: 15px;
+}
 .c5e .inventory-element .inventory-header .currency label,
 .c5e .inventory-element .inventory-filters .currency label {
   flex: 0;

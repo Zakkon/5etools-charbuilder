@@ -121,6 +121,27 @@ class SheetApplier {
         System5e.tryAddToInventory(actor, spellItem, "spell", {doNotRender:true});
         return spellItem;
     }
+    static async addInventoryItem(actor, hash, quantity){
+        if(typeof hash == "object"){ hash = UrlUtil.URL_TO_HASH_GENERIC(hash).toLowerCase(); }
+        else{hash = hash.replace("|", "_");}
+        if(hash.includes(" ") || hash.includes("/")){hash = encodeURIComponent(hash).toLowerCase();}
+        let success = await Item5e.verifySystemData(hash);
+        if(!success){return;}
+        let item = new Item5e(hash, quantity, null);
+        if(item.packContents != null && item.packContents.length > 0)
+        {
+            //Add pack contents instead
+            for(let o of item.packContents){
+                let quantity = 1;
+                let subHash = o;
+                if(typeof o == "object"){quantity = o.quantity; subHash = o.item;}
+                await SheetApplier.addInventoryItem(actor, subHash, quantity);
+            }
+            return null;
+        }
+        System5e.tryAddToInventory(actor, item, "item", {doNotRender:true});
+        return item;
+    }
     static handleConditionals(conditionals, actor, updatePool){
       
         for(let cond of conditionals){

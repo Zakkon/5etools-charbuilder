@@ -605,7 +605,8 @@ class CharacterBuilder {
         if(!this.VIEW_MODE){
           createRightSideBtn("Finalize", "glyphicon-floppy-disk").click(()=>{
             //Exit charactermancer, go to sheet view
-            console.log("mancer", this.compClass);
+            console.log("CompClass", this.compClass);
+
 
             this.getChoiceData().then((choiceData)=>{
               CharacterBuilder.parseMancerChoiceData(this._actor, choiceData).then(()=>{
@@ -1089,28 +1090,13 @@ class CharacterBuilder {
     let abilityData = await this.compAbility.getChoiceData();
     let featData = await this.compFeat.getChoiceData();
     let spellData = await this.compSpell.getChoiceData();
+    let startingItemData = await this.compEquipment._compEquipmentStartingDefault.getChoiceData();
+    let boughtItemData = await this.compEquipment._compEquipmentShopGold.getChoiceData();
     let targetData = {};
-    targetData = Object.assign(targetData, classData, raceData, backgroundData, abilityData, featData, spellData);
+    targetData = Object.assign(targetData, classData, raceData, backgroundData, abilityData, featData, spellData, startingItemData);
     return targetData;
   }
   //#region Parse Mancher Choice Data
-
-  static async testAddToActor(actor){
-    actor.items = [];
-    CharacterBuilder.instance._actor = actor;
-    let newClass = CharacterBuilder.getEntityByUid("class", "fighter_phb");
-    let subclass = CharacterBuilder.getEntityByUid("subclass", "cavalier_xge");
-    console.log(subclass);
-    //Try adding it to the actor
-    const targetLevel = 3;
-    const subclassFeature = await SheetApplier.addFeatureItem(actor, "subclassFeature", "warding%20maneuver_fighter_phb_cavalier_xge_7_xge", null, {
-      className:"fighter", classSource:"phb",
-      subclassName:"cavalier", subclassSource:"xge"
-    });
-
-    console.log("ACTOR", actor, subclassFeature);
-  }
-
   /**
    * Parses choices made in the charactermancer, and applies them to the sheet
    * @param {Actor5e} actor
@@ -1285,10 +1271,10 @@ class CharacterBuilder {
 
     //#region Spells
     for(let sp of choiceData.spells ?? []){
-      SheetApplier.addSpellItem(actor, sp.hash, sp.prepMode, sp.isPrepared);
+      await SheetApplier.addSpellItem(actor, sp.hash, sp.prepMode, sp.isPrepared);
     }
     for(let sp of choiceData.additionalSpells?.fromSubclass ?? []){
-      SheetApplier.addSpellItem(actor, sp.hash, sp.prepMode, sp.isPrepared);
+      await SheetApplier.addSpellItem(actor, sp.hash, sp.prepMode, sp.isPrepared);
     }
     //#endregion
 
@@ -1400,6 +1386,19 @@ class CharacterBuilder {
     updatePool["system.details.level"] = totalLevel;
     updatePool["system.attributes.prof"] = System5e.calcProficiencyBonus(totalLevel);
     
+    //#endregion
+
+
+    //#region Parse Starting Equipment
+    for(let o of choiceData.startingItems){
+      let item = o.item;
+      //Some items granted by backgrounds aren't added to 5etools yet (like 2014 Acolyte's sticks of incense)
+      await SheetApplier.addInventoryItem(actor, {name:item.name, source:item.source}, item.quantity);
+    }
+    for(let o of choiceData.boughtItems ?? []){
+      let item = o.item;
+      await SheetApplier.addInventoryItem(actor, {name:item.name, source:item.source}, item.quantity);
+    }
     //#endregion
 
     //This should be done after class, we need the proficiency modifier (based on class level)

@@ -149,13 +149,13 @@ class System5e{
      * Shorthand for adding an already created entity5e to the actor inventory
      * @param {Actor5e} actor
      * @param {Entity5e} entity5e
-     * @param {string} itemType
+     * @param {string} itemType spell/item/class etc
      * @returns {Entity5e}
      */
     static async tryAddToInventory(actor, entity5e, itemType, options={}){
         //console.error("Add", itemType, entity5e.name, entity5e.collectionId);
-        entity5e.type = itemType;
-        actor.createEmbeddedDocuments("item", [], [entity5e], options);
+        //entity5e.type = itemType;
+        actor.createEmbeddedDocuments("item", [], [{entity:entity5e, _type: itemType}], options);
         return entity5e;
     }
     static async removeFromInventory(actor, collectionId){
@@ -324,6 +324,7 @@ class Entity5e {
     _tryCloneOriginal(original){
         if(original == null){return;}
         this.name = original.name;
+        this.source = original.source;
         this.system = structuredClone(original.system);
         this.entries = structuredClone(original.entries);
     }
@@ -483,12 +484,17 @@ class Item5e extends Entity5e{
     get isCrewed(){return this.system.activation?.type === "crew";}
     get isFormulaRecharge(){ !!DND5E.limitedUsePeriods[this.system.uses?.per]?.formula;}
     static async verifySystemData(hash){
-        console.log(CharacterBuilder.instance._data);
         let existingData = CharacterBuilder.getEntityByUid("item", hash);
-        if(existingData.system){return;}
+        if(!existingData){console.warn("Failed to find item", hash); return false;}
+        if(existingData.system){return true;}
         //No system data exists, go ahead and import
         let imported = await SourceManager.plutoniumConvertData(existingData, "item");
         existingData.system = imported.system;
+        return true;
+    }
+    _tryCloneOriginal(original){
+        super._tryCloneOriginal(original);
+        this.packContents = original.packContents;
     }
     
     //Runtime label calculations
@@ -501,13 +507,7 @@ class Item5e extends Entity5e{
         };
     }
     get canToggle(){
-        switch(this.type){
-            case "weapon":
-            case "equipment":
-            return true;
-
-            default: return false;
-        }
+        return this.equippable;
     }
     get toggleClass(){
         return this.system.equipped? "active" : "";
@@ -1207,6 +1207,14 @@ class Actor5e {
             size: "med",
         }
 
+        this.system.currency = {
+            cp: 0,
+            sp: 0,
+            ep: 0,
+            gp: 0,
+            pp: 0,
+        }
+
         this.elements = {inventory: "dnd5e-inventory"};
 
         this.prepareEmbeddedData();
@@ -1217,8 +1225,8 @@ class Actor5e {
     /**
      * Create new, blank items, which are automatically added to the inventory
      * @param {any} embeddedName
-     * @param {{type:string, quantity:number, identified:boolean}[]} data=[] js objects containing type of item (spell/class/item/race etc etc). This should match the item category you're trying to place them in
-     * @param {Entity5e[]} entities=[] pre-created Entity5e objects containing type of item (spell/class/item/race etc etc). This should match the item category you're trying to place them in
+     * @param {{type:string, quantity:number, identified:boolean, system:any, name:string}[]} data=[] js objects containing type of item (spell/class/item/race etc etc). This should match the item category you're trying to place them in
+     * @param {{entity:Entity5e, _type:string}[]} entities=[] pre-created Entity5e objects containing type of item (spell/class/item/race etc etc). This should match the item category you're trying to place them in
      */
     createEmbeddedDocuments(embeddedName="item", data=[], entities=[], options={}){
         let collection = [];
@@ -1248,7 +1256,7 @@ class Actor5e {
                 entity.system = d.system;
                 entity.name = d.name;
                 entity.type = d.type; //weapon/spell/equipment/etc/etc
-                collection.push(entity);
+                collection.push({entity, _type:d.type});
             }
             if(entities != null){collection = collection.concat(entities);}
             //Add them to the character
@@ -1276,17 +1284,32 @@ class Actor5e {
         //re-render
         ActorCharactermancerSheet2.instance.render();
     }
-    _addEntities(items){
-        for(let it of items){
-            let subType = it.type;
-            switch(it.entityType){
+    /**
+     * @param {{entity:Entity5e, _type:string}} entities
+     */
+    _addEntities(entities){
+        for(let pair of entities){
+            const ent = pair.entity;
+            let subType = pair._type;
+            switch(ent.entityType){ //These are locked in depending on what class the entity is
                 case "spell":
-                    if(it.system.preparationMode=="innate"){subType = it.system.preparationMode;}
-                    else{subType = it.system.level;}
-                break;
+                    if(ent.system.preparationMode=="innate"){subType = ent.system.preparationMode;}
+                    else{subType = ent.system.level;} break;
+                case "item":
+                    console.log("ADD ITEM", ent);
+                    subType = "loot";
+                    if(["light", "medium", "heavy"].includes(ent.system.type.value)){subType = "equipment";}
+                    else if(["martialM", "simpleM", "martialR", "simpleR"].includes(ent.system.type.value)){subType = "weapon";}
+                    else if(["ammo"].includes(ent.system.type.value)){subType = "consumable";}
+                    else if(!!ent.system.capacity){subType = "container";}
+                    else if(ent.system.poison){subtype = "consumable";}
+                    //Hardcoding in a way to put common clothes/fine clothes/adventurer's clothes into the equipment category, not loot
+                    else if(ent.system.type.value == "gear"){subType = this._parseAdventuringGearSubType(ent) ?? subType;}
+                    ent.equippable = subType != "loot";
+                    break;
             }
-            let refArray = this._getEntities(it.entityType, subType);
-            refArray.push(it);
+            let refArray = this._getEntities(ent.entityType, subType);
+            refArray.push(ent);
         }
     }
     _removeEntities(items){
@@ -1330,6 +1353,20 @@ class Actor5e {
             return inv[subtype][arrayName];
         }
         catch(e){ console.log(entityType, subtype); console.error(e);  return null;}
+    }
+
+    _parseAdventuringGearSubType(entity){
+        const n = entity.name.toLowerCase();
+        const src = entity.source.toLowerCase();
+        const equipment_strings = [" clothes", "clothing", "robe", "suit", "hat"];
+        const consumable_strings = ["torch", "lamp", "lantern", "flask", "oil", "vial", "waterskin", "pitcher"];
+        const tool_strings = ["'s kit"];
+        //No source checking for now
+        //if(["phb"].includes(src)){}
+        if(equipment_strings.some(str => n.includes(str))){return "equipment";}
+        if(consumable_strings.some(str => n.includes(str))){return "consumable";}
+        if(tool_strings.some(str => n.includes(str))){return "tool";}
+        return null;
     }
 
     _runInventoryFunc(func){

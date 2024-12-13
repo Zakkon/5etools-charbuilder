@@ -199,11 +199,39 @@ class ActorCharactermancerSheet2 extends ActorCharactermancerSheet {
         //Make "Manage Spells" button respond to being clicked
         const mng = this.$sheet.find(".btn.manage-spells");
         mng.click(evt=>{
+            if(evt.detail == 0){return;} //Make enter key not trigger this event
             evt.stopPropagation();
             evt.preventDefault();
-
             CharacterBuilder.instance.e_switchTab("spells");
         });
+
+        //Make currency input fields respond to input value chaning
+        this.$sheet.find(".inventory-header .currency input").on("change", evt => {
+            let val = evt.target.value;
+            //Validate input. if failed, return without removing focus from the input field
+            //this.parseInputDelta(evt.target, CharacterBuilder.instance._actor); //not sure about this
+            evt.stopPropagation();
+            evt.preventDefault();
+            console.log("Input value changed to:", evt.target.value);
+        });
+    }
+
+    /**
+     * Handle a delta input for a number value from a form.
+     * @param {HTMLInputElement} input  Input that contains the modified value.
+     * @param {Document} target         Target document to be updated.
+     * @returns {number|void}
+     */
+    parseInputDelta(input, target) {
+        let value = input.value;
+        if ( ["+", "-"].includes(value[0]) ) {
+            const delta = parseFloat(value);
+            value = Number(PropUtils.getProperty(target, input.dataset.name ?? input.name)) + delta;
+        }
+        else if ( value[0] === "=" ) value = Number(value.slice(1));
+        if ( Number.isNaN(value) ) return;
+        input.value = value;
+        return value;
     }
 
     navigation_switchTab(activeTabName=null){
