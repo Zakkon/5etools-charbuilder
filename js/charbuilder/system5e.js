@@ -458,6 +458,8 @@ class Item5e extends Entity5e{
         this.quantity = quantity;
         if(!this.isCustom){this._tryCloneOriginal(CharacterBuilder.getEntityByUid("item", this.uid));}
         this.properties = {};
+        this.isPhysical = this.quantity != null;
+        //this.isCostlessAction = this.system.activation?.type in CONFIG.DND5E.staticAbilityActivationTypes;
 
         System5e.addHookBase("item_update", (p, collectionId) => {
             console.log("item update hook fired");
@@ -500,7 +502,7 @@ class Item5e extends Entity5e{
     //Runtime label calculations
     get labels(){
         let system = this.system;
-        const activation = `${system.activation.cost ?? 0} ${system.activation.type}`;
+        const activation = !system.activation? "" : `${system.activation.cost ?? 0} ${system.activation.type}`;
 
         return {
             activation
@@ -1326,7 +1328,7 @@ class Actor5e {
                     this.features[it.type].items = this.features[it.type].items.filter(obj => obj.collectionId !== it.collectionId);
                     break;
                 default:
-                    this.inventory[it.type].items = this.inventory[it.type].items.filter(obj => obj.collectionId !== it.collectionId);
+                    this.inventory[it.system.type.value].items = this.inventory[it.system.type.value].items.filter(obj => obj.collectionId !== it.collectionId);
                     break;
             }
         }

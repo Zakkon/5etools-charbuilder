@@ -446,12 +446,13 @@ class C5e_EditWindow {
         $("body").append(this.element);
 
         
-        let templateName = entity.type;
+        let templateName = entity.entityType;
         if(entity.type == "spell"){templateName = "spell";}
         else if(entity.type == "class"){templateName = "class";}
         else if(entity.type == "race"){templateName = "race";}
         else if(entity.type == "background"){templateName = "background";}
         else if(entity.entityType == "feature"){templateName = "feat";}
+        else if(entity.entityType == "item"){templateName = entity.system.type.value;}
 
         entity.cssClass = "editable";
         entity.concealDetails = false;//!game.user.isGM && (this.document.system.identified === false)
