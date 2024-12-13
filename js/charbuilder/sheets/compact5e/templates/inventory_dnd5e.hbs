@@ -123,7 +123,7 @@
                         {{/if}}
 
                         <div class="item-detail item-quantity">
-                            <input type="text" value="{{item.quantity}}" min="0" placeholder="0" data-dtype="Number"
+                            <input type="text" value="{{item.system.quantity}}" min="0" placeholder="0" data-dtype="Number"
                                 inputmode="numeric" pattern="[0-9+=\-]*" data-name="system.quantity"
                                 {{disabled (eq item.type "container")}}>
                         </div>

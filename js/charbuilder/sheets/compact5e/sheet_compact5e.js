@@ -384,6 +384,7 @@ class BaseSheet {
     type;
     element;
     _entity;
+    editable = true;
     contentElement;
     tab_details;
     rectWidth = 550;
@@ -397,6 +398,8 @@ class BaseSheet {
     startH;
     get entity(){return this._entity;}
     set entity(value){this._entity = value;}
+    get system(){return this._entity.system;}
+    get config(){return CONFIG.DND5E;}
     constructor(actor, itemUid, type, collectionId){
         this.actor = actor;
         this.collectionId = collectionId;
@@ -420,12 +423,12 @@ class BaseSheet {
         if(!templateName){templateName = entity.entityType;}
 
         this.templateName = templateName;
-        entity.cssClass = "editable";
-        entity.concealDetails = false;//!game.user.isGM && (this.document.system.identified === false)
+        this.cssClass = "editable";
+        this.concealDetails = false;//!game.user.isGM && (this.document.system.identified === false)
         this._renderUpdate();
     }
     _renderUpdate(){
-        let contentTemplate = new LoadTemplate(this.contentElement, "parts/edit/" + this.templateName, this.entity);
+        let contentTemplate = new LoadTemplate(this.contentElement, "parts/edit/" + this.templateName, this); //Important to set this sheet, not entity, as the context
 
         contentTemplate.createAndCompile((innerHTML)=>{
             let innerElement = $$`${innerHTML}`;
@@ -567,10 +570,14 @@ class ItemSheet extends BaseSheet {
     itemType; //Used to know what category of item this is
     get item(){return this.entity;}
     set item(value){this.entity = value;}
+    get isCostlessAction(){return this.system?.activation?.type in DND5E.staticAbilityActivationTypes;}
+    get isCrewed(){return this.system.activation?.type === "crew";}
+    get isFormulaRecharge(){ !!DND5E.limitedUsePeriods[this.system.uses?.per]?.formula;}
+    get isPhysical(){return this.system.quantity != null;}
 
     constructor(actor, itemUid, collectionId){
         super(actor, itemUid, "item", collectionId);
-        this.itemType = this.item.system.type.value;
+        this.itemType = this.system.type.value;
     }
 
     /**

@@ -455,8 +455,8 @@ class Item5e extends Entity5e{
     constructor(itemUid, quantity=1, collectionId=null, isCustom=false){
         super(itemUid, collectionId, isCustom);
         this.entityType = "item";
-        this.quantity = quantity;
         if(!this.isCustom){this._tryCloneOriginal(CharacterBuilder.getEntityByUid("item", this.uid));}
+        this.system = this.system ?? {};
         this.properties = {};
 
         System5e.addHookBase("item_update", (p, collectionId) => {
@@ -480,10 +480,7 @@ class Item5e extends Entity5e{
     }
     get itemData(){return CharacterBuilder.getItemByUid(this.uid);}
     /* DND 5E BOOLEANS */
-    get isCostlessAction(){return this.system?.activation?.type in DND5E.staticAbilityActivationTypes;}
-    get isCrewed(){return this.system.activation?.type === "crew";}
-    get isFormulaRecharge(){ !!DND5E.limitedUsePeriods[this.system.uses?.per]?.formula;}
-    get isPhysical(){return this.quantity != null;}
+    
     static async verifySystemData(hash){
         let existingData = CharacterBuilder.getEntityByUid("item", hash);
         if(!existingData){console.warn("Failed to find item", hash); return false;}
@@ -1250,9 +1247,11 @@ class Actor5e {
                         entity = new Race5e(null, null, true);
                         break;
                     default: //Assume Item5e
+                    console.log("Create new item5e", d.quantity);
                         entity = new Item5e(null, d.quantity ?? 1, null, true);
                         d.system.identified = d.identified ?? true;
                         d.system.type = {value:d.type} //This needs to be set before _addEntities, to know what category of item it is
+                        d.system.quantity = d.quantity ?? 1;
                         break;
                 }
                 entity.system = d.system;
