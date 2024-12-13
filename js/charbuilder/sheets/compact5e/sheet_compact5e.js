@@ -1,7 +1,3 @@
-class C5e_Sheet{
-    static createNew(){}
-}
-
 class C5e_Inventory{
     rootElement;
     summary;
@@ -256,44 +252,6 @@ class C5e_Inventory{
     //#region Spellbook
     //#endregion
 }
-class C5e_InventoryCategory {
-    header;
-    itemList;
-    categoryId;
-    constructor(){
-
-    }
-    render(categoryData){
-        this.categoryId = categoryData.id;
-        this.itemList = $$`<ol class="item-list" data-category-id="${categoryData.id}"></ol>`;
-
-        //Create header template
-        const header = `
-        <li class="items-header flexrow">
-            <span class="item-name flexrow">${categoryData.label}</span>
-        
-            <div class="item-detail item-weight">Weight</div>
-        
-            <div class="item-detail item-uses">Charges</div>
-            <div class="item-detail item-action">Usage</div>
-        
-            <div class="item-controls">
-              <a class="item-control item-action" data-action="create" data-tooltip="itemCreate">
-                <i class="fas fa-plus"></i> Add
-              </a>
-            </div>
-          </li>
-        `;
-        this.header = $$`${header}`;
-    }
-    clear(){
-        $(`.item-list[data-category-id="${this.categoryId}"] > *`).remove();
-    }
-    addTo(element){
-        this.header.appendTo(element);
-        this.itemList.appendTo(element);
-    }
-}
 class C5e_InventoryItem {
     parent;
     element;
@@ -419,7 +377,6 @@ class C5e_InventoryItemSummary {
     }
 }
 
-
 class BaseSheet {
 
     collectionId;
@@ -456,7 +413,7 @@ class BaseSheet {
         let window_content = $$`<section class="window-content"></section>`;
         this.contentElement = window_content;
         let handle = this.windowDragHandle();
-        let window = $$`<div class="c5e app window-app sheet item" style="z-index: 110; width: 550px; height: 500px; left: 400px; top: 50px;">${windowHeader}${window_content}${handle}</div>`;
+        let window = $$`<div class="c5e app window-app sheet item" style="z-index: 110; width: 550px; height: 700px; left: 400px; top: 50px;">${windowHeader}${window_content}${handle}</div>`;
         this.element = window;
         $("body").append(this.element);
 
@@ -468,7 +425,7 @@ class BaseSheet {
         let contentTemplate = new LoadTemplate(window_content, "parts/edit/" + templateName, entity);
         contentTemplate.create(()=>{
             this.navigation_switchTab(this.activeTab);
-            this.setupListeners(window_content);
+            this.setupListeners(this.contentElement);
         });
     }
     _renderUpdate(){
@@ -477,6 +434,7 @@ class BaseSheet {
         contentTemplate.createAndCompile((innerHTML)=>{
             let innerElement = $$`${innerHTML}`;
             this._replaceHTML(this.contentElement, innerElement);
+            this.contentElement = innerElement;
             this.navigation_switchTab(this.activeTab);
             this.setupListeners(this.contentElement);
         });
@@ -545,12 +503,8 @@ class BaseSheet {
         this.element.css("height", `${dy+this.startH}px`);
     }
     setRectSize(width, height){
-        //this.setStyle();
-        //console.log("W", width, height);
-        //this.rectWidth = width; this.rectHeight = height;
         this.element.css("width", `${width}px`);
         this.element.css("height", `${height}px`);
-        //this.element.css("top", "100px");
     }
     setStyle(){
         let str = `z-index:${this.zIndex} width:${this.rectWidth} height:${this.rectHeight} left:${this.rectLeft} top:${this.rectTop}`;

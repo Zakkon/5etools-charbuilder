@@ -262,15 +262,6 @@ class ActorCharactermancerSheet2 extends ActorCharactermancerSheet {
 
     }
     /**
-   * Render the inner application content
-   * @param {object} data         The data used to render the inner template
-   * @returns {Promise<jQuery>}   A promise resolving to the constructed jQuery object
-   * @private
-   */
-    async _renderInner(data){
-        
-    }
-    /**
    * Customize how inner HTML is replaced when the application is refreshed
    * @param {jQuery} element      The original HTML processed as a jQuery object
    * @param {jQuery} html         New updated HTML as a jQuery object
