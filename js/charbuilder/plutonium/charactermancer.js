@@ -11614,6 +11614,7 @@ class ActorCharactermancerSpell extends ActorCharactermancerBaseComponent {
         //Get the comps
         const filterValues = this.filterValuesSpellsCache || this.filterBoxSpells.getValues();
         for(let compSpell of this.compsSpellSpells){
+            if(!compSpell){continue;} //can be null if class is not a caster
             const form = await compSpell.pGetFormData(filterValues);
             console.log("Spells in form: ", form.data.spells);
             spells = form.data.spells/* .filter(sp => (sp.isLearned || sp.isPrepared)) */.map(sp => ({

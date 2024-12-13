@@ -1,11 +1,11 @@
 <form class="{{cssClass}} flexcol" autocomplete="off">
     {{!-- Item Sheet Header --}}
     <header class="sheet-header flexrow">
-        <img class="profile" src="{{img}}" data-tooltip="{{name}}" data-edit="img">
+        {{!-- <img class="profile" src="{{img}}" data-tooltip="{{name}}" data-edit="img"> --}}
 
         <div class="header-details flexrow">
             <h1 class="charname">
-                <input name="name" type="text" value="{{name}}" placeholder="Spell Name">
+                <input name="name" type="text" value="{{item.name}}" placeholder="Spell Name">
             </h1>
 
             <div class="item-subtitle">
@@ -38,7 +38,7 @@
     <section class="sheet-body">
 
         {{!-- Description Tab --}}
-       {{!--  {{> "dnd5e.item-description"}} --}}
+       {{> "dnd5e.item-description"}}
 
         {{!-- Details Tab --}}
         <div class="tab details" data-group="primary" data-tab="details">

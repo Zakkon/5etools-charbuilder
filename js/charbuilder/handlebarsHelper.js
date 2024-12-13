@@ -119,6 +119,7 @@ class HandlebarsHelper{
             
             return new Handlebars.SafeString(str);
         });
+        Handlebars.registerHelper("dnd5e-concealSection", HandlebarsHelper.concealSection);
         Handlebars.registerHelper("dnd5e-itemContext", HandlebarsHelper.itemContext);
         Handlebars.registerHelper("dnd5e-dataset", HandlebarsHelper.dataset);
     }
@@ -189,4 +190,26 @@ class HandlebarsHelper{
         }
         return new Handlebars.SafeString(entries.join(" "));
     }
+
+    /**
+ * Conceal a section and display a notice if unidentified.
+ * @param {boolean} conceal  Should the section be concealed?
+ * @param {object} options   Handlebars options.
+ * @returns {string}
+ */
+ static concealSection(conceal, options) {
+    let content = options.fn(this);
+    if ( !conceal ) return content;
+  
+    content = `<div inert>
+      ${content}
+    </div>
+    <div class="unidentified-notice">
+        <div>
+            <strong>${game.i18n.localize("DND5E.Unidentified.Title")}</strong>
+            <p>${game.i18n.localize("DND5E.Unidentified.Notice")}</p>
+        </div>
+    </div>`;
+    return content;
+  }
 }

@@ -444,7 +444,7 @@ class Entity5e {
         return (this.system.actionType === "heal") && this.hasDamage;
     }
     get hasLimitedUses(){
-        return (this.system.uses.max != null);
+        return (this.system?.uses?.max != null);
     }
     
     getContext(){
@@ -528,7 +528,7 @@ class Feature5e extends Entity5e{
      */
     static recast(inputObj){
         let item = null;
-        switch(inputObj.type){
+        switch(inputObj.featureType){
             case "race":
                 item = new Race5e(inputObj.uid, inputObj.collectionId, inputObj.isCustom);
                 break;
@@ -582,7 +582,7 @@ class Class5e extends Feature5e{
     constructor(itemUid, collectionId=null, isCustom=false){
         super(itemUid, collectionId, isCustom);
         if(!itemUid){return this;}
-        this.type = "class";
+        this.featureType = "class";
         if(!this.isCustom){this._tryCloneOriginal(CharacterBuilder.getEntityByUid("class", {uid: this.uid}));}
 
         if(!Entity5e.use_overrides){return this;}
@@ -603,7 +603,7 @@ class Class5e extends Feature5e{
 class Subclass5e extends Feature5e{
     constructor(itemUid, className, classSource, collectionId=null, isCustom=false){
         super(itemUid, collectionId, isCustom);
-        this.type = "subclass";
+        this.featureType = "subclass";
         if(!this.isCustom){this._tryCloneOriginal(CharacterBuilder.getEntityByUid("subclass", {uid: this.uid}));}
 
         if(!Entity5e.use_overrides){return this;}
@@ -663,7 +663,7 @@ class Subclass5e extends Feature5e{
 class Race5e extends Feature5e{
     constructor(itemUid, collectionId=null, isCustom=false){
         super(itemUid, collectionId, isCustom);
-        this.type = "race";
+        this.featureType = "race";
         if(!this.isCustom){this._tryCloneOriginal(CharacterBuilder.getEntityByUid("race", {uid: this.uid}));}
 
         if(!Entity5e.use_overrides){return this;}
@@ -682,7 +682,7 @@ class Race5e extends Feature5e{
 class Background5e extends Feature5e{
     constructor(itemUid, collectionId=null, isCustom=false){
         super(itemUid, collectionId, isCustom);
-        this.type = "background";
+        this.featureType = "background";
         if(!this.isCustom){this._tryCloneOriginal(CharacterBuilder.getEntityByUid("background", {uid: this.uid}));}
 
         if(!Entity5e.use_overrides){return this;}

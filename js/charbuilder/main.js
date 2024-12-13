@@ -1089,7 +1089,7 @@ class CharacterBuilder {
     let backgroundData = await this.compBackground.getChoiceData();
     let abilityData = await this.compAbility.getChoiceData();
     let featData = await this.compFeat.getChoiceData();
-    let spellData = await this.compSpell.getChoiceData();
+    let spellData = await this.compSpell?.getChoiceData(); //Is null on non-caster classes
     let startingItemData = await this.compEquipment._compEquipmentStartingDefault.getChoiceData();
     let boughtItemData = await this.compEquipment._compEquipmentShopGold.getChoiceData();
     let targetData = {};
