@@ -2,9 +2,6 @@
 <div class="form-group input-select">
     <label>Activation Cost</label>
     <div class="form-fields">
-        {{log system.activation.type}}
-        {{log (not isCostlessAction)}}
-        {{log (and system.activation.type (not isCostlessAction))}}
        {{#if (and system.activation.type (not isCostlessAction))}}
             <input type="number" step="any" name="system.activation.cost"
                    value="{{system.activation.cost}}" placeholder="&mdash;">
@@ -76,7 +73,7 @@
     <div class="form-group input-select">
         <label>Range</label>
         <div class="form-fields">
-            {{#if system.hasScalarRange}}
+            {{#if hasScalarRange}}
                 <input type="number" step="any" name="system.range.value" value="{{system.range.value}}"
                     placeholder="Normal" data-tooltip="DND5E.RangeNormal">
                 <span class="sep">/</span>
@@ -99,7 +96,7 @@
     <div class="form-group input-select">
         <label>Duration</label>
         <div class="form-fields">
-            {{#if system.hasScalarDuration}}
+            {{#if hasScalarDuration}}
                 <input type="text" name="system.duration.value" value="{{source.duration.value}}"
                     placeholder="&mdash;" data-tooltip="DND5E.DurationValue" data-formula-editor>
             {{/if}}

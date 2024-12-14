@@ -449,6 +449,9 @@ class ItemSheet5e extends BaseSheet {
     get isCrewed(){return this.system.activation?.type === "crew";}
     get isFormulaRecharge(){ !!DND5E.limitedUsePeriods[this.system.uses?.per]?.formula;}
     get isPhysical(){return this.system.quantity != null;}
+    get hasScalarRange(){return this.system.range?.units in CONFIG.DND5E.movementUnits;}
+    get hasScalarDuration(){return this.system.duration?.units in CONFIG.DND5E.scalarTimePeriods;}
+    get hasScalarTarget(){return this.system.target?.template?.type || ![null, "", "self"].includes(this.system.target?.affects?.type);}
     get labels(){return this.item.labels;} //Lazy shortcut before we move all labels rendering code to this class
     constructor(actor, itemUid, item, type, collectionId){
         super(item);
@@ -460,6 +463,9 @@ class ItemSheet5e extends BaseSheet {
         this._item = item;
         if(type == "item"){this.itemType = this.system.type.value;}
         this.boundUpdateFunc = this._onItemUpdate.bind(this);
+        this.user = {isGM:true};
+
+        
 
         System5e.addHookBase("item_update", this.boundUpdateFunc);
     }
@@ -502,6 +508,16 @@ class ItemSheet5e extends BaseSheet {
     }
     _renderUpdate(){
         let contentTemplate = new LoadTemplate(this.contentElement, "parts/edit/" + this.templateName, this); //Important to set this sheet, not entity, as the context
+
+        const enrichmentOptions = {
+            relativeTo: this.item, //rollData: this.rollData
+        }
+        /* TextEditor.enrichHTML(item.system.description?.value ?? "", enrichmentOptions).then(result => {
+            this.enriched = {description: result};
+        }) */
+        this.enriched = {
+            description: TextEditor.enrichHTML(this.item.system.description?.value ?? "", enrichmentOptions),
+        }
 
         contentTemplate.createAndCompile((innerHTML)=>{
             let innerElement = $$`${innerHTML}`;
@@ -586,6 +602,13 @@ class ItemSheet5e extends BaseSheet {
     }
     
     setupListeners(html){
+
+        //if ( !this.isEditable ) return;
+        //html.on("change", "input,select,textarea", this._onChangeInput.bind(this));
+
+        //Inside .editor-content, find child objects (of which only get created once the edit button has been clicked)
+        html.find(".editor-content[data-edit]").each((i, div) => this._activateEditor(div));
+
         //Make navigation respond to being clicked
         html.find(".sheet-navigation.tabs").click(evt=>{
             const targetTab = evt.target.getAttribute("data-tab");
@@ -612,6 +635,11 @@ class ItemSheet5e extends BaseSheet {
                 this.setProp(el.name, e.target.value);
             });
         }
+
+        html.find(".description-edit").click(event => {
+            this.editingDescriptionTarget = event.currentTarget.dataset.target;
+            this._renderUpdate();
+        });
     }
 
     
@@ -732,4 +760,111 @@ class ItemSheet5e extends BaseSheet {
       return this.item.update({"system.damage.parts": damage.parts});
     }
   }
+
+  //#region Text Editor
+  /**
+   * Activate an editor instance present within the form
+   * @param {HTMLElement} div  The element which contains the editor
+   * @protected
+   */
+  _activateEditor(div) {
+
+    // Get the editor content div
+    const name = div.dataset.edit;
+    const engine = "pell"; //div.dataset.engine || "tinymce";
+    const collaborate = div.dataset.collaborate === "true";
+    const button = div.previousElementSibling;
+    const hasButton = button && button.classList.contains("editor-edit");
+    const wrap = div.parentElement.parentElement;
+    const wc = div.closest(".window-content");
+
+    // Determine the preferred editor height
+    const heights = [wrap.offsetHeight, wc ? wc.offsetHeight : null];
+    if ( div.offsetHeight > 0 ) heights.push(div.offsetHeight);
+    const height = Math.min(...heights.filter(h => Number.isFinite(h)));
+
+    // Get initial content
+    const options = {
+      target: div,
+      fieldName: name,
+      save_onsavecallback: () => this.saveEditor(name),
+      height, engine, collaborate
+    };
+
+    //if ( engine === "prosemirror" ) options.plugins = this._configureProseMirrorPlugins(name, {remove: hasButton});
+
+    const data = this.object;
+
+    this.editors = this.editors ?? {};
+    // Define the editor configuration
+    const editor = this.editors[name] = {
+      options,
+      target: name,
+      button: button,
+      hasButton: hasButton,
+      mce: null,
+      instance: null,
+      active: !hasButton,
+      changed: false,
+      initial: HelperFunctions.getProperty(data, name)
+    };
+
+    // Activate the editor immediately, or upon button click
+    const activate = () => {
+      editor.initial = HelperFunctions.getProperty(data, name);
+      this.activateEditor(name, {}, editor.initial);
+    };
+
+    if (hasButton){button.onclick = activate;}
+    else {activate();}
+  }
+  async activateEditor(name, options={}, initialContent="") {
+
+    const editor = this.editors[name];
+    if ( !editor ) throw new Error(`${name} is not a registered editor name!`);
+    options = HelperFunctions.mergeObject(editor.options, options);
+    if ( !options.fitToSize ) options.height = options.target.offsetHeight;
+    if ( editor.hasButton ) editor.button.style.display = "none";
+    //Create the editor
+    const instance = editor.instance = editor.mce = await TextEditor.create(options, initialContent || editor.initial);
+    options.target.closest(".editor")?.classList.add(options.engine ?? "tinymce");
+    editor.changed = false;
+    editor.active = true;
+
+    //Configure extensions to the editor
+    if(options.engine === "pell"){
+        instance.onSave = (html) => {
+            let update = {}; update[name] = html;
+            console.log("Updating item", update);
+            this.item.update(update);
+            this.saveEditor(name, {remove: true});
+            this.editingDescriptionTarget = null;
+        }
+    }
+
+    return instance;
+  }
+  /**
+   * Handle saving the content of a specific editor by name
+   * @param {string} name           The named editor to save
+   * @param {boolean} [remove]      Remove the editor after saving its content
+   * @returns {Promise<void>}
+   */
+  async saveEditor(name, {remove=true}={}) {
+    const editor = this.editors[name];
+    if (!editor || !editor.instance) throw new Error(`${name} is not an active editor name!`);
+    editor.active = false;
+    const instance = editor.instance;
+    await this._onSubmit(new Event("submit"));
+
+    // Remove the editor
+    if (remove) {
+      //instance.destroy();
+      editor.instance = editor.mce = null;
+      if (editor.hasButton) editor.button.style.display = "block";
+      //this._renderUpdate(); //Disabling this for now, to avoid double updates
+    }
+    editor.changed = false;
+  }
+  //#endregion
 }

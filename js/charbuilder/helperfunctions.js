@@ -144,6 +144,7 @@ class HelperFunctions{
         }
         return clone;
     }
+    static mergeObject(original, other){return Object.assign(original, other);}
 
     /**
      * Sort the provided object by its values or by an inner sortKey.

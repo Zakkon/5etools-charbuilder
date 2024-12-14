@@ -13,9 +13,9 @@ class HandlebarsHelper{
     
     static registerHelpers(){
         
-        Handlebars.registerHelper("log", function(something, options) {
-            console.log(something, ...HandlebarsHelper.getAttributes(options));
-          });
+        Handlebars.registerHelper("log", function(...args) {
+            console.log(args);
+        });
         Handlebars.registerHelper('loud', function (aString) {
             return aString.toUpperCase()
         });
@@ -50,8 +50,8 @@ class HandlebarsHelper{
         });
         Handlebars.registerHelper('localize', function (value) {
             return HelperFunctions.localize(value);
-            return value;
         });
+        Handlebars.registerHelper('editor', HandlebarsHelper.editor);
         Handlebars.registerHelper('numberInput', function (value, options) {
             let wrapper = `<input type="number" value${value != null? `="${value}"` : ""}`;
             let opts = HandlebarsHelper.getAttributes(options);
@@ -148,7 +148,7 @@ class HandlebarsHelper{
         fetch("dnd5e.item-activation", "parts/edit/item-activation");
         fetch("dnd5e.item-action", "parts/edit/item-action");
         fetch("dnd5e.ability-scores", "parts/ability-scores");
-        fetch("dnd5e.item-description", "parts/item-description");
+        fetch("dnd5e.item-description", "parts/edit/item-description");
         fetch("dnd5e.item-source", "parts/item-source");
         fetch("dnd5e.inventory", "inventory_dnd5e");
         fetch("dnd5e.actor-spellbook", "parts/actor-spellbook");
@@ -212,5 +212,40 @@ class HandlebarsHelper{
         </div>
     </div>`;
     return content;
+  }
+
+  /**
+   * Construct an editor element for rich text editing with TinyMCE or ProseMirror.
+   * @param {[string, TextEditorOptions]} args  The content to display and edit, followed by handlebars options.
+   * @returns {Handlebars.SafeString}
+   *
+   * @example
+   * ```hbs
+   * {{editor world.description target="description" button=false engine="prosemirror" collaborate=false}}
+   * ```
+   */
+  static editor(...args) {
+    const options = args.pop();
+    let content = args.pop() ?? HelperFunctions.getProperty(options.data.root, options.hash.target) ?? "";
+    
+    console.log("options", options, "content", content);
+    const target = options.hash.target;
+    if (!target) throw new Error("You must define the name of a target field.");
+    const button = Boolean(options.hash.button);
+    const editable = "editable" in options.hash ? Boolean(options.hash.editable) : true;
+
+    // Construct the HTML
+    const editorClasses = ["editor-content", options.hash.class ?? null].filterJoin(" ");
+    let editorHTML = '<div class="editor">';
+    if ( button && editable ) editorHTML += '<a class="editor-edit"><i class="fas fa-edit"></i></a>';
+    let dataset = {
+      engine: options.hash.engine || "tinymce",
+      collaborate: !!options.hash.collaborate
+    };
+    if (editable) dataset.edit = target;
+    dataset = Object.entries(dataset).map(([k, v]) => `data-${k}="${v}"`).join(" ");
+    editorHTML += `<div class="${editorClasses}" ${dataset}>${content}</div></div>`;
+    console.log("EDITOR HTML", editorHTML, options);
+    return new Handlebars.SafeString(editorHTML);
   }
 }

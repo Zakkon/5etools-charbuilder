@@ -2250,7 +2250,7 @@ h5 {
   opacity: 20%;
 }
 .c5e.sheet.item [data-tab="description"] .item-description .description-header .description-edit .fa-solid.fa-edit {
-  position: absolute;
+  /* position: absolute; */
   inset-block: 0;
   inset-inline-end: 0;
   padding: 6px;
