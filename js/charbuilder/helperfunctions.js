@@ -110,7 +110,42 @@ class HelperFunctions{
         // Unknown Object type
         return "Object";
     }
+
         /**
+     * Quickly clone a simple piece of data, returning a copy which can be mutated safely.
+     * This method DOES support recursive data structures containing inner objects or arrays.
+     * This method DOES NOT support advanced object types like Set, Map, or other specialized classes.
+     * @param {*} original                     Some sort of data
+     * @param {object} [options]               Options to configure the behaviour of deepClone
+     * @param {boolean} [options.strict=false] Throw an Error if deepClone is unable to clone something instead of returning the original
+     * @return {*}                             The clone of that data
+     */
+    static deepClone(original, {strict=false}={}) {
+
+        // Simple types
+        if ( (typeof original !== "object") || (original === null) ) return original;
+    
+        // Arrays
+        if ( original instanceof Array ) return original.map(HelperFunctions.deepClone);
+    
+        // Dates
+        if ( original instanceof Date ) return new Date(original);
+    
+        // Unsupported advanced objects
+        if ( original.constructor && (original.constructor !== Object) ) {
+            if ( strict ) throw new Error("deepClone cannot clone advanced objects");
+            return original;
+        }
+    
+        // Other objects
+        const clone = {};
+        for ( let k of Object.keys(original) ) {
+            clone[k] = HelperFunctions.deepClone(original[k]);
+        }
+        return clone;
+    }
+
+    /**
      * Sort the provided object by its values or by an inner sortKey.
      * @param {object} obj                 The object to sort.
      * @param {string|Function} [sortKey]  An inner key upon which to sort or sorting function.

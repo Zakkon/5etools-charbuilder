@@ -62,7 +62,8 @@ class C5e_Inventory{
     static tryOpenEditWindow(actor, item=null, itemUid, type, collectionId){
         if(C5e_Inventory._editedCollectionUids.includes(collectionId)){return;}
         C5e_Inventory._editedCollectionUids.push(collectionId);
-        let window = new ItemSheet5e(actor, itemUid, type, collectionId);
+        if(!item){item = actor.getItemByCollectionId(collectionId);}
+        let window = new ItemSheet5e(actor, itemUid, item, type, collectionId);
         window.render(item);
     }
     static closeEditWindow(window, collectionId){
@@ -374,8 +375,54 @@ class C5e_InventoryItemSummary {
     }
 }
 
-class ItemSheet5e {
+class BaseSheet {
 
+    constructor(object){
+        /**
+        * The object target which we are using this form to modify
+        * @type {*}
+        */
+        this.object = object;
+    }
+
+    
+    /**
+     * Calls this.object.update and passes along formData
+     * @param {any} event
+     * @param {object} formData
+     */
+    async _updateObject(event, formData) {
+        //if (!this.object.id){return;}
+        return this.object.update(formData);
+    }
+
+    _getSubmitData(updateData={}){
+
+    }
+
+    //#region Event Listeners
+    /**
+     * Handle changes to an input element, submitting the form if options.submitOnChange is true.
+     * Do not preventDefault in this handler as other interactions on the form may also be occurring.
+     * @param {Event} event  The initial change event
+     * @protected
+     */
+    async _onChangeInput(event) {
+        // Do not fire change listeners for form inputs inside text editors.
+        if (event.currentTarget.closest(".editor")) return;
+
+        // Handle changes to specific input types
+        const el = event.target;
+        if ((el.type === "color") && el.dataset.edit) this._onChangeColorPicker(event);
+        else if (el.type === "range") this._onChangeRange(event);
+
+        // Maybe submit the form
+        if (this.options.submitOnChange) {return this._onSubmit(event);}
+    }
+    //#endregion
+}
+
+class ItemSheet5e extends BaseSheet {
     collectionId;
     itemUid;
     type;
@@ -403,14 +450,21 @@ class ItemSheet5e {
     get isFormulaRecharge(){ !!DND5E.limitedUsePeriods[this.system.uses?.per]?.formula;}
     get isPhysical(){return this.system.quantity != null;}
     get labels(){return this.item.labels;} //Lazy shortcut before we move all labels rendering code to this class
-    constructor(actor, itemUid, type, collectionId){
+    constructor(actor, itemUid, item, type, collectionId){
+        super(item);
         this.actor = actor;
         this.collectionId = collectionId;
         this.itemUid = itemUid;
         this.type = type;
         this.activeTab = "details";
-        this._item = this.actor.getItemByCollectionId(this.collectionId);
+        this._item = item;
         if(type == "item"){this.itemType = this.system.type.value;}
+        this.boundUpdateFunc = this._onItemUpdate.bind(this);
+
+        System5e.addHookBase("item_update", this.boundUpdateFunc);
+    }
+    _onItemUpdate(p, collectionId){
+        this._renderUpdate();
     }
 
     render(force){
@@ -423,6 +477,8 @@ class ItemSheet5e {
         let window = $$`<div class="c5e app window-app sheet item" style="z-index: 110; width: 550px; height: 700px; left: 400px; top: 50px;">${windowHeader}${window_content}${handle}</div>`;
         this.element = window;
         $("body").append(this.element);
+
+        
 
         let templateName = this.type;
         switch(this.type){
@@ -456,6 +512,8 @@ class ItemSheet5e {
         });
     }
     close(){
+        //Remove hooks
+        System5e.removeHookBase("item_update", this.boundUpdateFunc);
         //Fire one last item_update? (incase we clicked on close instead of clicking elsewhere, which normally triggers input fields "change" events)
         this.element.remove(); this.element = null;
     }
@@ -586,5 +644,92 @@ class ItemSheet5e {
         return element.replaceWith(html);
     }
 
-    
+    /** @inheritDoc */
+    async _onSubmit(...args) {
+        //if (this._tabs[0].active === "details") this.position.height = "auto";
+        //await super._onSubmit(...args);
+    }
+    /** @inheritDoc */
+    _getSubmitData(updateData={}) {
+        const formData = HelperFunctions.expandObject(super._getSubmitData(updateData));
+
+        // Handle Damage array
+        const damage = formData.system?.damage;
+        if (damage && !HelperFunctions.getProperty(this.item.overrides, "system.damage.parts")) {
+        damage.parts = Object.values(damage?.parts || {}).map(d => [d[0] || "", d[1] || ""]);
+        }
+
+        // Handle properties
+        if (HelperFunctions.hasProperty(formData, "system.properties")) {
+        const keys = new Set(Object.keys(formData.system.properties));
+        const preserve = new Set(this.item._source.system.properties ?? []).difference(keys);
+        formData.system.properties = [...filteredKeys(formData.system.properties), ...preserve];
+        }
+
+        // Check max uses formula
+        const uses = formData.system?.uses;
+        if ( uses?.max ) {
+        const maxRoll = new Roll(uses.max);
+        if ( !maxRoll.isDeterministic ) {
+            uses.max = this.item._source.system.uses.max;
+            this.form.querySelector("input[name='system.uses.max']").value = uses.max;
+            ui.notifications.error(game.i18n.format("DND5E.FormulaCannotContainDiceError", {
+            name: game.i18n.localize("DND5E.LimitedUses")
+            }));
+            return null;
+        }
+        }
+
+        // Check duration value formula
+        const duration = formData.system?.duration;
+        if ( duration?.value ) {
+        const durationRoll = new Roll(duration.value);
+        if ( !durationRoll.isDeterministic ) {
+            duration.value = this.item._source.system.duration.value;
+            this.form.querySelector("input[name='system.duration.value']").value = duration.value;
+            ui.notifications.error(game.i18n.format("DND5E.FormulaCannotContainDiceError", {
+            name: game.i18n.localize("DND5E.Duration")
+            }));
+            return null;
+        }
+        }
+
+        // Check class identifier
+        if ( formData.system?.identifier && !dnd5e.utils.validators.isValidIdentifier(formData.system.identifier) ) {
+        formData.system.identifier = this.item._source.system.identifier;
+        this.form.querySelector("input[name='system.identifier']").value = formData.system.identifier;
+        ui.notifications.error("DND5E.IdentifierError", {localize: true});
+        return null;
+        }
+
+        // Return the flattened submission data
+        return foundry.utils.flattenObject(formData);
+    }
+
+    /**
+   * Add or remove a damage part from the damage formula.
+   * @param {Event} event             The original click event.
+   * @returns {Promise<Item5e>|null}  Item with updates applied.
+   * @private
+   */
+  async _onDamageControl(event) {
+    event.preventDefault();
+    const a = event.currentTarget;
+
+    // Add new damage component
+    if (a.classList.contains("add-damage")) {
+      await this._onSubmit(event);  // Submit any unsaved changes
+      const damage = this.item.system.damage ?? {parts:[]}; //Create parts if they don't exist yet
+      return this.item.update({"system.damage.parts": damage.parts.concat([["", ""]])});
+    }
+
+    // Remove a damage component
+    if (a.classList.contains("delete-damage")) {
+      await this._onSubmit(event);  // Submit any unsaved changes
+      const li = a.closest(".damage-part");
+      const damage = HelperFunctions.deepClone(this.item.system.damage);
+      damage.parts.splice(Number(li.dataset.damagePart), 1);
+      return this.item.update({"system.damage.parts": damage.parts});
+    }
+  }
 }

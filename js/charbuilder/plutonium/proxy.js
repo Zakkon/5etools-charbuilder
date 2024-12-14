@@ -99,9 +99,10 @@ class MixedProxyBase //extends Cls
     static _removeHook_from(obj, hookProp, prop, hook) {
         if (obj[hookProp] && obj[hookProp][prop]) {
             const ix = obj[hookProp][prop].findIndex(hk=>hk === hook);
-            if (~ix)
-                obj[hookProp][prop].splice(ix, 1);
+            if (~ix){obj[hookProp][prop].splice(ix, 1);}
+            else{console.log("Does not contain hook", hook, obj[hookProp][prop]);}
         }
+        else{console.log("Does not have hook", obj[hookProp], prop);}
     }
 
     _removeHooks(hookProp, prop) {

@@ -180,7 +180,7 @@ class System5e{
         ProxyBase._addHook_to(System5e.__hooks, "state", prop, hook);
     }
     static removeHookBase(prop, hook){
-
+        ProxyBase._removeHook_from(System5e.__hooks, "state", prop, hook);
     }
 
     //DEPRECATED
@@ -457,6 +457,7 @@ class Item5e extends Entity5e{
         this.entityType = "item";
         if(!this.isCustom){this._tryCloneOriginal(CharacterBuilder.getEntityByUid("item", this.uid));}
         this.system = this.system ?? {};
+        this.system.damage = this.system.damage ?? {};
         this.properties = {};
 
         System5e.addHookBase("item_update", (p, collectionId) => {
