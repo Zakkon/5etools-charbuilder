@@ -128,6 +128,7 @@ class HelperFunctions{
     static _lang;
     static setLocalizationLanguage(jsonObj){HelperFunctions._lang = jsonObj;}
     static localize(stringId){
+        if(!HelperFunctions._lang){return stringId;}
         let v = HelperFunctions._lang[stringId];
         //let v = HelperFunctions.getProperty(langJson, stringId);
         if ( typeof v === "string" ) return v;

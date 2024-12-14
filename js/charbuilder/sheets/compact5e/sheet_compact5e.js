@@ -527,16 +527,17 @@ class ItemSheet5e {
         this.element.css(str);
     }
     
-    setupListeners(windowContent){
+    setupListeners(html){
         //Make navigation respond to being clicked
-        const nav = windowContent.find(".sheet-navigation.tabs");
-        nav.click(evt=>{
+        html.find(".sheet-navigation.tabs").click(evt=>{
             const targetTab = evt.target.getAttribute("data-tab");
             this.navigation_switchTab(targetTab);
         });
 
+        html.find(".damage-control").click(this._onDamageControl.bind(this));
+
         //Input
-        for(let el of windowContent.find("input")){
+        for(let el of html.find("input")){
             //Make sure it has a "name" attribute
             if(!el.name){continue;}
             $(el).on("change", (e) => {
@@ -545,7 +546,7 @@ class ItemSheet5e {
             });
         }
         //Select
-        for(let el of windowContent.find("select")){
+        for(let el of html.find("select")){
             //Make sure it has a "name" attribute
             if(!el.name){continue;}
             $(el).on("change", (e) => {
@@ -554,6 +555,9 @@ class ItemSheet5e {
             });
         }
     }
+
+    
+
     setProp(prop, value){
         //Set the value to the item's override
         let entity = this.item;//System5e.getEntityByCollectionId(this.collectionId);
@@ -581,4 +585,6 @@ class ItemSheet5e {
     _replaceHTML(element, html){
         return element.replaceWith(html);
     }
+
+    
 }
