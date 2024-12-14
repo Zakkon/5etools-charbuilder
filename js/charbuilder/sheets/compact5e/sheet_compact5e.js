@@ -429,6 +429,7 @@ class ItemSheet5e {
             case "feature":
                 templateName = "feat";
                 if(this.item.featureType == "class"){templateName = "class";}
+                else if(this.item.featureType == "subclass"){templateName = "subclass";}
                 else if(this.item.featureType == "race"){templateName = "race";}
                 else if(this.item.featureType == "background"){templateName = "background";}
                 break;

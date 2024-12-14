@@ -62,7 +62,7 @@ class Roll{
     static replaceFormulaData(formula, data, {missing, warn=true}={}) {
         let dataRgx = new RegExp(/@([a-z.0-9_-]+)/gi);
         return formula.replace(dataRgx, (match, term) => {
-            let value = PropUtils.getProperty(data, term);
+            let value = HelperFunctions.getProperty(data, term);
             if ( value == null ) {
                 if (warn) console.error("Missing data!", "match:", match, "term:", term, "data:", data);
                 return (missing !== undefined) ? String(missing) : match;

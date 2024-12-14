@@ -49,6 +49,7 @@ class HandlebarsHelper{
             return (value === 'true' || value == true)? `disabled` : "";
         });
         Handlebars.registerHelper('localize', function (value) {
+            return HelperFunctions.localize(value);
             return value;
         });
         Handlebars.registerHelper('numberInput', function (value, options) {
