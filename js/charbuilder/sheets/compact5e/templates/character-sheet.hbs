@@ -180,7 +180,7 @@
             </ul> --}}
             
             <ul class="ability-scores attributes flexrow">
-
+                <div class="vertical-line-separator"></div>
                 <li class="attribute armor">
                     <h4 class="attribute-name box-title">Armor Class</h4>
                     <a class="config-button" data-action="armor" data-tooltip="DND5E.ArmorConfig">
@@ -194,8 +194,8 @@
                         <span class="spell-dc">Spell DC {{system.attributes.spelldc}}</span>
                     </footer>
                 </li>
+                <div class="vertical-line-separator"></div>
 
-                
                 {{#each system.abilities as |ability id|}}
                 <li class="ability {{#if ability.proficient}}proficient{{/if}}" data-ability="{{id}}">
                     <h4 class="ability-name box-title rollable">{{ability.label}}</h4>
@@ -219,6 +219,7 @@
                         <i class="fas fa-cog"></i>
                     </a>
                 </li>
+                <div class="vertical-line-separator"></div>
                 {{/each}}
 
                 <li class="attribute initiative">
