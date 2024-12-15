@@ -1224,14 +1224,20 @@ h5 {
   flex: 0 0 100%;
   margin: 0;
 }
+.c5e.sheet.actor .sheet-header .attributes .vertical-line-separator{
+  width: 0.1rem;
+  flex: 0 0 auto;
+  background: darkgrey;
+}
 .c5e.sheet.actor .sheet-header .attributes .attribute {
   position: relative;
-  height: 70px;
+  height: 76px;
   margin: 0;
   border: none;
-  border-right: var(--dnd5e-border-groove);
-  border-radius: 0;
+  /* border-right: var(--dnd5e-border-groove);
+  border-radius: 0; */
 }
+
 .c5e.sheet.actor .sheet-header .attributes .attribute:last-child {
   border-right: none;
 }
@@ -1279,8 +1285,8 @@ h5 {
 .c5e.sheet.actor ul.attributes li.attribute {
   height: 60px;
   margin: 0 5px 0 0;
-  border: var(--dnd5e-border-groove);
-  border-radius: 4px;
+  /* border: var(--dnd5e-border-groove);
+  border-radius: 4px; */
   text-align: center;
 }
 .c5e.sheet.actor ul.attributes li.attribute:last-child {
@@ -1322,14 +1328,14 @@ h5 {
   font-family: var(--dnd5e-font-modesto);
   font-size: var(--font-size-20);
   font-weight: 700;
-  border: var(--dnd5e-border-groove);
-  border-radius: 3px;
+  /* border: var(--dnd5e-border-groove);
+  border-radius: 3px; */
 }
 .c5e.sheet.actor .ability-scores .ability {
   /* min-width: 100%; */
-  height: 70px;
+  height: 76px;
   text-align: center;
-  border: var(--dnd5e-border-groove);
+  /* border: var(--dnd5e-border-groove); */
   position: relative;
 }
 .c5e.sheet.actor .ability-scores .ability:last-child {
@@ -1355,7 +1361,7 @@ h5 {
 }
 .c5e.sheet.actor .ability-scores .ability .ability-modifiers {
   height: 24px;
-  margin: -8px 0 0;
+  /* margin: -8px 0 0; */
 }
 .c5e.sheet.actor .ability-scores .ability .ability-modifiers span.ability-mod,
 .c5e.sheet.actor .ability-scores .ability .ability-modifiers span.ability-save {
@@ -1364,6 +1370,8 @@ h5 {
   line-height: 22px;
   font-size: var(--font-size-16);
   border-top: var(--dnd5e-border-groove);
+  border-left: var(--dnd5e-border-groove);
+  border-right: var(--dnd5e-border-groove);
 }
 .c5e.sheet.actor .ability-scores .ability .ability-modifiers span.ability-mod {
   border-right: var(--dnd5e-border-groove);
