@@ -162,7 +162,6 @@ class CharacterExportFvtt{
         _char.featSpellsData = CharacterExportFvtt.getFeatData(builder.compFeat);
         //#endregion
 
-
         //optional feature stuff?
 
         //Character description
@@ -177,6 +176,10 @@ class CharacterExportFvtt{
             faith: builder.compDescription.__state["description_faith"],
             text: builder.compDescription.__state["description_text"],
         };
+
+        //#region Profile Image
+        const imgUrl = 
+        //#endregion
 
         //Build meta
 
@@ -1175,6 +1178,56 @@ class CharacterExportFvtt{
         return entity.name + "|" + entity.source;
     }
     
+    static async imageFileToBase64(file, callback, quality=0.7, MAX_WIDTH=300, MAX_HEIGHT=300){
+        // Create a FileReader to read the file
+        const reader = new FileReader();
+
+        reader.onload = function (e) {
+            const image = new Image();
+
+            image.onload = function () {
+                // Calculate scaled dimensions
+                let width = image.width;
+                let height = image.height;
+
+                if (width > MAX_WIDTH || height > MAX_HEIGHT) {
+                    const aspectRatio = width / height;
+
+                    if (width > height) {
+                        width = MAX_WIDTH;
+                        height = Math.round(MAX_WIDTH / aspectRatio);
+                    } else {
+                        height = MAX_HEIGHT;
+                        width = Math.round(MAX_HEIGHT * aspectRatio);
+                    }
+                }
+
+                // Draw the scaled image on a canvas
+                const canvas = document.createElement("canvas");
+                const ctx = canvas.getContext("2d");
+
+                canvas.width = width;
+                canvas.height = height;
+
+                //ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.drawImage(image, 0, 0, width, height);
+
+                // Convert the canvas content to a Base64 string
+                const base64Data = canvas.toDataURL("image/jpeg", quality); // Use JPEG format for lower memory usage
+
+                canvas.remove();
+
+                callback(base64Data);
+            };
+
+            // Load the image
+            image.src = e.target.result;
+        };
+
+        // Read the file as a data URL
+        reader.readAsDataURL(file);
+    }
+
     /**
      * Save file schema
      * _meta:

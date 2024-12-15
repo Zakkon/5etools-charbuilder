@@ -761,6 +761,8 @@ class ItemSheet5e extends BaseSheet {
     }
   }
 
+  
+
   //#region Text Editor
   /**
    * Activate an editor instance present within the form

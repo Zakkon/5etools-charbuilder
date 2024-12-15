@@ -2,7 +2,37 @@
 
     {{!-- Sheet Header --}}
     <header class="sheet-header flexrow">
-        <img class="profile" src="{{actor.img}}" data-tooltip="{{actor.name}}" data-edit="img"/>
+        <section class="profile">
+            <img class="portrait" src="{{actor.img}}" data-tooltip="{{actor.name}}" data-edit="img"/>
+            <div class="portrait-footer">
+                <div class="portrait-hp">
+                    <h4 class="attribute-name box-title">Hit Points</h4>
+                    {{!-- <a class="config-button" data-action="hitPoints" data-tooltip="DND5E.HitPointsConfig">
+                        <i class="fas fa-cog"></i>
+                    </a> --}}
+                    <div class="flexrow attribute-value multiple">
+                        <input name="system.attributes.hp.value" type="text" value="{{hp.value}}" placeholder="10"
+                            data-tooltip="DND5E.HitPointsCurrent" data-dtype="Number">
+                        <span class="sep"> / </span>{{!-- 
+                        <span data-tooltip="{{#if source.attributes.hp.max}}DND5E.HitPointsOverride{{else}}DND5E.HitPointsMax{{/if}}">
+                            {{hp.max}}
+                        </span> --}}
+                        <input name="system.attributes.hp.max" type="text" value="{{hp.max}}" placeholder="10"
+                            data-tooltip="DND5E.HitPointsMax" data-dtype="Number">
+                    </div>
+                    <footer class="flexrow attribute-footer">
+                        <input name="system.attributes.hp.temp" type="text" class="temphp"
+                            placeholder="+{{ localize 'Temp' }}" value="{{hp.temp}}"
+                            data-tooltip="DND5E.HitPointsTemp" data-dtype="Number">
+                        <input name="system.attributes.hp.tempmax" type="text" class="temphp"
+                            placeholder="+{{ localize 'Max' }}" value="{{hp.tempmax}}"
+                            data-tooltip="DND5E.HitPointsTempMax" data-dtype="Number">
+                    </footer>
+                </div>
+            </div>
+            
+        </section>
+        
 
         <section class="header-details flexrow">
            {{!--  {{> "dnd5e.actor-warnings"}} --}}
@@ -54,20 +84,30 @@
                 </li>
             </ul>
 
+            <div class="movement summary">
+                <span class="attribute-name box-title">Movement</span>
+                <span>{{movement.primary}}</span>
+                <span> | </span>
+                <span>{{movement.special}}</span>
+                <a class="config-button" data-action="movement" data-tooltip="DND5E.MovementConfig">
+                    <i class="fas fa-cog"></i>
+                </a>
+            </div>
+
             {{!-- Header Attributes --}}
-            <ul class="attributes flexrow">
+         {{!--    <ul class="attributes flexrow">
                 <li class="attribute health">
                     <h4 class="attribute-name box-title">Hit Points</h4>
-                    {{!-- <a class="config-button" data-action="hitPoints" data-tooltip="DND5E.HitPointsConfig">
+                    <a class="config-button" data-action="hitPoints" data-tooltip="DND5E.HitPointsConfig">
                         <i class="fas fa-cog"></i>
-                    </a> --}}
+                    </a>
                     <div class="attribute-value multiple">
                         <input name="system.attributes.hp.value" type="text" value="{{hp.value}}" placeholder="10"
                             data-tooltip="DND5E.HitPointsCurrent" data-dtype="Number">
-                        <span class="sep"> / </span>{{!-- 
+                        <span class="sep"> / </span>
                         <span data-tooltip="{{#if source.attributes.hp.max}}DND5E.HitPointsOverride{{else}}DND5E.HitPointsMax{{/if}}">
                             {{hp.max}}
-                        </span> --}}
+                        </span>
                         <input name="system.attributes.hp.max" type="text" value="{{hp.max}}" placeholder="10"
                             data-tooltip="DND5E.HitPointsMax" data-dtype="Number">
                     </div>
@@ -125,6 +165,61 @@
                         <span>{{movement.special}}</span>
                     </footer>
                 </li>
+
+                <li class="attribute initiative">
+                    <h4 class="attribute-name box-title rollable" data-action="rollInitiative">
+                        Initiative
+                    </h4>
+                    <a class="config-button" data-action="initiative" data-tooltip="DND5E.InitiativeConfig">
+                        <i class="fas fa-cog"></i>
+                    </a>
+                    <div class="attribute-value">
+                        <span>{{numberFormat system.attributes.init.total decimals=0 sign=true}}</span>
+                    </div>
+                </li>
+            </ul> --}}
+            
+            <ul class="ability-scores attributes flexrow">
+
+                <li class="attribute armor">
+                    <h4 class="attribute-name box-title">Armor Class</h4>
+                    <a class="config-button" data-action="armor" data-tooltip="DND5E.ArmorConfig">
+                        <i class="fas fa-cog"></i>
+                    </a>
+                    <div class="attribute-value" data-attribution="attributes.ac"
+                        data-attribution-caption="DND5E.ArmorClass" data-tooltip-direction="DOWN">
+                        <span>{{system.attributes.ac.value}}</span>
+                    </div>
+                    <footer class="attribute-footer">
+                        <span class="spell-dc">Spell DC {{system.attributes.spelldc}}</span>
+                    </footer>
+                </li>
+
+                
+                {{#each system.abilities as |ability id|}}
+                <li class="ability {{#if ability.proficient}}proficient{{/if}}" data-ability="{{id}}">
+                    <h4 class="ability-name box-title rollable">{{ability.label}}</h4>
+                    <input type="text" name="system.abilities.{{id}}.value" value="{{ability.value}}"
+                        class="ability-score" placeholder="10" data-dtype="Number">
+                    <div class="ability-modifiers flexrow">
+                        <span class="ability-mod" data-tooltip="DND5E.Modifier">
+                            {{numberFormat ability.mod decimals=0 sign=true}}
+                        </span>
+                        <input type="hidden" name="system.abilities.{{id}}.proficient" value="{{ability.baseProf}}"
+                               data-dtype="Number"/>
+                        <a class="proficiency-toggle ability-proficiency" data-tooltip="DND5E.Proficiency">
+                            <i class="{{{ability.icon}}}"></i>
+                        </a>
+                        <span class="ability-save" data-tooltip="DND5E.SavingThrow">
+                            {{numberFormat ability.save decimals=0 sign=true}}
+                        </span>
+                    </div>
+                    <a class="config-button" data-action="ability"
+                       data-tooltip="{{ localize "DND5E.AbilityConfigure" ability=ability.label }}">
+                        <i class="fas fa-cog"></i>
+                    </a>
+                </li>
+                {{/each}}
 
                 <li class="attribute initiative">
                     <h4 class="attribute-name box-title rollable" data-action="rollInitiative">

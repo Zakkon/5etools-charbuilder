@@ -148,6 +148,12 @@
 
                         {{#if @root.owner}}
                         <div class="item-controls flexrow">
+                            {{#if item.canToggleAttune}}
+                            <a class="item-control item-action {{item.toggleAttuneClass}}" data-action="attune"
+                            data-tooltip="{{item.toggleAttuneTitle}}">
+                                <i class="fas fa-sun"></i>
+                            </a>
+                            {{/if}}
                             {{#if item.canToggle}}
                             <a class="item-control item-action {{item.toggleClass}}" data-action="equip"
                             data-tooltip="{{item.toggleTitle}}">

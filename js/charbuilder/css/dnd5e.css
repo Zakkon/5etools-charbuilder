@@ -644,14 +644,6 @@ h5 {
   font-size: var(--font-size-32);
   margin: 0;
 }
-.c5e.sheet .sheet-header img.profile {
-  flex: 0 0 var(--dnd5e-sheet-header-height);
-  max-width: var(--dnd5e-sheet-header-height);
-  height: var(--dnd5e-sheet-header-height);
-  object-fit: contain;
-  border: none;
-  border-right: var(--dnd5e-border-groove);
-}
 .c5e.sheet .sheet-header .summary {
   flex: 0 0 100%;
   height: 40px;
@@ -1173,11 +1165,11 @@ h5 {
   font-size: var(--font-size-10);
   font-weight: normal;
 }
-.c5e.sheet.actor .sheet-header img.profile {
-  flex: 0 0 160px;
-  max-width: 160px;
-  height: 160px;
+.c5e.sheet.actor .sheet-header img.portrait {
+  width: 100%;
+  height: 100%;
 }
+
 .c5e.sheet.actor .sheet-header h1.charname {
   flex: 1;
   height: var(--dnd5e-actor-name-height);
@@ -1214,6 +1206,19 @@ h5 {
 .c5e.sheet.actor .sheet-header .summary select {
   position: relative;
   top: -4px;
+}
+.c5e.sheet.actor .sheet-header .summary.movement {
+  height: 30px;
+  display: flex;
+  flex-direction: row;
+  gap: 0.25rem;
+  border-bottom: var(--dnd5e-border-groove);
+  font-size: var(--font-size-18);
+}
+.c5e.sheet.actor .sheet-header .summary.movement .config-button {
+  font-size: small;
+  text-align: center;
+  line-height: 25px;
 }
 .c5e.sheet.actor .sheet-header .attributes {
   flex: 0 0 100%;
@@ -1321,16 +1326,17 @@ h5 {
   border-radius: 3px;
 }
 .c5e.sheet.actor .ability-scores .ability {
-  min-width: 100%;
+  /* min-width: 100%; */
   height: 70px;
   text-align: center;
-  border-bottom: var(--dnd5e-border-groove);
+  border: var(--dnd5e-border-groove);
   position: relative;
 }
 .c5e.sheet.actor .ability-scores .ability:last-child {
   border-bottom: none;
   margin-bottom: -3px;
 }
+
 .c5e.sheet.actor .ability-scores .ability input.ability-score {
   height: 30px;
   width: 36px;
@@ -2105,7 +2111,7 @@ h5 {
   /*  Unidentified Items                       */
   /* ----------------------------------------- */
 }
-.c5e.sheet.item .sheet-header img.profile {
+.c5e.sheet.item .sheet-header img.portrait {
   border: 2px solid #000;
 }
 .c5e.sheet.item .sheet-header .item-subtitle {
@@ -2842,25 +2848,31 @@ h5 {
   border-inline-end: 1px solid var(--dnd5e-color-faint);
 }
 .c5e .inventory-element .inventory-list .item-controls {
-  flex: 0 0 68px;
+  flex: 0 0 75px;
+  padding-left: 5px;
+  padding-right: 5px;
 }
 .c5e .inventory-element .inventory-list .item-controls [data-action="crew"],
 .c5e .inventory-element .inventory-list .item-controls [data-action="equip"],
+.c5e .inventory-element .inventory-list .item-controls [data-action="attune"],
 .c5e .inventory-element .inventory-list .item-controls [data-action="prepare"] {
   color: var(--dnd5e-color-beige);
 }
 .c5e .inventory-element .inventory-list .item-controls [data-action="crew"].active,
 .c5e .inventory-element .inventory-list .item-controls [data-action="equip"].active,
+.c5e .inventory-element .inventory-list .item-controls [data-action="attune"].active,
 .c5e .inventory-element .inventory-list .item-controls [data-action="prepare"].active {
   color: var(--dnd5e-color-olive);
 }
 .c5e .inventory-element .inventory-list .item-controls [data-action="crew"].fixed,
 .c5e .inventory-element .inventory-list .item-controls [data-action="equip"].fixed,
+.c5e .inventory-element .inventory-list .item-controls [data-action="attune"].fixed,
 .c5e .inventory-element .inventory-list .item-controls [data-action="prepare"].fixed {
   color: var(--dnd5e-color-crimson);
 }
 .c5e .inventory-element .inventory-list .item-controls [data-action="crew"].fixed:hover,
 .c5e .inventory-element .inventory-list .item-controls [data-action="equip"].fixed:hover,
+.c5e .inventory-element .inventory-list .item-controls [data-action="attune"].fixed:hover,
 .c5e .inventory-element .inventory-list .item-controls [data-action="prepare"].fixed:hover {
   text-shadow: none;
 }
@@ -3334,10 +3346,15 @@ p:empty:has(+ .content-embed),
   /*  Biography                                */
   /* ----------------------------------------- */
 }
-.c5e.sheet.actor.character .sheet-header img.profile {
-  flex: 0 0 160px;
-  max-width: 160px;
-  height: 160px;
+.c5e.sheet.actor.character .sheet-header .profile {
+  height: 100%;
+  flex: 0 0 132px;
+  max-width: 132px;
+}
+.c5e.sheet.actor.character .sheet-header .profile img.portrait{
+  flex: 0 0 132px;
+  max-width: 132px;
+  height: 132px;
 }
 .c5e.sheet.actor.character .sheet-header .charlevel {
   flex: 0 0 20px;

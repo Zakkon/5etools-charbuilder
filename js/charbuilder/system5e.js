@@ -508,11 +508,20 @@ class Item5e extends Entity5e{
     get canToggle(){
         return this.equippable;
     }
+    get canToggleAttune(){
+        return this.system.attunement > 0;
+    }
     get toggleClass(){
         return this.system.equipped? "active" : "";
     }
+    get toggleAttuneClass(){
+        return this.system.attunement == 2? "fixed" : "";
+    }
     get toggleTitle(){
         return this.system.equipped? "Equipped" : "Not Equipped";
+    }
+    get toggleAttuneTitle(){
+        return this.system.attunement == 2? "Attuned" : "Not Attuned";
     }
 }
 
@@ -1003,6 +1012,8 @@ class Actor5e {
         this.owner = true;//SETTINGS.SHEET_ISEDITABLE;
         this.config = CONFIG.DND5E;
         this.isCharacter = true;
+        /**The profile image @type {string} */
+        this.profileImgSrc = saveData?.profileImgSrc ?? "";
     }
     get _source(){return this;} //Used by charactermancer to access the object which holds .system
     get skills(){return this.system.skills;}

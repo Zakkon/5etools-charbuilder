@@ -1,48 +1,21 @@
 class ActorCharactermancerSheet2 extends ActorCharactermancerSheet {
     $sheet;
-    instance;
     _inv;
+    /**
+    * The displayed actor object
+    * @type {Actor5e}
+    */
     actor;
     element;
     activeTab = "features";
 
     constructor(main){
         super(main);
-        ActorCharactermancerSheet2.instance = this;
-
-        //Let's give the actor some items
-        //System5e.tryAddToInventory_Item(this.actor, null, "dagger|phb", 1, "weapon");
-
-        //Let's try adding a class feature to the actor
-        //First, let's get a class
-        /* let cls = new Class5e("barbarian_phb");
-        //Let's try to add the class to the sheet as well
-        System5e.tryAddToInventory(this._actor, cls, "class", {doNotRender:true});
-        //Let's get the first class feature
-        let f = cls.classFeatures[0];
-        ClassFeature5e.verifySystemData(f.hash, cls.name, cls.source).then(() => {
-            let featureItem = new ClassFeature5e(f.hash, cls.name, cls.source, null, false);
-            System5e.tryAddToInventory(this._actor, featureItem, "active", {doNotRender:true});
-        }); */
-        //let ent = CharacterBuilder.getEntityByUid("optionalfeature", {uid:"archery_phb"});
-        //console.log("ARCHERY:", ent);
         this.setup(main._actor);
     }
     setup(actor){
-        this.actor = actor; //Create a new actor
-        /* let hash = "archery_phb";
-        OptionalFeature5e.verifySystemData(hash).then(() => {
-            let featureItem = new OptionalFeature5e(hash, null, false);
-            console.log(featureItem);
-            
-            System5e.tryAddToInventory(actor, featureItem, "passive", {doNotRender:true});
-        }); */
-        /* let hash = UrlUtil.URL_TO_HASH_GENERIC({name:"acid (vial)", source:"phb"});
-        Item5e.verifySystemData(hash).then(() => {
-            let item = new Item5e(hash, 1, null, false);
-            System5e.tryAddToInventory(actor, item, "weapon", {doNotRender:true});
-        }); */
-
+        ActorCharactermancerSheet2.instance = this;
+        this.actor = actor;
         let inv = new TestInventoryElement(this.actor);
         this._inv = inv;
     }
@@ -143,6 +116,10 @@ class ActorCharactermancerSheet2 extends ActorCharactermancerSheet {
 
             this._setSpellMarkersRemaining(dataset.level, spellSlotsRemaining);
         }
+
+        const imgUrl = this.actor.profileImgSrc ?? "";
+        console.log("ImgUrl", imgUrl, this.actor);
+        this.$sheet.find("img.portrait").attr("src", imgUrl);
     }
 
     _setSpellMarkersRemaining(level, slotsRemaining){
@@ -214,6 +191,8 @@ class ActorCharactermancerSheet2 extends ActorCharactermancerSheet {
             evt.preventDefault();
             console.log("Input value changed to:", evt.target.value);
         });
+
+        this.$sheet.find("img.portrait").click(this._onEditProfile.bind(this));
     }
 
     /**
@@ -273,6 +252,35 @@ class ActorCharactermancerSheet2 extends ActorCharactermancerSheet {
     _injectHTML(html){
 
     }
+
+    //#region Profile Image
+  _onEditProfile(){
+    //Open up image browser
+    // Create a hidden file input element
+    const fileInput = document.createElement("input");
+    fileInput.type = "file";
+    fileInput.accept = "image/*"; // Accept only image formats (e.g., jpg, png, gif)
+
+    // Trigger the file picker dialog
+    fileInput.click();
+
+    
+    // Handle file selection
+    fileInput.addEventListener("change", () => {
+        const file = fileInput.files[0]; // Get the selected file
+        const imgUrl = file? URL.createObjectURL(file) : "";
+        //this.$sheet.find("img.portrait").attr("src", imgUrl);
+        if(file){
+            CharacterExportFvtt.imageFileToBase64(file, (base64)=>{
+                console.log("Got content?", base64);
+                this.$sheet.find("img.portrait").attr("src", base64);
+                this.actor.profileImgSrc = base64;
+            });
+            
+        }
+    });
+  }
+  //#endregion
 }
 
 class TestInventoryElement {
@@ -311,6 +319,9 @@ class TestInventoryElement {
                 return;
             case "equip":
                 return item.update({"system.equipped": !item.system.equipped});
+            case "attune":
+                if(item.system.attunement < 1){return;}
+                return item.update({"system.attunement": item.system.attunement == 1? 2 : 1});
             case "expand":
                 return this._onExpand(target, item);
             default: break;
