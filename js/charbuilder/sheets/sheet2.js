@@ -118,7 +118,6 @@ class ActorCharactermancerSheet2 extends ActorCharactermancerSheet {
         }
 
         const imgUrl = this.actor.profileImgSrc ?? "";
-        console.log("ImgUrl", imgUrl, this.actor);
         this.$sheet.find("img.portrait").attr("src", imgUrl);
     }
 

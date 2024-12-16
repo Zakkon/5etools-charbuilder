@@ -127,24 +127,7 @@ class System5e{
             return item5e;
         }
     }
-    //Deprecated
-    static async tryAddToInventory_Spell(actor, collectionId, itemUid, quantity){
-        //Try to see if this item already exists in the character inventory
-        let spell5e = System5e.getEntityByCollectionId(collectionId);
-        if(!spell5e){
-            //If it doesnt, create a new item5e, import system data, then add to inventory
-            spell5e = new Spell5e(itemUid, collectionId);
-            await spell5e.importSystemData();
-            await System5e.tryAddToInventory(actor, spell5e);
-            await ActorCharactermancerSheet.c5e_inventory.rebuildUi();
-            return spell5e;
-        }
-        else{
-            //If it does, just verify & import system data, no need to re-add it to the inventory
-            await spell5e.importSystemData();
-            return spell5e;
-        }
-    }
+    
     /**
      * Shorthand for adding an already created entity5e to the actor inventory
      * @param {Actor5e} actor
@@ -153,7 +136,7 @@ class System5e{
      * @returns {Entity5e}
      */
     static async tryAddToInventory(actor, entity5e, itemType, options={}){
-        //console.error("Add", itemType, entity5e.name, entity5e.collectionId);
+        console.error("Add", itemType, entity5e.name, entity5e.collectionId);
         //entity5e.type = itemType;
         actor.createEmbeddedDocuments("item", [], [{entity:entity5e, _type: itemType}], options);
         return entity5e;
@@ -295,8 +278,14 @@ class System5e{
 class Entity5e {
     static use_overrides = false;
     override;
+    /** Subtype for Feature5e descendants. race|background|class|subclass|optionalFeature|feat|classFeature|subclassFeature */
+    featureType;
+    /** Subtype for Item5e objects. weapon|equipment|consumable|container|tool|loot */
+    itemType;
     constructor(itemUid, collectionId, isCustom){
         this.uid = itemUid;
+        /** item|spell|feature @property {string}*/
+        this.entityType = "entity";
         this.collectionId = collectionId? collectionId : System5e.createUniqueID();
         this.isCustom = isCustom;
         this.override = {};
@@ -458,6 +447,7 @@ class Item5e extends Entity5e{
         if(!this.isCustom){this._tryCloneOriginal(CharacterBuilder.getEntityByUid("item", this.uid));}
         this.system = this.system ?? {};
         this.system.damage = this.system.damage ?? {};
+        this.itemType = Item5e._assertItemSubtype(this);
         this.properties = {};
 
         System5e.addHookBase("item_update", (p, collectionId) => {
@@ -494,6 +484,34 @@ class Item5e extends Entity5e{
     _tryCloneOriginal(original){
         super._tryCloneOriginal(original);
         this.packContents = original.packContents;
+    }
+    static _assertItemSubtype(ent){
+        let subType = "loot"; //Default
+        if(!ent.system){return subType;}
+        if(["equipment", "light", "medium", "heavy"].includes(ent.system.type.value)){subType = "equipment";}
+        else if(["weapon", "martialM", "simpleM", "martialR", "simpleR"].includes(ent.system.type.value)){subType = "weapon";}
+        else if(["consumable", "ammo"].includes(ent.system.type.value)){subType = "consumable";}
+        else if(["tool"].includes(ent.system.type.value)){subType = "tool";}
+        else if(!!ent.system.capacity || ["container"].includes(ent.system.type.value)){subType = "container";}
+        else if(ent.system.poison || ["consumable"].includes(ent.system.type.value)){subtype = "consumable";}
+        //Hardcoding in a way to put common clothes/fine clothes/adventurer's clothes into the equipment category, not loot
+        else if(ent.system.type.value == "gear"){
+            const n = entity.name.toLowerCase();
+            const src = entity.source.toLowerCase();
+            const equipment_strings = [" clothes", "clothing", "robe", "suit", "hat"];
+            const consumable_strings = ["torch", "lamp", "lantern", "flask", "oil", "vial", "waterskin", "pitcher"];
+            const tool_strings = ["'s kit"];
+            //No source checking for now
+            //if(["phb"].includes(src)){}
+            if(equipment_strings.some(str => n.includes(str))){subType = "equipment";}
+            else if(consumable_strings.some(str => n.includes(str))){subType = "consumable";}
+            else if(tool_strings.some(str => n.includes(str))){subType = "tool";}
+        }
+        return subType;
+    }
+    _parseAdventuringGearSubType(entity){
+        
+        return null;
     }
     
     //Runtime label calculations
@@ -585,6 +603,29 @@ class Feature5e extends Entity5e{
             console.error("failed to get context", this);
             console.error(e);
             return null;
+        }
+    }
+
+    isActivePassive(){
+        if(!!this.system?.activation?.type){return "active";}
+        return "passive";
+    }
+    /**
+     * Returns the inventory category this Feature5e should fall into. Dependant on .featureType and .system.activation.type
+     * @returns {String} active|passive|class|race|background
+     */
+    get featureCategory(){
+        switch(this.featureType){
+            case "optionalFeature":
+            case "classFeature":
+            case "subclassFeature":
+            case "feat":
+                return this.isActivePassive();
+            case "class":
+            case "subclass":
+                return "class";
+            default:
+                return this.featureType;
         }
     }
 }
@@ -1231,7 +1272,6 @@ class Actor5e {
         this.prepareDerivedData();
     }
     
-    
     /**
      * Create new, blank items, which are automatically added to the inventory
      * @param {any} embeddedName
@@ -1279,7 +1319,12 @@ class Actor5e {
         //then fire events
         this._onCreateDescendantDocuments(embeddedName, collection, options);
     }
-    removeEmbeddedDocuments(embeddedName, data=[]){
+    /**
+     * Removes entities from the actor's inventory and fires the appropriate events afterwards
+     * @param {string} embeddedName="item"
+     * @param {Entity5e[]} data Entities to remove
+     */
+    removeEmbeddedDocuments(embeddedName="item", data=[]){
         if(embeddedName == "item"){
             this._removeEntities(data);
         }
@@ -1298,7 +1343,11 @@ class Actor5e {
         ActorCharactermancerSheet2.instance.render();
     }
     /**
-     * @param {{entity:Entity5e, _type:string}} entities
+     * Add entity objects to the inventory.
+     * First, the entity type will be read from entity.entityType (item/spell/feature)
+     * For features, the subtype must be defined in the _type property (race/class/subclass etc)
+     * For items, assumptions of item subtype will be made by reading properties in entity.system
+     * @param {{entity:Entity5e, _type:string}[]} entities
      */
     _addEntities(entities){
         for(let pair of entities){
@@ -1309,23 +1358,19 @@ class Actor5e {
                     if(ent.system.preparationMode=="innate"){subType = ent.system.preparationMode;}
                     else{subType = ent.system.level;} break;
                 case "item":
-                    console.log("ADD ITEM", ent);
-                    subType = "loot";
-                    if(["equipment", "light", "medium", "heavy"].includes(ent.system.type.value)){subType = "equipment";}
-                    else if(["weapon", "martialM", "simpleM", "martialR", "simpleR"].includes(ent.system.type.value)){subType = "weapon";}
-                    else if(["consumable", "ammo"].includes(ent.system.type.value)){subType = "consumable";}
-                    else if(["tool"].includes(ent.system.type.value)){subType = "tool";}
-                    else if(!!ent.system.capacity || ["container"].includes(ent.system.type.value)){subType = "container";}
-                    else if(ent.system.poison || ["consumable"].includes(ent.system.type.value)){subtype = "consumable";}
-                    //Hardcoding in a way to put common clothes/fine clothes/adventurer's clothes into the equipment category, not loot
-                    else if(ent.system.type.value == "gear"){subType = this._parseAdventuringGearSubType(ent) ?? subType;}
-                    ent.equippable = subType != "loot";
+                    subType = ent.itemType;
+                    ent.equippable = ent.itemType != "loot";
                     break;
             }
-            let refArray = this._getEntities(ent.entityType, subType);
+            //Add items to the sub inventory
+            let refArray = this._getSubInventory(ent.entityType, subType);
             refArray.push(ent);
         }
     }
+    /**
+     * Removes items based on their collectionIds
+     * @param {Entity5e[]} items
+     */
     _removeEntities(items){
         for(let it of items){
             switch(it.entityType){
@@ -1335,7 +1380,7 @@ class Actor5e {
                     else{this.spellbook[it.system.level].spells = this.spellbook[it.system.level].spells.filter(obj => obj.collectionId !== it.collectionId);}
                     break;
                 case "feature":
-                    this.features[it.type].items = this.features[it.type].items.filter(obj => obj.collectionId !== it.collectionId);
+                    this.features[it.featureCategory].items = this.features[it.featureCategory].items.filter(obj => obj.collectionId !== it.collectionId);
                     break;
                 default:
                     this.inventory[it.system.type.value].items = this.inventory[it.system.type.value].items.filter(obj => obj.collectionId !== it.collectionId);
@@ -1359,7 +1404,7 @@ class Actor5e {
                 return null;
         }
     }
-    _getEntities(entityType, subtype){
+    _getSubInventory(entityType, subtype){
         try{
             const inv = this._getInventory(entityType);
             const arrayName = (entityType=="spell")?"spells":"items";
@@ -1369,20 +1414,12 @@ class Actor5e {
         catch(e){ console.log(entityType, subtype); console.error(e);  return null;}
     }
 
-    _parseAdventuringGearSubType(entity){
-        const n = entity.name.toLowerCase();
-        const src = entity.source.toLowerCase();
-        const equipment_strings = [" clothes", "clothing", "robe", "suit", "hat"];
-        const consumable_strings = ["torch", "lamp", "lantern", "flask", "oil", "vial", "waterskin", "pitcher"];
-        const tool_strings = ["'s kit"];
-        //No source checking for now
-        //if(["phb"].includes(src)){}
-        if(equipment_strings.some(str => n.includes(str))){return "equipment";}
-        if(consumable_strings.some(str => n.includes(str))){return "consumable";}
-        if(tool_strings.some(str => n.includes(str))){return "tool";}
-        return null;
-    }
+    
 
+    /**
+     * Run a function on each item in each of the inventories
+     * @param {Function} func
+     */
     _runInventoryFunc(func){
         //Search item inventory
         for(let section in this.inventory){ func(this.inventory[section].items);}
@@ -1410,6 +1447,12 @@ class Actor5e {
         }
         return matches[0];
     }
+    /**
+     * Searches all inventory for items with a matching uid and returns them
+     * @param {string} uid Unique id of the item. Interchangable with item hash. If "*", matches with every uid.
+     * @param {boolean} errorIfNotFound Throw error if no item was found?
+     * @returns {Entity5e[]}
+     */
     getItemsByUid(uid, errorIfNotFound=false){
         let matches = [];
         const runMatching = (searchIn) => {
@@ -1423,6 +1466,12 @@ class Actor5e {
         }
         return matches;
     }
+    /**
+     * Determines if this actor has an item with the uid in one of its inventories
+     * @param {string} uid Unique id of the item. Interchangable with item hash.
+     * @returns {boolean}
+     */
+    hasItem(uid){return this.getItemsByUid(uid, false).length > 0;}
     getFlag(flagCategory, flagName){
         return false;
     }

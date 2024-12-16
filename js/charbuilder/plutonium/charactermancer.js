@@ -11852,7 +11852,6 @@ class Charactermancer_Spell_Util {
      * @param {{mode:string, totals:object}} opts.abilityScoresFromComp={}
      */
     static getMaxPreparedSpells({cls, sc, targetLevel, existingAbilityScores, abilityScoresFromComp}={}) {
-        console.log("Get max prepared spells", cls, existingAbilityScores, abilityScoresFromComp);
         if (!cls || targetLevel == null)
             return null;
 

@@ -396,7 +396,7 @@ class SETTINGS{
     static ENABLE_SOURCE_UPLOAD_FILE = false;
     static ENABLE_SOURCE_CUSTOM_URL = false;
     static SHEET_ISEDITABLE = false;
-    static SHEET_MANCER_RECREATES_SHEET = true;
+    static SHEET_MANCER_RECREATES_SHEET = false;
      //Set this to true if you want to import one big subclassFeature detailing several subclassFeatures (gained at the same level, likely) within itself,
     //set it to false if you want to import each subclassFeature individually
     static SUBCLASS_IMPORT_LOADEDS = true;
@@ -1093,8 +1093,8 @@ class CharacterBuilder {
       actor.removeEmbeddedDocuments("item", [it]);
     }
     const isMancerGranted = (item) => {
-      console.log("Is Granted?", item.isMancerCreated, item);
-      return item.isMancerCreated;
+      //console.log("Is Granted?", item.isMancerCreated, item);
+      return !!item.isMancerCreated;
     }
     const findItemMatch = (path, uid) => {
       for(let i = 0; i < allItems.length; ++i){
@@ -1188,14 +1188,15 @@ class CharacterBuilder {
       }
     }
 
-    
+    let forceAdd = false;
     //Reset actor if settings demand it
     if(SETTINGS.SHEET_MANCER_RECREATES_SHEET){
       actor = new Actor5e();
       CharacterBuilder.instance._actor = actor;
       ActorCharactermancerSheet2.instance.setup(actor);
+      forceAdd = true;
     }
-    console.assert(SETTINGS.SHEET_MANCER_RECREATES_SHEET == true, "Sheet recreation mode is currently the only mode supported");
+    //console.assert(SETTINGS.SHEET_MANCER_RECREATES_SHEET == true, "Sheet recreation mode is currently the only mode supported");
     //Mark all mancer-given features on actor as unverified
     let allItems = actor.getItemsByUid("*").filter(it => isMancerGranted(it) == true);
     let itemsVerified = new Array(allItems.length).fill(false);
@@ -1207,6 +1208,7 @@ class CharacterBuilder {
     
     //#region Parse Race
     for(let race of choiceData.races){
+      if(!forceAdd && actor.hasItem(race.uid)){continue;}
       let raceItem = await addFeatureItem("race", race.uid, race.path);
       console.log("RaceItem", raceItem);
       updatePool["system.details.race"] = {name:raceItem.name, system:raceItem.system};
@@ -1234,6 +1236,7 @@ class CharacterBuilder {
 
     //#region Parse Background
     for(let bg of choiceData.backgrounds){
+      if(!forceAdd && actor.hasItem(bg.uid)){continue;}
       let bgItem = await addFeatureItem("background", bg.uid, bg.path);
       updatePool["system.details.background"] = {name:bgItem.name};
       pullSkills(bg.skills);
@@ -1244,15 +1247,32 @@ class CharacterBuilder {
     //#endregion
     //#region Feats
     for(let f of choiceData.featsFromCustom){
+      if(!forceAdd && actor.hasItem(bg.hash)){continue;}
       await SheetApplier.addFeatureItem(actor, "feat", f.hash, null, f);
     }
     //#endregion
 
     //#region Spells
     for(let sp of choiceData.spells ?? []){
+      //It's theoretically possible for a character to have multiple instances of the same spell, but with different preparation modes
+      //TODO: some spells may be locked to be upcast, we need to compare for that as well
+      if(!forceAdd){
+        let spells = actor.getItemsByUid(sp.hash);
+        let dontAdd = false;
+        for(let s of spells){if(s.preparationMode == sp.prepMode){dontAdd = true; break;}}
+        if(dontAdd){continue;}
+      }
       await SheetApplier.addSpellItem(actor, sp.hash, sp.prepMode, sp.isPrepared);
     }
     for(let sp of choiceData.additionalSpells?.fromSubclass ?? []){
+      //It's theoretically possible for a character to have multiple instances of the same spell, but with different preparation modes
+      //TODO: some spells may be locked to be upcast, we need to compare for that as well
+      if(!forceAdd){
+        let spells = actor.getItemsByUid(sp.hash);
+        let dontAdd = false;
+        for(let s of spells){if(s.preparationMode == sp.prepMode){dontAdd = true; break;}}
+        if(dontAdd){continue;}
+      }
       await SheetApplier.addSpellItem(actor, sp.hash, sp.prepMode, sp.isPrepared);
     }
     //#endregion
@@ -1264,6 +1284,7 @@ class CharacterBuilder {
     let totalLevel = 0;
     for(let clsIx = 0; clsIx < choiceData.classes.length; ++clsIx){
       const cls = choiceData.classes[clsIx];
+      if(!forceAdd && actor.hasItem(cls.uid)){continue;}
       let addedFeatureHashes = [];
       const clsData = CharacterBuilder.getEntityByUid("class", {uid: cls.uid});
       console.log("CLASS DATA", clsData);
@@ -1276,7 +1297,7 @@ class CharacterBuilder {
 
       const hasSubclass = cls.ixSubclass != null;
       let subclassName = null;
-      if(hasSubclass){
+      if(hasSubclass && (forceAdd || !actor.hasItem(cls.subclassUid))){
         sclsData = CharacterBuilder._getEntityByUid(clsData.subclasses, {uid: cls.subclassUid});
         subclassName = sclsData.name;
         //Add subclass's additionalSpells, unless there is more than one spell list
@@ -1323,7 +1344,7 @@ class CharacterBuilder {
             && feature.isRequiredOption !== null) && !SETTINGS.SUBCLASS_IMPORT_LOADEDS){continue;}
 
           const isCoreSubclassFeature = feature.type == "subclassFeature" && feature.entity.name == subclassName;
-          if(!isCoreSubclassFeature){
+          if(!isCoreSubclassFeature && (forceAdd || !actor.hasItem(feature.hash))){
             //If this is the core subclass feature, we should just avoid importing the feature item to the sheet. But we can still do the rest
             const sheetItem = await addFeatureItem(feature.type, feature.hash, cls.path,
               {className:clsData.name.toLowerCase(), classSource:clsData.source.toLowerCase(),
