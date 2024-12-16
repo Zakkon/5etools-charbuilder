@@ -1213,6 +1213,7 @@ class CharacterBuilder {
     const REMOVE_CUSTOM_ITEMS = false; //If REMOVE_ALL_ITEMS is true, do we remove custom items as well?
     const REPLACE_EXISTING_ITEMS = true; //If an item is found with the same uid, do we replace it?
     const ADD_WHEN_EXISTING_ITEMS = false; //If an item is found with the same uid, do we add a new item anyway? Requires REPLACE_EXISTING_ITEMS to be false
+    const REMOVE_ALL_PROFICIENCIES = true;
     //console.assert(SETTINGS.SHEET_MANCER_RECREATES_SHEET == true, "Sheet recreation mode is currently the only mode supported");
     //Mark all mancer-given features on actor as unverified
     let allItems = actor.getItemsByUid("*", false).filter(it => isMancerGranted(it) == true);
@@ -1220,6 +1221,23 @@ class CharacterBuilder {
     let itemsVerified = new Array(allItems.length).fill(false);
     //Then try to verify each one, and add new (already verified) features on to the sheet if needed
 
+    if(REMOVE_ALL_PROFICIENCIES){
+      //Set each skill proficiency to zero
+      for(let [key, value] of Object.entries(actor.system.skills)??{}){
+        //Is it .baseProf or .baseValue? not sure
+        actor.system.skills[key].baseProf = actor.system.skills[key].baseValue = 0;
+      }
+      //Set each skill proficiency to zero
+      for(let [key, value] of Object.entries(actor.tools)??{}){
+        //Is it .baseProf or .baseValue? not sure
+        actor.tools[key].baseProf = actor.tools[key].baseValue = 0;
+      }
+      //Reset all "traits" (armor prof, language, expertises, weapon prof, cond immunities, etc)
+      for(let [key, value] of Object.entries(actor.traits.traits??{})){
+        actor.traits.traits[key].selected = [];
+      }
+
+    }
 
     let updatePool = {};
 
