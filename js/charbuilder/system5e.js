@@ -108,42 +108,23 @@ class System5e{
         });
         console.log(formula);
     }
-
-    //Deprecated
-    static async tryAddToInventory_Item(actor, collectionId, itemUid, quantity, itemType="weapon"){
-        //Try to see if this item already exists in the character inventory
-        let item5e = await actor.getItemByCollectionId(collectionId);
-        if(!item5e){
-            //If it doesnt, create a new item5e, import system data, then add to inventory
-            item5e = new Item5e(itemUid, quantity, collectionId);
-            await item5e.importSystemData();
-            item5e.type = itemType;
-            actor._addEntities([item5e]);
-            return item5e;
-        }
-        else{
-            //If it does, just verify & import system data, no need to re-add it to the inventory
-            await item5e.importSystemData();
-            return item5e;
-        }
-    }
     
     /**
      * Shorthand for adding an already created entity5e to the actor inventory
      * @param {Actor5e} actor
      * @param {Entity5e} entity5e
-     * @param {string} itemType spell/item/class etc
+     * @param {string} category weapon|equipment|consumable|container|tool|loot|active|passive|class|race|background|spell
      * @returns {Entity5e}
      */
-    static async tryAddToInventory(actor, entity5e, itemType, options={}){
-        console.error("Add", itemType, entity5e.name, entity5e.collectionId);
-        //entity5e.type = itemType;
-        actor.createEmbeddedDocuments("item", [], [{entity:entity5e, _type: itemType}], options);
+    static async addToInventory(actor, entity5e, category, options={}){
+        console.error("Add", category, entity5e.name, entity5e.collectionId);
+        //Simply pass pre-created Entity5e objects
+        actor.createEmbeddedDocuments("item", [], [{entity:entity5e, _category: category}], options);
         return entity5e;
     }
     static async removeFromInventory(actor, collectionId){
         //TODO: use removeEmbeddedDocuments instead
-        console.error("Remove item", collectionId);
+        //console.error("Remove item", collectionId);
         const index = actor.system.inventory.items.map(e => e.collectionId).indexOf(collectionId);
         actor.system.inventory.items.splice(index, 1);
     }
@@ -487,7 +468,7 @@ class Item5e extends Entity5e{
     }
     static _assertItemSubtype(ent){
         let subType = "loot"; //Default
-        if(!ent.system){return subType;}
+        if(!ent.system?.type){return subType;}
         if(["equipment", "light", "medium", "heavy"].includes(ent.system.type.value)){subType = "equipment";}
         else if(["weapon", "martialM", "simpleM", "martialR", "simpleR"].includes(ent.system.type.value)){subType = "weapon";}
         else if(["consumable", "ammo"].includes(ent.system.type.value)){subType = "consumable";}
@@ -1273,10 +1254,10 @@ class Actor5e {
     }
     
     /**
-     * Create new, blank items, which are automatically added to the inventory
+     * Create new, blank items, which are automatically added to the inventory.
      * @param {any} embeddedName
-     * @param {{type:string, quantity:number, identified:boolean, system:any, name:string}[]} data=[] js objects containing type of item (spell/class/item/race etc etc). This should match the item category you're trying to place them in
-     * @param {{entity:Entity5e, _type:string}[]} entities=[] pre-created Entity5e objects containing type of item (spell/class/item/race etc etc). This should match the item category you're trying to place them in
+     * @param {{_category:string, quantity:number, identified:boolean, system:any, name:string}[]} data js objects containing category of item (weapon|equipment|consumable|container|tool|loot|active|passive|class|race|background|spell). This should match the item category you're trying to place them in.
+     * @param {{entity:Entity5e, _category:string}[]} entities pre-created Entity5e objects with the matching inventory category (weapon|equipment|consumable|container|tool|loot|active|passive|class|race|background|spell). This should match the item category you're trying to place them in.
      */
     createEmbeddedDocuments(embeddedName="item", data=[], entities=[], options={}){
         let collection = [];
@@ -1284,7 +1265,7 @@ class Actor5e {
             //create item5e
             for(let d of data){
                 let entity;
-                switch(d.type){
+                switch(d._category){
                     case "spell":
                         entity = new Spell5e(null, null, true);
                         entity.properties = {verbal:{selected:true, label:"Verbal"}}; //TEST
@@ -1299,17 +1280,18 @@ class Actor5e {
                         entity = new Race5e(null, null, true);
                         break;
                     default: //Assume Item5e
-                    console.log("Create new item5e", d.quantity);
+                    console.log("Create new item5e", d);
                         entity = new Item5e(null, d.quantity ?? 1, null, true);
                         d.system.identified = d.identified ?? true;
-                        d.system.type = {value:d.type} //This needs to be set before _addEntities, to know what category of item it is
+                        d.system.type = {value:d._category} //This needs to be set before _addEntities, to know what category of item it is
                         d.system.quantity = d.quantity ?? 1;
                         break;
                 }
                 entity.system = d.system;
+                if(entity.entityType == "item"){entity.itemType = Item5e._assertItemSubtype(entity);} //Have to re-assert item subtype here after system.type was set
                 entity.system.description = entity.system.description ?? {value: ""};
                 entity.name = d.name;
-                collection.push({entity, _type:d.type}); //weapon/spell/equipment/etc/etc
+                collection.push({entity, _category:d._category}); //weapon/spell/equipment/etc/etc
             }
             if(entities != null){collection = collection.concat(entities);}
             //Add them to the character
@@ -1334,36 +1316,37 @@ class Actor5e {
     }
     _onCreateDescendantDocuments(collectionName, documents, options={}){
         if(collectionName == "items"){} //update encumberance
-        //re-render
+        //Re-render sheet, unless told not to
         if(!options || !options?.doNotRender){ActorCharactermancerSheet2.instance.render();}
     }
     _onRemoveDescendantDocuments(collectionName, documents){
         if(collectionName == "items"){} //update encumberance
-        //re-render
+        //Re-render sheet
         ActorCharactermancerSheet2.instance.render();
     }
     /**
-     * Add entity objects to the inventory.
-     * First, the entity type will be read from entity.entityType (item/spell/feature)
-     * For features, the subtype must be defined in the _type property (race/class/subclass etc)
-     * For items, assumptions of item subtype will be made by reading properties in entity.system
-     * @param {{entity:Entity5e, _type:string}[]} entities
+     * Add entity objects to their corresponding inventory category.
+     * First, the category type will be read from entity.entityType (item|spell|feature)
+     * For spells, the category will be determined by system.preparationMode or system.level (innate|0|1|2|3|4|5|6|7|8|9)
+     * For features, the category must be defined in the _category property (active|passive|class|race|background)
+     * For items, category will be determined by .itemType. Furthermore, .equippable will be determined by .itemType (weapon|equipment|consumable|container|tool|loot)
+     * @param {{entity:Entity5e, _category:string}[]} entities
      */
     _addEntities(entities){
         for(let pair of entities){
             const ent = pair.entity;
-            let subType = pair._type;
+            let category = pair._category;
             switch(ent.entityType){ //These are locked in depending on what class the entity is
                 case "spell":
-                    if(ent.system.preparationMode=="innate"){subType = ent.system.preparationMode;}
-                    else{subType = ent.system.level;} break;
+                    if(ent.system.preparationMode=="innate"){category = ent.system.preparationMode;}
+                    else{category = ent.system.level;} break;
                 case "item":
-                    subType = ent.itemType;
+                    category = ent.itemType;
                     ent.equippable = ent.itemType != "loot";
                     break;
             }
             //Add items to the sub inventory
-            let refArray = this._getSubInventory(ent.entityType, subType);
+            let refArray = this._getSubInventory(ent.entityType, category);
             refArray.push(ent);
         }
     }
@@ -1453,10 +1436,10 @@ class Actor5e {
      * @param {boolean} errorIfNotFound Throw error if no item was found?
      * @returns {Entity5e[]}
      */
-    getItemsByUid(uid, errorIfNotFound=false){
+    getItemsByUid(uid, includeCustom=true, errorIfNotFound=false){
         let matches = [];
         const runMatching = (searchIn) => {
-            matches = matches.concat(searchIn.filter(f => {return !f.isCustom && (f.uid == uid || uid == "*");}));
+            matches = matches.concat(searchIn.filter(f => {return (!f.isCustom || includeCustom) && (f.uid == uid || uid == "*");}));
         }
        this._runInventoryFunc(runMatching);
        
@@ -1471,7 +1454,7 @@ class Actor5e {
      * @param {string} uid Unique id of the item. Interchangable with item hash.
      * @returns {boolean}
      */
-    hasItem(uid){return this.getItemsByUid(uid, false).length > 0;}
+    hasItem(uid){return this.getItemsByUid(uid, true, false).length > 0;}
     getFlag(flagCategory, flagName){
         return false;
     }

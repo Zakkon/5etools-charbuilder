@@ -587,10 +587,23 @@ class CharacterBuilder {
             console.log("CompClass", this.compClass);
 
 
-            this.getChoiceData().then((choiceData)=>{
-              CharacterBuilder.parseMancerChoiceData(this._actor, choiceData).then(()=>{
-                this.e_switchTab("sheet");
+
+            this.getChoiceData().then(async (choiceData)=>{
+
+              const allItems = this._actor.getItemsByUid("*");
+              const foundCustomizations = allItems.filter(i => i.isCustomized == true);
+              const foundCustomItems = allItems.filter(i => i.isCustom == true);
+              console.log("Found custom", foundCustomizations.length, foundCustomItems.length, allItems);
+              const isSure = (foundCustomizations.length < 1 && foundCustomItems.length < 1) || await InputUiUtil.pGetUserBoolean({
+                title: `Are you sure?`,
+                htmlDescription: `Custom changes to the sheet, such as added items or modifications on class features may be deleted. Do you wish to proceed?`,
+                textYes: "Yes",
+                textNo: "Cancel",
               });
+              if (!isSure){return;}
+
+              await CharacterBuilder.parseMancerChoiceData(this._actor, choiceData);
+              this.e_switchTab("sheet");
               
             });
             
@@ -1088,19 +1101,18 @@ class CharacterBuilder {
     const addFeatureItem = async(type, hash, dependencyPath, data={}) => {
       return await SheetApplier.addFeatureItem(actor, type, hash, dependencyPath, data);
     }
-    const removeFeatureItem = (it) => {
+    const addSpellItem = async(actor, hash, preparationMode, isPrepared)=>{
+      return await SheetApplier.addSpellItem(actor, hash, preparationMode, isPrepared);
+    }
+    const removeItemsNow = (items, fireEvents=false) => {
+      if(!Array.isArray(items)){items = [items];}
+      if(fireEvents){actor.removeEmbeddedDocuments("item", items);}
+      else{actor._removeEntities(items);}
       //Or just add to removal pool
-      actor.removeEmbeddedDocuments("item", [it]);
     }
     const isMancerGranted = (item) => {
       //console.log("Is Granted?", item.isMancerCreated, item);
       return !!item.isMancerCreated;
-    }
-    const findItemMatch = (path, uid) => {
-      for(let i = 0; i < allItems.length; ++i){
-        if(allItems[i].isMancerDependencyMatch(path) && allItems[i].uid == uid){return i;}
-      }
-      return -1;
     }
     
     const pull = (forms, propertyParentName) => {
@@ -1196,9 +1208,15 @@ class CharacterBuilder {
       ActorCharactermancerSheet2.instance.setup(actor);
       forceAdd = true;
     }
+    const REMOVE_UNTRACEABLE_ITEMS = false;
+    const REMOVE_ALL_ITEMS = false; //Remove all items prior to (attempting) to add new ones?
+    const REMOVE_CUSTOM_ITEMS = false; //If REMOVE_ALL_ITEMS is true, do we remove custom items as well?
+    const REPLACE_EXISTING_ITEMS = true; //If an item is found with the same uid, do we replace it?
+    const ADD_WHEN_EXISTING_ITEMS = false; //If an item is found with the same uid, do we add a new item anyway? Requires REPLACE_EXISTING_ITEMS to be false
     //console.assert(SETTINGS.SHEET_MANCER_RECREATES_SHEET == true, "Sheet recreation mode is currently the only mode supported");
     //Mark all mancer-given features on actor as unverified
-    let allItems = actor.getItemsByUid("*").filter(it => isMancerGranted(it) == true);
+    let allItems = actor.getItemsByUid("*", false).filter(it => isMancerGranted(it) == true);
+    if(REMOVE_ALL_ITEMS){removeItemsNow(actor.getItemsByUid("*", REMOVE_CUSTOM_ITEMS));}
     let itemsVerified = new Array(allItems.length).fill(false);
     //Then try to verify each one, and add new (already verified) features on to the sheet if needed
 
@@ -1236,8 +1254,10 @@ class CharacterBuilder {
 
     //#region Parse Background
     for(let bg of choiceData.backgrounds){
-      if(!forceAdd && actor.hasItem(bg.uid)){continue;}
-      let bgItem = await addFeatureItem("background", bg.uid, bg.path);
+      const existing = actor.getItemsByUid(bg.uid);
+      if(existing.length > 0 && REPLACE_EXISTING_ITEMS){removeItemsNow(existing);}
+      else if(existing.length > 0 && !ADD_WHEN_EXISTING_ITEMS){continue;}
+      const bgItem = await addFeatureItem("background", bg.uid, bg.path);
       updatePool["system.details.background"] = {name:bgItem.name};
       pullSkills(bg.skills);
       pullTools(bg.languagesTools);
@@ -1247,8 +1267,10 @@ class CharacterBuilder {
     //#endregion
     //#region Feats
     for(let f of choiceData.featsFromCustom){
-      if(!forceAdd && actor.hasItem(bg.hash)){continue;}
-      await SheetApplier.addFeatureItem(actor, "feat", f.hash, null, f);
+      const existing = actor.getItemsByUid(f.hash);
+      if(existing.length > 0 && REPLACE_EXISTING_ITEMS){removeItemsNow(existing);}
+      else if(existing.length > 0 && !ADD_WHEN_EXISTING_ITEMS){continue;}
+      await addFeatureItem(actor, "feat", f.hash, null, f);
     }
     //#endregion
 
@@ -1256,23 +1278,17 @@ class CharacterBuilder {
     for(let sp of choiceData.spells ?? []){
       //It's theoretically possible for a character to have multiple instances of the same spell, but with different preparation modes
       //TODO: some spells may be locked to be upcast, we need to compare for that as well
-      if(!forceAdd){
-        let spells = actor.getItemsByUid(sp.hash);
-        let dontAdd = false;
-        for(let s of spells){if(s.preparationMode == sp.prepMode){dontAdd = true; break;}}
-        if(dontAdd){continue;}
-      }
+      const existing = actor.getItemsByUid(sp.hash).filter(s => s.system.preparationMode == sp.prepMode);
+      if(existing.length > 0 && REPLACE_EXISTING_ITEMS){removeItemsNow(existing);}
+      else if(existing.length > 0 && !ADD_WHEN_EXISTING_ITEMS){continue;}
       await SheetApplier.addSpellItem(actor, sp.hash, sp.prepMode, sp.isPrepared);
     }
     for(let sp of choiceData.additionalSpells?.fromSubclass ?? []){
       //It's theoretically possible for a character to have multiple instances of the same spell, but with different preparation modes
       //TODO: some spells may be locked to be upcast, we need to compare for that as well
-      if(!forceAdd){
-        let spells = actor.getItemsByUid(sp.hash);
-        let dontAdd = false;
-        for(let s of spells){if(s.preparationMode == sp.prepMode){dontAdd = true; break;}}
-        if(dontAdd){continue;}
-      }
+      const existing = actor.getItemsByUid(sp.hash).filter(s => s.system.preparationMode == sp.prepMode);
+      if(existing.length > 0 && REPLACE_EXISTING_ITEMS){removeItemsNow(existing);}
+      else if(existing.length > 0 && !ADD_WHEN_EXISTING_ITEMS){continue;}
       await SheetApplier.addSpellItem(actor, sp.hash, sp.prepMode, sp.isPrepared);
     }
     //#endregion
@@ -1284,7 +1300,9 @@ class CharacterBuilder {
     let totalLevel = 0;
     for(let clsIx = 0; clsIx < choiceData.classes.length; ++clsIx){
       const cls = choiceData.classes[clsIx];
-      if(!forceAdd && actor.hasItem(cls.uid)){continue;}
+      const existing = actor.getItemsByUid(cls.uid);
+      if(existing.length > 0 && REPLACE_EXISTING_ITEMS){removeItemsNow(existing);}
+      else if(existing.length > 0 && !ADD_WHEN_EXISTING_ITEMS){continue;}
       let addedFeatureHashes = [];
       const clsData = CharacterBuilder.getEntityByUid("class", {uid: cls.uid});
       console.log("CLASS DATA", clsData);
@@ -1297,26 +1315,32 @@ class CharacterBuilder {
 
       const hasSubclass = cls.ixSubclass != null;
       let subclassName = null;
-      if(hasSubclass && (forceAdd || !actor.hasItem(cls.subclassUid))){
-        sclsData = CharacterBuilder._getEntityByUid(clsData.subclasses, {uid: cls.subclassUid});
-        subclassName = sclsData.name;
-        //Add subclass's additionalSpells, unless there is more than one spell list
-        //SheetApplier.handleSubclassAdditionalSpells(sclsData, actor, cls.targetLevel);
-        
-        //Try to import the subclass itself
-        let subclassItem = await addFeatureItem("subclass", cls.subclassUid, null,
-          {className: clsData.name, classSource: clsData.source,
-            subclassName: sclsData.name, subclassSource: sclsData.source});
+      if(hasSubclass){
+        let addSubclass = true;
+        const existingSC = actor.getItemsByUid(cls.subclassUid);
+        if(existingSC.length > 0 && REPLACE_EXISTING_ITEMS){removeItemsNow(existingSC);}
+        else if(existingSC.length > 0 && !ADD_WHEN_EXISTING_ITEMS){addSubclass = false;}
 
-        
+        if(addSubclass){
+          sclsData = CharacterBuilder._getEntityByUid(clsData.subclasses, {uid: cls.subclassUid});
+          subclassName = sclsData.name;
+          //Add subclass's additionalSpells, unless there is more than one spell list
+          //SheetApplier.handleSubclassAdditionalSpells(sclsData, actor, cls.targetLevel);
+          
+          //Try to import the subclass itself
+          let subclassItem = await addFeatureItem("subclass", cls.subclassUid, null,
+            {className: clsData.name, classSource: clsData.source,
+              subclassName: sclsData.name, subclassSource: sclsData.source});
 
-        for(let i = 1; i <= 9; ++i){
-          //TODO: make this be combinable with other classes
-          let slots = ActorCharactermancerSheet.getSpellSlotsAtLvl(i, cls.targetLevel, clsData, sclsData);
-          updatePool[`spellbook.${i}.uses`] = slots;
-          updatePool[`spellbook.${i}.slots`] = slots;
+          
+
+          for(let i = 1; i <= 9; ++i){
+            //TODO: make this be combinable with other classes
+            let slots = ActorCharactermancerSheet.getSpellSlotsAtLvl(i, cls.targetLevel, clsData, sclsData);
+            updatePool[`spellbook.${i}.uses`] = slots;
+            updatePool[`spellbook.${i}.slots`] = slots;
+          }
         }
-        
       }
 
       //HIT POINTS
@@ -1344,12 +1368,18 @@ class CharacterBuilder {
             && feature.isRequiredOption !== null) && !SETTINGS.SUBCLASS_IMPORT_LOADEDS){continue;}
 
           const isCoreSubclassFeature = feature.type == "subclassFeature" && feature.entity.name == subclassName;
-          if(!isCoreSubclassFeature && (forceAdd || !actor.hasItem(feature.hash))){
+          if(!isCoreSubclassFeature){
             //If this is the core subclass feature, we should just avoid importing the feature item to the sheet. But we can still do the rest
-            const sheetItem = await addFeatureItem(feature.type, feature.hash, cls.path,
-              {className:clsData.name.toLowerCase(), classSource:clsData.source.toLowerCase(),
-                subclassName:sclsData?.name.toLowerCase(), subclassSource:sclsData?.source.toLowerCase()});
-            addedFeatureHashes.push(feature.hash);
+            let add = true;
+            const existing = actor.getItemsByUid(feature.hash);
+            if(existing.length > 0 && REPLACE_EXISTING_ITEMS){removeItemsNow(existing);}
+            else if(existing.length > 0 && !ADD_WHEN_EXISTING_ITEMS){add = false;}
+            if(add){
+              const sheetItem = await addFeatureItem(feature.type, feature.hash, cls.path,
+                {className:clsData.name.toLowerCase(), classSource:clsData.source.toLowerCase(),
+                  subclassName:sclsData?.name.toLowerCase(), subclassSource:sclsData?.source.toLowerCase()});
+              addedFeatureHashes.push(feature.hash);
+            }
           }
 
           //Try to read the feature's entrydata
@@ -1408,10 +1438,10 @@ class CharacterBuilder {
     //#endregion
 
     //Then remove all unverified features
-    for(let i = 0; i < itemsVerified.length; ++i){
+    for(let i = 0; REMOVE_UNTRACEABLE_ITEMS && i < itemsVerified.length; ++i){
       let it = allItems[i];
       let isVerified = itemsVerified[i];
-      if(!isVerified){console.log(it.uid, "remains unverified!"); removeFeatureItem(it);}
+      if(!isVerified){console.log(it.uid, "remains unverified!"); removeItemsNow(it);}
     }
     
     console.log("updatepool after class", updatePool);

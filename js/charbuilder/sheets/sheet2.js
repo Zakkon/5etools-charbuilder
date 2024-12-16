@@ -283,6 +283,7 @@ class ActorCharactermancerSheet2 extends ActorCharactermancerSheet {
 }
 
 class TestInventoryElement {
+    /** @type {Actor5e} */
     actor;
     _expanded = [];
     constructor(actor, rootDiv){
@@ -347,7 +348,7 @@ class TestInventoryElement {
   
         const itemData = {
             name: `New ${type.capitalizeEachWord()}`,//game.i18n.format("DND5E.ItemNew", {type: game.i18n.localize(CONFIG.Item.typeLabels[type])}),
-            type, //This will be used by createEmbeddedDocuments to know what kind of entity to create
+            _category:type, //This will be used by createEmbeddedDocuments to know what kind of entity to create
             system: structuredClone({...dataset})//foundry.utils.expandObject({ ...dataset })
         };
         itemData.system.type = {value: type};

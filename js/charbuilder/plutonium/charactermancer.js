@@ -9822,7 +9822,7 @@ Charactermancer_StartingEquipment.ComponentDefault = class extends Charactermanc
                     let item5e = System5e.getEntityByCollectionId(this.collectionId);
                     if(!item5e){item5e = new Item5e(itemUid, it.quantity, this.collectionId);}
                     await item5e.importSystemData();
-                    System5e.tryAddToInventory(CharacterBuilder.instance._actor, item5e);
+                    System5e.addToInventory(CharacterBuilder.instance._actor, item5e);
                 }
                 this._state["defaultItemPulse"] = !this._state["defaultItemPulse"];
             }
@@ -10482,9 +10482,6 @@ Charactermancer_StartingEquipment.ComponentGold = class extends Charactermancer_
                     isIgnoreCost: opts.isIgnoreCost,
                 },
             });
-            
-            //Try to see if this item already exists in the character inventory
-            System5e.tryAddToInventory_Item(this._actor, collectionId, itemUid, opts.quantity);
         }
 
         if (opts.isTriggerUpdate) { this._triggerCollectionUpdate("itemPurchases"); }

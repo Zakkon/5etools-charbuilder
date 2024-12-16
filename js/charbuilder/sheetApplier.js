@@ -29,49 +29,49 @@ class SheetApplier {
             await OptionalFeature5e.verifySystemData(hash, actor);
             let optFeatureItem = new OptionalFeature5e(hash, null, false);
             optFeatureItem.markMancerDependency(new MancerDependencyLink(dependencyPath));
-            System5e.tryAddToInventory(actor, optFeatureItem, optFeatureItem.featureCategory, {doNotRender:true});
+            System5e.addToInventory(actor, optFeatureItem, optFeatureItem.featureCategory, {doNotRender:true});
             return optFeatureItem;
           case "class":
             //await Class5e.verifySystemData(hash);
             let classItem = new Class5e(hash, null, false);
             classItem.markMancerDependency(new MancerDependencyLink(dependencyPath));
-            System5e.tryAddToInventory(actor, classItem, classItem.featureCategory, {doNotRender:true});
+            System5e.addToInventory(actor, classItem, classItem.featureCategory, {doNotRender:true});
             return classItem;
           case "subclass":
             await Subclass5e.verifySystemData(actor, data.className, data.classSource, data.subclassName, data.subclassSource);
             let subclassItem = new Subclass5e(hash, data.className, data.classSource, null, false);
             //subclassItem.markMancerDependency(new MancerDependencyLink(dependencyPath));
-            System5e.tryAddToInventory(actor, subclassItem, subclassItem.featureCategory, {doNotRender:true});
+            System5e.addToInventory(actor, subclassItem, subclassItem.featureCategory, {doNotRender:true});
             return subclassItem;
           case "background":
             await Background5e.verifySystemData(hash);
             let backgroundItem = new Background5e(hash, null, false);
             backgroundItem.markMancerDependency(new MancerDependencyLink(dependencyPath));
-            System5e.tryAddToInventory(actor, backgroundItem, backgroundItem.featureCategory, {doNotRender:true});
+            System5e.addToInventory(actor, backgroundItem, backgroundItem.featureCategory, {doNotRender:true});
             return backgroundItem;
           case "race":
             await Race5e.verifySystemData(hash);
             let raceItem = new Race5e(hash, null, false);
             raceItem.markMancerDependency(new MancerDependencyLink(dependencyPath));
-            System5e.tryAddToInventory(actor, raceItem, raceItem.featureCategory, {doNotRender:true});
+            System5e.addToInventory(actor, raceItem, raceItem.featureCategory, {doNotRender:true});
             return raceItem;
           case "classFeature":
             await ClassFeature5e.verifySystemData(hash, actor, data.className, data.classSource);
             let clsFeatureItem = new ClassFeature5e(hash, data.className, data.classSource, null, false);
             clsFeatureItem.markMancerDependency(new MancerDependencyLink(dependencyPath));
-            System5e.tryAddToInventory(actor, clsFeatureItem, clsFeatureItem.featureCategory, {doNotRender:true});
+            System5e.addToInventory(actor, clsFeatureItem, clsFeatureItem.featureCategory, {doNotRender:true});
             return clsFeatureItem;
           case "subclassFeature":
             await SubclassFeature5e.verifySystemData(actor, hash, data.className, data.classSource, data.subclassName, data.subclassSource);
             let sclsFeatureItem = new SubclassFeature5e(hash, data.className, data.classSource, data.subclassName, data.subclassSource, null, false);
             sclsFeatureItem.markMancerDependency(new MancerDependencyLink(dependencyPath));
-            System5e.tryAddToInventory(actor, sclsFeatureItem, sclsFeatureItem.featureCategory, {doNotRender:true});
+            System5e.addToInventory(actor, sclsFeatureItem, sclsFeatureItem.featureCategory, {doNotRender:true});
             return sclsFeatureItem;
         case "feat":
             //await Feat5e.verifySystemData(hash);
             let featItem = new Feat5e(hash, null, false); //TODO: apply ixFeatAbility
             //featItem.markMancerDependency(new MancerDependencyLink(dependencyPath));
-            System5e.tryAddToInventory(actor, featItem, featItem.featureCategory, {doNotRender:true});
+            System5e.addToInventory(actor, featItem, featItem.featureCategory, {doNotRender:true});
             return featItem;
         default:
             console.error("Could not recognize entity type", type);
@@ -118,7 +118,7 @@ class SheetApplier {
         if(spellItem.system.level == 0 && preparationMode == "known"){preparationMode = "always"; isPrepared=true;}
         spellItem.system.preparationMode = preparationMode;
         spellItem.system.equipped = isPrepared;
-        System5e.tryAddToInventory(actor, spellItem, "spell", {doNotRender:true});
+        System5e.addToInventory(actor, spellItem, "spell", {doNotRender:true});
         return spellItem;
     }
     static async addInventoryItem(actor, hash, quantity){
@@ -139,7 +139,7 @@ class SheetApplier {
             }
             return null;
         }
-        System5e.tryAddToInventory(actor, item, "item", {doNotRender:true});
+        System5e.addToInventory(actor, item, "item", {doNotRender:true});
         return item;
     }
     static handleConditionals(conditionals, actor, updatePool){
