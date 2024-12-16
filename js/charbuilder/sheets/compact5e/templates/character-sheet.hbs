@@ -252,34 +252,6 @@
 
         <div class="tab attributes flexrow" data-group="primary" data-tab="attributes">
 
-            {{!-- Ability Scores --}}
-            <ul class="ability-scores flexrow">
-            {{#each system.abilities as |ability id|}}
-                <li class="ability {{#if ability.proficient}}proficient{{/if}}" data-ability="{{id}}">
-                    <h4 class="ability-name box-title rollable">{{ability.label}}</h4>
-                    <input type="text" name="system.abilities.{{id}}.value" value="{{ability.value}}"
-                        class="ability-score" placeholder="10" data-dtype="Number">
-                    <div class="ability-modifiers flexrow">
-                        <span class="ability-mod" data-tooltip="DND5E.Modifier">
-                            {{numberFormat ability.mod decimals=0 sign=true}}
-                        </span>
-                        <input type="hidden" name="system.abilities.{{id}}.proficient" value="{{ability.baseProf}}"
-                               data-dtype="Number"/>
-                        <a class="proficiency-toggle ability-proficiency" data-tooltip="DND5E.Proficiency">
-                            <i class="{{{ability.icon}}}"></i>
-                        </a>
-                        <span class="ability-save" data-tooltip="DND5E.SavingThrow">
-                            {{numberFormat ability.save decimals=0 sign=true}}
-                        </span>
-                    </div>
-                    <a class="config-button" data-action="ability"
-                       data-tooltip="{{ localize "DND5E.AbilityConfigure" ability=ability.label }}">
-                        <i class="fas fa-cog"></i>
-                    </a>
-                </li>
-            {{/each}}
-            </ul>
-
             {{!-- Skills --}}
             <ul class="skills-list">
             {{#each config.skills as |obj s|}} 
