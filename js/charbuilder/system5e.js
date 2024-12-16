@@ -214,28 +214,27 @@ class System5e{
     }
     /**
      * @param {object} data
-     * @param {number} [data.baseProf]
-     * @param {string} [data.ability]
-     * @param {object} [abilities]
-     * @param {number} [proficiencyModifier]
-     * @returns {any}
+     * @param {number} [data.baseProf] 0(not proficient), 1(proficient), 2(expertise), 3(half-proficient)
+     * @param {string} [data.ability] str|dex|con|int|wis|cha
+     * @param {{str:{value:number}}} [abilities] str|dex|con|wis|int|cha objects
+     * @param {number} [proficiencyModifier] Starts at +2 for level 1 characters, increases as you level up
+     * @returns {object}
      */
     static calcSkillEmbed(data, abilities, proficiencyModifier) {
         data.icon = data.baseProf == 0? "far fa-circle" : data.baseProf == 1? "fas fa-check" : data.baseProf == 2? "fas fa-check-double" : "fas fa-adjust";
         data.hover = data.baseProf == 0? "Not Proficient" : data.baseProf == 1? "Proficient" : data.baseProf == 2? "Expertise" : "Half Proficient";
-        data.baseValue = System5e.proficiencyMult(data.baseProf);
+        data.baseValue = System5e.proficiencyMult(data.baseProf); //Proficiency multiplier (normal, none, double, half)
         data.value = data.baseProf >= 1;
         data.abbreviation = data.ability;
         const {mod, passive} = System5e.calcSkillMod(abilities[data.ability].value, data.baseProf, proficiencyModifier);
         data.total = mod;
         data.passive = passive;
         return data;
-        return {label, value, ability:abilAbbr, baseValue, hover, icon, abbreviation:abilAbbr, total:mod, passive};
     }
     /**
      * @param {object} data
-     * @param {number} [data.baseProf]
-     * @param {number} [proficiencyModifier]
+     * @param {number} [data.baseProf] 0(not proficient), 1(proficient), 2(expertise), 3(half-proficient)
+     * @param {number} [proficiencyModifier] Starts at +2 for level 1 characters, increases as you level up
      * @returns {any}
      */
     static calcToolEmbed(data, proficiencyModifier) {
@@ -1514,7 +1513,7 @@ class Actor5e {
 
     //#region Derived Data
     /**
-   * Prepare remaining character data.
+   * Prepare derived character data, such as ability modifiers, armor class, initiative, spellcasting DC, and movement speed.
    */
     prepareDerivedData(){
 
@@ -1525,7 +1524,7 @@ class Actor5e {
         this._prepareArmorClass();
         this._prepareInitiative(rollData, globalCheckBonus);
         this._prepareSpellcasting();
-        this.movement = this._getMovementSpeed(this.system, false);
+        this.movement = this._getMovementSpeed(this.system.attributes.movement ?? {}, false);
 
         this.prepareSheetDetails();
 
@@ -1537,7 +1536,7 @@ class Actor5e {
         }
     }
     /**
-     * Prepare modifiers and other values for abilities.
+     * Prepares modifier, proficiency, save bonus, check bonus and dc values for abilities. Applies global bonuses if any are set.
      * @param {object} [options={}]
      * @param {object} [options.rollData={}]    Roll data used to calculate bonuses.
      * @param {object} [options.originalSaves]  Original ability data for transformed actors.
@@ -1658,7 +1657,7 @@ class Actor5e {
     }
     /**
    * Prepare the initiative data for an actor.
-   * Mutates the value of the system.attributes.init object.
+   * Mutates the value of the `system.attributes.init` object.
    * @param {object} bonusData         Data produced by getRollData to be applied to bonus formulas
    * @param {number} globalCheckBonus  Global ability check bonus
    * @protected
@@ -1708,7 +1707,7 @@ class Actor5e {
     }
         /**
      * Prepare data related to the spell-casting capabilities of the Actor.
-     * Mutates the value of the system.spells object.
+     * Mutates the value of the `system.spells` object.
      * @protected
      */
     _prepareSpellcasting() {
@@ -1787,8 +1786,7 @@ class Actor5e {
    * @returns {{primary: string, special: string}}
    * @protected
    */
-    _getMovementSpeed(systemData, largestPrimary=false) {
-        const movement = systemData.attributes.movement ?? {};
+    _getMovementSpeed(movement, largestPrimary=false) {
 
         // Prepare an array of available movement speeds
         let speeds = [

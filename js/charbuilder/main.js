@@ -1140,7 +1140,7 @@ class CharacterBuilder {
       for(let form of forms??[]){
         for(let [skillName, profValue] of Object.entries(form.data[isExpertise? "expertise" : "skillProficiencies"]??{})){
           const skillAbbr = skillNameToAbbr(skillName);
-          let skill = actor.skills[skillAbbr];
+          const skill = actor.system.skills[skillAbbr];
           if(skill.baseProf > profValue){continue;} //Do not try to overwrite a higher proficiency (replacing expertise with normal proficiency, for example)
           skill.baseProf = profValue;
           const newSkill = System5e.calcSkillEmbed(skill, actor.system.abilities, actor.system.attributes.prof);
@@ -1161,7 +1161,7 @@ class CharacterBuilder {
         for(let [toolName, profValue] of Object.entries(form.data.toolProficiencies??{})){
           const toolAbbr = toolNameToAbbr(toolName);
           if(toolAbbr == null){console.error("Failed to find any tool with name", toolName);}
-          let tool = actor.tools[toolAbbr];
+          const tool = actor.tools[toolAbbr];
           if(tool == null){console.error("Failed to find any tool with abbr", toolAbbr, actor.tools);}
           if(tool.baseProf > profValue){continue;} //Do not try to overwrite a higher proficiency (replacing expertise with normal proficiency, for example)
           tool.baseProf = profValue;
@@ -1213,7 +1213,8 @@ class CharacterBuilder {
     const REMOVE_CUSTOM_ITEMS = false; //If REMOVE_ALL_ITEMS is true, do we remove custom items as well?
     const REPLACE_EXISTING_ITEMS = true; //If an item is found with the same uid, do we replace it?
     const ADD_WHEN_EXISTING_ITEMS = false; //If an item is found with the same uid, do we add a new item anyway? Requires REPLACE_EXISTING_ITEMS to be false
-    const REMOVE_ALL_PROFICIENCIES = true;
+    const RESET_ALL_PROFICIENCIES = true;
+    const RESET_ABILITY_SCORES = true;
     //console.assert(SETTINGS.SHEET_MANCER_RECREATES_SHEET == true, "Sheet recreation mode is currently the only mode supported");
     //Mark all mancer-given features on actor as unverified
     let allItems = actor.getItemsByUid("*", false).filter(it => isMancerGranted(it) == true);
@@ -1221,22 +1222,32 @@ class CharacterBuilder {
     let itemsVerified = new Array(allItems.length).fill(false);
     //Then try to verify each one, and add new (already verified) features on to the sheet if needed
 
-    if(REMOVE_ALL_PROFICIENCIES){
-      //Set each skill proficiency to zero
+    if(RESET_ABILITY_SCORES){
+      for(let [key, value] of Object.entries(actor.system.abilities)){
+        value.baseProf = 0; //No save proficiency
+        actor.system.abilities[key] = System5e.calcAbilityScoreEmbed(value, 8, actor.system.attributes.prof);
+      }
+    }
+
+    if(RESET_ALL_PROFICIENCIES){
+      //Set each skill proficiency to non-proficient (keep in mind that this depends on what the ability scores are currently set to)
       for(let [key, value] of Object.entries(actor.system.skills)??{}){
-        //Is it .baseProf or .baseValue? not sure
-        actor.system.skills[key].baseProf = actor.system.skills[key].baseValue = 0;
+        value.baseProf = 0;
+        actor.system.skills[key] = System5e.calcSkillEmbed(value, actor.system.abilities, actor.system.attributes.prof);
       }
       //Set each skill proficiency to zero
       for(let [key, value] of Object.entries(actor.tools)??{}){
-        //Is it .baseProf or .baseValue? not sure
-        actor.tools[key].baseProf = actor.tools[key].baseValue = 0;
+        value.baseProf = 0;
+        actor.tools[key] = System5e.calcToolEmbed(value, actor.system.abilities, actor.system.attributes.prof);
       }
       //Reset all "traits" (armor prof, language, expertises, weapon prof, cond immunities, etc)
       for(let [key, value] of Object.entries(actor.traits.traits??{})){
         actor.traits.traits[key].selected = [];
       }
-
+      //Resetting speed as well
+      actor.system.attributes.movement = {walk: 0, units: "ft"};
+      //Also resetting size
+      actor.traits.size = "med";
     }
 
     let updatePool = {};
@@ -1452,7 +1463,7 @@ class CharacterBuilder {
     //This should be done after class, we need the proficiency modifier (based on class level)
     const abilityAbbr = ["str", "dex", "con", "int", "wis", "cha"];
     for(let a of abilityAbbr){
-      updatePool[`system.abilities${a}`] = System5e.calcAbilityScoreEmbed(actor.system.abilities[`${a}`], choiceData.ability[`${a}`], actor.system.attributes.prof); }
+      updatePool[`system.abilities.${a}`] = System5e.calcAbilityScoreEmbed(actor.system.abilities[`${a}`], choiceData.ability[`${a}`], actor.system.attributes.prof); }
     //#endregion
 
     //Then remove all unverified features
