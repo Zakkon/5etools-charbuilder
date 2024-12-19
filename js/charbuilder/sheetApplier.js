@@ -18,7 +18,7 @@ class SheetApplier {
      * @param {Actor5e} actor
      * @param {string} type
      * @param {string} hash
-     * @param {object} dependencyPath not used at the moment
+     * @param {string} dependencyPath not used at the moment
      * @param {object} data={} contains additional data such as className, classSource, subclassName, subclassSource
      * @returns {Feature5e}
      */
@@ -28,13 +28,13 @@ class SheetApplier {
           case "optionalfeature":
             await OptionalFeature5e.verifySystemData(hash, actor);
             let optFeatureItem = new OptionalFeature5e(hash, null, false);
-            optFeatureItem.markMancerDependency(new MancerDependencyLink(dependencyPath));
+            optFeatureItem.dependency = dependencyPath;
             System5e.addToInventory(actor, optFeatureItem, optFeatureItem.featureCategory, {doNotRender:true});
             return optFeatureItem;
           case "class":
             //await Class5e.verifySystemData(hash);
             let classItem = new Class5e(hash, null, false);
-            classItem.markMancerDependency(new MancerDependencyLink(dependencyPath));
+            classItem.dependency = dependencyPath;
             System5e.addToInventory(actor, classItem, classItem.featureCategory, {doNotRender:true});
             return classItem;
           case "subclass":
@@ -46,7 +46,7 @@ class SheetApplier {
           case "background":
             await Background5e.verifySystemData(hash);
             let backgroundItem = new Background5e(hash, null, false);
-            backgroundItem.markMancerDependency(new MancerDependencyLink(dependencyPath));
+            backgroundItem.dependency = dependencyPath;
             System5e.addToInventory(actor, backgroundItem, backgroundItem.featureCategory, {doNotRender:true});
             return backgroundItem;
           case "race":
@@ -95,7 +95,7 @@ class SheetApplier {
      * @param {string} preparationMode
      * @returns {Spell5e}
      */
-    static async addSpellItem(actor, hash, preparationMode, isPrepared){
+    static async addSpellItem(actor, hash, preparationMode, isPrepared, dependencyPath){
         hash = hash.replace("|", "_");
         const hashIncludesSource = hash.includes("_");
         const hashIncludesSuffix = hash.includes("#");
@@ -118,6 +118,7 @@ class SheetApplier {
         if(spellItem.system.level == 0 && preparationMode == "known"){preparationMode = "always"; isPrepared=true;}
         spellItem.system.preparationMode = preparationMode;
         spellItem.system.equipped = isPrepared;
+        spellItem.dependency = dependencyPath;
         System5e.addToInventory(actor, spellItem, "spell", {doNotRender:true});
         return spellItem;
     }
@@ -245,7 +246,7 @@ class SheetApplier {
                     if(targetLevel < gainedAtLvl){continue;} //Must be high enough level
                     let preparationMode = knownType;
                     for(let hash of spellHashes){
-                        await this.addSpellItem(actor, hash, preparationMode);
+                        await this.addSpellItem(actor, hash, preparationMode, {type:"subclass", }); console.error("Not finished");
                     }
                 }
             }

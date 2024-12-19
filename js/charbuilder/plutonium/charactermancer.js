@@ -11613,11 +11613,12 @@ class ActorCharactermancerSpell extends ActorCharactermancerBaseComponent {
         for(let compSpell of this.compsSpellSpells){
             if(!compSpell){continue;} //can be null if class is not a caster
             const form = await compSpell.pGetFormData(filterValues);
-            console.log("Spells in form: ", form.data.spells);
+            console.log("Spells in form: ", form.data.spells, compSpell);
             spells = form.data.spells/* .filter(sp => (sp.isLearned || sp.isPrepared)) */.map(sp => ({
                 hash: makeHash(sp.spell),
                 prepMode: sp.preparationMode,
                 isPrepared: sp.isPrepared,
+                dependency: sp.dependency
             }));
         }
         out.spells = spells;
@@ -12649,7 +12650,7 @@ class Charactermancer_Spell_SpellMeta {
      * @param {number} usesMax
      * @param {string} usesPer
      */
-    constructor({ix, spell, isPrepared, isLearned, isUpdateOnly, existingItemId, preparationMode, usesValue, usesMax, usesPer}) {
+    constructor({ix, spell, isPrepared, isLearned, isUpdateOnly, existingItemId, preparationMode, usesValue, usesMax, usesPer, dependency}) {
         this.ix = ix;
         this.spell = spell;
         this.isPrepared = isPrepared;
@@ -12662,6 +12663,7 @@ class Charactermancer_Spell_SpellMeta {
         this.usesValue = usesValue;
         this.usesMax = usesMax;
         this.usesPer = usesPer;
+        this.dependency = dependency;
     }
 }
 
@@ -13282,9 +13284,14 @@ class Charactermancer_Spell extends BaseComponent {
         return false;
     }
 
+    /**
+     * Returns string detailing if this spell comes from the expanded spell lists of race, background, class or subclass, or none(null)
+     * @param {*} sp
+     * @returns {string}
+     */
     isAvailableExpandedSpell_(sp) {
         const spellUid = this.constructor._getSpellUid(sp);
-        if (this._state.expandedSpellsRace.includes(spellUid))
+        /* if (this._state.expandedSpellsRace.includes(spellUid))
             return true;
         if (this._state.expandedSpellsBackground.includes(spellUid))
             return true;
@@ -13292,7 +13299,16 @@ class Charactermancer_Spell extends BaseComponent {
             return true;
         if (this._state.expandedSpellsSubclass.includes(spellUid))
             return true;
-        return false;
+        return false; */
+        if (this._state.expandedSpellsRace.includes(spellUid))
+            return "expandedRace";
+        if (this._state.expandedSpellsBackground.includes(spellUid))
+            return "expandedBackground";
+        if (this._state.expandedSpellsClass.includes(spellUid))
+            return "expandedClass";
+        if (this._state.expandedSpellsSubclass.includes(spellUid))
+            return "expandedSubclass";
+        return null;
     }
 
     isAlwaysKnownSpell_(sp) {
@@ -14185,10 +14201,14 @@ class Charactermancer_Spell_Level extends BaseComponent {
         for (let i = 0; i < len; ++i) {
             const sp = this._spellDatas[i];
 
-            if (!this._isAvailableSpell(sp))
-                continue;
-            if (!this._parent.isAvailableClassSpell_(sp) && !this._parent.isAvailableSubclassSpell_(sp) && !this._parent.isAvailableExpandedSpell_(sp))
-                continue;
+            if (!this._isAvailableSpell(sp)){ continue;}
+
+            //console.log("form sub data", this);
+            let dependency = null;
+            if(this._parent.isAvailableClassSpell_(sp)){dependency = {type: "class", name:this._parent._className, source: this._parent._classSource};}
+            else if(this._parent.isAvailableSubclassSpell_(sp)){dependency = {type: "subclass", name:this._parent._subclassName, source: this._parent._subclassSource};}
+            else if(this._parent.isAvailableExpandedSpell_(sp)){dependency = {type: this._parent.isAvailableExpandedSpell_(sp)};}
+            else{continue;}
 
             const {ixLearned, ixPrepared, ixAlwaysPrepared, ixAlwaysKnownSpell} = this.constructor._getProps(i);
 
@@ -14228,6 +14248,7 @@ class Charactermancer_Spell_Level extends BaseComponent {
                 isLearned,
                 isUpdateOnly: isUpdatePrepared,
                 existingItemId: existingSpellMeta?.item?.id,
+                dependency: dependency
             }));
         }
 

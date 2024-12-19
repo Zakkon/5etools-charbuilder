@@ -262,6 +262,8 @@ class Entity5e {
     featureType;
     /** Subtype for Item5e objects. weapon|equipment|consumable|container|tool|loot */
     itemType;
+    /** @property {string} */
+    dependency;
     constructor(itemUid, collectionId, isCustom){
         this.uid = itemUid;
         /** item|spell|feature @property {string}*/
@@ -1279,7 +1281,6 @@ class Actor5e {
                         entity = new Race5e(null, null, true);
                         break;
                     default: //Assume Item5e
-                    console.log("Create new item5e", d);
                         entity = new Item5e(null, d.quantity ?? 1, null, true);
                         d.system.identified = d.identified ?? true;
                         d.system.type = {value:d._category} //This needs to be set before _addEntities, to know what category of item it is

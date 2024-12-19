@@ -401,7 +401,7 @@ class SETTINGS{
     //set it to false if you want to import each subclassFeature individually
     static SUBCLASS_IMPORT_LOADEDS = true;
     static PLUT_IMPORT_ADDITIONALSPELLS_TO_ACTOR = false;
-    static SPELLS_TAB_ACCESSED_FROM_SPELLBOOK = true;
+    static SPELLS_TAB_ACCESSED_FROM_SPELLBOOK = false;
 }
 class CharacterBuilder {
     tabButtonParent;
@@ -1101,8 +1101,8 @@ class CharacterBuilder {
     const addFeatureItem = async(type, hash, dependencyPath, data={}) => {
       return await SheetApplier.addFeatureItem(actor, type, hash, dependencyPath, data);
     }
-    const addSpellItem = async(actor, hash, preparationMode, isPrepared)=>{
-      return await SheetApplier.addSpellItem(actor, hash, preparationMode, isPrepared);
+    const addSpellItem = async(actor, hash, preparationMode, isPrepared, dependencyPath)=>{
+      return await SheetApplier.addSpellItem(actor, hash, preparationMode, isPrepared, dependencyPath);
     }
     const removeItemsNow = (items, fireEvents=false) => {
       if(!Array.isArray(items)){items = [items];}
@@ -1188,17 +1188,6 @@ class CharacterBuilder {
         }
       }
     }
-    const pullAdditionalSpells = (forms) => {
-      if(!forms){return;}
-      for(let form of forms){
-        for(let spell of form.data){
-          let hash = spell.uid;
-          const hashNeedsConversion = hash.includes("|");
-          if(hashNeedsConversion){hash = hash.replace("|", "_");}
-          SheetApplier.addSpellItem(actor, hash, spell.preparationMode, null);
-        }
-      }
-    }
 
     let forceAdd = false;
     //Reset actor if settings demand it
@@ -1219,6 +1208,28 @@ class CharacterBuilder {
     //Mark all mancer-given features on actor as unverified
     let allItems = actor.getItemsByUid("*", false).filter(it => isMancerGranted(it) == true);
     if(REMOVE_ALL_ITEMS){removeItemsNow(actor.getItemsByUid("*", REMOVE_CUSTOM_ITEMS));}
+    let allSpells = actor.getItemsByUid("*", false).filter(it => it.entityType == "spell");
+    console.log("All current spells:", allSpells);
+
+    allSpells = allSpells.filter(it => it.dependency != null);
+    for(let sp of allSpells){
+      const hash = UrlUtil.URL_TO_HASH_GENERIC(sp.dependency).toLowerCase();
+      if(sp.dependency.type == "class"){
+        const hasClassNow = actor.getItemsByUid(hash).length > 0;
+        const hasClassSoon = choiceData.classes.filter(it => it.uid == hash).length > 0;
+        console.log("hash", hash, "now", hasClassNow, "soon", hasClassSoon, choiceData.classes);
+      }
+      else if(sp.dependency.type == "subclass"){
+        const hasClassNow = actor.getItemsByUid(hash).length > 0;
+        const hasClassSoon = choiceData.classes.filter(it => it.subclassUid == hash).length > 0;
+        console.log("hash", hash, "now", hasClassNow, "soon", hasClassSoon, choiceData.classes);
+      }
+    }
+
+    //Look at class to try and see if it could give this spell
+    let allClasses = actor.getItemsByUid("*").filter(it => it.featureType == "class")[0];
+    console.log(allClasses);
+
     let itemsVerified = new Array(allItems.length).fill(false);
     //Then try to verify each one, and add new (already verified) features on to the sheet if needed
 
@@ -1310,7 +1321,7 @@ class CharacterBuilder {
       const existing = actor.getItemsByUid(sp.hash).filter(s => s.system.preparationMode == sp.prepMode);
       if(existing.length > 0 && REPLACE_EXISTING_ITEMS){removeItemsNow(existing);}
       else if(existing.length > 0 && !ADD_WHEN_EXISTING_ITEMS){continue;}
-      await SheetApplier.addSpellItem(actor, sp.hash, sp.prepMode, sp.isPrepared);
+      await SheetApplier.addSpellItem(actor, sp.hash, sp.prepMode, sp.isPrepared, sp.dependency);
     }
     for(let sp of choiceData.additionalSpells?.fromSubclass ?? []){
       //It's theoretically possible for a character to have multiple instances of the same spell, but with different preparation modes
@@ -1318,7 +1329,7 @@ class CharacterBuilder {
       const existing = actor.getItemsByUid(sp.hash).filter(s => s.system.preparationMode == sp.prepMode);
       if(existing.length > 0 && REPLACE_EXISTING_ITEMS){removeItemsNow(existing);}
       else if(existing.length > 0 && !ADD_WHEN_EXISTING_ITEMS){continue;}
-      await SheetApplier.addSpellItem(actor, sp.hash, sp.prepMode, sp.isPrepared);
+      await SheetApplier.addSpellItem(actor, sp.hash, sp.prepMode, sp.isPrepared, sp.dependency);
     }
     //#endregion
 
