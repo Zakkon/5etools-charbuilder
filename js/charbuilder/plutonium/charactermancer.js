@@ -10637,7 +10637,7 @@ class ActorCharactermancerSpell extends ActorCharactermancerBaseComponent {
 
             if(data[j].additionalSpellsSubclass != null){
                 const state = JSON.parse(data[j].additionalSpellsSubclass);
-                this._compsSpellAdditionalSpellSubclass[j].loadFromSaveData(state);
+                this._compsSpellAdditionalSpellSubclass[j].loadFromSavedState(state);
                 //console.error("failed to parse additionalSpellsSubclass state", data[j].additionalSpellsSubclass);
             }
         }
