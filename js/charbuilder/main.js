@@ -1214,19 +1214,30 @@ class CharacterBuilder {
 
     allSpells = allSpells.filter(it => it.dependency != null);
     for(let sp of allSpells){
-      const hash = UrlUtil.URL_TO_HASH_GENERIC(sp.dependency).toLowerCase();
+      const hash = sp.dependency.uid;
+      let hasDependencyNow = false;
+      let hasDependencySoon = false;
       if(sp.dependency.type == "class"){
-        const hasClassNow = actor.getItemsByUid(hash).length > 0;
-        const hasClassSoon = choiceData.classes.filter(it => it.uid == hash).length > 0;
+        hasDependencyNow = actor.getItemsByUid(hash).length > 0;
+        hasDependencySoon = choiceData.classes.filter(it => it.uid == hash).length > 0;
         //console.log("hash", hash, "now", hasClassNow, "soon", hasClassSoon, choiceData.classes);
       }
       else if(sp.dependency.type == "subclass"){
-        const hasClassNow = actor.getItemsByUid(hash).length > 0;
-        const hasClassSoon = choiceData.classes.filter(it => it.subclassUid == hash).length > 0;
+        hasDependencyNow = actor.getItemsByUid(hash).length > 0;
+        hasDependencySoon = choiceData.classes.filter(it => it.subclassUid == hash).length > 0;
         //console.log("hash", hash, "now", hasClassNow, "soon", hasClassSoon, choiceData.classes);
+      }
+      else if(sp.dependency.type == "race"){
+        hasDependencyNow = actor.getItemsByUid(hash).length > 0;
+        hasDependencySoon = choiceData.races.filter(it => it.uid == hash).length > 0;
       }
       else{
         console.log("Unknown dependency type:", sp.dependency);
+      }
+      if(!hasDependencySoon){
+        //Remove item?
+        console.log("Removing item", sp.uid, "because dependency", sp.dependency, "will no longer be present");
+        removeItemsNow(sp);
       }
     }
 
@@ -1326,7 +1337,6 @@ class CharacterBuilder {
       //TODO: some spells may be locked to be upcast, we need to compare for that as well
       
       if(sp.dependency && !sp.uid){sp.dependency = MancerDependencyLink.fill(sp.dependency, choiceData);}
-      console.log("New spell dependency", sp.dependency);
       const existing = actor.getItemsByUid(sp.hash).filter(s => s.system.preparationMode == sp.prepMode);
       if(existing.length > 0 && REPLACE_EXISTING_ITEMS){removeItemsNow(existing);}
       else if(existing.length > 0 && !ADD_WHEN_EXISTING_ITEMS){continue;}
