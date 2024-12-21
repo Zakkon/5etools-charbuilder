@@ -1214,6 +1214,7 @@ class CharacterBuilder {
 
     allSpells = allSpells.filter(it => it.dependency != null);
     for(let sp of allSpells){
+      if(sp.isCustom || !sp.dependency){continue;}
       const hash = sp.dependency.uid;
       let hasDependencyNow = false;
       let hasDependencySoon = false;

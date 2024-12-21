@@ -110,6 +110,31 @@ class System5e{
     }
     
     /**
+     * Clone an entity and add it to the sheet's inventory
+     * @param {Entity5e} entity
+     * @param {Actor5e} actor
+     * @returns {Entity5e}
+     */
+    static async cloneEntity(entity, actor){
+        let clone = structuredClone(entity);
+        if(clone.entityType == "item"){clone = Item5e.recast(clone);}
+        else if(clone.entityType == "feature"){clone = Feature5e.recast(clone);}
+        else if(clone.entityType == "spell"){clone = Spell5e.recast(clone);}
+        clone.isCustom = true;
+        delete(clone.dependency);
+        //Create a new collection id
+        clone.name += " (Copy)";
+        clone.collectionId = System5e.createUniqueID();
+        let inv = actor._getInventory(clone.entityType);
+        for(let [catName, subcategory] of Object.entries(inv)){
+            let arr = subcategory.spells ?? subcategory.items;
+            if(arr.some(it => it.collectionId == entity.collectionId)){
+                System5e.addToInventory(actor, clone, catName)
+            }
+        }
+    }
+
+    /**
      * Shorthand for adding an already created entity5e to the actor inventory
      * @param {Actor5e} actor
      * @param {Entity5e} entity5e
@@ -121,12 +146,6 @@ class System5e{
         //Simply pass pre-created Entity5e objects
         actor.createEmbeddedDocuments("item", [], [{entity:entity5e, _category: category}], options);
         return entity5e;
-    }
-    static async removeFromInventory(actor, collectionId){
-        //TODO: use removeEmbeddedDocuments instead
-        //console.error("Remove item", collectionId);
-        const index = actor.system.inventory.items.map(e => e.collectionId).indexOf(collectionId);
-        actor.system.inventory.items.splice(index, 1);
     }
     static __hooks = {};
     static hkItemUpdated(collectionID){

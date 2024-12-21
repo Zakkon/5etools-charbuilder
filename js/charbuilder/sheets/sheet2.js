@@ -317,6 +317,10 @@ class TestInventoryElement {
                 //Get the ui object for the entire item
                 C5e_Inventory.tryOpenEditWindow(this.actor, item, item.uid, item.entityType, item.collectionId);
                 return;
+            case "duplicate":
+                //Get the ui object for the entire item
+                System5e.cloneEntity(item, this.actor);
+                return;
             case "equip":
                 return item.update({"system.equipped": !item.system.equipped});
             case "attune":
