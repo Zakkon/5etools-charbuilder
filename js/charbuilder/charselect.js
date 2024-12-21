@@ -11,7 +11,7 @@ class CharacterSelectScreen {
 
         const _root = $("#window-root");
 
-        const content = $$`<div></div>`;
+        const content = $$`<div class="character-select"></div>`;
 
         const btnNew = $$`<button>Create New Character</button>`;
         btnNew.click(() => {
@@ -24,7 +24,7 @@ class CharacterSelectScreen {
         });
 
         const header = $$`
-        <div class="character-screen-header">
+        <div class="character-select-header">
             <h1>My Characters</h1>
             ${btnNew}
             ${btnImport}
@@ -75,7 +75,7 @@ class CharacterSelectScreen {
         });
 
         //Get the character data
-        const charData = CookieManager.getCharacterInfo(charUid).result.character;
+        const charData = CookieManager.getCharacterInfo(charUid).result.mancerData;
         if(!charData){console.error("charData for uid " + charUid + " is null"); return;}
         let classString = "";
         let totalLevels = 0;
