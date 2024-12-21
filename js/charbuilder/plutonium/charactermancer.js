@@ -2357,6 +2357,8 @@ class Charactermancer_AdditionalSpellsSelect extends BaseComponent {
         this._additionalSpells = opts.additionalSpells;
         this._sourceHintText = opts.sourceHintText;
         this._modalFilterSpells = opts.modalFilterSpells;
+        /**@type {string} Hash of the class/subclass/race/background/etc that gave us additionalSpells */
+        this._additionalSpellsSource = opts.additionalSpellsSource;
 
         this._additionalSpellsFlat = Charactermancer_AdditionalSpellsUtil.getFlatData(opts.additionalSpells);
 
@@ -10562,6 +10564,7 @@ class ActorCharactermancerSpell extends ActorCharactermancerBaseComponent {
       this._compSpellAdditionalSpellRace = null;
       this._compSpellAdditionalSpellBackground = null;
       this._compsSpellAdditionalSpellClass = [];
+      /**@type {Charactermancer_AdditionalSpellsSelect[]} */
       this._compsSpellAdditionalSpellSubclass = [];
     }
 
@@ -10922,6 +10925,7 @@ class ActorCharactermancerSpell extends ActorCharactermancerBaseComponent {
     get compsSpellAdditionalSpellClass() {
       return this._compsSpellAdditionalSpellClass;
     }
+    /**@type {Charactermancer_AdditionalSpellsSelect[]} */
     get compsSpellAdditionalSpellSubclass() {
       return this._compsSpellAdditionalSpellSubclass;
     }
@@ -11316,6 +11320,7 @@ class ActorCharactermancerSpell extends ActorCharactermancerBaseComponent {
         this._compsSpellAdditionalSpellSubclass[classIndex] = new Charactermancer_AdditionalSpellsSelect({
           spellDatas: this._data.spell,
           additionalSpells: subcls.additionalSpells,
+          additionalSpellsSource: UrlUtil.URL_TO_HASH_GENERIC(subcls),
           modalFilterSpells: this._modalFilterSpells
         });
         this._compsSpellAdditionalSpellSubclass[classIndex].render(stgSubclassAdditionalSpells);
@@ -11608,6 +11613,7 @@ class ActorCharactermancerSpell extends ActorCharactermancerBaseComponent {
 
         let spells = [];
         let additionalSpellHashes = [];
+        const curLevel = actor.system.details.level;
         //Get the comps
         const filterValues = this.filterValuesSpellsCache || this.filterBoxSpells.getValues();
         for(let compSpell of this.compsSpellSpells){
@@ -11626,17 +11632,26 @@ class ActorCharactermancerSpell extends ActorCharactermancerBaseComponent {
         let additionalSpellSubclass = [];
         for(let comp of this.compsSpellAdditionalSpellSubclass){
             if(!comp){continue;}
-            const form = await comp.pGetFormData({level: actor.system.details.level});
+            const form = await comp.pGetFormData({level: curLevel});
             for(let sp of form.data){
-                if(sp.type == "choose" && sp.uid != null){
-                    additionalSpellSubclass.push({hash: hashSanityCheck(sp.uid), prepMode:sp.preparationMode});
-                }
-                else if(sp.type == "spell" && sp.uid != null){
-                    additionalSpellSubclass.push({hash: hashSanityCheck(sp.uid), prepMode:sp.preparationMode});
+                if((sp.type == "choose" || sp.type == "spell") && sp.uid != null){
+                    additionalSpellSubclass.push({hash: hashSanityCheck(sp.uid), prepMode:sp.preparationMode, dependency: MancerDependencyLink.fromSubclass(comp._additionalSpellsSource)});
                 }
             }
         }
-        out.additionalSpells = {fromSubclass:additionalSpellSubclass};
+        let additionalSpellRace = [];
+        if(this._compSpellAdditionalSpellRace){
+            const form = await this._compSpellAdditionalSpellRace.pGetFormData({level: curLevel});
+            console.log("Race form data", form);
+            let abilityAbv = form.abilityAbv;
+            for(let sp of form.data){
+                if((sp.type == "choose" || sp.type == "spell") && sp.uid != null && (!sp.requiredLevel || sp.requiredLevel <= curLevel)){
+                    additionalSpellRace.push({hash: hashSanityCheck(sp.uid), prepMode:sp.preparationMode, dependency: MancerDependencyLink.fromRace()});
+                }
+            }
+        }
+        out.additionalSpells = {fromSubclass:additionalSpellSubclass, fromRace:additionalSpellRace};
+        
 
         /* out.featFromAsi = [];
         out.featsFromBackground = [];
@@ -12676,6 +12691,7 @@ class Charactermancer_Spell extends BaseComponent {
         opts = opts || {};
         super();
 
+        /** @type {Actor5e} */
         this._actor = opts.actor;
         this._existingClass = opts.existingClass;
         this._existingCasterMeta = opts.existingCasterMeta;
@@ -13285,12 +13301,12 @@ class Charactermancer_Spell extends BaseComponent {
     }
 
     /**
-     * Returns string detailing if this spell comes from the expanded spell lists of race, background, class or subclass, or none(null)
+     * Returns true if this spell comes from the expanded spell lists of race, background, class or subclass
      * @param {*} sp
-     * @returns {string}
+     * @returns {boolean}
      */
     isAvailableExpandedSpell_(sp) {
-        const spellUid = this.constructor._getSpellUid(sp);
+        //const spellUid = this.constructor._getSpellUid(sp);
         /* if (this._state.expandedSpellsRace.includes(spellUid))
             return true;
         if (this._state.expandedSpellsBackground.includes(spellUid))
@@ -13300,6 +13316,16 @@ class Charactermancer_Spell extends BaseComponent {
         if (this._state.expandedSpellsSubclass.includes(spellUid))
             return true;
         return false; */
+        //Switching to returning string instead of boolean
+        return this.getAvailableExpandedSpell(sp) != null;
+    }
+    /**
+     * Returns string detailing if this spell comes from the expanded spell lists of race, background, class or subclass, or none(null)
+     * @param {*} sp
+     * @returns {string}
+     */
+    getAvailableExpandedSpell(sp){
+        const spellUid = this.constructor._getSpellUid(sp);
         if (this._state.expandedSpellsRace.includes(spellUid))
             return "expandedRace";
         if (this._state.expandedSpellsBackground.includes(spellUid))
@@ -13590,6 +13616,7 @@ class Charactermancer_Spell_Level extends BaseComponent {
 
         this._spellDatas = opts.spellDatas;
         this._spellLevel = opts.spellLevel;
+        /**@type {Charactermancer_Spell} */
         this._parent = opts.parent;
 
         this._$wrpRows = null;
@@ -14203,11 +14230,10 @@ class Charactermancer_Spell_Level extends BaseComponent {
 
             if (!this._isAvailableSpell(sp)){ continue;}
 
-            //console.log("form sub data", this);
             let dependency = null;
             if(this._parent.isAvailableClassSpell_(sp)){dependency = {type: "class", name:this._parent._className, source: this._parent._classSource};}
             else if(this._parent.isAvailableSubclassSpell_(sp)){dependency = {type: "subclass", name:this._parent._subclassName, source: this._parent._subclassSource};}
-            else if(this._parent.isAvailableExpandedSpell_(sp)){dependency = {type: this._parent.isAvailableExpandedSpell_(sp)};}
+            else if(this._parent.isAvailableExpandedSpell_(sp)){dependency = {type: this._parent.getAvailableExpandedSpell(sp)};}
             else{continue;}
 
             const {ixLearned, ixPrepared, ixAlwaysPrepared, ixAlwaysKnownSpell} = this.constructor._getProps(i);

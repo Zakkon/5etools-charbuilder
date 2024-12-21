@@ -426,7 +426,8 @@ class CharacterBuilder {
     _featureSourceTracker;
     _actor;
     _mancerData;
-    instance;
+    /** @type {CharacterBuilder} */
+    static instance;
     get actor(){return this._actor;}
     get mancerData(){return this._mancerData;}
     static useHeaderTitleAndReturnButton = false;
@@ -1217,12 +1218,15 @@ class CharacterBuilder {
       if(sp.dependency.type == "class"){
         const hasClassNow = actor.getItemsByUid(hash).length > 0;
         const hasClassSoon = choiceData.classes.filter(it => it.uid == hash).length > 0;
-        console.log("hash", hash, "now", hasClassNow, "soon", hasClassSoon, choiceData.classes);
+        //console.log("hash", hash, "now", hasClassNow, "soon", hasClassSoon, choiceData.classes);
       }
       else if(sp.dependency.type == "subclass"){
         const hasClassNow = actor.getItemsByUid(hash).length > 0;
         const hasClassSoon = choiceData.classes.filter(it => it.subclassUid == hash).length > 0;
-        console.log("hash", hash, "now", hasClassNow, "soon", hasClassSoon, choiceData.classes);
+        //console.log("hash", hash, "now", hasClassNow, "soon", hasClassSoon, choiceData.classes);
+      }
+      else{
+        console.log("Unknown dependency type:", sp.dependency);
       }
     }
 
@@ -1315,17 +1319,14 @@ class CharacterBuilder {
     //#endregion
 
     //#region Spells
-    for(let sp of choiceData.spells ?? []){
+    let inputSpells = [];
+    inputSpells = inputSpells.concat(choiceData.spells??[], choiceData.additionalSpells?.fromSubclass??[], choiceData.additionalSpells?.fromRace??[]);
+    for(let sp of inputSpells){
       //It's theoretically possible for a character to have multiple instances of the same spell, but with different preparation modes
       //TODO: some spells may be locked to be upcast, we need to compare for that as well
-      const existing = actor.getItemsByUid(sp.hash).filter(s => s.system.preparationMode == sp.prepMode);
-      if(existing.length > 0 && REPLACE_EXISTING_ITEMS){removeItemsNow(existing);}
-      else if(existing.length > 0 && !ADD_WHEN_EXISTING_ITEMS){continue;}
-      await SheetApplier.addSpellItem(actor, sp.hash, sp.prepMode, sp.isPrepared, sp.dependency);
-    }
-    for(let sp of choiceData.additionalSpells?.fromSubclass ?? []){
-      //It's theoretically possible for a character to have multiple instances of the same spell, but with different preparation modes
-      //TODO: some spells may be locked to be upcast, we need to compare for that as well
+      
+      if(sp.dependency && !sp.uid){sp.dependency = MancerDependencyLink.fill(sp.dependency, choiceData);}
+      console.log("New spell dependency", sp.dependency);
       const existing = actor.getItemsByUid(sp.hash).filter(s => s.system.preparationMode == sp.prepMode);
       if(existing.length > 0 && REPLACE_EXISTING_ITEMS){removeItemsNow(existing);}
       else if(existing.length > 0 && !ADD_WHEN_EXISTING_ITEMS){continue;}

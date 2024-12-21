@@ -93,9 +93,10 @@ class SheetApplier {
      * @param {Actor5e} actor
      * @param {string} hash
      * @param {string} preparationMode
+     * @param {{type: string, uid:string}} dependency
      * @returns {Spell5e}
      */
-    static async addSpellItem(actor, hash, preparationMode, isPrepared, dependencyPath){
+    static async addSpellItem(actor, hash, preparationMode, isPrepared, dependency){
         hash = hash.replace("|", "_");
         const hashIncludesSource = hash.includes("_");
         const hashIncludesSuffix = hash.includes("#");
@@ -118,7 +119,7 @@ class SheetApplier {
         if(spellItem.system.level == 0 && preparationMode == "known"){preparationMode = "always"; isPrepared=true;}
         spellItem.system.preparationMode = preparationMode;
         spellItem.system.equipped = isPrepared;
-        spellItem.dependency = dependencyPath;
+        spellItem.dependency = dependency;
         System5e.addToInventory(actor, spellItem, "spell", {doNotRender:true});
         return spellItem;
     }

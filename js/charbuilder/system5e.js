@@ -117,7 +117,7 @@ class System5e{
      * @returns {Entity5e}
      */
     static async addToInventory(actor, entity5e, category, options={}){
-        console.error("Add", category, entity5e.name, entity5e.collectionId);
+        //console.error("Add", category, entity5e.name, entity5e.collectionId);
         //Simply pass pre-created Entity5e objects
         actor.createEmbeddedDocuments("item", [], [{entity:entity5e, _category: category}], options);
         return entity5e;
@@ -2057,6 +2057,34 @@ class MancerDependencyLink extends DependencyLink{
         return this.creationKey == creationKey;
     }
 
+    static fromClass(name, source){}
+    static fromSubclass(uid){
+        return {type: "subclass", uid: uid};
+    }
+    static fromExtended(type){}
+    static fromRace(){
+        return {type:"race"};
+    }
+
+    static fill(dependency, choiceData){
+        switch(dependency.type){
+            case "race":
+                //Assume only one race exists in choiceData
+                console.assert(choiceData.races.length < 2, "Too many races chosen, this shouldn't be possible according to 5e rules");
+                if(choiceData.races.length < 1){break;}
+                dependency.uid = choiceData.races[0].uid;
+                break;
+            case "class":
+            case "subclass":
+                if(dependency.name && dependency.source){dependency.uid = UrlUtil.URL_TO_HASH_GENERIC(dependency); delete(dependency.name); delete(dependency.source);}
+                break;
+            default: break;
+        }
+        return dependency;
+    }
+
+    test_class(){
+    }
 }
 //This object contains info about sub-features that we grant to the sheet
 class ChildLink {
