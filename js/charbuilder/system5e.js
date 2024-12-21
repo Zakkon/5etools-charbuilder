@@ -2076,15 +2076,24 @@ class MancerDependencyLink extends DependencyLink{
         return this.creationKey == creationKey;
     }
 
-    static fromClass(name, source){}
+    static fromClass(uid){return {type: "class", uid: uid};}
     static fromSubclass(uid){
         return {type: "subclass", uid: uid};
     }
     static fromExtended(type){}
+    /**
+     * Create a dependancy for race. Needs to be filled with race data using `fill(dependency, choiceData)` later.
+     */
     static fromRace(){
         return {type:"race"};
     }
 
+    /**
+     * Set the `uid` of a dependency, by filling missing info with those contained within choiceData
+     * @param {{type:string}} dependency
+     * @param {{races:object[]}} choiceData
+     * @returns {{type:string, uid:string}}
+     */
     static fill(dependency, choiceData){
         switch(dependency.type){
             case "race":
@@ -2095,6 +2104,7 @@ class MancerDependencyLink extends DependencyLink{
                 break;
             case "class":
             case "subclass":
+                //Assume class name and source is already defined in the dependancy
                 if(dependency.name && dependency.source){dependency.uid = UrlUtil.URL_TO_HASH_GENERIC(dependency); delete(dependency.name); delete(dependency.source);}
                 break;
             default: break;

@@ -1099,8 +1099,8 @@ class CharacterBuilder {
   static async parseMancerChoiceData(actor, choiceData){
     console.log("ChoiceData", choiceData);
     //System5e.applyClassChoiceData(actor, choiceData);
-    const addFeatureItem = async(type, hash, dependencyPath, data={}) => {
-      return await SheetApplier.addFeatureItem(actor, type, hash, dependencyPath, data);
+    const addFeatureItem = async(type, hash, dependency, data={}) => {
+      return await SheetApplier.addFeatureItem(actor, type, hash, dependency, data);
     }
     const addSpellItem = async(actor, hash, preparationMode, isPrepared, dependencyPath)=>{
       return await SheetApplier.addSpellItem(actor, hash, preparationMode, isPrepared, dependencyPath);
@@ -1380,7 +1380,7 @@ class CharacterBuilder {
           //SheetApplier.handleSubclassAdditionalSpells(sclsData, actor, cls.targetLevel);
           
           //Try to import the subclass itself
-          let subclassItem = await addFeatureItem("subclass", cls.subclassUid, null,
+          let subclassItem = await addFeatureItem("subclass", cls.subclassUid, MancerDependencyLink.fromClass(cls.uid),
             {className: clsData.name, classSource: clsData.source,
               subclassName: sclsData.name, subclassSource: sclsData.source});
 
@@ -1427,7 +1427,8 @@ class CharacterBuilder {
             if(existing.length > 0 && REPLACE_EXISTING_ITEMS){removeItemsNow(existing);}
             else if(existing.length > 0 && !ADD_WHEN_EXISTING_ITEMS){add = false;}
             if(add){
-              const sheetItem = await addFeatureItem(feature.type, feature.hash, cls.path,
+              let dependency = feature.type == "subclassFeature"? MancerDependencyLink.fromSubclass(cls.subclassUid) : MancerDependencyLink.fromClass(cls.uid);
+              const sheetItem = await addFeatureItem(feature.type, feature.hash, dependency,
                 {className:clsData.name.toLowerCase(), classSource:clsData.source.toLowerCase(),
                   subclassName:sclsData?.name.toLowerCase(), subclassSource:sclsData?.source.toLowerCase()});
               addedFeatureHashes.push(feature.hash);
