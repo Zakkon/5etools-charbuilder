@@ -1326,7 +1326,7 @@ class CharacterBuilder {
       const existing = actor.getItemsByUid(f.hash);
       if(existing.length > 0 && REPLACE_EXISTING_ITEMS){removeItemsNow(existing);}
       else if(existing.length > 0 && !ADD_WHEN_EXISTING_ITEMS){continue;}
-      await addFeatureItem(actor, "feat", f.hash, null, f);
+      await addFeatureItem(actor, "feat", f.hash, MancerDependencyLink.fromCustomASIFeat(), f);
     }
     //#endregion
 

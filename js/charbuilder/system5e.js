@@ -2076,6 +2076,7 @@ class MancerDependencyLink extends DependencyLink{
         return this.creationKey == creationKey;
     }
 
+    static fromCustomASIFeat(){return {type: "customASIFeat"};}
     static fromClass(uid){return {type: "class", uid: uid};}
     static fromSubclass(uid){
         return {type: "subclass", uid: uid};
