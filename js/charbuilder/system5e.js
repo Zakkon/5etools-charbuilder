@@ -411,6 +411,26 @@ class Entity5e {
             labels.uses = {max: val}; //Remember, just a label
         }
         this.labels = labels;
+        if(this.system.description){
+            let str = this.system.description;
+
+            function processTag(tagType, tagValue) {
+                return Renderer.get().render(`{@${tagType} ${tagValue.toTitleCase()}}`);
+            }
+            
+            function replaceTags(inputString) {
+                // Regular expression to match tags like @language Druidic or @skill Perception
+                const tagRegex = /[{]?@(\w+)[\s$$]+(\w+)[$$}]?/g;
+            
+                // Replace function that processes each match
+                return inputString.replace(tagRegex, (match, tagType, tagValue) => {
+                    return processTag(tagType, tagValue);
+                });
+            }
+            
+
+            this.system.descriptionRendered = str;
+        }
     }
     prepareActorDerivedData(actor, rollData){
         this.calculateMaxUses(rollData);
@@ -1547,6 +1567,15 @@ class Actor5e {
         this.movement = this._getMovementSpeed(this.system.attributes.movement ?? {}, false);
 
         this.prepareSheetDetails();
+
+        if(!this.system.details.xp){
+            this.system.details.xp = {
+                value: 0,
+                max: 0,
+                pct: 0,
+            };
+        }
+        
 
         //Go through inventory items and prepare derived data
         for(let [categoryName, category] of Object.entries(this.features)){
