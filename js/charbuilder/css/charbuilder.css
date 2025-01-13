@@ -708,7 +708,7 @@ select.chooseAlignment{background: #d3d1c5;}
     padding: 0;
     list-style: none;
     /* border-top: var(--dnd5e-border-groove); */
-    border-bottom: none;
+    border-bottom: none !important;
 }
 .c5e .sheet-header .summary select{
     width: 100%;
