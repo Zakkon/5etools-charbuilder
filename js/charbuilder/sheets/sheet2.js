@@ -16,7 +16,7 @@ class ActorCharactermancerSheet2 extends ActorCharactermancerSheet {
     setup(actor){
         ActorCharactermancerSheet2.instance = this;
         this.actor = actor;
-        let inv = new TestInventoryElement(this.actor);
+        let inv = new InventoryElement(this.actor);
         this._inv = inv;
     }
     preRender(){
@@ -34,11 +34,11 @@ class ActorCharactermancerSheet2 extends ActorCharactermancerSheet {
         C5e_Inventory.setupListeners();
 
         System5e.addHookBase("item_update", (p, collectionId) => {
-            console.log("hook fired");
+            console.log("Item Update hook fired");
             this.render();
         });
         System5e.addHookBase("actor_update", (p, collectionId) => {
-            console.log("actor hook fired");
+            console.log("Actor update hook fired");
             this.render();
         });
     }
@@ -54,12 +54,10 @@ class ActorCharactermancerSheet2 extends ActorCharactermancerSheet {
             let innerElement = $$`${innerHTML}`;
             if(this.element){ //If we have rendered the sheet once already
                 //this.removeAllListeners();
-                
                 this._replaceHTML(this.element, innerElement);
                 this.element = innerElement;
             }
             else { //First render
-                
                 this.element = innerElement;
                 this.element.appendTo(parentElement);
             }
@@ -282,7 +280,7 @@ class ActorCharactermancerSheet2 extends ActorCharactermancerSheet {
   //#endregion
 }
 
-class TestInventoryElement {
+class InventoryElement {
     /** @type {Actor5e} */
     actor;
     _expanded = [];

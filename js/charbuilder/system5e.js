@@ -974,16 +974,15 @@ class Spell5e extends Entity5e{
     _prepareLabels(){
         super._prepareLabels();
         this.labels.school = this.system.school;
-        
     }
 
-     /**
+    /**
      * Used by spell importer
      * @param {{name:string, id:string, flags:{plutonium:{source:string}}}[]} docData
      * @param {any} options
      * @returns {any}
      */
-     static create(docData, options){
+    static create(docData, options){
         let response = [];
         for(let data of docData){
             const source = data.flags.plutonium.source;
@@ -994,12 +993,14 @@ class Spell5e extends Entity5e{
         }
         return response;
     }
+
     static recast(inputObj){
         let spell5e = new Spell5e(inputObj.uid, inputObj.collectionId, inputObj.isCustom);
         inputObj && Object.assign(spell5e, inputObj);
         //spell5e._prepareLabels();
         return spell5e;
     }
+
     static async verifySystemData(hash){
         let existingData = CharacterBuilder.getEntityByUid("spell", hash);
         if(existingData == null){console.error("Could not find spell entity with hash", hash, CharacterBuilder.instance._data);}
@@ -1877,7 +1878,7 @@ class Actor5e {
     }
     get numPreparedSpells(){
         let count = 0;
-        for(let category of Object.entries(this.spellbook)){
+        for(let category of Object.values(this._getInventory("spell"))){
             if(!category.canPrepare){continue;}
             for(let sp of category.spells){
                 if(sp.isAlwaysPrepared){continue;}

@@ -824,6 +824,9 @@ select.chooseAlignment{background: #d3d1c5;}
 .c5e .tab[data-tab].flexcol.active, .tab[data-tab].flexrow.active{
     display: flex;
 }
+.c5e .spellbook-filters .spells_prepared {
+    flex: 0.2;
+}
 
 /* SPELL SLOTS */
 .spellSlotMarker {
