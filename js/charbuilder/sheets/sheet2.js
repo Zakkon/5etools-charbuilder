@@ -374,11 +374,12 @@ class InventoryElement {
             summary.slideUp(200, () => summary.remove());
             this._unsetExpanded(item.collectionId);
         } else {
-            const chatData = {description: //JSON.stringify(item)
-                item.system.description.value
-            };
+            //Get a description out of the item
+            const descrHTML = item.system.description?.html;
+            //const descr = item.system.description.value;
             console.log(item);
-            let template = new LoadTemplate(null, "parts/item-summary", chatData);
+            //We pass along the rendered html as 'description' to the template, which will render it using triple curly brackets
+            let template = new LoadTemplate(null, "parts/item-summary", {description: descrHTML});
             template.createAndCompile((innerHTML)=>{
                 const summary = $$`${innerHTML}`;
                 $(li).append(summary.hide());

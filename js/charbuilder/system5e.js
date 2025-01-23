@@ -411,25 +411,74 @@ class Entity5e {
             labels.uses = {max: val}; //Remember, just a label
         }
         this.labels = labels;
+        this.prepareRenderedDescription();
+    }
+    prepareRenderedDescription(){
         if(this.system.description){
-            let str = this.system.description;
+            let str = this.system.description?.value;
+
+            function createRefLink(tagType, tagValue){
+                function getSource(type, val){return "phb";}
+                function link(page, value, source, displayedText=null, redirect=true){
+                    if(!displayedText){displayedText=value;}
+                    value = encodeURIComponent(value);
+                    let hmtl = `<a href="${page}.html#${value.toLowerCase()}_${source}"
+                    data-vet-page="${page}.html" data-vet-source="${source.toUpperCase()}" data-vet-hash="${value.toLowerCase()}_${source}"
+                    ${redirect? `data-vet-is-allow-redirect="true"` : ""}
+                    onmouseover="Renderer.hover.pHandleLinkMouseOver(event, this)"
+                    onmouseleave="Renderer.hover.handleLinkMouseLeave(event, this)"
+                    onmousemove="Renderer.hover.handleLinkMouseMove(event, this)"
+                    onclick="Renderer.hover.handleLinkClick(event, this)"
+                    ondragstart="Renderer.hover.handleLinkDragStart(event, this)"
+                    ontouchstart="Renderer.hover.handleTouchStart(event, this)"
+                    >${displayedText}</a>`;
+                    return hmtl;
+                }
+                function linkFauxPage(page, value, source, redirect=true){
+                    value = encodeURIComponent(value);
+                    let html = `<span class="help help--hover"
+                    data-vet-page="${page}" data-vet-source="${source.toUpperCase()}" data-vet-hash="${value.toLowerCase()}_${source}"
+                    data-vet-is-faux-page="true" ${redirect? `data-vet-is-allow-redirect="true"` : ""}
+                    onmouseover="Renderer.hover.pHandleLinkMouseOver(event, this)"
+                    onmouseleave="Renderer.hover.handleLinkMouseLeave(event, this)"
+                    onmousemove="Renderer.hover.handleLinkMouseMove(event, this)"
+                    onclick="Renderer.hover.handleLinkClick(event, this)"
+                    ondragstart="Renderer.hover.handleLinkDragStart(event, this)"
+                    ontouchstart="Renderer.hover.handleTouchStart(event, this)"
+                    >${value}</span>`;
+                    return html;
+                }
+                switch(tagType){
+                    case "skill": return linkFauxPage("skill", tagValue, getSource(tagType, tagValue));
+                    case "language":return link("languages", tagValue, getSource(tagType, tagValue));
+                    case "item":return link("items", tagValue, getSource(tagType, tagValue));
+                    case "spell":return link("spells", tagValue, getSource(tagType, tagValue));
+                    case "condition":return link("conditionsdiseases", tagValue, getSource(tagType, tagValue));
+                    case "variantrule":
+                        let parts = tagValue.split("|"); //hashdata|source|displayedText
+                        return link("variantrules", parts[0], parts[1], parts[2], false);
+                    default: console.error(`Could not create help link for unrecognized type ${tagType}`); return null;
+                }
+            }
 
             function processTag(tagType, tagValue) {
-                return Renderer.get().render(`{@${tagType} ${tagValue.toTitleCase()}}`);
+                return createRefLink(tagType, tagValue);
+                //Renderer.get().render(`{@${tagType} ${tagValue.toTitleCase()}}`);
             }
             
-            function replaceTags(inputString) {
+            function replaceTags(inputString, item) {
                 // Regular expression to match tags like @language Druidic or @skill Perception
-                const tagRegex = /[{]?@(\w+)[\s$$]+(\w+)[$$}]?/g;
+                const tagRegex = /@([\w]*)\[([^\]]+)\]/g;
             
                 // Replace function that processes each match
                 return inputString.replace(tagRegex, (match, tagType, tagValue) => {
+                    console.log("Handling string", match, "in", item.name);
                     return processTag(tagType, tagValue);
                 });
             }
             
 
-            this.system.descriptionRendered = str;
+            if(str != null){this.system.description.html = replaceTags(str, this);}
         }
     }
     prepareActorDerivedData(actor, rollData){
