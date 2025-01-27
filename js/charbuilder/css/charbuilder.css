@@ -440,7 +440,19 @@ select.chooseAlignment{background: #d3d1c5;}
     background-color: #3f3737 !important;
 }
 .ve-night-mode .window-app .window-resizable-handle{background: rgb(43, 43, 43);}
-
+/* STARTING EQUIPMENT */
+.mancer-starting-equipment .input-starting-gold{
+    display: flex !important;
+    align-items:center !important;
+    flex: 0.4;
+    margin-left: 20px;
+}
+.mancer-starting-equipment .btn.reset-starting-gold{
+    display: flex !important;
+    align-items:center !important;
+    flex: 0.4;
+    margin-left: 20px;
+}
 /* CHARACTER SHEET */
 .c5e input[type="text"], .c5e input[type="number"], .c5e input[type="password"],
 .c5e input[type="date"], .c5e input[type="time"], .c5e input[type="search"]{

@@ -8842,11 +8842,15 @@ class ActorCharactermancerEquipment extends ActorCharactermancerBaseComponent {
             const primaryClass = this._parent.compClass.class_getPrimaryClass();
             const customizedBackground = this._parent.compBackground.getFeatureCustomizedBackground_({ isAllowStub: false });
             const startingEquipment = MiscUtil.copy(primaryClass?.startingEquipment || {});
+            startingEquipment.numChoicesClass = startingEquipment.defaultData?.length | 0;
+            startingEquipment.numChoicesBackground = 0;
             //Check if we should push more options to choose from by looking at the background
             if ((!primaryClass || primaryClass && !primaryClass.startingEquipment || primaryClass && primaryClass.startingEquipment.additionalFromBackground)
-            && customizedBackground?.startingEquipment?.length) {
+            && customizedBackground?.startingEquipment?.length){
                 startingEquipment.defaultData = startingEquipment.defaultData || [];
-                startingEquipment.defaultData.push(...MiscUtil.copy(customizedBackground.startingEquipment));
+                const bgChoices = MiscUtil.copy(customizedBackground.startingEquipment);
+                startingEquipment.defaultData.push(...bgChoices);
+                startingEquipment.numChoicesBackground = bgChoices?.length | 0;
             }
 
             //Let our components know what we're working with
@@ -9471,8 +9475,8 @@ Charactermancer_StartingEquipment.ComponentBase = class extends BaseComponent {
      * @returns {any}
      */
     _$getBtnRollStartingGold() {
-        const goldFormula = this._compCurrency.rollableExpressionGold.replaceAll("*", "x");
-        return $(`<button class="btn ve-btn-default btn-xs btn-5et">Roll Starting Gold (${goldFormula})</button>`).click(async()=>{
+        
+        return $(`<button class="btn ve-btn-default btn-xs btn-5et roll-starting-gold">Roll Starting Gold ()</button>`).click(async()=>{
             //Wait for a popup warning to return true. If it returns false, it means the user cancelled
             //if (!(await this._pIsIgnoreGoldWarning())){return;}
             console.error("Roll gold warning not implemented");
@@ -9549,7 +9553,7 @@ Charactermancer_StartingEquipment.ComponentBase = class extends BaseComponent {
         return $$`<div class="ve-flex-v-center">${$btnRoll}${$dispRollOrManual}${$btnManual}${$stgDispRolled}</div>`;
     }
 
-    _doBindRollableExpressionHooks({$dispRollOrManual, $btnRoll, $btnManual, $spcRollOrManual, $wrpRollOrManual}) {
+    _doBindRollableExpressionHooks({$dispRollOrManual, $btnRoll, $btnManual, $spcRollOrManual/* , $wrpRollOrManual */}) {
         const hkRollableExpressionGold = ()=>{
             $dispRollOrManual.toggleVe(this._compCurrency.rollableExpressionGold);
             $btnRoll.toggleVe(this._compCurrency.rollableExpressionGold).title(`Rolling ${this._compCurrency.rollableExpressionGold}`);
@@ -9558,7 +9562,7 @@ Charactermancer_StartingEquipment.ComponentBase = class extends BaseComponent {
 
             if ($spcRollOrManual)
                 $spcRollOrManual.toggleVe(!this._isPredefinedItemDatas && this._compCurrency.startingEquipment);
-            $wrpRollOrManual.toggleVe(this._compCurrency.startingEquipment);
+           /*  $wrpRollOrManual.toggleVe(this._compCurrency.startingEquipment); */
         };
         this._compCurrency.addHookStartingEquipment(hkRollableExpressionGold);
         this._compCurrency.addHookRollableExpressionGold(hkRollableExpressionGold);
@@ -9583,7 +9587,7 @@ Charactermancer_StartingEquipment.ComponentDefault = class extends Charactermanc
     }
 
     async pRender($wrpTab) {
-        const $wrpTabInner = $(`<div class="ve-flex-col w-100 h-100 min-h-0"></div>`).appendTo($wrpTab);
+        const $wrpTabInner = $(`<div class="ve-flex-col w-100 h-100 min-h-0 mancer-starting-equipment"></div>`).appendTo($wrpTab);
         this._render_standard($wrpTabInner);
         return $wrpTabInner;
     }
@@ -9594,10 +9598,8 @@ Charactermancer_StartingEquipment.ComponentDefault = class extends Charactermanc
         const $dispRollOrManual = $(`<i class="mx-1">\u2013 or \u2013</i>`);
         const $btnManual = this._$getBtnEnterStartingGold();
 
-        const $wrpRollOrManual = this._$getWrpRollOrManual({
-            $dispRollOrManual, $btnRoll, $btnManual
-        });
-
+        const $wrpRollOrManual = $$`<div class="ve-flex-v-center">(2014 rules only) Alternatively,&nbsp;${$btnRoll}&nbsp;or enter starting gold:</div>`;//this._$getWrpRollOrManual({$dispRollOrManual, $btnRoll, $btnManual});
+       
         const $btnApplyToSheet = $$`<button class="btn ve-btn-default btn-sx btn-5et" title="Add Starting Equipment">Add Starting Equipment</button>`;
         $btnApplyToSheet.click(async() => {
             //Add these items to an update pool, which will be applied to the actor later upon finalization
@@ -9607,18 +9609,17 @@ Charactermancer_StartingEquipment.ComponentDefault = class extends Charactermanc
             //TODO: add a checkmark next to the button, signaling that it was applied? Or maybe some green text at the top?
         });
 
-        this._doBindRollableExpressionHooks({
-            $dispRollOrManual, $btnRoll, $btnManual, $wrpRollOrManual
-        });
+        this._doBindRollableExpressionHooks({$dispRollOrManual, $btnRoll, $btnManual, $wrpRollOrManual});
 
-        const $rowSkipToShop = $$`<div class="w-100 py-1 ve-flex-v-center">
+
+        /* const $rowSkipToShop = $$`<div class="w-100 py-1 ve-flex-v-center">
             ${$btnApplyToSheet}
             <div class="mr-1">Alternatively, </div>
 			${$wrpRollOrManual}
 			<div class="ml-1">to skip to the shop.</div>
-		</div>`.appendTo($wrpTabStandard);
+		</div>`.appendTo($wrpTabStandard); */
 
-        const $btnResetStartingGold = $(`<button class="btn ve-btn-default btn-xs btn-5et">Reset Starting Gold</button>`).click(async()=>{
+        const $btnResetStartingGold = $(`<button class="btn reset-starting-gold ve-btn-default btn-xs btn-5et">Reset Starting Gold</button>`).click(async()=>{
             //Create a popup that asks the user if they are sure
             const isSure = await InputUiUtil.pGetUserBoolean({
                 title: `Are you sure?`,
@@ -9628,15 +9629,24 @@ Charactermancer_StartingEquipment.ComponentDefault = class extends Charactermanc
             this._compCurrency.cpRolled = null;
         }
         );
+
+        
+        const $wrpRollOrManual2 = $$`<div class="w-100 py-1 ve-flex-v-center">
+        <div class="ve-flex-v-center">(2014 rules only) Alternatively,&nbsp;${$btnRoll}&nbsp;or enter starting gold:</div>
+        <div class="input-starting-gold">
+            <input type="text" id="startingGold", value="0", data-dtype="Number"></input>
+        </div>
+        ${$btnResetStartingGold}
+    </div>`.appendTo($wrpTabStandard)
+        
         const $rowHasCpRolled = $$`<div class="w-100 py-1 ve-flex-v-center">
-			<div class="mr-2">You have rolled or entered a value for starting gold instead of using starting equipment.</div>
-			${$btnResetStartingGold}
-			<div class="ml-1">to use the equipment listed below.</div>
+			<div class="mr-2">You have rolled or entered a value for starting gold instead of using your class's starting equipment.</div>
 		</div>`.appendTo($wrpTabStandard);
 
         const hkCpRolled = ()=>{
-            $rowSkipToShop.toggleVe(this._compCurrency.cpRolled == null);
+            //$rowSkipToShop.toggleVe(this._compCurrency.cpRolled == null);
             $rowHasCpRolled.toggleVe(this._compCurrency.cpRolled != null);
+            $wrpTabStandard.find("#startingGold").val(((this._compCurrency.cpRolled | 0) * 0.01)); //Needs to be converted to gold
         };
 
         this._compCurrency.addHookCpRolled(hkCpRolled);
@@ -9651,12 +9661,18 @@ Charactermancer_StartingEquipment.ComponentDefault = class extends Charactermanc
         }
 
         //Now lets create some rows for the different choices we have
-        const $wrpRows = $$`<div class="ve-flex-col w-100 h-100 min-h-0 overflow-y-auto"></div>`.appendTo($wrpTabStandard);
+        const $wrpRows = $$`<div class="ve-flex-col w-100 min-h-0 overflow-y-auto starting-item-rows"></div>`.appendTo($wrpTabStandard);
 
+        //$wrpTabStandard.append($wrpRollOrManual2);
+        //const $wrpRowsBackground = $$`<div class="ve-flex-col w-100 h-100 min-h-0 overflow-y-auto starting-item-rows"></div>`.appendTo($wrpTabStandard);
         //Add a hook for when our starting equipment choices change
         const hkStartingEquipment = ()=>{
             //Get the data
             const defaultData = this._compCurrency.startingEquipment?.defaultData || [];
+            //Change text on the roll for gold button
+            const goldFormula = this._compCurrency.rollableExpressionGold.replaceAll("*", "x");
+            $wrpTabStandard.find(".btn.roll-starting-gold").text(`Roll Starting Gold (${goldFormula})`); //Needs to be converted to gold
+            console.error("START EQ",defaultData, this._compCurrency.startingEquipment );
 
             //Call the unhook functions to let them know we are dropping them
             this._fnsUnhook.forEach(fn=>fn());
@@ -9666,8 +9682,11 @@ Charactermancer_StartingEquipment.ComponentDefault = class extends Charactermanc
             //Clear the existing ui elements
             $wrpRows.empty();
 
+            const numClassChoices = this._compCurrency.startingEquipment?.numChoicesClass;
+            const numBackgroundChoices = this._compCurrency.startingEquipment?.numChoicesBackground;
+
             //Create a row for each of the group sections
-            const $rows = defaultData.map((group,ixGroup)=>{
+            const $rows = defaultData.map((group, ixGroup)=>{
                 const isSingleOption = Object.keys(group).length === 1;
                 const propGroup = `std__choice__${ixGroup}`;
                 this._state[propGroup] = 0;
@@ -9676,11 +9695,10 @@ Charactermancer_StartingEquipment.ComponentDefault = class extends Charactermanc
 
                 const $wrpsChoices = choices.map(([choiceName,choice],ixChoice)=>{
                     const children = [];
-                    choice.forEach((equi,ixEqui)=>{
+                    choice.forEach((equi, ixEqui)=>{
                         if (typeof equi === "string"){children.push(Renderer.get().render(`{@item ${equi}}`));}
                         else if (equi.item) {
                             const itemId = this.constructor._getItemIdWithDisplayName(equi.item, equi.displayName);
-
                             children.push(Renderer.get().render(`${equi.quantity ? `${equi.quantity}× ` : ""}{@item ${itemId}}${equi.containsValue ? ` containing ${this.constructor._getHumanReadableCoinage(equi.containsValue)}` : ""}`));
                         }
                         //If the choice is of an equipment type, things get complicated as we need to show several sub-choices
@@ -9792,7 +9810,24 @@ Charactermancer_StartingEquipment.ComponentDefault = class extends Charactermanc
                 return $$`<div class="ve-flex-col w-100 p-1 my-1 imp-cls__wrp-equi-group">${$wrpsChoices}</div>`;
             });
 
-            $rows.forEach($row=>$wrpRows.append($row));
+            for(let i = 0; i < $rows.length; ++i){
+                //If its time to start showing choices from class
+                if(i == 0 && numClassChoices > 0){$wrpRows.append($$`<h4>From Class:</h4>`);}
+                //If we are done with showing choices from class
+                else if(i==numClassChoices){
+                    //If we have background choices
+                    if(numBackgroundChoices > 0){$wrpRows.append($$`<h4>From Background:</h4>`);}
+                    
+                }
+                $wrpRows.append($rows[i]);
+                if(i+1 == numClassChoices){
+                    if(numClassChoices > 0){ //Change this to if we have a gold alternative from class
+                        
+                    }
+                }
+            }
+
+            //$rows.forEach($row=>$wrpRows.append($row));
 
             //If there are no rows available, just show a sad message
             if (!$rows.length) {
@@ -9829,9 +9864,7 @@ Charactermancer_StartingEquipment.ComponentDefault = class extends Charactermanc
                 this._state["defaultItemPulse"] = !this._state["defaultItemPulse"];
             }
         );
-        const $row2 = $$`<div class="w-100 py-1 ve-flex-v-center">
-			${$btnApplyStarterItems}
-		</div>`.appendTo($wrpRows);
+        const $row2 = $$`<div class="w-100 py-1 ve-flex-v-center">${$btnApplyStarterItems}</div>`.appendTo($wrpTabStandard);
 
         //Add a hook for when the amount of coins we get to use with starting equipment changes
         const hkSetCoinsFromDefault = ()=>{
