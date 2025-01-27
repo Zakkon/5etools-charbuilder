@@ -9279,8 +9279,7 @@ Charactermancer_StartingEquipment.Currency = class extends BaseComponent {
     }
 
     static _getRollableExpressionGold(startingEquipment) {
-        if (!startingEquipment?.goldAlternative)
-            return null;
+        if (!startingEquipment?.goldAlternative){return null;}
         const m = /{@dice ([^|]+)/.exec(startingEquipment.goldAlternative);
         if (m)
             return m[1].replace(/×/g, "*");
@@ -9472,7 +9471,8 @@ Charactermancer_StartingEquipment.ComponentBase = class extends BaseComponent {
      * @returns {any}
      */
     _$getBtnRollStartingGold() {
-        return $(`<button class="btn ve-btn-default btn-xs btn-5et">Roll Starting Gold</button>`).click(async()=>{
+        const goldFormula = this._compCurrency.rollableExpressionGold.replaceAll("*", "x");
+        return $(`<button class="btn ve-btn-default btn-xs btn-5et">Roll Starting Gold (${goldFormula})</button>`).click(async()=>{
             //Wait for a popup warning to return true. If it returns false, it means the user cancelled
             //if (!(await this._pIsIgnoreGoldWarning())){return;}
             console.error("Roll gold warning not implemented");
