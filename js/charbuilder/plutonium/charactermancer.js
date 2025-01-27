@@ -9320,6 +9320,12 @@ Charactermancer_StartingEquipment.Currency = class extends BaseComponent {
     set cpRolled(val) {
         this._state.cpRolled = val;
     }
+    get cpFromDefault() {
+        return this._state.cpFromDefault;
+    }
+    set cpFromDefault(val) {
+        this._state.cpFromDefault = val;
+    }
 
     get hasShownGoldWarning() {
         return this._state.hasShownGoldWarning;
@@ -9850,27 +9856,27 @@ Charactermancer_StartingEquipment.ComponentDefault = class extends Charactermanc
                 title: `Are you sure you wish to apply these items to the character sheet?`,
                 htmlDescription: ``,
             });
+            const actor = CharacterBuilder.instance._actor;
             if (!isSure){return;}
-                //Get form data
-                //Apply items to inventory
-                const compEquipDefault = CharacterBuilder.instance.compEquipment._compEquipmentStartingDefault;
-                const form = await compEquipDefault.pGetFormData();
-                console.log("Given items form", form);
-                //Get gold from the input field
-                const rolledGold = $wrpTabStandard.find("#startingGold").val() | 0;
-                const items = rolledGold == 0? form.data.equipmentItemEntries : []; //Dont add items if rolled gold > 0
-                for(let it of items){
-                    const itemUid = (it.item.name + "|" + it.item.source).toLowerCase();
-                    //Try to get existing item5e
-                    console.log("COLID", this.collectionId);
-                    let item5e = System5e.getEntityByCollectionId(this.collectionId);
-                    if(!item5e){item5e = new Item5e(itemUid, it.quantity, this.collectionId);}
-                    await item5e.importSystemData();
-                    System5e.addToInventory(CharacterBuilder.instance._actor, item5e);
-                }
-                this._state["defaultItemPulse"] = !this._state["defaultItemPulse"];
+            //Get form data
+            //Apply items to inventory
+            const compEquipDefault = CharacterBuilder.instance.compEquipment._compEquipmentStartingDefault;
+            const form = await compEquipDefault.pGetFormData(); //This form is missing gold given by backgrounds
+            //Get gold from the input field
+            const rolledGold = (this._compCurrency.cpRolled | 0) / 100;
+            const gainedGold = rolledGold == 0? (this._compCurrency.cpFromDefault | 0) / 100 : 0;
+            const items = rolledGold == 0? form.data.equipmentItemEntries : []; //Dont add items if rolled gold > 0
+            for(let it of items){
+                const itemUid = (encodeURIComponent(it.item.name.toLowerCase()) + "_" + it.item.source).toLowerCase();
+                await Item5e.verifySystemData(itemUid);
+                console.log("Adding", itemUid);
+                let item5e = new Item5e(itemUid, it.quantity, this.collectionId);
+                System5e.addToInventory(actor, item5e);
             }
-        );
+            //Add gold rolled to inventory
+            CharacterBuilder.instance._actor.update({"system.currency.gp": rolledGold + gainedGold});
+            this._state["defaultItemPulse"] = !this._state["defaultItemPulse"];
+        });
         const $row2 = $$`<div class="w-100 py-1 ve-flex-v-center">${$btnApplyStarterItems}</div>`.appendTo($wrpTabStandard);
 
         //Add a hook for when the amount of coins we get to use with starting equipment changes
@@ -10002,8 +10008,7 @@ Charactermancer_StartingEquipment.ComponentDefault = class extends Charactermanc
     }
 
     async _pGetItemDatasDefault() {
-        if (this._compCurrency.cpRolled)
-            return [];
+        if (this._compCurrency.cpRolled){return [];}
 
         const outUidMetas = [];
         const outPreloaded = [];
@@ -10017,8 +10022,7 @@ Charactermancer_StartingEquipment.ComponentDefault = class extends Charactermanc
                     itemUid,
                     quantity: quantity
                 });
-        }
-        ;
+        };
 
         const fnEqui = (ixGroup,ixChoice,equi)=>{
             if (typeof equi === "string")
@@ -10045,8 +10049,7 @@ Charactermancer_StartingEquipment.ComponentDefault = class extends Charactermanc
                     quantity: equi.quantity || 1,
                 });
             }
-        }
-        ;
+        };
 
         this._iterChosenStartingEquipment(fnEqui);
 

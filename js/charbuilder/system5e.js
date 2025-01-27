@@ -561,6 +561,7 @@ class Item5e extends Entity5e{
         return true;
     }
     _tryCloneOriginal(original){
+        if(original == null){ console.error("Could not clone original item as it was null"); return;}
         super._tryCloneOriginal(original);
         this.packContents = original.packContents;
     }
@@ -575,8 +576,8 @@ class Item5e extends Entity5e{
         else if(ent.system.poison || ["consumable"].includes(ent.system.type.value)){subtype = "consumable";}
         //Hardcoding in a way to put common clothes/fine clothes/adventurer's clothes into the equipment category, not loot
         else if(ent.system.type.value == "gear"){
-            const n = entity.name.toLowerCase();
-            const src = entity.source.toLowerCase();
+            const n = ent.name.toLowerCase();
+            const src = ent.source.toLowerCase();
             const equipment_strings = [" clothes", "clothing", "robe", "suit", "hat"];
             const consumable_strings = ["torch", "lamp", "lantern", "flask", "oil", "vial", "waterskin", "pitcher"];
             const tool_strings = ["'s kit"];
