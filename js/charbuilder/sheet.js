@@ -2370,6 +2370,14 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent{
       return spellsByLevel_innate; //{innate:spellsByLevel_innate}
       
     }
+    /**
+     * Calculates number of spell slots the class and subclass (if present) grants for the specified spell level
+     * @param {number} spellLevel 1-9
+     * @param {number} classLevel 1-20
+     * @param {any} classData the data of the class
+     * @param {any} subclassData the data of the subclass. Can be null.
+     * @returns {number}
+     */
     static getSpellSlotsAtLvl(spellLevel, classLevel, classData, subclassData){
       
       let total = 0;

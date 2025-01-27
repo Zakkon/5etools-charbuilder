@@ -311,6 +311,10 @@ class Entity5e {
             }
         });
     }
+    /**
+     * Copies the name, source, system, and entries properties from the object 'original'
+     * @param {object} original
+     */
     _tryCloneOriginal(original){
         if(original == null){return;}
         this.name = original.name;

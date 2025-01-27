@@ -1099,8 +1099,8 @@ class CharacterBuilder {
   static async parseMancerChoiceData(actor, choiceData){
     console.log("ChoiceData", choiceData);
     //System5e.applyClassChoiceData(actor, choiceData);
-    const addFeatureItem = async(type, hash, dependency, data={}) => {
-      return await SheetApplier.addFeatureItem(actor, type, hash, dependency, data);
+    const addFeatureItem = async(type, hash, dependency, data={}, clazz, subclass) => {
+      return await SheetApplier.addFeatureItem(actor, type, hash, dependency, data, clazz, subclass);
     }
     const addSpellItem = async(actor, hash, preparationMode, isPrepared, dependencyPath)=>{
       return await SheetApplier.addSpellItem(actor, hash, preparationMode, isPrepared, dependencyPath);
@@ -1380,12 +1380,9 @@ class CharacterBuilder {
           //SheetApplier.handleSubclassAdditionalSpells(sclsData, actor, cls.targetLevel);
           
           //Try to import the subclass itself
-          let subclassItem = await addFeatureItem("subclass", cls.subclassUid, MancerDependencyLink.fromClass(cls.uid),
-            {className: clsData.name, classSource: clsData.source,
-              subclassName: sclsData.name, subclassSource: sclsData.source});
+          const subclassItem = await addFeatureItem("subclass", cls.subclassUid, MancerDependencyLink.fromClass(cls.uid), {}, clsData, sclsData);
 
-          
-
+          //Recalculate spell slots (taking subclass into account)
           for(let i = 1; i <= 9; ++i){
             //TODO: make this be combinable with other classes
             let slots = ActorCharactermancerSheet.getSpellSlotsAtLvl(i, cls.targetLevel, clsData, sclsData);
@@ -1419,6 +1416,7 @@ class CharacterBuilder {
           if(feature.type == "subclassFeature" && (feature.isRequiredOption === false
             && feature.isRequiredOption !== null) && !SETTINGS.SUBCLASS_IMPORT_LOADEDS){continue;}
 
+          //Standard practice is for subclasses to have a feature named after itself. We don't want to include those.
           const isCoreSubclassFeature = feature.type == "subclassFeature" && feature.entity.name == subclassName;
           if(!isCoreSubclassFeature){
             //If this is the core subclass feature, we should just avoid importing the feature item to the sheet. But we can still do the rest
@@ -1427,10 +1425,8 @@ class CharacterBuilder {
             if(existing.length > 0 && REPLACE_EXISTING_ITEMS){removeItemsNow(existing);}
             else if(existing.length > 0 && !ADD_WHEN_EXISTING_ITEMS){add = false;}
             if(add){
-              let dependency = feature.type == "subclassFeature"? MancerDependencyLink.fromSubclass(cls.subclassUid) : MancerDependencyLink.fromClass(cls.uid);
-              const sheetItem = await addFeatureItem(feature.type, feature.hash, dependency,
-                {className:clsData.name.toLowerCase(), classSource:clsData.source.toLowerCase(),
-                  subclassName:sclsData?.name.toLowerCase(), subclassSource:sclsData?.source.toLowerCase()});
+              const dependency = feature.type == "subclassFeature"? MancerDependencyLink.fromSubclass(cls.subclassUid) : MancerDependencyLink.fromClass(cls.uid);
+              const sheetItem = await addFeatureItem(feature.type, feature.hash, dependency, {}, clsData, sclsData);
               addedFeatureHashes.push(feature.hash);
             }
           }

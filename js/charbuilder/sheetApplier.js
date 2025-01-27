@@ -16,14 +16,18 @@ class SheetApplier {
     /**
      * Adds a feature item to the character sheet.
      * @param {Actor5e} actor
-     * @param {string} type
+     * @param {string} type optionalfeature|feat|classFeature|subclassFeature
      * @param {string} hash
      * @param {string} dependency not used at the moment
      * @param {object} data={} contains additional data such as className, classSource, subclassName, subclassSource
+     * @param {{name:string, source:string}} clazz if specified, data is filled with name and source
+     * @param {{name:string, source:string}} subclass if specified, data is filled with name and source
      * @returns {Feature5e}
      */
-    static async addFeatureItem(actor, type, hash, dependency, data={}) {
-        //f.type should be either "optionalfeature"(lowercase spelling), "feat", "classFeature", or "subclassFeature"
+    static async addFeatureItem(actor, type, hash, dependency, data={}, clazz, subclass) {
+        //type should be either "optionalfeature"(lowercase spelling), "feat", "classFeature", or "subclassFeature"
+        if(clazz){data.className = clazz.name.toLowerCase(); data.classSource = clazz.source.toLowerCase();}
+        if(subclass){data.subclassName = subclass.name.toLowerCase(); data.subclassSource = subclass.source.toLowerCase();}
         switch(type){
           case "optionalfeature":
             await OptionalFeature5e.verifySystemData(hash, actor);
@@ -127,7 +131,7 @@ class SheetApplier {
         if(typeof hash == "object"){ hash = UrlUtil.URL_TO_HASH_GENERIC(hash).toLowerCase(); }
         else{hash = hash.replace("|", "_");}
         if(hash.includes(" ") || hash.includes("/")){hash = encodeURIComponent(hash).toLowerCase();}
-        let success = await Item5e.verifySystemData(hash);
+        let success = await Entity5e.verifySystemData("item", hash);
         if(!success){return;}
         let item = new Item5e(hash, quantity, null);
         if(item.packContents != null && item.packContents.length > 0)
