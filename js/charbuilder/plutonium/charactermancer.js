@@ -9600,14 +9600,14 @@ Charactermancer_StartingEquipment.ComponentDefault = class extends Charactermanc
 
         const $wrpRollOrManual = $$`<div class="ve-flex-v-center">(2014 rules only) Alternatively,&nbsp;${$btnRoll}&nbsp;or enter starting gold:</div>`;//this._$getWrpRollOrManual({$dispRollOrManual, $btnRoll, $btnManual});
        
-        const $btnApplyToSheet = $$`<button class="btn ve-btn-default btn-sx btn-5et" title="Add Starting Equipment">Add Starting Equipment</button>`;
+        /* const $btnApplyToSheet = $$`<button class="btn ve-btn-default btn-sx btn-5et" title="Add Starting Equipment">Add Starting Equipment</button>`;
         $btnApplyToSheet.click(async() => {
             //Add these items to an update pool, which will be applied to the actor later upon finalization
             const itemDatasDefault = await this._pGetItemDatasDefault();
             if (itemDatasDefault) { this._appliedChosenStarterItems.push(...itemDatasDefault); }
             //TODO: Reset choices
             //TODO: add a checkmark next to the button, signaling that it was applied? Or maybe some green text at the top?
-        });
+        }); */
 
         this._doBindRollableExpressionHooks({$dispRollOrManual, $btnRoll, $btnManual, $wrpRollOrManual});
 
@@ -9630,11 +9630,15 @@ Charactermancer_StartingEquipment.ComponentDefault = class extends Charactermanc
         }
         );
 
-        
+        const rolledGoldManualInput = $$`<input type="text" id="startingGold", value="0", data-dtype="Number"></input>`.change(async(evt)=>{
+            this._compCurrency.cpRolled = evt.target.value <= 0? null : evt.target.value * 100;
+            hkCpRolled();
+            hkStartingEquipment();
+        });
         const $wrpRollOrManual2 = $$`<div class="w-100 py-1 ve-flex-v-center">
         <div class="ve-flex-v-center">(2014 rules only) Alternatively,&nbsp;${$btnRoll}&nbsp;or enter starting gold:</div>
         <div class="input-starting-gold">
-            <input type="text" id="startingGold", value="0", data-dtype="Number"></input>
+           ${rolledGoldManualInput} 
         </div>
         ${$btnResetStartingGold}
     </div>`.appendTo($wrpTabStandard)
@@ -9840,10 +9844,10 @@ Charactermancer_StartingEquipment.ComponentDefault = class extends Charactermanc
         hkStartingEquipment();
 
         //Create a button that applies chosen items to inventory
-        const $btnApplyStarterItems = $(`<button class="btn ve-btn-default btn-xs btn-5et">Add Starting Equipment</button>`).click(async()=>{
+        const $btnApplyStarterItems = $(`<button class="btn ve-btn-default btn-xs btn-5et">Add Starting Equipment / Gold</button>`).click(async()=>{
             //Create a popup that asks the user if they are sure
             const isSure = await InputUiUtil.pGetUserBoolean({
-                title: `Are you sure?`,
+                title: `Are you sure you wish to apply these items to the character sheet?`,
                 htmlDescription: ``,
             });
             if (!isSure){return;}
@@ -9851,7 +9855,10 @@ Charactermancer_StartingEquipment.ComponentDefault = class extends Charactermanc
                 //Apply items to inventory
                 const compEquipDefault = CharacterBuilder.instance.compEquipment._compEquipmentStartingDefault;
                 const form = await compEquipDefault.pGetFormData();
-                const items = form.data.equipmentItemEntries;
+                console.log("Given items form", form);
+                //Get gold from the input field
+                const rolledGold = $wrpTabStandard.find("#startingGold").val() | 0;
+                const items = rolledGold == 0? form.data.equipmentItemEntries : []; //Dont add items if rolled gold > 0
                 for(let it of items){
                     const itemUid = (it.item.name + "|" + it.item.source).toLowerCase();
                     //Try to get existing item5e
