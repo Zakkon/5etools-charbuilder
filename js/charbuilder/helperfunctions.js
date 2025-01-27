@@ -165,6 +165,29 @@ class HelperFunctions{
     static setLocalizationLanguage(jsonObj){HelperFunctions._lang = jsonObj;}
     static localize(stringId){
         if(!HelperFunctions._lang){return stringId;}
+
+        const recursiveSearch = (start, _path) => {
+            if(start == null){return null;}
+            const properties = _path.split('.');
+            let current = start;
+            for (let i = 0; i < properties.length; i++) {
+                //If this is the final word
+                if(i+1>=properties.length){return current[properties[i]];}
+                if(current[properties[i]] != null){
+                    current = current[properties[i]];
+                }
+            }
+            return null; //failed
+        }
+
+        let subwords = stringId.split(".");
+        if(subwords.length > 2){
+            let firstPath = `${subwords[0]}.${subwords[1]}`;
+            let subPath = stringId.substring(`${firstPath}.`.length);
+            let target = recursiveSearch(HelperFunctions._lang[firstPath], subPath);
+            if(target != null && typeof target === "string"){return target;}
+        }
+
         let v = HelperFunctions._lang[stringId];
         //let v = HelperFunctions.getProperty(langJson, stringId);
         if ( typeof v === "string" ) return v;
