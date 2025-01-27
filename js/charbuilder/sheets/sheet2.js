@@ -288,10 +288,6 @@ class InventoryElement {
         this.actor = actor;
     }
 
-    async getItem(collectionId){
-        return this.actor.getItemByCollectionId(collectionId);
-    }
-
     activateListeners(rootDiv){
         //We have to delete the previous click listener, if it exists
         rootDiv.find(".item-action[data-action]").off("click").on("click", event => {
@@ -303,7 +299,7 @@ class InventoryElement {
         event.stopPropagation();
         event.preventDefault();
         const { itemId } = target.closest("[data-item-id]")?.dataset ?? {};
-        const item = itemId != null? await this.getItem(itemId) : null; //item-id is the collectionId, unique per item in the inventory
+        const item = itemId != null? await this.actor.getItemByCollectionId(itemId) : null; //item-id is the collectionId, unique per item in the inventory
         switch(action){
             case "create":
                 //TODO: Make sure we are not a container also
@@ -313,7 +309,7 @@ class InventoryElement {
                 return;
             case "edit":
                 //Get the ui object for the entire item
-                C5e_Inventory.tryOpenEditWindow(this.actor, item, item.uid, item.entityType, item.collectionId);
+                C5e_Inventory.openEditWindow(this.actor, item, item.uid, item.entityType, item.collectionId);
                 return;
             case "duplicate":
                 //Get the ui object for the entire item

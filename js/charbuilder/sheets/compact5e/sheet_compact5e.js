@@ -59,12 +59,20 @@ class C5e_Inventory{
 
     //#region Editing
     static _editedCollectionUids = [];
-    static tryOpenEditWindow(actor, item=null, itemUid, type, collectionId){
-        if(C5e_Inventory._editedCollectionUids.includes(collectionId)){return;}
+    /**
+     * Opens an edit window for the specified entity (must be in the actor's inventory)
+     * @param {Actor5e} actor
+     * @param {Entity5e} entity=null
+     * @param {string} uid uid of the entity. Found in entity.uid
+     * @param {string} type Entity type. Found in entity.entityType
+     * @param {string} collectionId unique item collection id for this specific entity, given when added to the inventory of the actor. Found in entity.collectionId
+     */
+    static openEditWindow(actor, entity=null, uid, type, collectionId){
+        if(C5e_Inventory._editedCollectionUids.includes(collectionId)){ return;} //We are already editing this item!
         C5e_Inventory._editedCollectionUids.push(collectionId);
-        if(!item){item = actor.getItemByCollectionId(collectionId);}
-        let window = new ItemSheet5e(actor, itemUid, item, type, collectionId);
-        window.render(item);
+        if(!entity){entity = actor.getItemByCollectionId(collectionId);}
+        let window = new EntitySheet5e(actor, uid, entity, type, collectionId);
+        window.render();
     }
     static closeEditWindow(window, collectionId){
         if(!C5e_Inventory._editedCollectionUids.includes(collectionId)){return;}
@@ -312,7 +320,7 @@ class C5e_InventoryItem {
                 this.element.remove();
             }
             else if(action == "itemEdit"){
-                C5e_Inventory.tryOpenEditWindow(this.itemUid, this.type, this.collectionId);
+                C5e_Inventory.openEditWindow(this.itemUid, this.type, this.collectionId);
             }
             else if(action == "equip"){
                 $(gp).removeClass("equipped");
@@ -422,12 +430,12 @@ class BaseSheet {
     //#endregion
 }
 
-class ItemSheet5e extends BaseSheet {
+class EntitySheet5e extends BaseSheet {
     collectionId;
     itemUid;
     type;
     element;
-    _item;
+    _entity;
     editable = true;
     contentElement;
     tab_details;
@@ -441,9 +449,13 @@ class ItemSheet5e extends BaseSheet {
     startW;
     startH;
     itemType; //Used to know what category of item this is
-    get item(){return this._item;}
-    set item(value){this._item = value;}
-    get system(){return this._item.system;}
+    /**
+     * The entity being edited
+     * @returns {Entity5e}
+     */
+    get entity(){return this._entity;}
+    set entity(value){this._entity = value;}
+    get system(){return this._entity.system;}
     get config(){return CONFIG.DND5E;}
     get isCostlessAction(){return this.system?.activation?.type in DND5E.staticAbilityActivationTypes;}
     get isCrewed(){return this.system.activation?.type === "crew";}
@@ -452,20 +464,26 @@ class ItemSheet5e extends BaseSheet {
     get hasScalarRange(){return this.system.range?.units in CONFIG.DND5E.movementUnits;}
     get hasScalarDuration(){return this.system.duration?.units in CONFIG.DND5E.scalarTimePeriods;}
     get hasScalarTarget(){return this.system.target?.template?.type || ![null, "", "self"].includes(this.system.target?.affects?.type);}
-    get labels(){return this.item.labels;} //Lazy shortcut before we move all labels rendering code to this class
-    constructor(actor, itemUid, item, type, collectionId){
+    get labels(){return this.entity.labels;} //Lazy shortcut before we move all labels rendering code to this class
+    /**
+     * @param {Actor5e} actor
+     * @param {string} uid
+     * @param {Entity5e} item
+     * @param {string} type
+     * @param {string} collectionId
+     * @returns {EntitySheet5e}
+     */
+    constructor(actor, uid, item, type, collectionId){
         super(item);
         this.actor = actor;
         this.collectionId = collectionId;
-        this.itemUid = itemUid;
+        this.itemUid = uid;
         this.type = type;
         this.activeTab = "details";
-        this._item = item;
+        this._entity = item;
         if(type == "item"){this.itemType = this.system.type.value;}
         this.boundUpdateFunc = this._onItemUpdate.bind(this);
         this.user = {isGM:true};
-
-        
 
         System5e.addHookBase("item_update", this.boundUpdateFunc);
     }
@@ -473,9 +491,11 @@ class ItemSheet5e extends BaseSheet {
         this._renderUpdate();
     }
 
-    render(force){
-        const entity = this.item;
-        console.log("to edit: ", entity);
+    /**
+     * Renders the edit window on screen
+     */
+    render(){
+        console.log("to edit: ", this.entity);
         const windowHeader = this.windowHeader();
         this.contentElement = $$`<div></div>`;
         let window_content = $$`<section class="window-content">${this.contentElement}</section>`;
@@ -484,16 +504,14 @@ class ItemSheet5e extends BaseSheet {
         this.element = window;
         $("body").append(this.element);
 
-        
-
         let templateName = this.type;
         switch(this.type){
             case "feature":
                 templateName = "feat";
-                if(this.item.featureType == "class"){templateName = "class";}
-                else if(this.item.featureType == "subclass"){templateName = "subclass";}
-                else if(this.item.featureType == "race"){templateName = "race";}
-                else if(this.item.featureType == "background"){templateName = "background";}
+                if(this.entity.featureType == "class"){templateName = "class";}
+                else if(this.entity.featureType == "subclass"){templateName = "subclass";}
+                else if(this.entity.featureType == "race"){templateName = "race";}
+                else if(this.entity.featureType == "background"){templateName = "background";}
                 break;
             case "item":
                 templateName = this.itemType;
@@ -510,13 +528,13 @@ class ItemSheet5e extends BaseSheet {
         let contentTemplate = new LoadTemplate(this.contentElement, "parts/edit/" + this.templateName, this); //Important to set this sheet, not entity, as the context
 
         const enrichmentOptions = {
-            relativeTo: this.item, //rollData: this.rollData
+            relativeTo: this.entity, //rollData: this.rollData
         }
         /* TextEditor.enrichHTML(item.system.description?.value ?? "", enrichmentOptions).then(result => {
             this.enriched = {description: result};
         }) */
         this.enriched = {
-            description: TextEditor.enrichHTML(this.item.system.description?.value ?? "", enrichmentOptions),
+            description: TextEditor.enrichHTML(this.entity.system.description?.value ?? "", enrichmentOptions),
         }
 
         contentTemplate.createAndCompile((innerHTML)=>{
@@ -619,12 +637,14 @@ class ItemSheet5e extends BaseSheet {
 
         //Input
         for(let el of html.find("input")){
-            //Make sure it has a "name" attribute
+            //Make sure the element has a "name" attribute. This is needed to know what prop to send the value to
             if(!el.name){continue;}
             $(el).on("change", (e) => {
                 console.log("setprop", el.name, e.target.value);
                 this.setProp(el.name, e.target.value);
             });
+            //Setting the name manually seems neccesary due to some strange bug
+            if(el.name == "name"){el.value = this.entity.name;}
         }
         //Select
         for(let el of html.find("select")){
@@ -642,24 +662,20 @@ class ItemSheet5e extends BaseSheet {
         });
     }
 
-    
-
+    /**
+     * Sets the prop of the entity, then fires item update, then fires render update
+     * @param {string} prop example: "system.activation.type"
+     * @param {string} value If "none", set value to null
+     */
     setProp(prop, value){
         //Set the value to the item's override
-        let entity = this.item;//System5e.getEntityByCollectionId(this.collectionId);
+        let entity = this.entity;
         if(typeof(value) == "string" && (value).toLowerCase() === "none"){value = null;}
         entity.setProp(prop, value);
         //Fire a hook to alert other UI that this item has changed
         System5e.hkItemUpdated(this.collectionId);
         //Update this UI and re-render things
         this._renderUpdate();
-    }
-    
-    
-    getItemByID(itemUid){
-        const itemDatas = CharacterBuilder.instance._data.item;
-        const foundItem = ActorCharactermancerEquipment.findItemByUID(itemUid, itemDatas);
-        return foundItem;
     }
 
     /**
@@ -683,14 +699,14 @@ class ItemSheet5e extends BaseSheet {
 
         // Handle Damage array
         const damage = formData.system?.damage;
-        if (damage && !HelperFunctions.getProperty(this.item.overrides, "system.damage.parts")) {
+        if (damage && !HelperFunctions.getProperty(this.entity.overrides, "system.damage.parts")) {
         damage.parts = Object.values(damage?.parts || {}).map(d => [d[0] || "", d[1] || ""]);
         }
 
         // Handle properties
         if (HelperFunctions.hasProperty(formData, "system.properties")) {
         const keys = new Set(Object.keys(formData.system.properties));
-        const preserve = new Set(this.item._source.system.properties ?? []).difference(keys);
+        const preserve = new Set(this.entity._source.system.properties ?? []).difference(keys);
         formData.system.properties = [...filteredKeys(formData.system.properties), ...preserve];
         }
 
@@ -699,7 +715,7 @@ class ItemSheet5e extends BaseSheet {
         if ( uses?.max ) {
         const maxRoll = new Roll(uses.max);
         if ( !maxRoll.isDeterministic ) {
-            uses.max = this.item._source.system.uses.max;
+            uses.max = this.entity._source.system.uses.max;
             this.form.querySelector("input[name='system.uses.max']").value = uses.max;
             ui.notifications.error(game.i18n.format("DND5E.FormulaCannotContainDiceError", {
             name: game.i18n.localize("DND5E.LimitedUses")
@@ -713,7 +729,7 @@ class ItemSheet5e extends BaseSheet {
         if ( duration?.value ) {
         const durationRoll = new Roll(duration.value);
         if ( !durationRoll.isDeterministic ) {
-            duration.value = this.item._source.system.duration.value;
+            duration.value = this.entity._source.system.duration.value;
             this.form.querySelector("input[name='system.duration.value']").value = duration.value;
             ui.notifications.error(game.i18n.format("DND5E.FormulaCannotContainDiceError", {
             name: game.i18n.localize("DND5E.Duration")
@@ -724,7 +740,7 @@ class ItemSheet5e extends BaseSheet {
 
         // Check class identifier
         if ( formData.system?.identifier && !dnd5e.utils.validators.isValidIdentifier(formData.system.identifier) ) {
-        formData.system.identifier = this.item._source.system.identifier;
+        formData.system.identifier = this.entity._source.system.identifier;
         this.form.querySelector("input[name='system.identifier']").value = formData.system.identifier;
         ui.notifications.error("DND5E.IdentifierError", {localize: true});
         return null;
@@ -747,17 +763,17 @@ class ItemSheet5e extends BaseSheet {
     // Add new damage component
     if (a.classList.contains("add-damage")) {
       await this._onSubmit(event);  // Submit any unsaved changes
-      const damage = this.item.system.damage ?? {parts:[]}; //Create parts if they don't exist yet
-      return this.item.update({"system.damage.parts": damage.parts.concat([["", ""]])});
+      const damage = this.entity.system.damage ?? {parts:[]}; //Create parts if they don't exist yet
+      return this.entity.update({"system.damage.parts": damage.parts.concat([["", ""]])});
     }
 
     // Remove a damage component
     if (a.classList.contains("delete-damage")) {
       await this._onSubmit(event);  // Submit any unsaved changes
       const li = a.closest(".damage-part");
-      const damage = HelperFunctions.deepClone(this.item.system.damage);
+      const damage = HelperFunctions.deepClone(this.entity.system.damage);
       damage.parts.splice(Number(li.dataset.damagePart), 1);
-      return this.item.update({"system.damage.parts": damage.parts});
+      return this.entity.update({"system.damage.parts": damage.parts});
     }
   }
 
@@ -820,8 +836,14 @@ class ItemSheet5e extends BaseSheet {
     if (hasButton){button.onclick = activate;}
     else {activate();}
   }
+  /**
+   * Creates a text editor instance, specified by a string name
+   * @param {string} name
+   * @param {object} options={}
+   * @param {string} initialContent=""
+   * @returns {EditorInstance}
+   */
   async activateEditor(name, options={}, initialContent="") {
-
     const editor = this.editors[name];
     if ( !editor ) throw new Error(`${name} is not a registered editor name!`);
     options = HelperFunctions.mergeObject(editor.options, options);
@@ -836,9 +858,10 @@ class ItemSheet5e extends BaseSheet {
     //Configure extensions to the editor
     if(options.engine === "pell"){
         instance.onSave = (html) => {
-            let update = {}; update[name] = html;
-            console.log("Updating item", update);
-            this.item.update(update);
+            let update = {}; update[name] = html; //Usually "system.description.value"
+            this.entity.update(update);
+            //If description was changed, make item also create a rendered version of the text (with hotlinks)
+            if(name == "system.description.value"){this.entity.prepareRenderedDescription();}
             this.saveEditor(name, {remove: true});
             this.editingDescriptionTarget = null;
         }
