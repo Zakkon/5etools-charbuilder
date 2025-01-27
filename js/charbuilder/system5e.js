@@ -375,6 +375,10 @@ class Entity5e {
         
         return override != null? override : recursiveSearch(obj, path);
     }
+    /**
+     * Updates properties of this entity with the properties provided in data, then fires entity update hook
+     * @param {object} data example: {name: "MyName", source:"MySource"}
+     */
     update(data){
         for(let [key, value] of Object.entries(data)){
             this.setProp(key, value);
@@ -453,7 +457,9 @@ class Entity5e {
                     case "language":return link("languages", tagValue, getSource(tagType, tagValue));
                     case "item":return link("items", tagValue, getSource(tagType, tagValue));
                     case "spell":return link("spells", tagValue, getSource(tagType, tagValue));
-                    case "condition":return link("conditionsdiseases", tagValue, getSource(tagType, tagValue));
+                    case "status":
+                    case "disease":
+                    case "condition": return link("conditionsdiseases", tagValue, getSource(tagType, tagValue));
                     case "variantrule":
                         let parts = tagValue.split("|"); //hashdata|source|displayedText
                         return link("variantrules", parts[0], parts[1], parts[2], false);
@@ -476,7 +482,6 @@ class Entity5e {
                     return processTag(tagType, tagValue);
                 });
             }
-            
 
             if(str != null){this.system.description.html = replaceTags(str, this);}
         }
@@ -1011,8 +1016,10 @@ class Spell5e extends Entity5e{
         if(!this.isCustom){this._tryCloneOriginal(CharacterBuilder.getSpellByUid(this.uid));}
 
         System5e.addHookBase("item_update", (p, collectionId) => {
-            console.log("spell update hook fired");
-            this._prepareLabels();
+            if(collectionId == this.collectionId){
+                console.log("spell update hook fired");
+                this._prepareLabels();
+            }
         });
         if(this.system != null){this._prepareLabels();}
 
@@ -1500,6 +1507,12 @@ class Actor5e {
         //Search spells
         for(let section in this.spellbook){ func(this.spellbook[section].spells);}
     }
+    /**
+     * Looks through item, feature, and spell inventories for an entity with the specified collectionid
+     * @param {string} collectionId
+     * @param {boolean} errorIfNotFound=false
+     * @returns {Entity5e}
+     */
     getItemByCollectionId(collectionId, errorIfNotFound=false){
         let matches = [];
         const runMatching = (searchIn) => {
