@@ -19,6 +19,8 @@
         </select>
         <span>DC {{system.attributes.spelldc}}</span>
     </div>
+    
+    <div class="spells_prepared">Spells Prepared: {{numPreparedSpells}}/{{numPreparedSpellsMax}}</div>
 
     <ul class="filter-list flexrow" data-filter="spellbook">
         <li class="filter-item" data-filter="action">Action</li>
@@ -142,5 +144,5 @@
     {{/if}}
   {{/each}}
   </ol>
-  <div>Spells Prepared: {{numPreparedSpells}}/{{numPreparedSpellsMax}}</div>
+  
 </{{elements.inventory}}>

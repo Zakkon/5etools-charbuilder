@@ -402,6 +402,7 @@ class SETTINGS{
     static SUBCLASS_IMPORT_LOADEDS = true;
     static PLUT_IMPORT_ADDITIONALSPELLS_TO_ACTOR = false;
     static SPELLS_TAB_ACCESSED_FROM_SPELLBOOK = false;
+    static PLUTONIUM_RENDER_IMPORT_PLUGINS = false; //This is actually handled in config.js, search "enrichersAutoConvert"
 }
 class CharacterBuilder {
     tabButtonParent;

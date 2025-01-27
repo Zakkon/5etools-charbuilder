@@ -379,6 +379,10 @@ class Entity5e {
         
         return override != null? override : recursiveSearch(obj, path);
     }
+    /**
+     * Updates properties of this entity with the properties provided in data, then fires entity update hook
+     * @param {object} data example: {name: "MyName", source:"MySource"}
+     */
     update(data){
         for(let [key, value] of Object.entries(data)){
             this.setProp(key, value);
@@ -415,6 +419,76 @@ class Entity5e {
             labels.uses = {max: val}; //Remember, just a label
         }
         this.labels = labels;
+        this.prepareRenderedDescription();
+    }
+    prepareRenderedDescription(){
+        if(this.system.description){
+            let str = this.system.description?.value;
+
+            function createRefLink(tagType, tagValue){
+                function getSource(type, val){return "phb";}
+                function link(page, value, source, displayedText=null, redirect=true){
+                    if(!displayedText){displayedText=value;}
+                    value = encodeURIComponent(value);
+                    let hmtl = `<a href="${page}.html#${value.toLowerCase()}_${source}"
+                    data-vet-page="${page}.html" data-vet-source="${source.toUpperCase()}" data-vet-hash="${value.toLowerCase()}_${source}"
+                    ${redirect? `data-vet-is-allow-redirect="true"` : ""}
+                    onmouseover="Renderer.hover.pHandleLinkMouseOver(event, this)"
+                    onmouseleave="Renderer.hover.handleLinkMouseLeave(event, this)"
+                    onmousemove="Renderer.hover.handleLinkMouseMove(event, this)"
+                    onclick="Renderer.hover.handleLinkClick(event, this)"
+                    ondragstart="Renderer.hover.handleLinkDragStart(event, this)"
+                    ontouchstart="Renderer.hover.handleTouchStart(event, this)"
+                    >${displayedText}</a>`;
+                    return hmtl;
+                }
+                function linkFauxPage(page, value, source, redirect=true){
+                    value = encodeURIComponent(value);
+                    let html = `<span class="help help--hover"
+                    data-vet-page="${page}" data-vet-source="${source.toUpperCase()}" data-vet-hash="${value.toLowerCase()}_${source}"
+                    data-vet-is-faux-page="true" ${redirect? `data-vet-is-allow-redirect="true"` : ""}
+                    onmouseover="Renderer.hover.pHandleLinkMouseOver(event, this)"
+                    onmouseleave="Renderer.hover.handleLinkMouseLeave(event, this)"
+                    onmousemove="Renderer.hover.handleLinkMouseMove(event, this)"
+                    onclick="Renderer.hover.handleLinkClick(event, this)"
+                    ondragstart="Renderer.hover.handleLinkDragStart(event, this)"
+                    ontouchstart="Renderer.hover.handleTouchStart(event, this)"
+                    >${value}</span>`;
+                    return html;
+                }
+                switch(tagType){
+                    case "skill": return linkFauxPage("skill", tagValue, getSource(tagType, tagValue));
+                    case "language":return link("languages", tagValue, getSource(tagType, tagValue));
+                    case "item":return link("items", tagValue, getSource(tagType, tagValue));
+                    case "spell":return link("spells", tagValue, getSource(tagType, tagValue));
+                    case "status":
+                    case "disease":
+                    case "condition": return link("conditionsdiseases", tagValue, getSource(tagType, tagValue));
+                    case "variantrule":
+                        let parts = tagValue.split("|"); //hashdata|source|displayedText
+                        return link("variantrules", parts[0], parts[1], parts[2], false);
+                    default: console.error(`Could not create help link for unrecognized type ${tagType}`); return null;
+                }
+            }
+
+            function processTag(tagType, tagValue) {
+                return createRefLink(tagType, tagValue);
+                //Renderer.get().render(`{@${tagType} ${tagValue.toTitleCase()}}`);
+            }
+            
+            function replaceTags(inputString, item) {
+                // Regular expression to match tags like @language Druidic or @skill Perception
+                const tagRegex = /@([\w]*)\[([^\]]+)\]/g;
+            
+                // Replace function that processes each match
+                return inputString.replace(tagRegex, (match, tagType, tagValue) => {
+                    console.log("Handling string", match, "in", item.name);
+                    return processTag(tagType, tagValue);
+                });
+            }
+
+            if(str != null){this.system.description.html = replaceTags(str, this);}
+        }
     }
     prepareActorDerivedData(actor, rollData){
         this.calculateMaxUses(rollData);
@@ -946,8 +1020,10 @@ class Spell5e extends Entity5e{
         if(!this.isCustom){this._tryCloneOriginal(CharacterBuilder.getSpellByUid(this.uid));}
 
         System5e.addHookBase("item_update", (p, collectionId) => {
-            console.log("spell update hook fired");
-            this._prepareLabels();
+            if(collectionId == this.collectionId){
+                console.log("spell update hook fired");
+                this._prepareLabels();
+            }
         });
         if(this.system != null){this._prepareLabels();}
 
@@ -958,16 +1034,15 @@ class Spell5e extends Entity5e{
     _prepareLabels(){
         super._prepareLabels();
         this.labels.school = this.system.school;
-        
     }
 
-     /**
+    /**
      * Used by spell importer
      * @param {{name:string, id:string, flags:{plutonium:{source:string}}}[]} docData
      * @param {any} options
      * @returns {any}
      */
-     static create(docData, options){
+    static create(docData, options){
         let response = [];
         for(let data of docData){
             const source = data.flags.plutonium.source;
@@ -978,12 +1053,14 @@ class Spell5e extends Entity5e{
         }
         return response;
     }
+
     static recast(inputObj){
         let spell5e = new Spell5e(inputObj.uid, inputObj.collectionId, inputObj.isCustom);
         inputObj && Object.assign(spell5e, inputObj);
         //spell5e._prepareLabels();
         return spell5e;
     }
+
     static async verifySystemData(hash){
         let existingData = CharacterBuilder.getEntityByUid("spell", hash);
         if(existingData == null){console.error("Could not find spell entity with hash", hash, CharacterBuilder.instance._data);}
@@ -1434,6 +1511,12 @@ class Actor5e {
         //Search spells
         for(let section in this.spellbook){ func(this.spellbook[section].spells);}
     }
+    /**
+     * Looks through item, feature, and spell inventories for an entity with the specified collectionid
+     * @param {string} collectionId
+     * @param {boolean} errorIfNotFound=false
+     * @returns {Entity5e}
+     */
     getItemByCollectionId(collectionId, errorIfNotFound=false){
         let matches = [];
         const runMatching = (searchIn) => {
@@ -1551,6 +1634,15 @@ class Actor5e {
         this.movement = this._getMovementSpeed(this.system.attributes.movement ?? {}, false);
 
         this.prepareSheetDetails();
+
+        if(!this.system.details.xp){
+            this.system.details.xp = {
+                value: 0,
+                max: 0,
+                pct: 0,
+            };
+        }
+        
 
         //Go through inventory items and prepare derived data
         for(let [categoryName, category] of Object.entries(this.features)){
@@ -1852,7 +1944,7 @@ class Actor5e {
     }
     get numPreparedSpells(){
         let count = 0;
-        for(let category of Object.entries(this.spellbook)){
+        for(let category of Object.values(this._getInventory("spell"))){
             if(!category.canPrepare){continue;}
             for(let sp of category.spells){
                 if(sp.isAlwaysPrepared){continue;}

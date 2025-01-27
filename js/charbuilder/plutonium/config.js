@@ -997,16 +997,16 @@ class ConfigConsts {
 						name: "Use Enrichers",
 						help: `If enabled, importers will make use of dnd5e-specific custom enrichers when rendering content. For example, damage rolls may be rendered as "[[/damage ...]]" instead of "[[/r ...]]", changing the on-click behaviour.`,
 						default: {
-														[ConfigConsts.C_IMPORT_ENRICHERS_AUTO_CONVERT__CONDITION]: false, //tempfix
-							[ConfigConsts.C_IMPORT_ENRICHERS_AUTO_CONVERT__DICE]: true,
+							[ConfigConsts.C_IMPORT_ENRICHERS_AUTO_CONVERT__CONDITION]: false, //tempfix
+							[ConfigConsts.C_IMPORT_ENRICHERS_AUTO_CONVERT__DICE]: false,
 							[ConfigConsts.C_IMPORT_ENRICHERS_AUTO_CONVERT__RULE]: false, //Tempfix
-							[ConfigConsts.C_IMPORT_ENRICHERS_AUTO_CONVERT__SENSE]: true,
-							[ConfigConsts.C_IMPORT_ENRICHERS_AUTO_CONVERT__SKILL]: true,
-							[ConfigConsts.C_IMPORT_ENRICHERS_AUTO_CONVERT__DC]: true,
+							[ConfigConsts.C_IMPORT_ENRICHERS_AUTO_CONVERT__SENSE]: false,
+							[ConfigConsts.C_IMPORT_ENRICHERS_AUTO_CONVERT__SKILL]: false,
+							[ConfigConsts.C_IMPORT_ENRICHERS_AUTO_CONVERT__DC]: false,
 						},
 						type: "multipleChoice",
 						choices: [
-														{value: ConfigConsts.C_IMPORT_ENRICHERS_AUTO_CONVERT__CONDITION, name: "Condition (Reference)"},
+							{value: ConfigConsts.C_IMPORT_ENRICHERS_AUTO_CONVERT__CONDITION, name: "Condition (Reference)"},
 							{value: ConfigConsts.C_IMPORT_ENRICHERS_AUTO_CONVERT__DICE, name: "Dice (Damage)"},
 							{value: ConfigConsts.C_IMPORT_ENRICHERS_AUTO_CONVERT__RULE, name: "Rule (Reference)"},
 							{value: ConfigConsts.C_IMPORT_ENRICHERS_AUTO_CONVERT__SENSE, name: "Sense (Reference)"},

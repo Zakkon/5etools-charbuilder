@@ -87,6 +87,7 @@ class HandlebarsHelper{
               .join('\n');
         });
         Handlebars.registerHelper('selectOptions', function (choices, options) {
+            const autoLocalize = true;
             if(choices == null){return Handlebars.SafeString("");}
             let {blank=null, selected=null, sort=false, labelAttr, nameAttr} = HandlebarsHelper.getAttributes(options);
             selected = selected instanceof Array ? selected.map(String) : [String(selected)];
@@ -96,15 +97,17 @@ class HandlebarsHelper{
             if(choices instanceof Array){
                 console.assert(nameAttr != null, "selectOptions requires a nameAttr if choices is an array!");
                 for(let c of choices){
-                    const label = c[labelAttr];
-                    const name = String(c[nameAttr]); //we are going to need a nameAttr variable to 
+                    let label = c[labelAttr];
+                    let name = String(c[nameAttr]); //we are going to need a nameAttr variable to
+                    if(autoLocalize){label = HelperFunctions.localize(label); name = HelperFunctions.localize(name);}
                     myOptions.push({label, name});
                 }
             }
             else{
                 for (let [key, value] of Object.entries(choices)) {
-                    const label = labelAttr ? value[labelAttr] : value;
-                    const name = String(nameAttr ? value[nameAttr] : key);
+                    let label = labelAttr ? value[labelAttr] : value;
+                    let name = String(nameAttr ? value[nameAttr] : key);
+                    if(autoLocalize){label = HelperFunctions.localize(label); name = HelperFunctions.localize(name);}
                     myOptions.push({name, label});
                 }
             }
@@ -228,7 +231,7 @@ class HandlebarsHelper{
     const options = args.pop();
     let content = args.pop() ?? HelperFunctions.getProperty(options.data.root, options.hash.target) ?? "";
     
-    console.log("options", options, "content", content);
+    //console.log("options", options, "content", content);
     const target = options.hash.target;
     if (!target) throw new Error("You must define the name of a target field.");
     const button = Boolean(options.hash.button);
@@ -245,7 +248,7 @@ class HandlebarsHelper{
     if (editable) dataset.edit = target;
     dataset = Object.entries(dataset).map(([k, v]) => `data-${k}="${v}"`).join(" ");
     editorHTML += `<div class="${editorClasses}" ${dataset}>${content}</div></div>`;
-    console.log("EDITOR HTML", editorHTML, options);
+    //console.log("EDITOR HTML", editorHTML, options);
     return new Handlebars.SafeString(editorHTML);
   }
 }

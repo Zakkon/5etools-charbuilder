@@ -1469,25 +1469,24 @@ static getConvertedTagLinkEntries (entries) {
 }
 class DescriptionRendererHookBase {
     static getConfigCache () {
-    const configCache = {};
-    MiscUtil.set(configCache, "import", "enrichersAutoConvert", Config.get("import", "enrichersAutoConvert"));
-    MiscUtil.set(configCache, "import", "isAutoAddAdditionalFonts", Config.get("import", "isAutoAddAdditionalFonts"));
-    MiscUtil.set(configCache, "import", "isRenderLinksAsTags", Config.get("import", "isRenderLinksAsTags"));
-    MiscUtil.set(configCache, "import", "isRendererDiceDisabled", Config.get("import", "isRendererDiceDisabled"));
-    return configCache;
-}
+		const configCache = {};
+		MiscUtil.set(configCache, "import", "enrichersAutoConvert", Config.get("import", "enrichersAutoConvert"));
+		MiscUtil.set(configCache, "import", "isAutoAddAdditionalFonts", Config.get("import", "isAutoAddAdditionalFonts"));
+		MiscUtil.set(configCache, "import", "isRenderLinksAsTags", Config.get("import", "isRenderLinksAsTags"));
+		MiscUtil.set(configCache, "import", "isRendererDiceDisabled", Config.get("import", "isRendererDiceDisabled"));
+		return configCache;
+	}
 
+	constructor ({configCache}) {
+		this._configCache = configCache;
+		this._boundHook = null;
+	}
 
-constructor ({configCache}) {
-    this._configCache = configCache;
-    this._boundHook = null;
-}
+		hook () { throw new Error("Unimplemented!"); }
 
-    hook () { throw new Error("Unimplemented!"); }
-
-get boundHook () {
-    return (this._boundHook ||= this.hook.bind(this));
-}
+	get boundHook () {
+		return (this._boundHook ||= this.hook.bind(this));
+	}
 }
 class DescriptionRendererHookLinkAttributesHover extends DescriptionRendererHookBase {
 	hook (commonArgs, {input: {entry, procHash}}) {

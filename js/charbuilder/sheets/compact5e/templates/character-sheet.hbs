@@ -66,14 +66,14 @@
                         <span data-tooltip="DND5E.Race">{{system.details.race.name}}</span>
                     {{else}}
                         <input type="text" name="system.details.race" value="{{system.details.race}}"
-                               placeholder="Race">
+                               placeholder="Race" disabled>
                     {{/if}}
                 </li>
                 <li class="background">
                     {{#if system.details.background.name}}
                         <span data-tooltip="DND5E.Background">{{system.details.background.name}}</span>
                     {{else}}
-                        <input type="text" name="system.details.background" value="{{system.details.background}}" placeholder="Background"/>
+                        <input type="text" name="system.details.background" value="{{system.details.background}}" placeholder="Background" disabled/>
                     {{/if}}
                 </li>
                 <li class="alignment">

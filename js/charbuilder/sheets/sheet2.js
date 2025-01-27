@@ -16,7 +16,7 @@ class ActorCharactermancerSheet2 extends ActorCharactermancerSheet {
     setup(actor){
         ActorCharactermancerSheet2.instance = this;
         this.actor = actor;
-        let inv = new TestInventoryElement(this.actor);
+        let inv = new InventoryElement(this.actor);
         this._inv = inv;
     }
     preRender(){
@@ -34,11 +34,11 @@ class ActorCharactermancerSheet2 extends ActorCharactermancerSheet {
         C5e_Inventory.setupListeners();
 
         System5e.addHookBase("item_update", (p, collectionId) => {
-            console.log("hook fired");
+            console.log("Item Update hook fired");
             this.render();
         });
         System5e.addHookBase("actor_update", (p, collectionId) => {
-            console.log("actor hook fired");
+            console.log("Actor update hook fired");
             this.render();
         });
     }
@@ -54,12 +54,10 @@ class ActorCharactermancerSheet2 extends ActorCharactermancerSheet {
             let innerElement = $$`${innerHTML}`;
             if(this.element){ //If we have rendered the sheet once already
                 //this.removeAllListeners();
-                
                 this._replaceHTML(this.element, innerElement);
                 this.element = innerElement;
             }
             else { //First render
-                
                 this.element = innerElement;
                 this.element.appendTo(parentElement);
             }
@@ -282,16 +280,12 @@ class ActorCharactermancerSheet2 extends ActorCharactermancerSheet {
   //#endregion
 }
 
-class TestInventoryElement {
+class InventoryElement {
     /** @type {Actor5e} */
     actor;
     _expanded = [];
     constructor(actor, rootDiv){
         this.actor = actor;
-    }
-
-    async getItem(collectionId){
-        return this.actor.getItemByCollectionId(collectionId);
     }
 
     activateListeners(rootDiv){
@@ -305,7 +299,7 @@ class TestInventoryElement {
         event.stopPropagation();
         event.preventDefault();
         const { itemId } = target.closest("[data-item-id]")?.dataset ?? {};
-        const item = itemId != null? await this.getItem(itemId) : null; //item-id is the collectionId, unique per item in the inventory
+        const item = itemId != null? await this.actor.getItemByCollectionId(itemId) : null; //item-id is the collectionId, unique per item in the inventory
         switch(action){
             case "create":
                 //TODO: Make sure we are not a container also
@@ -315,7 +309,7 @@ class TestInventoryElement {
                 return;
             case "edit":
                 //Get the ui object for the entire item
-                C5e_Inventory.tryOpenEditWindow(this.actor, item, item.uid, item.entityType, item.collectionId);
+                C5e_Inventory.openEditWindow(this.actor, item, item.uid, item.entityType, item.collectionId);
                 return;
             case "duplicate":
                 //Get the ui object for the entire item
@@ -376,11 +370,12 @@ class TestInventoryElement {
             summary.slideUp(200, () => summary.remove());
             this._unsetExpanded(item.collectionId);
         } else {
-            const chatData = {description: //JSON.stringify(item)
-                item.system.description.value
-            };
+            //Get a description out of the item
+            const descrHTML = item.system.description?.html;
+            //const descr = item.system.description.value;
             console.log(item);
-            let template = new LoadTemplate(null, "parts/item-summary", chatData);
+            //We pass along the rendered html as 'description' to the template, which will render it using triple curly brackets
+            let template = new LoadTemplate(null, "parts/item-summary", {description: descrHTML});
             template.createAndCompile((innerHTML)=>{
                 const summary = $$`${innerHTML}`;
                 $(li).append(summary.hide());
