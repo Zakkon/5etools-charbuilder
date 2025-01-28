@@ -1730,10 +1730,10 @@ class Actor5e {
             default:
                 let formula = ac.calc === "custom" ? ac.formula : cfg.formula;
                 if (armors.length) {
-                    if ( armors.length > 1 ) this._preparationWarnings.push({
+                   /*  if (armors.length > 1) this._preparationWarnings.push({
                         message: "You are wearing multiple armors!", type: "warning"
                     });
-                    const armorData = armors[0].system.armor;
+                    */const  armorData = armors[0].system.armor;
                     const isHeavy = armors[0].system.type.value === "heavy";
                     ac.armor = armorData.value ?? ac.armor;
                     ac.dex = isHeavy ? 0 : Math.min(armorData.dex ?? Infinity, this.system.abilities.dex?.mod ?? 0);
@@ -1767,9 +1767,9 @@ class Actor5e {
 
         // Equipped Shield
         if (shields.length) {
-            if ( shields.length > 1 ) this._preparationWarnings.push({
+            /* if (shields.length > 1) this._preparationWarnings.push({
                 message: game.i18n.localize("DND5E.WarnMultipleShields"), type: "warning"
-            });
+            }); */
             ac.shield = shields[0].system.armor.value ?? 0;
             ac.equippedShield = shields[0];
         }
