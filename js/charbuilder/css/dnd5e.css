@@ -1177,7 +1177,7 @@ h5 {
 }
 .c5e.sheet.actor .sheet-header h1.charname input {
   height: calc(var(--dnd5e-actor-name-height) - 20px);
-  margin: 10px 0;
+  margin: 10px 3px;
 }
 .c5e.sheet.actor .sheet-header .header-exp {
   flex: 0 0 150px;
