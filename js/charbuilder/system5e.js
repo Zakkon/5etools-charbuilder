@@ -382,12 +382,14 @@ class Entity5e {
     /**
      * Updates properties of this entity with the properties provided in data, then fires entity update hook
      * @param {object} data example: {name: "MyName", source:"MySource"}
+     * @param {boolean} doNotFireUpdate
      */
-    update(data){
+    update(data, doNotFireUpdate = false){
         for(let [key, value] of Object.entries(data)){
             this.setProp(key, value);
         }
         //Fire item update
+        if(doNotFireUpdate){return;}
         System5e.hkItemUpdated(this.collectionId);
     }
 
@@ -406,7 +408,7 @@ class Entity5e {
     }
 
     _prepareLabels(){
-        const labels = {};
+        let labels = {};
         if(this.system?.activation?.type){
             labels.activation = `${this.system.activation.cost ?? ""}`;
             labels.activation += (labels.activation.length > 0? " " : "") + `${this.system.activation.type}`;
@@ -482,7 +484,6 @@ class Entity5e {
             
                 // Replace function that processes each match
                 return inputString.replace(tagRegex, (match, tagType, tagValue) => {
-                    console.log("Handling string", match, "in", item.name);
                     return processTag(tagType, tagValue);
                 });
             }
@@ -533,7 +534,7 @@ class Item5e extends Entity5e{
             console.log("item update hook fired");
             //this._prepareLabels();
         });
-        //if(this.system != null){this._prepareLabels();}
+        if(this.system != null){this._prepareLabels();}
 
         if(!Entity5e.use_overrides){return this;}
         return this._createProxy();
@@ -567,6 +568,8 @@ class Item5e extends Entity5e{
     }
     static _assertItemSubtype(ent){
         let subType = "loot"; //Default
+        console.log("added item", ent.subType, ent);
+        if(ent.system?.armor){return "equipment";}
         if(!ent.system?.type){return subType;}
         if(["equipment", "light", "medium", "heavy"].includes(ent.system.type.value)){subType = "equipment";}
         else if(["weapon", "martialM", "simpleM", "martialR", "simpleR"].includes(ent.system.type.value)){subType = "weapon";}
@@ -595,14 +598,12 @@ class Item5e extends Entity5e{
     }
     
     //Runtime label calculations
-    get labels(){
+    /* get labels(){
         let system = this.system;
         const activation = !system.activation? "" : `${system.activation.cost ?? 0} ${system.activation.type}`;
 
-        return {
-            activation
-        };
-    }
+        return {activation};
+    } */
     get canToggle(){
         return this.equippable;
     }
@@ -1166,7 +1167,11 @@ class Actor5e {
             }
         }
     }
-    
+     /**
+     * Updates properties of this actor with the properties provided in data, then fires actor update hook, unless blocked in options
+     * @param {object} data example: {name: "MyName", source:"MySource"}
+     * @param {{doNotFireUpdate:boolean}} options
+     */
     update(data, options){
         if(data != null){
             for(let [key, value] of Object.entries(data)){
@@ -1175,7 +1180,7 @@ class Actor5e {
         }
         if(options?.doNotFireUpdate){return;}
         //Fire item update
-        System5e.hkActorUpdated(this.collectionId);
+        System5e.hkActorUpdated();
     }
     setProp(path, value, toOverride=Entity5e.use_overrides){
         Entity5e.setp(this, path, value, toOverride);
@@ -1467,7 +1472,8 @@ class Actor5e {
                     this.features[it.featureCategory].items = this.features[it.featureCategory].items.filter(obj => obj.collectionId !== it.collectionId);
                     break;
                 default:
-                    this.inventory[it.system.type.value].items = this.inventory[it.system.type.value].items.filter(obj => obj.collectionId !== it.collectionId);
+                    console.log(it.itemType, this.inventory, it);
+                    this.inventory[it.itemType].items = this.inventory[it.itemType].items.filter(obj => obj.collectionId !== it.collectionId);
                     break;
             }
         }
@@ -1497,8 +1503,6 @@ class Actor5e {
         }
         catch(e){ console.log(entityType, subtype); console.error(e);  return null;}
     }
-
-    
 
     /**
      * Run a function on each item in each of the inventories
@@ -1705,9 +1709,10 @@ class Actor5e {
         // Identify Equipped Items
         const armorTypes = new Set(Object.keys(CONFIG.DND5E.armorTypes));
         const {armors, shields} = this.itemTypes.equipment.reduce((obj, equip) => {
-            if ( !equip.system.equipped || !armorTypes.has(equip.system.type.value) ) return obj;
-            if ( equip.system.type.value === "shield" ) obj.shields.push(equip);
-            else obj.armors.push(equip);
+            if (!equip.system.equipped || !armorTypes.has(equip.system.type.value)) {return obj;}
+            console.log(obj, equip);
+            if (equip.system.type.value === "shield") {obj.shields.push(equip);}
+            else {obj.armors.push(equip);}
             return obj;
         }, {armors: [], shields: []});
         const rollData = this.getRollData({ deterministic: true });
@@ -1738,7 +1743,13 @@ class Actor5e {
                     ac.dex = isHeavy ? 0 : Math.min(armorData.dex ?? Infinity, this.system.abilities.dex?.mod ?? 0);
                     ac.equippedArmor = armors[0];
                 }
-                else {ac.dex = this.system.abilities.dex?.mod ?? 0;}
+                else {
+                    ac.dex = this.system.abilities.dex?.mod ?? 0;
+                    ac.base = 10 + ac.dex;
+                    ac.armor = 0;
+                    ac.equippedArmor = null;
+                    break;
+                }
                 ac.armor = ac.armor ?? CONFIG.DND5E.baseArmorClass;
 
                 rollData.attributes.ac = ac;
@@ -1759,18 +1770,24 @@ class Actor5e {
         }
 
         // Equipped Shield
-        if ( shields.length ) {
+        if (shields.length) {
             if ( shields.length > 1 ) this._preparationWarnings.push({
                 message: game.i18n.localize("DND5E.WarnMultipleShields"), type: "warning"
             });
             ac.shield = shields[0].system.armor.value ?? 0;
             ac.equippedShield = shields[0];
         }
+        else{
+            ac.shield = 0;
+            ac.equippedShield = null;
+        }
 
         // Compute total AC and return
         ac.min = Roll.simplifyBonus(ac.min, rollData);
         ac.bonus = Roll.simplifyBonus(ac.bonus, rollData);
         ac.value = Math.max(ac.min, ac.base + (ac.shield??0) + ac.bonus + (ac.cover??0));
+        
+        console.log("Recalculated AC:", ac);
     }
     /**
    * Prepare the initiative data for an actor.

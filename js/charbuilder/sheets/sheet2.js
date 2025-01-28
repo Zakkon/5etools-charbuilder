@@ -35,10 +35,15 @@ class ActorCharactermancerSheet2 extends ActorCharactermancerSheet {
 
         System5e.addHookBase("item_update", (p, collectionId) => {
             console.log("Item Update hook fired");
+            //Recalculate derived data in the actor
+            this.actor.prepareDerivedData();
             this.render();
         });
         System5e.addHookBase("actor_update", (p, collectionId) => {
             console.log("Actor update hook fired");
+            //Recalculate derived data in the actor
+            this.actor.prepareDerivedData();
+            //Then render the ui
             this.render();
         });
     }
@@ -48,6 +53,7 @@ class ActorCharactermancerSheet2 extends ActorCharactermancerSheet {
         if(!this.$sheet){this.preRender();}
         let parentElement = this.$sheet; //Should be a jquery object
 
+        this.actor.prepareDerivedData();
         const data = this.actor;
         let template = new LoadTemplate(parentElement, "character-sheet", data);
         template.createAndCompile((innerHTML)=>{
@@ -188,8 +194,18 @@ class ActorCharactermancerSheet2 extends ActorCharactermancerSheet {
             evt.preventDefault();
             console.log("Input value changed to:", evt.target.value);
         });
-
+        //Make portrait click open a dialogue to pick an image file
         this.$sheet.find("img.portrait").click(this._onEditProfile.bind(this));
+
+        //Make ability score input fields respond to being edited
+        this.$sheet.find("input.ability-score").on("change", evt =>{
+            const val = evt.target.value;
+            const name = evt.target.name; //"system.abilities.str.value"
+            console.log("changed score to ", val);
+            //Immediately update the sheet with the new score
+            let upd = {}; upd[name] = val;
+            this.actor.update(upd);
+        });
     }
 
     /**
