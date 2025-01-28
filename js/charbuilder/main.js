@@ -1390,7 +1390,7 @@ class CharacterBuilder {
           //Recalculate spell slots (taking subclass into account)
           for(let i = 1; i <= 9; ++i){
             //TODO: make this be combinable with other classes
-            let slots = ActorCharactermancerSheet.getSpellSlotsAtLvl(i, cls.targetLevel, clsData, sclsData);
+            let slots = System5e.getSpellSlotsAtLvl(i, cls.targetLevel, clsData, sclsData);
             updatePool[`spellbook.${i}.uses`] = slots;
             updatePool[`spellbook.${i}.slots`] = slots;
           }

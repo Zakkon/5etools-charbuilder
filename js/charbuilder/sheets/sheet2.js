@@ -1,4 +1,4 @@
-class ActorCharactermancerSheet2 extends ActorCharactermancerSheet {
+class ActorCharactermancerSheet2 extends ActorCharactermancerBaseComponent {
     $sheet;
     _inv;
     /**
@@ -11,6 +11,11 @@ class ActorCharactermancerSheet2 extends ActorCharactermancerSheet {
 
     constructor(main){
         super(main);
+        this._actor = main.actor;
+        this._data = main.data; //data is an object containing information about all classes, subclasses, feats, etc
+        this._parent = main.parent;
+        this._tabSheet = main.tabSheet;
+        this._meta = {attributes:[], equipped:{}};
         this.setup(main._actor);
     }
     setup(actor){
@@ -20,7 +25,7 @@ class ActorCharactermancerSheet2 extends ActorCharactermancerSheet {
         this._inv = inv;
     }
     preRender(){
-        ActorCharactermancerSheet.characterName = null;
+        ActorCharactermancerSheet2.characterName = null;
         //if(!!charInfo?.character?.about?.name?.length){ActorCharactermancerSheet.characterName = charInfo.character.about.name;}
         const tabSheet = this._tabSheet?.$wrpTab;
         if (!tabSheet) { return; }

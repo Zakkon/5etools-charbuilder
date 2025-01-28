@@ -41,12 +41,42 @@ class System5e{
         return eval(result);
     }
     static calculateClassScale(className, identifier, parent){
-        const activeClassData = ActorCharactermancerSheet.getClassData(parent.compClass);
+        const activeClassData = System5e.getClassData(parent.compClass);
         console.log("classData", activeClassData);
         const classLevel = System5e.getClassLevel(className, activeClassData);
         //const scale = this._getClassScales(className)[identifier];
         //return scale.scale[classLevel.toString()].value;
         return this._getTableColumnValue(this._getClassTable(className, parent.compClass._data.class), identifier, (classLevel-1).toString());
+    }
+    static getClassData(compClass) {
+        const primaryClassIndex = compClass._state.class_ixPrimaryClass;
+        //If we have 2 classes, this will be 1
+        const highestClassIndex = compClass._state.class_ixMax;
+
+        const classList = [];
+        for(let i = 0; i <= highestClassIndex; ++i){
+            const isPrimary = i == primaryClassIndex;
+            //Get a string property that will help us grab actual class data
+            const { propIxClass: propIxClass, propIxSubclass: propIxSubclass, propCurLevel:propCurLevel, propTargetLevel: propTargetLevel } =
+            ActorCharactermancerBaseComponent.class_getProps(i);
+            //Grab actual class data
+            const cls = compClass.getClass_({propIxClass: propIxClass});
+            if(!cls){continue;}
+            const targetLevel = compClass._state[propTargetLevel];
+            const block = {
+                cls: cls,
+                isPrimary: isPrimary,
+                propIxClass: propIxClass,
+                propIxSubclass:propIxSubclass,
+                targetLevel:targetLevel,
+                isDeleted:ActorCharactermancerBaseComponent.class_isDeleted(i),
+            }
+            //Now we want to ask compClass if there is a subclass selected for this index
+            const sc = compClass.getSubclass_({cls:cls, propIxSubclass:propIxSubclass});
+            if(sc != null) { block.sc = sc; }
+            classList.push(block);
+        }
+        return classList;
     }
     static _getTableColumnValue(table, columnName, rowValue){
         columnName = columnName.toLowerCase();
@@ -108,6 +138,40 @@ class System5e{
         });
         console.log(formula);
     }
+    /**
+     * Calculates number of spell slots the class and su    bclass (if present) grants for the specified spell level
+     * @param {number} spellLevel 1-9
+     * @param {number} classLevel 1-20
+     * @param {any} classData the data of the class
+     * @param {any} subclassData the data of the subclass. Can be null.
+     * @returns {number}
+     */
+    static getSpellSlotsAtLvl(spellLevel, classLevel, classData, subclassData){
+      
+        let total = 0;
+        //Ask class for spellslots
+        if(classData.classTableGroups){
+          //What is the level we have achieved for this class?
+          let foundSpellSlotsTable = false;
+          for(let i = 0; i < classData.classTableGroups.length && !foundSpellSlotsTable; ++i){
+            const t = classData.classTableGroups[i];
+            if(!t.rowsSpellProgression){continue;}
+            foundSpellSlotsTable = true;
+            total += t.rowsSpellProgression[classLevel-1][spellLevel-1]; //0 is level 1, 1 is level 2, etc (this applies for both)
+          }
+        }
+        //TODO: Ask subclass for spells lots
+        if(subclassData && subclassData.classTableGroups){
+          let foundSpellSlotsTable = false;
+          for(let i = 0; i < subclassData.classTableGroups.length && !foundSpellSlotsTable; ++i){
+            const t = subclassData.classTableGroups[i];
+            if(!t.rowsSpellProgression){continue;}
+            foundSpellSlotsTable = true;
+            total += t.rowsSpellProgression[level-1]; //0 is level 1, 1 is level 2, etc
+          }
+        }
+        return total;
+      }
     
     /**
      * Clone an entity and add it to the sheet's inventory
