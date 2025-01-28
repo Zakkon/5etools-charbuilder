@@ -404,6 +404,10 @@ class SETTINGS{
     static SPELLS_TAB_ACCESSED_FROM_SPELLBOOK = false;
     static PLUTONIUM_RENDER_IMPORT_PLUGINS = false; //This is actually handled in config.js, search "enrichersAutoConvert"
 }
+class ui{
+  static windows = [];
+  static activeWindow = null;
+}
 class CharacterBuilder {
     tabButtonParent;
     tabClass;

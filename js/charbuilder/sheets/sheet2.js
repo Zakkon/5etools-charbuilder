@@ -206,6 +206,9 @@ class ActorCharactermancerSheet2 extends ActorCharactermancerSheet {
             let upd = {}; upd[name] = val;
             this.actor.update(upd);
         });
+
+        //Make skill proficiency edit buttons respond to being clicked
+        this.$sheet.find(".skills-list .config-button").on("click", this._onConfigMenu.bind(this));
     }
 
     /**
@@ -265,6 +268,20 @@ class ActorCharactermancerSheet2 extends ActorCharactermancerSheet {
     _injectHTML(html){
 
     }
+    _onConfigMenu(event){
+        event.preventDefault();
+        event.stopPropagation();
+        const button = event.currentTarget;
+        console.log("ACTOR", this.actor);
+        let app;
+        switch(button.dataset.action){
+            case "skill":
+                const skillAbv = button.closest("[data-key]").dataset.key;
+                app = new ProficiencyConfig(this.actor, {property: "skills", key: skillAbv});
+                break;
+        }
+        app.render(true);
+    }
 
     //#region Profile Image
   _onEditProfile(){
@@ -295,6 +312,9 @@ class ActorCharactermancerSheet2 extends ActorCharactermancerSheet {
   }
   //#endregion
 }
+
+
+
 
 class InventoryElement {
     /** @type {Actor5e} */

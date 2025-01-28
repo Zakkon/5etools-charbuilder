@@ -893,3 +893,751 @@ class EntitySheet5e extends BaseSheet {
   }
   //#endregion
 }
+
+let _maxZ = 100;
+let _appId = 0;
+const MIN_WINDOW_WIDTH = 200;
+const MIN_WINDOW_HEIGHT = 50;
+class Application {
+    constructor(options={}){
+        this.options = HelperFunctions.mergeObject(this.constructor.defaultOptions, options);
+        //Unique to every application window
+        this.appId = _appId += 1;
+        this._element = null;
+        //Create our position
+        this.position = {
+            width: this.options.width,
+            height: this.options.height,
+            left: this.options.left,
+            top: this.options.top,
+            scale: this.options.scale,
+            zIndex: 0
+        };
+        this._minimized = false;
+        this._state = Application.RENDER_STATES.NONE;
+        this._priorState = this._state;
+    }
+    static RENDER_STATES = Object.freeze({
+        CLOSING: -2,
+        CLOSED: -1,
+        NONE: 0,
+        RENDERING: 1,
+        RENDERED: 2,
+        ERROR: 3
+      });
+    static get defaultOptions(){
+        return {
+            title: "",
+            id: "",
+            classes: [],
+            template:null,
+        }
+    }
+    get id(){return this.options.id ? this.options.id : `app-${this.appId}`;};
+    get template(){return this.options.template;}
+    get element(){
+        if(this._element){return this._element;}
+        return $(`#${this.id}`);
+    }
+    get popOut(){return this.options.popOut??true;}
+    getData(options={}){return {};}
+    get title(){return this.options.title;}
+    render(force=false, options={}){
+        this._render(force, options).catch(err => {
+            console.error(err);
+        });
+        return this;
+    }
+    async _render(force=false, options={}){
+        this.options = HelperFunctions.mergeObject(this.options, options, {insertKeys: false});
+        const element = this.element;
+        const data = await this.getData(this.options);
+        const inner = await this._renderInner(data);
+        console.log("InnerHTML", inner);
+        let html = inner;
+        if(element.length){this._replaceHTML(element, data);}
+        else{
+            if(this.popOut){
+                html = await this._renderOuter();
+                html.find(".window-content").append(inner);
+                ui.windows[this.appId] = this;
+            }
+            // Add the HTML to the DOM and record the element
+            this._injectHTML(html);
+        }
+        
+        if (!this.popOut && this.options.resizable) new Draggable(this, html, false, this.options.resizable);
+
+        // Activate event listeners on the inner HTML
+        this._activateCoreListeners(inner);
+        //this.activateListeners(inner);
+    }
+    async _renderInner(data){
+        let html = await this.renderTemplate(this.template, data);
+        if ( html === "" ) throw new Error(`No data was returned from template ${this.template}`);
+        return $(html);
+    }
+    /**
+     * Creates an outer jquery div for the form, and makes it draggable.
+     * @returns {jQuery}
+     */
+    async _renderOuter(){
+        const classes = this.options.classes;
+        const windowData = {
+            id: this.id,
+            classes: classes.join(" "),
+            title: this.title,
+            appId: this.appId,
+            headerButtons: this._getHeaderButtons(),
+        }
+        let html = await this.renderTemplate("app/app-window", windowData);
+        html = $(html);
+
+        // Make the outer window draggable
+        const header = html.find("header")[0];
+        new Draggable(this, html, header, this.options.resizable);
+
+        // Set the outer frame z-index
+        if (Object.keys(ui.windows).length === 0) _maxZ = 100 - 1;
+        this.position.zIndex = Math.min(++_maxZ, 9999);
+        html.css({zIndex: this.position.zIndex});
+        ui.activeWindow = this;
+
+        return html;
+    }
+    /**
+     * Add a Jquery element to the DOM's 'body' element. Can be overridden.
+     * @param {jQuery} html Jquery element to add to the DOM's 'body' element
+     * @private
+     */
+    _injectHTML(html) {
+        $("body").append(html);
+        this._element = html;
+        html.hide().fadeIn(200);
+    }
+    /**
+     * Replace HTML within an existing jQuery element with new content. Can be overridden.
+     * @param {jQuery} element the original element
+     * @param {jQuery} html the updated element
+     * @private
+     */
+    _replaceHTML(element, html) {
+        if (!element.length) return;
+    
+        // For pop-out windows update the inner content and the window title
+        if (this.popOut) {
+          element.find(".window-content").html(html);
+          let t = element.find(".window-title")[0];
+          if (t.hasChildNodes()) t = t.childNodes[0];
+          t.textContent = this.title;
+        }
+    
+        // For regular applications, replace the whole thing
+        else {element.replaceWith(html); this._element = html;}
+    }
+    async renderTemplate(template, data){
+        let contentTemplate = new LoadTemplate(null, template, data); //Important to set this sheet, not entity, as the context
+
+        let promise = new Promise((resolve, reject) => {
+
+            contentTemplate.createAndCompile((innerHTML)=>{
+                //let innerElement = $$`${innerHTML}`;
+                resolve(innerHTML);
+            });
+        });
+        return promise;
+    }
+    async close(options={}) {
+        const states = Application.RENDER_STATES;
+        if (!options.force && ![states.RENDERED, states.ERROR].includes(this._state)) return;
+        this._state = states.CLOSING;
+    
+        // Get the element
+        let el = this.element;
+        if (!el) return this._state = states.CLOSED;
+        el.css({minHeight: 0});
+    
+        // Dispatch Hooks for closing the base and subclass applications
+        for (let cls of this.constructor._getInheritanceChain()) {
+    
+          /**
+           * A hook event that fires whenever this Application is closed.
+           * @function closeApplication
+           * @memberof hookEvents
+           * @param {Application} app                     The Application instance being closed
+           * @param {jQuery[]} html                       The application HTML when it is closed
+           */
+          Hooks.call(`close${cls.name}`, this, el); //send a hook using the name of our topmost class
+        }
+    
+        // Animate closing the element
+        return new Promise(resolve => {
+          el.slideUp(200, () => {
+            el.remove();
+    
+            // Clean up data
+            this._element = null;
+            delete ui.windows[this.appId];
+            this._minimized = false;
+            this._scrollPositions = null;
+            this._state = states.CLOSED;
+            resolve();
+          });
+        });
+    }
+    bringToTop() {
+        const element = this.element[0];
+        const z = document.defaultView.getComputedStyle(element).zIndex;
+        if ( z < _maxZ ) {
+          this.position.zIndex = Math.min(++_maxZ, 99999);
+          element.style.zIndex = this.position.zIndex;
+          ui.activeWindow = this;
+        }
+    }
+    setPosition({left, top, width, height, scale}={}) {
+        if (!this.popOut && !this.options.resizable) return; // Only configure position for popout or resizable apps.
+        const el = this.element[0];
+        const currentPosition = this.position;
+        const pop = this.popOut;
+        const styles = window.getComputedStyle(el);
+        if ( scale === null ) scale = 1;
+        scale = scale ?? currentPosition.scale ?? 1;
+    
+        // If Height is "auto" unset current preference
+        if ( (height === "auto") || (this.options.height === "auto") ) {
+          el.style.height = "";
+          height = null;
+        }
+    
+        // Update width if an explicit value is passed, or if no width value is set on the element
+        if ( !el.style.width || width ) {
+          const tarW = width || el.offsetWidth;
+          const minW = parseInt(styles.minWidth) || (pop ? MIN_WINDOW_WIDTH : 0);
+          const maxW = el.style.maxWidth || (window.innerWidth / scale);
+          currentPosition.width = width = HelperFunctions.mathClamped(tarW, minW, maxW);
+          el.style.width = `${width}px`;
+          if ( ((width * scale) + currentPosition.left) > window.innerWidth ) left = currentPosition.left;
+        }
+        width = el.offsetWidth;
+    
+        // Update height if an explicit value is passed, or if no height value is set on the element
+        if ( !el.style.height || height ) {
+          const tarH = height || (el.offsetHeight + 1);
+          const minH = parseInt(styles.minHeight) || (pop ? MIN_WINDOW_HEIGHT : 0);
+          const maxH = el.style.maxHeight || (window.innerHeight / scale);
+          currentPosition.height = height = HelperFunctions.mathClamped(tarH, minH, maxH);
+          el.style.height = `${height}px`;
+          if ( ((height * scale) + currentPosition.top) > window.innerHeight + 1 ) top = currentPosition.top - 1;
+        }
+        height = el.offsetHeight;
+    
+        // Update Left
+        if ( (pop && !el.style.left) || Number.isFinite(left) ) {
+          const scaledWidth = width * scale;
+          const tarL = Number.isFinite(left) ? left : (window.innerWidth - scaledWidth) / 2;
+          const maxL = Math.max(window.innerWidth - scaledWidth, 0);
+          currentPosition.left = left = HelperFunctions.mathClamped(tarL, 0, maxL);
+          el.style.left = `${left}px`;
+        }
+    
+        // Update Top
+        if ( (pop && !el.style.top) || Number.isFinite(top) ) {
+          const scaledHeight = height * scale;
+          const tarT = Number.isFinite(top) ? top : (window.innerHeight - scaledHeight) / 2;
+          const maxT = Math.max(window.innerHeight - scaledHeight, 0);
+          currentPosition.top = HelperFunctions.mathClamped(tarT, 0, maxT);
+          el.style.top = `${currentPosition.top}px`;
+        }
+    
+        // Update Scale
+        if ( scale ) {
+          currentPosition.scale = Math.max(scale, 0);
+          if ( scale === 1 ) el.style.transform = "";
+          else el.style.transform = `scale(${scale})`;
+        }
+    
+        // Return the updated position object
+        return currentPosition;
+    }
+    _getHeaderButtons() {
+        const buttons = [
+          {
+            label: "Close",
+            class: "close",
+            icon: "fas fa-times",
+            onclick: () => this.close()
+          }
+        ];
+        for (let cls of this.constructor._getInheritanceChain()) {
+    
+          /**
+           * A hook event that fires whenever this Application is first rendered to add buttons to its header.
+           * @function getApplicationHeaderButtons
+           * @memberof hookEvents
+           * @param {Application} app                     The Application instance being rendered
+           * @param {ApplicationHeaderButton[]} buttons   The array of header buttons which will be displayed
+           */
+          Hooks.call(`get${cls.name}HeaderButtons`, this, buttons);
+        }
+        return buttons;
+    }
+    static _getInheritanceChain() {
+        const parents = HelperFunctions.getParentClasses(this);
+        const base = this.defaultOptions.baseApplication;
+        const chain = [this];
+        for (let cls of parents) {
+          chain.push(cls);
+          if (cls.name === base) break;
+        }
+        return chain;
+    }
+
+    _activateCoreListeners(html) {
+       /*  const el = html[0];
+        this._tabs.forEach(t => t.bind(el));
+        this._dragDrop.forEach(d => d.bind(el));
+        this._searchFilters.forEach(f => f.bind(el)); */
+    }
+}
+class FormApplication extends Application {
+    constructor(object={}, options={}){
+        super(options);
+        /** The target object this form is manipulating 
+        */
+        this.object = object;
+        this.form = null;
+        this.filepickers = [];
+        this.editors = [];
+    }
+    async _render(force, options) {
+
+        // Identify the focused element
+        let focus = this.element.find(":focus");
+        focus = focus.length ? focus[0] : null;
+    
+        // Render the application and restore focus
+        await super._render(force, options);
+        if (focus && focus.name) {
+          const input = this.form[focus.name];
+          if (input && (input.focus instanceof Function)) input.focus();
+        }
+    }
+    async _renderInner(...args){
+        const html = await super._renderInner(...args);
+        //Try to grab the form from our own element
+        this.form = html.filter((i, el) => el instanceof HTMLFormElement)[0];
+        if (!this.form) this.form = html.find("form")[0];
+        return html;
+    }
+    async close(options={}) {
+        const states = Application.RENDER_STATES;
+        if ( !options.force && ![states.RENDERED, states.ERROR].includes(this._state) ) return;
+    
+        // Trigger saving of the form
+        const submit = options.submit ?? this.options.submitOnClose;
+        if (submit) await this.submit({preventClose: true, preventRender: true});
+    
+        // Close any open FilePicker instances
+        for (let fp of this.filepickers) {
+          fp.close();
+        }
+        this.filepickers = [];
+    
+        // Close any open MCE editors
+        for ( let ed of Object.values(this.editors) ) {
+          if ( ed.mce ) ed.mce.destroy();
+        }
+        this.editors = {};
+    
+        // Close the application itself
+        return super.close(options);
+      }
+
+    _activateCoreListeners(html){
+        super._activateCoreListeners(html);
+        if(!this.form){return;}
+        //if(!this.isEditable){return this._disableFields(this.form);}
+        this.form.onsubmit = this._onSubmit.bind(this);
+    }
+
+    async _onSubmit(event, {updateData=null, preventClose=false, preventRender=false}={}){
+        event.preventDefault();
+        const states = Application.RENDER_STATES;
+        //TODO MORE
+        console.log("onsubmit");
+        const formData = this._getSubmitData(updateData);
+        //See if we should close the form
+        let closeForm = this.options.closeOnSubmit && !preventClose;
+        const priorState = this._state;
+        if (preventRender) this._state = states.RENDERING;
+        if (closeForm) this._state = states.CLOSING;
+
+         // Trigger the object update
+        try {
+            await this._updateObject(event, formData);
+        }
+        catch(err) {
+            console.error(err);
+            closeForm = false;
+            this._state = priorState;
+        }
+        this._submitting = false;
+        if (preventRender) this._state = priorState;
+        if(closeForm){await this.close({submit:false, force:true});}
+        //Return the form data
+        return formData;
+    }
+    _getSubmitData(updateData={}) {
+        if (!this.form) throw new Error("The FormApplication subclass has no registered form element");
+        const fd = new FormDataExtended(this.form, {editors: this.editors});
+        let data = fd.object;
+        if (updateData) data = HelperFunctions.flattenObject(HelperFunctions.mergeObject(data, updateData));
+        return data;
+    }
+    /**
+   * Submit the contents of a Form Application, processing its content as defined by the Application
+   * @param {object} [options]        Options passed to the _onSubmit event handler
+   * @returns {FormApplication}       Return a self-reference for convenient method chaining
+   */
+    async submit(options={}) {
+        if ( this._submitting ) return;
+        const submitEvent = new Event("submit");
+        await this._onSubmit(submitEvent, options);
+        return this;
+    }
+    /**
+   * This method is called upon form submission after form data is validated
+   * @param {Event} event       The initial triggering submission event
+   * @param {object} formData   The object of validated form data with which to update the object
+   * @returns {Promise}         A Promise which resolves once the update operation has completed
+   * @abstract
+   */
+    async _updateObject(event, formData) {
+        throw new Error("A subclass of the FormApplication must implement the _updateObject method.");
+    }
+    static get defaultOptions(){
+        return HelperFunctions.mergeObject(super.defaultOptions, {
+            closeOnSubmit: true
+        });
+    }
+}
+class FormDataExtended extends FormData {
+    constructor(form, {editors={}, dtypes={}}={}) {
+      super();
+  
+      /**
+       * A mapping of data types requested for each form field.
+       * @type {{string, string}}
+       */
+      this.dtypes = dtypes;
+  
+      /**
+       * A record of TinyMCE editors which are linked to this form.
+       * @type {Object<string, object>}
+       */
+      this.editors = editors;
+  
+      /**
+       * The object representation of the form data, available once processed.
+       * @type {object}
+       */
+      Object.defineProperty(this, "object", {value: {}, writable: false, enumerable: false});
+  
+      // Process the provided form
+      this.process(form);
+    }
+  
+    /* -------------------------------------------- */
+  
+    /**
+     * Process the HTML form element to populate the FormData instance.
+     * @param {HTMLFormElement} form    The HTML form being processed
+     */
+    process(form) {
+      this.#processFormFields(form);
+      this.#processEditableHTML(form);
+      this.#processEditors();
+    }
+  
+    /* -------------------------------------------- */
+  
+    /**
+     * Assign a value to the FormData instance which always contains JSON strings.
+     * Also assign the cast value in its preferred data type to the parsed object representation of the form data.
+     * @param {string} name     The field name
+     * @param {any} value       The raw extracted value from the field
+     * @private
+     */
+    #set(name, value) {
+      this.object[name] = value;
+      if ( value instanceof Array ) value = JSON.stringify(value);
+      this.set(name, value);
+    }
+  
+    /* -------------------------------------------- */
+  
+    /**
+     * Process all standard HTML form field elements from the form.
+     * @param {HTMLFormElement} form    The form being processed
+     * @private
+     */
+    #processFormFields(form) {
+      if ( form.hasAttribute("disabled") ) return;
+      const mceEditorIds = Object.values(this.editors).map(e => e.mce?.id);
+      for ( const element of form.elements ) {
+        const name = element.name;
+  
+        // Skip fields which are unnamed or already handled
+        if ( !name || this.has(name) ) continue;
+  
+        // Skip buttons and editors
+        if ( (element.tagName === "BUTTON") || mceEditorIds.includes(name) ) continue;
+  
+        // Skip disabled or read-only fields
+        if ( element.disabled || element.readOnly || element.closest("fieldset")?.disabled ) continue;
+  
+        // Extract and process the value of the field
+        const field = form.elements[name];
+        const value = this.#getFieldValue(name, field);
+        this.#set(name, value);
+      }
+    }
+  
+    /* -------------------------------------------- */
+  
+    /**
+     * Process editable HTML elements (ones with a [data-edit] attribute).
+     * @param {HTMLFormElement} form    The form being processed
+     * @private
+     */
+    #processEditableHTML(form) {
+      const editableElements = form.querySelectorAll("[data-edit]");
+      for ( const element of editableElements ) {
+        const name = element.dataset.edit;
+        if ( this.has(name) || element.disabled || element.readOnly || (name in this.editors) ) continue;
+        let value;
+        if (element.tagName === "IMG") value = element.getAttribute("src");
+        else value = element.innerHTML.trim();
+        this.#set(name, value);
+      }
+    }
+  
+    /* -------------------------------------------- */
+  
+    /**
+     * Process TinyMCE editor instances which are present in the form.
+     * @private
+     */
+    #processEditors() {
+      for ( const [name, editor] of Object.entries(this.editors) ) {
+        if ( !editor.instance ) continue;
+        if ( editor.options.engine === "tinymce" ) {
+          const content = editor.instance.getContent();
+          this.delete(editor.mce.id); // Delete hidden MCE inputs
+          this.#set(name, content);
+        } else if ( editor.options.engine === "prosemirror" ) {
+          this.#set(name, ProseMirror.dom.serializeString(editor.instance.view.state.doc.content));
+        }
+      }
+    }
+  
+    /* -------------------------------------------- */
+  
+    /**
+     * Obtain the parsed value of a field conditional on its element type and requested data type.
+     * @param {string} name                       The field name being processed
+     * @param {HTMLElement|RadioNodeList} field   The HTML field or a RadioNodeList of multiple fields
+     * @returns {*}                               The processed field value
+     * @private
+     */
+    #getFieldValue(name, field) {
+  
+      // Multiple elements with the same name
+      if ( field instanceof RadioNodeList ) {
+        const fields = Array.from(field);
+        if ( fields.every(f => f.type === "radio") ) {
+          const chosen = fields.find(f => f.checked);
+          return chosen ? this.#getFieldValue(name, chosen) : undefined;
+        }
+        return Array.from(field).map(f => this.#getFieldValue(name, f));
+      }
+  
+      // Record requested data type
+      const dataType = field.dataset.dtype || this.dtypes[name];
+  
+      // Disabled fields
+      if ( field.disabled ) return null;
+  
+      // Checkbox
+      if ( field.type === "checkbox" ) {
+  
+        // Non-boolean checkboxes with an explicit value attribute yield that value or null
+        if ( field.hasAttribute("value") && (dataType !== "Boolean") ) {
+          return this.#castType(field.checked ? field.value : null, dataType);
+        }
+  
+        // Otherwise, true or false based on the checkbox checked state
+        return this.#castType(field.checked, dataType);
+      }
+  
+      // Number and Range
+      if ( ["number", "range"].includes(field.type) ) {
+        if ( field.value === "" ) return null;
+        else return this.#castType(field.value, dataType || "Number");
+      }
+  
+      // Multi-Select
+      if ( field.type === "select-multiple" ) {
+        return Array.from(field.options).reduce((chosen, opt) => {
+          if ( opt.selected ) chosen.push(this.#castType(opt.value, dataType));
+          return chosen;
+        }, []);
+      }
+  
+      // Radio Select
+      if ( field.type === "radio" ) {
+        return field.checked ? this.#castType(field.value, dataType) : null;
+      }
+  
+      // Other field types
+      return this.#castType(field.value, dataType);
+    }
+  
+    /* -------------------------------------------- */
+  
+    /**
+     * Cast a processed value to a desired data type.
+     * @param {any} value         The raw field value
+     * @param {string} dataType   The desired data type
+     * @returns {any}             The resulting data type
+     * @private
+     */
+    #castType(value, dataType) {
+      if ( value instanceof Array ) return value.map(v => this.#castType(v, dataType));
+      if ( [undefined, null].includes(value) || (dataType === "String") ) return value;
+  
+      // Boolean
+      if ( dataType === "Boolean" ) {
+        if ( value === "false" ) return false;
+        return Boolean(value);
+      }
+  
+      // Number
+      else if ( dataType === "Number" ) {
+        if ( (value === "") || (value === "null") ) return null;
+        return Number(value);
+      }
+  
+      // Serialized JSON
+      else if ( dataType === "JSON" ) {
+        return JSON.parse(value);
+      }
+  
+      // Other data types
+      if ( window[dataType] instanceof Function ) {
+        try {
+          return window[dataType](value);
+        } catch(err) {
+          console.warn(`The form field value "${value}" was not able to be cast to the requested data type ${dataType}`);
+        }
+      }
+      return value;
+    }
+  
+    /* -------------------------------------------- */
+    /*  Deprecations and Compatibility              */
+    /* -------------------------------------------- */
+  
+    /**
+     * @deprecated since v10
+     * @ignore
+     */
+    toObject() {
+      foundry.utils.logCompatibilityWarning("You are using FormDataExtended#toObject which is deprecated in favor of"
+        + " FormDataExtended#object", {since: 10, until: 12});
+      return this.object;
+    }
+}
+  
+class DocumentSheet extends FormApplication {
+    constructor(object, options={}){
+        super(object, options);
+    }
+    /**Shorthand ref to the target object*/
+    get document(){return this.object;}
+    async close(options={}) {
+        await super.close(options);
+        delete this.object.apps?.[this.appId];
+    }
+    async _updateObject(event, formData) {
+        //if (!this.object.id) return; //Our object must have an id
+        return this.object.update(formData);
+    }
+}
+class ConfigSheet extends DocumentSheet {
+    /**
+     * @param {Actor5e} actor
+     * @param {object} options
+     */
+    constructor(actor, options){
+        super(actor, options);
+    }
+    /**
+     * The actor this config sheet is working with
+     * @returns {Actor5e}
+     */
+    get actor(){return this.document;}
+    getData(options={}){return options;}
+    static get defaultOptions(){
+        return HelperFunctions.mergeObject(super.defaultOptions, {
+            title: "Config Sheet",
+            classes: ["c5e"],
+            template:"app/proficiency-config",
+            popOut: true,
+            resizable: true,
+        });
+    }
+    async _render(force=false, options={}){
+        await super._render(force, options);
+        this.setPosition(this.position); //Set the position once, so it's placed where we want it
+    }
+}
+class ProficiencyConfig extends ConfigSheet {
+    static get defaultOptions(){
+        return HelperFunctions.mergeObject(super.defaultOptions, {
+            template: "app/proficiency-config",
+            width: 500,
+            height: "auto"
+        });
+    }
+    get title(){
+        const skillName = CONFIG.DND5E.skills[this.options.key].label;
+        return `Configure ${skillName}`;
+    }
+    getData(options={}) {
+        return {
+          abilities: CONFIG.DND5E.abilities,
+          proficiencyLevels: CONFIG.DND5E.proficiencyLevels,
+          entry: this.actor.system[this.options.property]?.[this.options.key],
+          isTool: this.isTool,
+          isSkill: this.isSkill,
+          key: this.options.key,
+          property: this.options.property
+        };
+    }
+
+    async _updateObject(event, formData) {
+        //if (this.isTool) return super._updateObject(event, formData);
+        console.log("config skill form", formData);
+        const passive = formData[`system.skills.${this.options.key}.bonuses.passive`];
+        /* const passiveRoll = new Roll(passive);
+        if (!passiveRoll.isDeterministic) {
+          const message = game.i18n.format("DND5E.FormulaCannotContainDiceError", {
+            name: game.i18n.localize("DND5E.SkillBonusPassive")
+          });
+          ui.notifications.error(message);
+          throw new Error(message);
+        } */
+        return super._updateObject(event, formData);
+      }
+}

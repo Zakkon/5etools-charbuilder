@@ -1428,12 +1428,14 @@ h5 {
 }
 .c5e.sheet.actor ul.skills-list li.skill .skill-name-controls .config-button {
   right: 3px;
-  top: 4px;
+  top: 2px;
   position: absolute;
   display: none;
+  font-size: 12.5px;
 }
 .c5e.sheet.actor ul.skills-list li.skill .skill-name-controls:hover .config-button {
   display: block;
+  cursor:pointer;
 }
 .c5e.sheet.actor ul.skills-list li.skill .skill-ability {
   flex: 0 0 26px;

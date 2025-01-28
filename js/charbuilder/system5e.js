@@ -243,7 +243,7 @@ class System5e{
         data.icon = data.baseProf == 0? "far fa-circle" : data.baseProf == 1? "fas fa-check" : data.baseProf == 2? "fas fa-check-double" : "fas fa-adjust";
         data.hover = data.baseProf == 0? "Not Proficient" : data.baseProf == 1? "Proficient" : data.baseProf == 2? "Expertise" : "Half Proficient";
         data.baseValue = System5e.proficiencyMult(data.baseProf); //Proficiency multiplier (normal, none, double, half)
-        data.value = data.baseProf >= 1;
+        data.value = data.baseProf;
         data.abbreviation = data.ability;
         const {mod, passive} = System5e.calcSkillMod(abilities[data.ability].value, data.baseProf, proficiencyModifier);
         data.total = mod;
@@ -1172,7 +1172,7 @@ class Actor5e {
      * @param {object} data example: {name: "MyName", source:"MySource"}
      * @param {{doNotFireUpdate:boolean}} options
      */
-    update(data, options){
+    update(data, options={}){
         if(data != null){
             for(let [key, value] of Object.entries(data)){
                 this.setProp(key, value);
@@ -1905,7 +1905,7 @@ class Actor5e {
             this.skills[key] = System5e.calcSkillEmbed({
                 label: val.label,
                 ability: val.ability,
-                baseProf: 0},
+                baseProf: val.value},
                 this.system.abilities, this.system.attributes.prof);
         }
     }

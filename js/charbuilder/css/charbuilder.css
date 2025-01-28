@@ -23,6 +23,7 @@ p {line-height: 1.6; cursor: pointer;}
     display: inline-block;
 }
 
+
 /* WIDTH & HEIGHT */
 .overflow-x-vis{overflow-x: visible;}
 /* POSITION */
@@ -412,6 +413,7 @@ select.chooseAlignment{background: #d3d1c5;}
     display: flex;
     flex-direction: column;
     flex-wrap: nowrap;
+    font-size: 13px !important;
     justify-content: flex-start;
     background: url(../ui/parchment.jpg) repeat;
     padding: 8px;
@@ -434,6 +436,25 @@ select.chooseAlignment{background: #d3d1c5;}
     overflow: hidden;
 }
 .window-app .window-resizable-handle i.fas {transform: rotate(45deg);}
+.window-app .window-header .window-title {
+    font-size: 18px;
+    margin: 0px;
+    word-break: break-all;
+    line-height: 30px;
+}
+.window-app .window-header .close {
+    font-size: 14px;
+    line-height: 30px;
+} 
+.window-app button {
+    width: 100%;
+    margin: 0 1px;
+    line-height: 28px;
+    cursor: pointer;
+    font-size: 14px;
+    border: 1px solid gray;
+    border-radius: 3px;
+}
 /* WINDOW APP - NIGHT MODE */
 .ve-night-mode .window-app{
     /* background-color: #1c1c1c !important; */
@@ -866,6 +887,7 @@ select.chooseAlignment{background: #d3d1c5;}
     background-color: var(--light-highlight);
     border-color: #7a7971;
   }
+
 /*FOOTER*/
 .c5e footer{
     padding: 0px;

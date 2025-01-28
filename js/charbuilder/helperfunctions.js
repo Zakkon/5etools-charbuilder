@@ -144,8 +144,25 @@ class HelperFunctions{
         }
         return clone;
     }
-    static mergeObject(original, other){return Object.assign(original, other);}
-
+    static mergeObject(target, ...sources){return Object.assign(target, ...sources);}
+    static flattenObject(obj, _d=0) {
+        const flat = {};
+        if ( _d > 100 ) {
+          throw new Error("Maximum depth exceeded");
+        }
+        for ( let [k, v] of Object.entries(obj) ) {
+          let t = getType(v);
+          if ( t === "Object" ) {
+            if ( isEmpty(v) ) flat[k] = v;
+            let inner = flattenObject(v, _d+1);
+            for ( let [ik, iv] of Object.entries(inner) ) {
+              flat[`${k}.${ik}`] = iv;
+            }
+          }
+          else flat[k] = v;
+        }
+        return flat;
+    }
     /**
      * Sort the provided object by its values or by an inner sortKey.
      * @param {object} obj                 The object to sort.
@@ -160,6 +177,24 @@ class HelperFunctions{
         else sorted = sorted.sort((lhs, rhs) => sort(lhs[1], rhs[1]));
         return Object.fromEntries(sorted);
     } */
+
+    /**
+     * Get the references to the parent classes of the provided class
+     * @param {Function} cls
+     * @returns {Function[]}
+     */
+    static getParentClasses(cls) {
+        if (typeof cls !== "function") {
+            throw new Error("The provided class is not a type of Function");
+        }
+        const parents = [];
+        let parent = Object.getPrototypeOf(cls);
+        while (parent) {
+            parents.push(parent);
+            parent = Object.getPrototypeOf(parent);
+        }
+        return parents.slice(0, -2)
+    }
 
     static _lang;
     static setLocalizationLanguage(jsonObj){HelperFunctions._lang = jsonObj;}
@@ -195,4 +230,15 @@ class HelperFunctions{
         /* v = HelperFunctions.getProperty(this._fallback, stringId);
         return typeof v === "string" ? v : stringId; */
     }
+
+    /**
+     * Bound a number between some minimum and maximum value, inclusively.
+     * @param {number} num    The current value
+     * @param {number} min    The minimum allowed value
+     * @param {number} max    The maximum allowed value
+     * @return {number}       The clamped number
+     */
+    static mathClamped(num, min, max) {
+    return Math.min(max, Math.max(num, min));
+  }
 }
