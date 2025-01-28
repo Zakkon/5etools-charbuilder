@@ -30,12 +30,7 @@ class HandlebarsHelper{
             //return (bool1 && bool2).toString();
             return bool1 && bool2;
         });
-        Handlebars.registerHelper('or', function (value1, value2) {
-            var bool1 = (value1 === 'true' || value1 == true);
-            var bool2 = (value2 === 'true' || value2 == true);
-            //return (bool1 || bool2).toString();
-            return bool1 || bool2;
-        });
+        Handlebars.registerHelper({or() { console.log("or", arguments); return Array.prototype.slice.call(arguments, 0, -1).some(Boolean);}});
         Handlebars.registerHelper('eq', function (value1, value2) {
             return value1 === value2;
         });
@@ -53,11 +48,16 @@ class HandlebarsHelper{
         });
         Handlebars.registerHelper('editor', HandlebarsHelper.editor);
         Handlebars.registerHelper('numberInput', function (value, options) {
-            let wrapper = `<input type="number" value${value != null? `="${value}"` : ""}`;
-            let opts = HandlebarsHelper.getAttributes(options);
-            for(const [key, val] of Object.entries(opts)){wrapper += ` ${key}="${val}"`;}
-            wrapper += "></input>";
-            return new Handlebars.SafeString(wrapper);
+            const properties = [];
+            for ( let k of ["class", "name", "placeholder", "min", "max"] ) {
+                if ( k in options.hash ) properties.push(`${k}="${options.hash[k]}"`);
+            }
+            const step = options.hash.step ?? "any";
+            properties.unshift(`step="${step}"`);
+            if ( options.hash.disabled === true ) properties.push("disabled");
+            let safe = Number.isNumeric(value) ? Number(value) : "";
+            if ( Number.isNumeric(step) && (typeof safe === "number") ) safe = safe.toNearest(Number(step));
+            return new Handlebars.SafeString(`<input type="number" value="${safe}" ${properties.join(" ")}>`);
         });
         /**
  * A helper for using Intl.NumberFormat within handlebars.
