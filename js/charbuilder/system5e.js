@@ -1487,12 +1487,12 @@ class Actor5e {
     _onCreateDescendantDocuments(collectionName, documents, options={}){
         if(collectionName == "items"){} //update encumberance
         //Re-render sheet, unless told not to
-        if(!options || !options?.doNotRender){ActorCharactermancerSheet2.instance.render();}
+        if(!options || !options?.doNotRender){ActorCharactermancerSheet.instance.render();}
     }
     _onRemoveDescendantDocuments(collectionName, documents){
         if(collectionName == "items"){} //update encumberance
         //Re-render sheet
-        ActorCharactermancerSheet2.instance.render();
+        ActorCharactermancerSheet.instance.render();
     }
     /**
      * Add entity objects to their corresponding inventory category.

@@ -492,7 +492,7 @@ class CharacterBuilder {
       this.compSpell = new ActorCharactermancerSpell(this);
       this.compFeat = new ActorCharactermancerFeat(this);
       this.compDescription = new ActorCharactermancerDescription(this);
-      this.compSheet = new ActorCharactermancerSheet2(this);
+      this.compSheet = new ActorCharactermancerSheet(this);
           
       this._pRenderTest(charInfo)
       .then(
@@ -1200,7 +1200,7 @@ class CharacterBuilder {
     if(SETTINGS.SHEET_MANCER_RECREATES_SHEET){
       actor = new Actor5e();
       CharacterBuilder.instance._actor = actor;
-      ActorCharactermancerSheet2.instance.setup(actor);
+      ActorCharactermancerSheet.instance.setup(actor);
       forceAdd = true;
     }
     const REMOVE_UNTRACEABLE_ITEMS = false;

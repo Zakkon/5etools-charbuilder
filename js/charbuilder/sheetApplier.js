@@ -10,7 +10,7 @@ class SheetApplier {
         //Reset actor if settings demand it
         actor = new Actor5e();
         CharacterBuilder.instance._actor = actor;
-        ActorCharactermancerSheet2.instance.setup(actor);
+        ActorCharactermancerSheet.instance.setup(actor);
     }
 
     /**

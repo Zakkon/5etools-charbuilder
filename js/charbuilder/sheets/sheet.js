@@ -1,4 +1,4 @@
-class ActorCharactermancerSheet2 extends ActorCharactermancerBaseComponent {
+class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent {
     $sheet;
     _inv;
     /**
@@ -19,13 +19,13 @@ class ActorCharactermancerSheet2 extends ActorCharactermancerBaseComponent {
         this.setup(main._actor);
     }
     setup(actor){
-        ActorCharactermancerSheet2.instance = this;
+        ActorCharactermancerSheet.instance = this;
         this.actor = actor;
         let inv = new InventoryElement(this.actor);
         this._inv = inv;
     }
     preRender(){
-        ActorCharactermancerSheet2.characterName = null;
+        ActorCharactermancerSheet.characterName = null;
         //if(!!charInfo?.character?.about?.name?.length){ActorCharactermancerSheet.characterName = charInfo.character.about.name;}
         const tabSheet = this._tabSheet?.$wrpTab;
         if (!tabSheet) { return; }
