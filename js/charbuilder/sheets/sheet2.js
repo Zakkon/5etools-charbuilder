@@ -207,8 +207,8 @@ class ActorCharactermancerSheet2 extends ActorCharactermancerSheet {
             this.actor.update(upd);
         });
 
-        //Make skill proficiency edit buttons respond to being clicked
-        this.$sheet.find(".skills-list .config-button").on("click", this._onConfigMenu.bind(this));
+        //Make config buttons respond to being clicked
+        this.$sheet.find(".config-button").on("click", this._onConfigMenu.bind(this));
     }
 
     /**
@@ -278,6 +278,9 @@ class ActorCharactermancerSheet2 extends ActorCharactermancerSheet {
             case "skill":
                 const skillAbv = button.closest("[data-key]").dataset.key;
                 app = new ProficiencyConfig(this.actor, {property: "skills", key: skillAbv});
+                break;
+            case "movement":
+                app = new ActorMovementConfig(this.actor);
                 break;
         }
         app.render(true);

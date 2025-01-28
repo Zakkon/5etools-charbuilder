@@ -1581,6 +1581,7 @@ class ConfigSheet extends DocumentSheet {
      */
     constructor(actor, options){
         super(actor, options);
+        console.log("config sheet");
     }
     /**
      * The actor this config sheet is working with
@@ -1639,5 +1640,51 @@ class ProficiencyConfig extends ConfigSheet {
           throw new Error(message);
         } */
         return super._updateObject(event, formData);
-      }
+    }
+}
+class ActorMovementConfig extends ConfigSheet {
+    static get defaultOptions(){
+        return HelperFunctions.mergeObject(super.defaultOptions, {
+            template: "app/movement-config",
+            width: 500,
+            height: "auto",
+            keyPath: "system.attributes.movement"
+        });
+    }
+    get title(){
+        return `Configure Movement Speeds`;
+    }
+    getData(options={}) {
+        const source = this.actor;//.toObject();
+        const movement = HelperFunctions.getProperty(source, this.options.keyPath) ?? {};
+        const raceData = this.actor.system.details?.race?.system?.movement ?? {};
+    
+        // Allowed speeds
+        const speeds = source.type === "group" ? {
+          land: "DND5E.MovementLand",
+          water: "DND5E.MovementWater",
+          air: "DND5E.MovementAir"
+        } : {
+          walk: "DND5E.MovementWalk",
+          burrow: "DND5E.MovementBurrow",
+          climb: "DND5E.MovementClimb",
+          fly: "DND5E.MovementFly",
+          swim: "DND5E.MovementSwim"
+        };
+    
+        return {
+          movement,
+          movements: Object.entries(speeds).reduce((obj, [k, label]) => {
+            obj[k] = { label, value: movement[k], placeholder: raceData[k] ?? 0 };
+            return obj;
+          }, {}),
+          selectUnits: Object.hasOwn(movement, "units"),
+          canHover: Object.hasOwn(movement, "hover"),
+          units: CONFIG.DND5E.movementUnits,
+          unitsPlaceholder: "ft",/* game.i18n.format("DND5E.AutomaticValue", {
+            value: CONFIG.DND5E.movementUnits[raceData.units ?? Object.keys(CONFIG.DND5E.movementUnits)[0]]?.toLowerCase()
+          }), */
+          keyPath: this.options.keyPath
+        };
+    }
 }

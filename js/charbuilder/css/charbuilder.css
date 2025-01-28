@@ -697,6 +697,13 @@ select.chooseAlignment{background: #d3d1c5;}
     font-size: var(--font-size-20);
     font-weight: 700;
 }
+.c5e .header-details .movement .config-button {
+    display: none;
+}
+.c5e .header-details .movement:hover .config-button {
+    display: block;
+    cursor: pointer;
+}
 .c5e .sheet-header h1 {
     flex: 1;
     border-bottom: none;
@@ -779,7 +786,6 @@ select.chooseAlignment{background: #d3d1c5;}
 .c5e.sheet.item .sheet-body{
     overflow: hidden;
 }
-
 .c5e form .form-header {
     --color-border-light-primary: #b5b3a4;
     --dnd5e-color-groove: #eeede0;

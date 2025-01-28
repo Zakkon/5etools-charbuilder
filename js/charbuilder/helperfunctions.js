@@ -45,7 +45,7 @@ class HelperFunctions{
           else {return undefined;}
         }
         return target;
-        }
+    }
     
         /**
      * Searches through an object's hierarchy to assign a value using a string key

@@ -126,6 +126,7 @@ class HandlebarsHelper{
         Handlebars.registerHelper("dnd5e-concealSection", HandlebarsHelper.concealSection);
         Handlebars.registerHelper("dnd5e-itemContext", HandlebarsHelper.itemContext);
         Handlebars.registerHelper("dnd5e-dataset", HandlebarsHelper.dataset);
+        Handlebars.registerHelper("concat", HandlebarsHelper.concat);
     }
 
     static registerPartials(){
@@ -201,7 +202,7 @@ class HandlebarsHelper{
  * @param {object} options   Handlebars options.
  * @returns {string}
  */
- static concealSection(conceal, options) {
+    static concealSection(conceal, options) {
     let content = options.fn(this);
     if ( !conceal ) return content;
   
@@ -215,40 +216,46 @@ class HandlebarsHelper{
         </div>
     </div>`;
     return content;
-  }
+    }
 
-  /**
-   * Construct an editor element for rich text editing with TinyMCE or ProseMirror.
-   * @param {[string, TextEditorOptions]} args  The content to display and edit, followed by handlebars options.
-   * @returns {Handlebars.SafeString}
-   *
-   * @example
-   * ```hbs
-   * {{editor world.description target="description" button=false engine="prosemirror" collaborate=false}}
-   * ```
-   */
-  static editor(...args) {
-    const options = args.pop();
-    let content = args.pop() ?? HelperFunctions.getProperty(options.data.root, options.hash.target) ?? "";
-    
-    //console.log("options", options, "content", content);
-    const target = options.hash.target;
-    if (!target) throw new Error("You must define the name of a target field.");
-    const button = Boolean(options.hash.button);
-    const editable = "editable" in options.hash ? Boolean(options.hash.editable) : true;
+    static concat(...values) {
+        const options = values.pop();
+        const join = options.hash?.join || "";
+        return new Handlebars.SafeString(values.join(join));
+      }
 
-    // Construct the HTML
-    const editorClasses = ["editor-content", options.hash.class ?? null].filterJoin(" ");
-    let editorHTML = '<div class="editor">';
-    if ( button && editable ) editorHTML += '<a class="editor-edit"><i class="fas fa-edit"></i></a>';
-    let dataset = {
-      engine: options.hash.engine || "tinymce",
-      collaborate: !!options.hash.collaborate
-    };
-    if (editable) dataset.edit = target;
-    dataset = Object.entries(dataset).map(([k, v]) => `data-${k}="${v}"`).join(" ");
-    editorHTML += `<div class="${editorClasses}" ${dataset}>${content}</div></div>`;
-    //console.log("EDITOR HTML", editorHTML, options);
-    return new Handlebars.SafeString(editorHTML);
-  }
+    /**
+     * Construct an editor element for rich text editing with TinyMCE or ProseMirror.
+     * @param {[string, TextEditorOptions]} args  The content to display and edit, followed by handlebars options.
+     * @returns {Handlebars.SafeString}
+     *
+     * @example
+     * ```hbs
+     * {{editor world.description target="description" button=false engine="prosemirror" collaborate=false}}
+     * ```
+     */
+    static editor(...args) {
+        const options = args.pop();
+        let content = args.pop() ?? HelperFunctions.getProperty(options.data.root, options.hash.target) ?? "";
+        
+        //console.log("options", options, "content", content);
+        const target = options.hash.target;
+        if (!target) throw new Error("You must define the name of a target field.");
+        const button = Boolean(options.hash.button);
+        const editable = "editable" in options.hash ? Boolean(options.hash.editable) : true;
+
+        // Construct the HTML
+        const editorClasses = ["editor-content", options.hash.class ?? null].filterJoin(" ");
+        let editorHTML = '<div class="editor">';
+        if ( button && editable ) editorHTML += '<a class="editor-edit"><i class="fas fa-edit"></i></a>';
+        let dataset = {
+        engine: options.hash.engine || "tinymce",
+        collaborate: !!options.hash.collaborate
+        };
+        if (editable) dataset.edit = target;
+        dataset = Object.entries(dataset).map(([k, v]) => `data-${k}="${v}"`).join(" ");
+        editorHTML += `<div class="${editorClasses}" ${dataset}>${content}</div></div>`;
+        //console.log("EDITOR HTML", editorHTML, options);
+        return new Handlebars.SafeString(editorHTML);
+    }
 }
