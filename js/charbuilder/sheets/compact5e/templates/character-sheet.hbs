@@ -199,7 +199,7 @@
                 {{#each system.abilities as |ability id|}}
                 <li class="ability {{#if ability.proficient}}proficient{{/if}}" data-ability="{{id}}">
                     <h4 class="ability-name box-title rollable">{{ability.label}}</h4>
-                    <input type="text" name="system.abilities.{{id}}.value" value="{{ability.value}}"
+                    <input type="text" name="system.abilities.{{id}}.value" value="{{ability.value}}" onkeypress='return event.charCode >= 48 && event.charCode <= 57'
                         class="ability-score" placeholder="10" data-dtype="Number">
                     <div class="ability-modifiers flexrow">
                         <span class="ability-mod" data-tooltip="DND5E.Modifier">
