@@ -1619,9 +1619,6 @@ class Actor5e {
         this.system.attributes.movement.units ??= Object.keys(CONFIG.DND5E.movementUnits)[0];
         this.system.attributes.senses.units ??= Object.keys(CONFIG.DND5E.movementUnits)[0];
     }
-    prepareSheetDetails(){
-        
-    }
 
     //#region Derived Data
     /**
@@ -1636,9 +1633,8 @@ class Actor5e {
         this._prepareArmorClass();
         this._prepareInitiative(rollData, globalCheckBonus);
         this._prepareSpellcasting();
+        this._prepareSkills();
         this.movement = this._getMovementSpeed(this.system.attributes.movement ?? {}, false);
-
-        this.prepareSheetDetails();
 
         if(!this.system.details.xp){
             this.system.details.xp = {
@@ -1900,6 +1896,18 @@ class Actor5e {
         //Copy over units
         if (force && race.system.senses.units) {this.system.attributes.senses.units = race.system.senses.units;}
         else {this.system.attributes.senses.units ??= race.system.senses.units;}
+    }
+    /**
+     * Recalculates skills based on current ability score values
+     */
+    _prepareSkills(){
+        for(let [key, val] of Object.entries(this.system.skills)){
+            this.skills[key] = System5e.calcSkillEmbed({
+                label: val.label,
+                ability: val.ability,
+                baseProf: 0},
+                this.system.abilities, this.system.attributes.prof);
+        }
     }
     //#endregion
 
