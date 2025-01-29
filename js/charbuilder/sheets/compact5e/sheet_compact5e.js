@@ -1500,10 +1500,6 @@ class ItemSheet5e extends ItemSheet {
             tabs: [{navSelector: ".tabs", contentSelector: ".sheet-body", initial: "description"}],
         });
     }
-
-    _onItemUpdate(p, collectionId){
-        this._renderUpdate();
-    }
     get template(){
         switch (this.entity.entityType){
             case "item":
@@ -1567,28 +1563,6 @@ class ItemSheet5e extends ItemSheet {
     async _render(force, options) {
         //if (!this.editingDescriptionTarget) {this._accordions.forEach(accordion => accordion._saveCollapsedState());}
         return super._render(force, options);
-    }
-    //DEPRECATED
-    _renderUpdate(){
-        let contentTemplate = new LoadTemplate(this.contentElement, "parts/edit/" + this.templateName, this); //Important to set this sheet, not entity, as the context
-
-        const enrichmentOptions = {
-            relativeTo: this.entity, //rollData: this.rollData
-        }
-        /* TextEditor.enrichHTML(item.system.description?.value ?? "", enrichmentOptions).then(result => {
-            this.enriched = {description: result};
-        }) */
-        this.enriched = {
-            description: TextEditor.enrichHTML(this.entity.system.description?.value ?? "", enrichmentOptions),
-        }
-
-        contentTemplate.createAndCompile((innerHTML)=>{
-            let innerElement = $$`${innerHTML}`;
-            this._replaceHTML(this.contentElement, innerElement);
-            this.contentElement = innerElement;
-            this.navigation_switchTab(this.activeTab);
-            this.setupListeners(this.contentElement);
-        });
     }
     navigation_switchTab(activeTabName=null){
 
