@@ -520,6 +520,10 @@ class Application {
         RENDERED: 2,
         ERROR: 3
     });
+    /**
+     * Options to be fed to the application before creation. Overridable, intended to be merged with super.
+     * @returns {object}
+     */
     static get defaultOptions(){
         return {
             title: "",
@@ -843,7 +847,6 @@ class Application {
 }
 class FormApplication extends Application {
     constructor(object={}, options={}){
-        console.log("object", object, "options", options)
         super(options);
         /** The target object this form is manipulating 
         */
@@ -1236,6 +1239,11 @@ class DocumentSheet extends FormApplication {
     }
     /**Shorthand ref to the target object*/
     get document(){return this.object;}
+    /**
+     * Data to be fed to the handlebars template. Intended to be overridable.
+     * @param {object} options
+     * @returns {object}
+     */
     getData(options={}) {
         const data = this.document;//.toObject(false);
         const isEditable = this.isEditable;
@@ -1487,7 +1495,6 @@ class ItemSheet5e extends ItemSheet {
         System5e.addHookBase("item_update", this.boundUpdateFunc);
     } */
     constructor(...args){
-        console.log("args", ...args);
         super(...args);
     }
 
@@ -1518,11 +1525,13 @@ class ItemSheet5e extends ItemSheet {
             system: item.system,
             labels: item.labels,
             editable: true,
+            equippable: item.equippable,
+            isArmor: this.isArmor,
             baseItems: await this._getItemBaseTypes(),
             isHealing: item.system.actionType === "heal",
             isIdentifiable: "identified" in item.system,
             isIdentified: item.system.identified !== false,
-            hasDexModifier: item.isArmor && (item.system.type.value !== "shield"),
+            hasDexModifier: this.isArmor && (item.system.type.value !== "shield"),
         });
 
         const enrichmentOptions = {
@@ -1544,21 +1553,82 @@ class ItemSheet5e extends ItemSheet {
    * @protected
    */
     async _getItemBaseTypes() {
-        const baseIds = this.item.type === "equipment" ? {
+        const baseIds = this.item.itemType === "equipment" ? {
         ...CONFIG.DND5E.armorIds,
         ...CONFIG.DND5E.shieldIds
-        } : CONFIG.DND5E[`${this.item.type}Ids`];
+        } : CONFIG.DND5E[`${this.item.itemType}Ids`];
         if (baseIds === undefined) return {};
 
         const baseType = this.item.system.type.value;
 
         const items = {};
         for (const [name, id] of Object.entries(baseIds)) {
-            const baseItem = await getBaseItem(id);
+            //NOT YET IMPLEMENTED (getItemByUid wont work)
+            continue;
+            const baseItem = await this.getBaseItem(id);
             if (baseType !== baseItem?.system?.type?.value) continue;
             items[name] = baseItem.name;
         }
         return Object.fromEntries(Object.entries(items).sort((lhs, rhs) => lhs[1].localeCompare(rhs[1], game.i18n.lang)));
+    }
+    /**
+     * Fetch an item for the provided ID. If the provided ID contains a compendium pack name
+     * it will be fetched from that pack, otherwise it will be fetched from the compendium defined
+     * in `DND5E.sourcePacks.ITEMS`.
+     * @param {string} identifier            Simple ID or compendium name and ID separated by a dot.
+     * @param {object} [options]
+     * @param {boolean} [options.indexOnly]  If set to true, only the index data will be fetched (will never return
+     *                                       Promise).
+     * @param {boolean} [options.fullItem]   If set to true, the full item will be returned as long as `indexOnly` is
+     *                                       false.
+     * @returns {Promise<Item5e>|object}     Promise for a `Document` if `indexOnly` is false & `fullItem` is true,
+     *                                       otherwise else a simple object containing the minimal index data.
+     */
+    getBaseItem(identifier, { indexOnly=false, fullItem=false }={}) {
+        //NOT YET IMPLEMENTED
+        const uuid = getBaseItemUUID(identifier);
+        const { collection, documentId: id } = foundry.utils.parseUuid(uuid);
+        const pack = collection?.metadata.id;
+    
+        // Full Item5e document required, always async.
+        if ( fullItem && !indexOnly ) return collection?.getDocument(id);
+    
+        const cache = _cachedIndices[pack];
+        const loading = cache instanceof Promise;
+    
+        // Return extended index if cached, otherwise normal index, guaranteed to never be async.
+        if ( indexOnly ) {
+        const index = collection?.index.get(id);
+        return loading ? index : cache?.[id] ?? index;
+        }
+    
+        // Returned cached version of extended index if available.
+        if ( loading ) return cache.then(() => _cachedIndices[pack][id]);
+        else if ( cache ) return cache[id];
+        if ( !collection ) return;
+    
+        // Build the extended index and return a promise for the data
+        const fields = traitIndexFields();
+        const promise = collection.getIndex({ fields }).then(index => {
+        const store = index.reduce((obj, entry) => {
+            for ( const field of fields ) {
+            const val = foundry.utils.getProperty(entry, field);
+            if ( (field !== "system.type.value") && (val !== undefined) ) {
+                foundry.utils.setProperty(entry, "system.type.value", val);
+                foundry.utils.logCompatibilityWarning(
+                `The '${field}' property has been deprecated in favor of a standardized \`system.type.value\` property.`,
+                { since: "DnD5e 3.0", until: "DnD5e 3.2", once: true }
+                );
+            }
+            }
+            obj[entry._id] = entry;
+            return obj;
+        }, {});
+        _cachedIndices[pack] = store;
+        return store[id];
+        });
+        _cachedIndices[pack] = promise;
+        return promise;
     }
     async _render(force, options) {
         //if (!this.editingDescriptionTarget) {this._accordions.forEach(accordion => accordion._saveCollapsedState());}
@@ -1643,7 +1713,7 @@ class ItemSheet5e extends ItemSheet {
         //Fire a hook to alert other UI that this item has changed
         System5e.hkItemUpdated(this.collectionId);
         //Update this UI and re-render things
-        this._renderUpdate();
+        this.render();
     }
 
     /** @inheritDoc */

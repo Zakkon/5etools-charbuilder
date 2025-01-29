@@ -1835,6 +1835,7 @@ class Actor5e {
                 message: game.i18n.localize("DND5E.WarnMultipleShields"), type: "warning"
             }); */
             ac.shield = shields[0].system.armor.value ?? 0;
+            if(typeof ac.shield === "string"){ac.shield = Number.parseInt(ac.shield);}
             ac.equippedShield = shields[0];
         }
         else{
