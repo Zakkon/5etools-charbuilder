@@ -688,6 +688,11 @@ class Item5e extends Entity5e{
     get toggleAttuneTitle(){
         return this.system.attunement == 2? "Attuned" : "Not Attuned";
     }
+    getContext(){
+        return {
+            totalWeight: this.system.weight * this.system.quantity,
+        }
+    }
 }
 
 class Feature5e extends Entity5e{
@@ -1198,6 +1203,7 @@ class Actor5e {
     
     constructor(saveData=null){
         this._mancerDependencies = {};
+        this.weightUnit = "lbs.";
         if(saveData != null){this._loadFromSaveData(saveData);}
         else{this._createFakeCharacterData();}
         this.owner = true;//SETTINGS.SHEET_ISEDITABLE;
@@ -1208,7 +1214,6 @@ class Actor5e {
     }
     get _source(){return this;} //Used by charactermancer to access the object which holds .system
     get skills(){return this.system.skills;}
-
     _loadFromSaveData(data){
         for(let [key, value] of Object.entries(data)){
             this[key] = value;
@@ -2083,6 +2088,10 @@ class Actor5e {
 
     }
 
+    /**
+     * Get contextual information about an item collection
+     * @param {number} collectionId
+     */
     itemContext(collectionId){
         const item = this.getItemByCollectionId(collectionId, false);
         if(item == null){return null;}
