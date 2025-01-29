@@ -352,6 +352,14 @@ class InventoryElement {
                 //TODO: Make sure we are not a container also
                 return this._onCreate(target);
             case "delete":
+                //Open up a popup asking if user is sure
+                const isUserSure = await InputUiUtil.pGetUserBoolean({
+                    title: `Are you sure?`,
+                    htmlDescription: `Are you sure you wish to delete ${item.name}?`,
+                    textYes: "Yes",
+                    textNo: "Cancel",
+                });
+                if (!isUserSure){return false;}
                 this._onDelete(item, {shouldRemoveAdvancements:true});
                 return;
             case "edit":
