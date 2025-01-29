@@ -893,7 +893,11 @@ select.chooseAlignment{background: #d3d1c5;}
     background-color: var(--light-highlight);
     border-color: #7a7971;
   }
-
+/*TEXT EDITOR*/
+.pell-actionbar{
+    display: inline-flex;
+    min-width: 400px;
+}
 /*FOOTER*/
 .c5e footer{
     padding: 0px;

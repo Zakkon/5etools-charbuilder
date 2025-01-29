@@ -30,7 +30,7 @@ class HandlebarsHelper{
             //return (bool1 && bool2).toString();
             return bool1 && bool2;
         });
-        Handlebars.registerHelper({or() { console.log("or", arguments); return Array.prototype.slice.call(arguments, 0, -1).some(Boolean);}});
+        Handlebars.registerHelper({or() { return Array.prototype.slice.call(arguments, 0, -1).some(Boolean);}});
         Handlebars.registerHelper('eq', function (value1, value2) {
             return value1 === value2;
         });
@@ -49,14 +49,14 @@ class HandlebarsHelper{
         Handlebars.registerHelper('editor', HandlebarsHelper.editor);
         Handlebars.registerHelper('numberInput', function (value, options) {
             const properties = [];
-            for ( let k of ["class", "name", "placeholder", "min", "max"] ) {
-                if ( k in options.hash ) properties.push(`${k}="${options.hash[k]}"`);
+            for (let k of ["class", "name", "placeholder", "min", "max"]) {
+                if (k in options.hash) properties.push(`${k}="${options.hash[k]}"`);
             }
             const step = options.hash.step ?? "any";
             properties.unshift(`step="${step}"`);
-            if ( options.hash.disabled === true ) properties.push("disabled");
+            if (options.hash.disabled === true ) properties.push("disabled");
             let safe = Number.isNumeric(value) ? Number(value) : "";
-            if ( Number.isNumeric(step) && (typeof safe === "number") ) safe = safe.toNearest(Number(step));
+            if (Number.isNumeric(step) && (typeof safe === "number")) safe = HelperFunctions.numToNearest(safe, Number(step));
             return new Handlebars.SafeString(`<input type="number" value="${safe}" ${properties.join(" ")}>`);
         });
         /**

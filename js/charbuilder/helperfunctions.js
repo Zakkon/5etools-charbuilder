@@ -238,7 +238,26 @@ class HelperFunctions{
      * @param {number} max    The maximum allowed value
      * @return {number}       The clamped number
      */
-    static mathClamped(num, min, max) {
-    return Math.min(max, Math.max(num, min));
-  }
+    static mathClamped(num, min, max) {return Math.min(max, Math.max(num, min));}
+    /**
+     * Round a number to the nearest number which is a multiple of a given interval
+     * @param {number} num     The number to round
+     * @param {number} interval     The interval to round the number to the nearest multiple of
+     * @param {string} [method=round] The rounding method in: round, ceil, floor
+     * @returns {number}            The rounded number
+     *
+     * @example Round a number to the nearest step interval
+     * ```js
+     * let n = 17.18;
+     * n.toNearest(5); // 15
+     * n.toNearest(10); // 20
+     * n.toNearest(10, "floor"); // 10
+     * n.toNearest(10, "ceil"); // 20
+     * n.toNearest(0.25); // 17.25
+     * ```
+     */
+   static numToNearest(num, interval=1, method="round") {
+        const q = 1 / interval;
+        return Math[method](num * q) / q;
+    }
 }

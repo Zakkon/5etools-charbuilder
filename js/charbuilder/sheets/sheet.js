@@ -319,6 +319,9 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent {
     });
   }
   //#endregion
+
+    
+
 }
 
 
@@ -353,7 +356,7 @@ class InventoryElement {
                 return;
             case "edit":
                 //Get the ui object for the entire item
-                C5e_Inventory.openEditWindow(this.actor, item, item.uid, item.entityType, item.collectionId);
+                ItemSheet5e.openEditWindow(this.actor, item, item.uid, item.entityType, item.collectionId);
                 return;
             case "duplicate":
                 //Get the ui object for the entire item

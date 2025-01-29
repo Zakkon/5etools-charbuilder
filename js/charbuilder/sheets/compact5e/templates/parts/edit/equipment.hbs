@@ -94,7 +94,7 @@
                 </select>
             </div>
 
-            {{#unless system.isMountable}}
+            {{#unless equippable}}
             <div class="form-group input-select">
                 <label>{{localize "DND5E.Attunement"}}</label>
                 <div class="form-fields">
@@ -129,7 +129,7 @@
             </div>
 
             {{!-- Armor Class --}}
-            {{#if (or system.isArmor system.isMountable)}}
+            {{#if (or isArmor equippable)}}
             <div class="form-group">
                 <label>{{ localize "DND5E.ArmorClass" }}</label>
                 <div class="form-fields">

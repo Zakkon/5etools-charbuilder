@@ -57,29 +57,7 @@ class C5e_Inventory{
     activateListeners(){
     }
 
-    //#region Editing
-    static _editedCollectionUids = [];
-    /**
-     * Opens an edit window for the specified entity (must be in the actor's inventory)
-     * @param {Actor5e} actor
-     * @param {Entity5e} entity=null
-     * @param {string} uid uid of the entity. Found in entity.uid
-     * @param {string} type Entity type. Found in entity.entityType
-     * @param {string} collectionId unique item collection id for this specific entity, given when added to the inventory of the actor. Found in entity.collectionId
-     */
-    static openEditWindow(actor, entity=null, uid, type, collectionId){
-        if(C5e_Inventory._editedCollectionUids.includes(collectionId)){ return;} //We are already editing this item!
-        C5e_Inventory._editedCollectionUids.push(collectionId);
-        if(!entity){entity = actor.getItemByCollectionId(collectionId);}
-        let window = new EntitySheet5e(actor, uid, entity, type, collectionId);
-        window.render();
-    }
-    static closeEditWindow(window, collectionId){
-        if(!C5e_Inventory._editedCollectionUids.includes(collectionId)){return;}
-        C5e_Inventory._editedCollectionUids.splice(C5e_Inventory._editedCollectionUids.indexOf(collectionId), 1);
-        window.close();
-    }
-    //#endregion
+    
 
     //#region Classes
     _myClasses = [];
@@ -320,7 +298,7 @@ class C5e_InventoryItem {
                 this.element.remove();
             }
             else if(action == "itemEdit"){
-                C5e_Inventory.openEditWindow(this.itemUid, this.type, this.collectionId);
+                ItemSheet5e.openEditWindow(this.itemUid, this.type, this.collectionId);
             }
             else if(action == "equip"){
                 $(gp).removeClass("equipped");
@@ -382,517 +360,129 @@ class C5e_InventoryItemSummary {
         return foundItem;
     }
 }
-
-class BaseSheet {
-
-    constructor(object){
-        /**
-        * The object target which we are using this form to modify
-        * @type {*}
-        */
-        this.object = object;
-    }
-
-    
-    /**
-     * Calls this.object.update and passes along formData
-     * @param {any} event
-     * @param {object} formData
-     */
-    async _updateObject(event, formData) {
-        //if (!this.object.id){return;}
-        return this.object.update(formData);
-    }
-
-    _getSubmitData(updateData={}){
-
-    }
-
-    //#region Event Listeners
-    /**
-     * Handle changes to an input element, submitting the form if options.submitOnChange is true.
-     * Do not preventDefault in this handler as other interactions on the form may also be occurring.
-     * @param {Event} event  The initial change event
-     * @protected
-     */
-    async _onChangeInput(event) {
-        // Do not fire change listeners for form inputs inside text editors.
-        if (event.currentTarget.closest(".editor")) return;
-
-        // Handle changes to specific input types
-        const el = event.target;
-        if ((el.type === "color") && el.dataset.edit) this._onChangeColorPicker(event);
-        else if (el.type === "range") this._onChangeRange(event);
-
-        // Maybe submit the form
-        if (this.options.submitOnChange) {return this._onSubmit(event);}
-    }
-    //#endregion
-}
-
-class EntitySheet5e extends BaseSheet {
-    collectionId;
-    itemUid;
-    type;
-    element;
-    _entity;
-    editable = true;
-    contentElement;
-    tab_details;
-    rectWidth = 550;
-    rectHeight = 500;
-    zIndex = 110;
-    rectLeft = 400;
-    rectTop = 50;
-    startX;
-    startY;
-    startW;
-    startH;
-    itemType; //Used to know what category of item this is
-    /**
-     * The entity being edited
-     * @returns {Entity5e}
-     */
-    get entity(){return this._entity;}
-    set entity(value){this._entity = value;}
-    get system(){return this._entity.system;}
-    get config(){return CONFIG.DND5E;}
-    get isCostlessAction(){return this.system?.activation?.type in DND5E.staticAbilityActivationTypes;}
-    get isCrewed(){return this.system.activation?.type === "crew";}
-    get isFormulaRecharge(){ !!DND5E.limitedUsePeriods[this.system.uses?.per]?.formula;}
-    get isPhysical(){return this.system.quantity != null;}
-    get hasScalarRange(){return this.system.range?.units in CONFIG.DND5E.movementUnits;}
-    get hasScalarDuration(){return this.system.duration?.units in CONFIG.DND5E.scalarTimePeriods;}
-    get hasScalarTarget(){return this.system.target?.template?.type || ![null, "", "self"].includes(this.system.target?.affects?.type);}
-    get labels(){return this.entity.labels;} //Lazy shortcut before we move all labels rendering code to this class
-    /**
-     * @param {Actor5e} actor
-     * @param {string} uid
-     * @param {Entity5e} item
-     * @param {string} type
-     * @param {string} collectionId
-     * @returns {EntitySheet5e}
-     */
-    constructor(actor, uid, item, type, collectionId){
-        super(item);
-        this.actor = actor;
-        this.collectionId = collectionId;
-        this.itemUid = uid;
-        this.type = type;
-        this.activeTab = "details";
-        this._entity = item;
-        if(type == "item"){this.itemType = this.system.type.value;}
-        this.boundUpdateFunc = this._onItemUpdate.bind(this);
-        this.user = {isGM:true};
-
-        System5e.addHookBase("item_update", this.boundUpdateFunc);
-    }
-    _onItemUpdate(p, collectionId){
-        this._renderUpdate();
-    }
-
-    /**
-     * Renders the edit window on screen
-     */
-    render(){
-        console.log("to edit: ", this.entity);
-        const windowHeader = this.windowHeader();
-        this.contentElement = $$`<div></div>`;
-        let window_content = $$`<section class="window-content">${this.contentElement}</section>`;
-        let handle = this.windowDragHandle();
-        let window = $$`<div class="c5e app window-app sheet item" style="z-index: 110; width: 550px; height: 700px; left: 400px; top: 50px;">${windowHeader}${window_content}${handle}</div>`;
-        this.element = window;
-        $("body").append(this.element);
-
-        let templateName = this.type;
-        switch(this.type){
-            case "feature":
-                templateName = "feat";
-                if(this.entity.featureType == "class"){templateName = "class";}
-                else if(this.entity.featureType == "subclass"){templateName = "subclass";}
-                else if(this.entity.featureType == "race"){templateName = "race";}
-                else if(this.entity.featureType == "background"){templateName = "background";}
-                break;
-            case "item":
-                templateName = this.itemType;
-                break;
-            default: break;
-        }
-
-        this.templateName = templateName;
-        this.cssClass = "editable";
-        this.concealDetails = false;//!game.user.isGM && (this.document.system.identified === false)
-        this._renderUpdate();
-    }
-    _renderUpdate(){
-        let contentTemplate = new LoadTemplate(this.contentElement, "parts/edit/" + this.templateName, this); //Important to set this sheet, not entity, as the context
-
-        const enrichmentOptions = {
-            relativeTo: this.entity, //rollData: this.rollData
-        }
-        /* TextEditor.enrichHTML(item.system.description?.value ?? "", enrichmentOptions).then(result => {
-            this.enriched = {description: result};
-        }) */
-        this.enriched = {
-            description: TextEditor.enrichHTML(this.entity.system.description?.value ?? "", enrichmentOptions),
-        }
-
-        contentTemplate.createAndCompile((innerHTML)=>{
-            let innerElement = $$`${innerHTML}`;
-            this._replaceHTML(this.contentElement, innerElement);
-            this.contentElement = innerElement;
-            this.navigation_switchTab(this.activeTab);
-            this.setupListeners(this.contentElement);
-        });
-    }
-    close(){
-        //Remove hooks
-        System5e.removeHookBase("item_update", this.boundUpdateFunc);
-        //Fire one last item_update? (incase we clicked on close instead of clicking elsewhere, which normally triggers input fields "change" events)
-        this.element.remove(); this.element = null;
-    }
-    navigation_switchTab(activeTabName=null){
-
-        //Choose an open tab name if none was specified
-        if(activeTabName==null){
-            const nav_tabs = this.element.find(".sheet-navigation.tabs > [data-tab]");
-            activeTabName = nav_tabs.eq(0).attr("data-tab");
-        }
-
-        //Disable all tabs
-        let nav_tabs = this.element.find(".sheet-navigation.tabs > [data-tab]");
-        let tabDivs = this.element.find(".sheet-body > .tab");
-        nav_tabs.toggleClass("active", false);
-        tabDivs.toggleClass("active", false);
-        //Enable the specific tab we want open
-        nav_tabs = this.element.find(`.sheet-navigation.tabs > [data-tab="${activeTabName}"]`);
-        tabDivs = this.element.find(`.sheet-body > .tab[data-tab="${activeTabName}"]`);
-        nav_tabs.toggleClass("active", true);
-        tabDivs.toggleClass("active", true);
-
-        this.activeTab = activeTabName;
-    }
-    windowHeader(){
-        const closeBtn = $$`<a class="header-button control"><i class="fas fa-times"></i>Close </a>`;
-        closeBtn.on("click", (e) => {
-            //Close window
-            C5e_Inventory.closeEditWindow(this, this.collectionId);
-        });
-        const header = $$`<header class="window-header flexrow draggable resizable">
-        <h4 class="window-title">Edit Item</h4>
-        ${closeBtn}</header>`;
-        return header;
-    }
-    windowDragHandle(){
-        let handle = $$`<div class="window-resizable-handle"><i class="fas fa-arrows-alt-h"></i></div>`;
-
-        handle.on("mousedown", (e)=>{
-            this.resizeDragStart(e);
-            $("body").on("mousemove", (e)=>{this.resizeDragMove(e)});
-        });
-        $("body").on("mouseup", (e)=>{
-            $("body").off("mousemove");
-        });
-
-        return handle;
-    }
-    resizeDragStart(e){
-        this.startX = e.clientX;
-        this.startY = e.clientY;
-        this.startW = Number.parseInt((this.element.css("width")).replace(/\D/g,''));
-        this.startH = Number.parseInt((this.element.css("height")).replace(/\D/g,''));
-    }
-    resizeDragMove(e){
-        let x = e.clientX;
-        let y = e.clientY;
-        let dx = x - this.startX;
-        let dy = y - this.startY;
-        this.element.css("width", `${dx+this.startW}px`);
-        this.element.css("height", `${dy+this.startH}px`);
-    }
-    setRectSize(width, height){
-        this.element.css("width", `${width}px`);
-        this.element.css("height", `${height}px`);
-    }
-    setStyle(){
-        let str = `z-index:${this.zIndex} width:${this.rectWidth} height:${this.rectHeight} left:${this.rectLeft} top:${this.rectTop}`;
-        this.element.css(str);
-    }
-    
-    setupListeners(html){
-
-        //if ( !this.isEditable ) return;
-        //html.on("change", "input,select,textarea", this._onChangeInput.bind(this));
-
-        //Inside .editor-content, find child objects (of which only get created once the edit button has been clicked)
-        html.find(".editor-content[data-edit]").each((i, div) => this._activateEditor(div));
-
-        //Make navigation respond to being clicked
-        html.find(".sheet-navigation.tabs").click(evt=>{
-            const targetTab = evt.target.getAttribute("data-tab");
-            this.navigation_switchTab(targetTab);
-        });
-
-        html.find(".damage-control").click(this._onDamageControl.bind(this));
-
-        //Input
-        for(let el of html.find("input")){
-            //Make sure the element has a "name" attribute. This is needed to know what prop to send the value to
-            if(!el.name){continue;}
-            $(el).on("change", (e) => {
-                console.log("setprop", el.name, e.target.value);
-                this.setProp(el.name, e.target.value);
-            });
-            //Setting the name manually seems neccesary due to some strange bug
-            if(el.name == "name"){el.value = this.entity.name;}
-        }
-        //Select
-        for(let el of html.find("select")){
-            //Make sure it has a "name" attribute
-            if(!el.name){continue;}
-            $(el).on("change", (e) => {
-                console.log("setprop", el.name, e.target.value);
-                this.setProp(el.name, e.target.value);
-            });
-        }
-
-        html.find(".description-edit").click(event => {
-            this.editingDescriptionTarget = event.currentTarget.dataset.target;
-            this._renderUpdate();
-        });
-    }
-
-    /**
-     * Sets the prop of the entity, then fires item update, then fires render update
-     * @param {string} prop example: "system.activation.type"
-     * @param {string} value If "none", set value to null
-     */
-    setProp(prop, value){
-        //Set the value to the item's override
-        let entity = this.entity;
-        if(typeof(value) == "string" && (value).toLowerCase() === "none"){value = null;}
-        entity.setProp(prop, value);
-        //Fire a hook to alert other UI that this item has changed
-        System5e.hkItemUpdated(this.collectionId);
-        //Update this UI and re-render things
-        this._renderUpdate();
-    }
-
-    /**
-   * Customize how inner HTML is replaced when the application is refreshed
-   * @param {jQuery} element      The original HTML processed as a jQuery object
-   * @param {jQuery} html         New updated HTML as a jQuery object
-   * @private
-   */
-    _replaceHTML(element, html){
-        return element.replaceWith(html);
-    }
-
-    /** @inheritDoc */
-    async _onSubmit(...args) {
-        //if (this._tabs[0].active === "details") this.position.height = "auto";
-        //await super._onSubmit(...args);
-    }
-    /** @inheritDoc */
-    _getSubmitData(updateData={}) {
-        const formData = HelperFunctions.expandObject(super._getSubmitData(updateData));
-
-        // Handle Damage array
-        const damage = formData.system?.damage;
-        if (damage && !HelperFunctions.getProperty(this.entity.overrides, "system.damage.parts")) {
-        damage.parts = Object.values(damage?.parts || {}).map(d => [d[0] || "", d[1] || ""]);
-        }
-
-        // Handle properties
-        if (HelperFunctions.hasProperty(formData, "system.properties")) {
-        const keys = new Set(Object.keys(formData.system.properties));
-        const preserve = new Set(this.entity._source.system.properties ?? []).difference(keys);
-        formData.system.properties = [...filteredKeys(formData.system.properties), ...preserve];
-        }
-
-        // Check max uses formula
-        const uses = formData.system?.uses;
-        if ( uses?.max ) {
-        const maxRoll = new Roll(uses.max);
-        if ( !maxRoll.isDeterministic ) {
-            uses.max = this.entity._source.system.uses.max;
-            this.form.querySelector("input[name='system.uses.max']").value = uses.max;
-            ui.notifications.error(game.i18n.format("DND5E.FormulaCannotContainDiceError", {
-            name: game.i18n.localize("DND5E.LimitedUses")
-            }));
-            return null;
-        }
-        }
-
-        // Check duration value formula
-        const duration = formData.system?.duration;
-        if ( duration?.value ) {
-        const durationRoll = new Roll(duration.value);
-        if ( !durationRoll.isDeterministic ) {
-            duration.value = this.entity._source.system.duration.value;
-            this.form.querySelector("input[name='system.duration.value']").value = duration.value;
-            ui.notifications.error(game.i18n.format("DND5E.FormulaCannotContainDiceError", {
-            name: game.i18n.localize("DND5E.Duration")
-            }));
-            return null;
-        }
-        }
-
-        // Check class identifier
-        if ( formData.system?.identifier && !dnd5e.utils.validators.isValidIdentifier(formData.system.identifier) ) {
-        formData.system.identifier = this.entity._source.system.identifier;
-        this.form.querySelector("input[name='system.identifier']").value = formData.system.identifier;
-        ui.notifications.error("DND5E.IdentifierError", {localize: true});
-        return null;
-        }
-
-        // Return the flattened submission data
-        return foundry.utils.flattenObject(formData);
-    }
-
-    /**
-   * Add or remove a damage part from the damage formula.
-   * @param {Event} event             The original click event.
-   * @returns {Promise<Item5e>|null}  Item with updates applied.
-   * @private
-   */
-  async _onDamageControl(event) {
-    event.preventDefault();
-    const a = event.currentTarget;
-
-    // Add new damage component
-    if (a.classList.contains("add-damage")) {
-      await this._onSubmit(event);  // Submit any unsaved changes
-      const damage = this.entity.system.damage ?? {parts:[]}; //Create parts if they don't exist yet
-      return this.entity.update({"system.damage.parts": damage.parts.concat([["", ""]])});
-    }
-
-    // Remove a damage component
-    if (a.classList.contains("delete-damage")) {
-      await this._onSubmit(event);  // Submit any unsaved changes
-      const li = a.closest(".damage-part");
-      const damage = HelperFunctions.deepClone(this.entity.system.damage);
-      damage.parts.splice(Number(li.dataset.damagePart), 1);
-      return this.entity.update({"system.damage.parts": damage.parts});
-    }
-  }
-
+class Tabs {
+    constructor({group, navSelector, contentSelector, initial, callback}={}) {
   
-
-  //#region Text Editor
-  /**
-   * Activate an editor instance present within the form
-   * @param {HTMLElement} div  The element which contains the editor
-   * @protected
-   */
-  _activateEditor(div) {
-
-    // Get the editor content div
-    const name = div.dataset.edit;
-    const engine = "pell"; //div.dataset.engine || "tinymce";
-    const collaborate = div.dataset.collaborate === "true";
-    const button = div.previousElementSibling;
-    const hasButton = button && button.classList.contains("editor-edit");
-    const wrap = div.parentElement.parentElement;
-    const wc = div.closest(".window-content");
-
-    // Determine the preferred editor height
-    const heights = [wrap.offsetHeight, wc ? wc.offsetHeight : null];
-    if ( div.offsetHeight > 0 ) heights.push(div.offsetHeight);
-    const height = Math.min(...heights.filter(h => Number.isFinite(h)));
-
-    // Get initial content
-    const options = {
-      target: div,
-      fieldName: name,
-      save_onsavecallback: () => this.saveEditor(name),
-      height, engine, collaborate
-    };
-
-    //if ( engine === "prosemirror" ) options.plugins = this._configureProseMirrorPlugins(name, {remove: hasButton});
-
-    const data = this.object;
-
-    this.editors = this.editors ?? {};
-    // Define the editor configuration
-    const editor = this.editors[name] = {
-      options,
-      target: name,
-      button: button,
-      hasButton: hasButton,
-      mce: null,
-      instance: null,
-      active: !hasButton,
-      changed: false,
-      initial: HelperFunctions.getProperty(data, name)
-    };
-
-    // Activate the editor immediately, or upon button click
-    const activate = () => {
-      editor.initial = HelperFunctions.getProperty(data, name);
-      this.activateEditor(name, {}, editor.initial);
-    };
-
-    if (hasButton){button.onclick = activate;}
-    else {activate();}
-  }
-  /**
-   * Creates a text editor instance, specified by a string name
-   * @param {string} name
-   * @param {object} options={}
-   * @param {string} initialContent=""
-   * @returns {EditorInstance}
-   */
-  async activateEditor(name, options={}, initialContent="") {
-    const editor = this.editors[name];
-    if ( !editor ) throw new Error(`${name} is not a registered editor name!`);
-    options = HelperFunctions.mergeObject(editor.options, options);
-    if ( !options.fitToSize ) options.height = options.target.offsetHeight;
-    if ( editor.hasButton ) editor.button.style.display = "none";
-    //Create the editor
-    const instance = editor.instance = editor.mce = await TextEditor.create(options, initialContent || editor.initial);
-    options.target.closest(".editor")?.classList.add(options.engine ?? "tinymce");
-    editor.changed = false;
-    editor.active = true;
-
-    //Configure extensions to the editor
-    if(options.engine === "pell"){
-        instance.onSave = (html) => {
-            let update = {}; update[name] = html; //Usually "system.description.value"
-            this.entity.update(update);
-            //If description was changed, make item also create a rendered version of the text (with hotlinks)
-            if(name == "system.description.value"){this.entity.prepareRenderedDescription();}
-            this.saveEditor(name, {remove: true});
-            this.editingDescriptionTarget = null;
+      /**
+       * The name of the tabs group
+       * @type {string}
+       */
+      this.group = group;
+  
+      /**
+       * The value of the active tab
+       * @type {string}
+       */
+      this.active = initial;
+  
+      /**
+       * A callback function to trigger when the tab is changed
+       * @type {Function|null}
+       */
+      this.callback = callback;
+  
+      /**
+       * The CSS selector used to target the tab navigation element
+       * @type {string}
+       */
+      this._navSelector = navSelector;
+  
+      /**
+       * A reference to the HTML navigation element the tab controller is bound to
+       * @type {HTMLElement|null}
+       */
+      this._nav = null;
+  
+      /**
+       * The CSS selector used to target the tab content element
+       * @type {string}
+       */
+      this._contentSelector = contentSelector;
+  
+      /**
+       * A reference to the HTML container element of the tab content
+       * @type {HTMLElement|null}
+       */
+      this._content = null;
+    }
+  
+    /* -------------------------------------------- */
+  
+    /**
+     * Bind the Tabs controller to an HTML application
+     * @param {HTMLElement} html
+     */
+    bind(html) {
+  
+      // Identify navigation element
+      this._nav = html.querySelector(this._navSelector);
+      if ( !this._nav ) return;
+  
+      // Identify content container
+      if ( !this._contentSelector ) this._content = null;
+      else if ( html.matches(this._contentSelector )) this._content = html;
+      else this._content = html.querySelector(this._contentSelector);
+  
+      // Initialize the active tab
+      this.activate(this.active);
+  
+      // Register listeners
+      this._nav.addEventListener("click", this._onClickNav.bind(this));
+    }
+  
+    /* -------------------------------------------- */
+  
+    /**
+     * Activate a new tab by name
+     * @param {string} tabName
+     * @param {boolean} triggerCallback
+     */
+    activate(tabName, {triggerCallback=false}={}) {
+  
+      // Validate the requested tab name
+      const group = this._nav.dataset.group;
+      const items = this._nav.querySelectorAll("[data-tab]");
+      if ( !items.length ) return;
+      const valid = Array.from(items).some(i => i.dataset.tab === tabName);
+      if ( !valid ) tabName = items[0].dataset.tab;
+  
+      // Change active tab
+      for ( let i of items ) {
+        i.classList.toggle("active", i.dataset.tab === tabName);
+      }
+  
+      // Change active content
+      if ( this._content ) {
+        const tabs = this._content.querySelectorAll("[data-tab]");
+        for ( let t of tabs ) {
+          if ( t.dataset.group && (t.dataset.group !== group) ) continue;
+          t.classList.toggle("active", t.dataset.tab === tabName);
         }
+      }
+  
+      // Store the active tab
+      this.active = tabName;
+  
+      // Optionally trigger the callback function
+      if ( triggerCallback ) this.callback(null, this, tabName);
     }
-
-    return instance;
-  }
-  /**
-   * Handle saving the content of a specific editor by name
-   * @param {string} name           The named editor to save
-   * @param {boolean} [remove]      Remove the editor after saving its content
-   * @returns {Promise<void>}
-   */
-  async saveEditor(name, {remove=true}={}) {
-    const editor = this.editors[name];
-    if (!editor || !editor.instance) throw new Error(`${name} is not an active editor name!`);
-    editor.active = false;
-    const instance = editor.instance;
-    await this._onSubmit(new Event("submit"));
-
-    // Remove the editor
-    if (remove) {
-      //instance.destroy();
-      editor.instance = editor.mce = null;
-      if (editor.hasButton) editor.button.style.display = "block";
-      //this._renderUpdate(); //Disabling this for now, to avoid double updates
+  
+    /* -------------------------------------------- */
+  
+    /**
+     * Handle click events on the tab navigation entries
+     * @param {MouseEvent} event    A left click event
+     * @private
+     */
+    _onClickNav(event) {
+      const tab = event.target.closest("[data-tab]");
+      if ( !tab ) return;
+      event.preventDefault();
+      const tabName = tab.dataset.tab;
+      if ( tabName !== this.active) this.activate(tabName, {triggerCallback: true});
     }
-    editor.changed = false;
   }
-  //#endregion
-}
+
 
 let _maxZ = 100;
 let _appId = 0;
@@ -903,6 +493,10 @@ class Application {
         this.options = HelperFunctions.mergeObject(this.constructor.defaultOptions, options);
         //Unique to every application window
         this.appId = _appId += 1;
+        /**
+        * Private reference to the jQuery element we are rendering
+        * @type {jQuery}
+        */
         this._element = null;
         //Create our position
         this.position = {
@@ -913,6 +507,7 @@ class Application {
             scale: this.options.scale,
             zIndex: 0
         };
+        this._tabs = this._createTabHandlers();
         this._minimized = false;
         this._state = Application.RENDER_STATES.NONE;
         this._priorState = this._state;
@@ -924,7 +519,7 @@ class Application {
         RENDERING: 1,
         RENDERED: 2,
         ERROR: 3
-      });
+    });
     static get defaultOptions(){
         return {
             title: "",
@@ -935,6 +530,10 @@ class Application {
     }
     get id(){return this.options.id ? this.options.id : `app-${this.appId}`;};
     get template(){return this.options.template;}
+    /**
+     * Returns our jQuery element, if it exists
+     * @returns {jQuery}
+     */
     get element(){
         if(this._element){return this._element;}
         return $(`#${this.id}`);
@@ -953,9 +552,8 @@ class Application {
         const element = this.element;
         const data = await this.getData(this.options);
         const inner = await this._renderInner(data);
-        console.log("InnerHTML", inner);
         let html = inner;
-        if(element.length){this._replaceHTML(element, data);}
+        if(element.length){this._replaceHTML(element, html);}
         else{
             if(this.popOut){
                 html = await this._renderOuter();
@@ -970,11 +568,12 @@ class Application {
 
         // Activate event listeners on the inner HTML
         this._activateCoreListeners(inner);
-        //this.activateListeners(inner);
+        this.activateListeners(inner);
     }
+
     async _renderInner(data){
         let html = await this.renderTemplate(this.template, data);
-        if ( html === "" ) throw new Error(`No data was returned from template ${this.template}`);
+        if (html === "") throw new Error(`No data was returned from template ${this.template}`);
         return $(html);
     }
     /**
@@ -992,6 +591,15 @@ class Application {
         }
         let html = await this.renderTemplate("app/app-window", windowData);
         html = $(html);
+
+        // Activate header button click listeners after a slight timeout to prevent immediate interaction
+        setTimeout(() => {
+            html.find(".header-button").click(event => {
+              event.preventDefault();
+              const button = windowData.headerButtons.find(b => event.currentTarget.classList.contains(b.class));
+              button.onclick(event);
+            });
+          }, 500);
 
         // Make the outer window draggable
         const header = html.find("header")[0];
@@ -1049,7 +657,7 @@ class Application {
     }
     async close(options={}) {
         const states = Application.RENDER_STATES;
-        if (!options.force && ![states.RENDERED, states.ERROR].includes(this._state)) return;
+        //if (!options.force && ![states.RENDERED, states.ERROR].includes(this._state)) {return;}
         this._state = states.CLOSING;
     
         // Get the element
@@ -1159,6 +767,16 @@ class Application {
         // Return the updated position object
         return currentPosition;
     }
+    /**
+     * Additional actions to take when the application window is resized
+     * @param {Event} event
+     * @private
+     */
+    _onResize(event) {}
+    /**
+     * Creates buttons to use in the header of the popout
+     * @private
+     */
     _getHeaderButtons() {
         const buttons = [
           {
@@ -1192,15 +810,40 @@ class Application {
         return chain;
     }
 
+    /**
+     * Activate important listeners after rendering. Should not be overridden!
+     * @param {jQuery} html
+     */
     _activateCoreListeners(html) {
-       /*  const el = html[0];
+       const el = html[0];
         this._tabs.forEach(t => t.bind(el));
-        this._dragDrop.forEach(d => d.bind(el));
+        /* this._dragDrop.forEach(d => d.bind(el));
         this._searchFilters.forEach(f => f.bind(el)); */
+    }
+    /**
+     * Activate listeners after rendering. Can be overridden.
+     * @param {jQuery} html
+     */
+    activateListeners(html) {}
+
+    /**
+     * Create tabs based on the tabs specified in options.tabs
+     * @private
+     * @returns {object[]}
+     */
+    _createTabHandlers() {
+        return this.options.tabs.map(t => {
+          t.callback = this._onChangeTab.bind(this); //Set the callback
+          return new Tabs(t);
+        });
+    }
+    _onChangeTab(event, tabs, active) {
+        this.setPosition();
     }
 }
 class FormApplication extends Application {
     constructor(object={}, options={}){
+        console.log("object", object, "options", options)
         super(options);
         /** The target object this form is manipulating 
         */
@@ -1210,16 +853,16 @@ class FormApplication extends Application {
         this.editors = [];
     }
     async _render(force, options) {
-
+        console.log(this.element, this.id);
         // Identify the focused element
-        let focus = this.element.find(":focus");
-        focus = focus.length ? focus[0] : null;
+        let focus = this.element?.find(":focus");
+        focus = focus?.length ? focus[0] : null;
     
         // Render the application and restore focus
         await super._render(force, options);
         if (focus && focus.name) {
           const input = this.form[focus.name];
-          if (input && (input.focus instanceof Function)) input.focus();
+          if (input && (input.focus instanceof Function)) {input.focus();}
         }
     }
     async _renderInner(...args){
@@ -1231,7 +874,7 @@ class FormApplication extends Application {
     }
     async close(options={}) {
         const states = Application.RENDER_STATES;
-        if ( !options.force && ![states.RENDERED, states.ERROR].includes(this._state) ) return;
+        //if (!options.force && ![states.RENDERED, states.ERROR].includes(this._state)) return;
     
         // Trigger saving of the form
         const submit = options.submit ?? this.options.submitOnClose;
@@ -1244,20 +887,31 @@ class FormApplication extends Application {
         this.filepickers = [];
     
         // Close any open MCE editors
-        for ( let ed of Object.values(this.editors) ) {
-          if ( ed.mce ) ed.mce.destroy();
+        for (let ed of Object.values(this.editors)) {
+          //if (ed.mce) {ed.mce.destroy();}
+          if(ed.mce){this.destroyEditor(ed);}
         }
         this.editors = {};
     
         // Close the application itself
         return super.close(options);
-      }
+    }
 
     _activateCoreListeners(html){
         super._activateCoreListeners(html);
         if(!this.form){return;}
         //if(!this.isEditable){return this._disableFields(this.form);}
         this.form.onsubmit = this._onSubmit.bind(this);
+    }
+    activateListeners(html) {
+        super.activateListeners(html);
+        //if (!this.isEditable) { console.error("Not editable! Enable it in options.editable"); return;}
+        html.on("change", "input,select,textarea", this._onChangeInput.bind(this));
+        html.find(".editor-content[data-edit]").each((i, div) => this._activateEditor(div));
+        for (let fp of html.find("button.file-picker")) {
+          fp.onclick = this._activateFilePicker.bind(this);
+        }
+        //if (this._priorState <= this.constructor.RENDER_STATES.NONE) html.find("[autofocus]")[0]?.focus();
     }
 
     async _onSubmit(event, {updateData=null, preventClose=false, preventRender=false}={}){
@@ -1319,6 +973,24 @@ class FormApplication extends Application {
         return HelperFunctions.mergeObject(super.defaultOptions, {
             closeOnSubmit: true
         });
+    }
+    /**
+     * Handle changes to an input element, submitting the form if options.submitOnChange is true.
+     * Do not preventDefault in this handler as other interactions on the form may also be occurring.
+     * @param {Event} event  The initial change event
+     * @protected
+     */
+    async _onChangeInput(event) {
+        // Do not fire change listeners for form inputs inside text editors.
+        if (event.currentTarget.closest(".editor")) return;
+
+        // Handle changes to specific input types
+        const el = event.target;
+        if ((el.type === "color") && el.dataset.edit) this._onChangeColorPicker(event);
+        else if (el.type === "range") this._onChangeRange(event);
+
+        // Maybe submit the form
+        if (this.options.submitOnChange) {return this._onSubmit(event);}
     }
 }
 class FormDataExtended extends FormData {
@@ -1558,19 +1230,49 @@ class FormDataExtended extends FormData {
       return this.object;
     }
 }
-  
 class DocumentSheet extends FormApplication {
     constructor(object, options={}){
         super(object, options);
     }
     /**Shorthand ref to the target object*/
     get document(){return this.object;}
+    getData(options={}) {
+        const data = this.document;//.toObject(false);
+        const isEditable = this.isEditable;
+        return {
+          cssClass: isEditable ? "editable" : "locked",
+          editable: isEditable,
+          document: this.document,
+          data: data,
+          limited: this.document.limited,
+          options: this.options,
+          owner: this.document.isOwner,
+          title: this.title
+        };
+    }
+    render(force=false, options={}) {
+        /* if ( !this._canUserView(game.user) ) {
+          if ( !force ) return this; // If rendering is not being forced, fail silently
+          const err = game.i18n.format("SHEETS.DocumentSheetPrivate", {
+            type: game.i18n.localize(this.object.constructor.metadata.label)
+          });
+          ui.notifications.warn(err);
+          return this;
+        } */
+    
+        // Update editable permission
+        options.editable = options.editable ?? true; //this.object.isOwner;
+    
+        // Register the active Application with the referenced Documents
+        //this.object.apps[this.appId] = this;
+        return super.render(force, options);
+    }
     async close(options={}) {
         await super.close(options);
         delete this.object.apps?.[this.appId];
     }
     async _updateObject(event, formData) {
-        //if (!this.object.id) return; //Our object must have an id
+        if (!this.object.id) {console.error("Document is missing an id, cannot update!");} //Our object must have an id
         return this.object.update(formData);
     }
 }
@@ -1581,7 +1283,6 @@ class ConfigSheet extends DocumentSheet {
      */
     constructor(actor, options){
         super(actor, options);
-        console.log("config sheet");
     }
     /**
      * The actor this config sheet is working with
@@ -1687,4 +1388,506 @@ class ActorMovementConfig extends ConfigSheet {
           keyPath: this.options.keyPath
         };
     }
+}
+
+class ItemSheet extends DocumentSheet{
+    get title(){return this.item.name;}
+    get item(){return this.document;}
+    static get defaultOptions(){
+        return HelperFunctions.mergeObject(super.defaultOptions, {
+            popOut: true,
+            editable: true,
+        });
+    }
+    getData(options={}) {
+        const data = super.getData(options);
+        data.item = data.document;
+        return data;
+    }
+
+    async _render(force=false, options={}){
+        await super._render(force, options);
+        this.setPosition(this.position); //Set the position once, so it's placed where we want it
+    }
+}
+class ItemSheet5e extends ItemSheet {
+    collectionId;
+    itemUid;
+    type;
+    contentElement;
+    tab_details;
+    rectWidth = 550;
+    rectHeight = 500;
+    zIndex = 110;
+    rectLeft = 400;
+    rectTop = 50;
+    startX;
+    startY;
+    startW;
+    startH;
+    itemType; //Used to know what category of item this is
+    editingDescriptionTarget; //The description we are editing at the moment
+    /**
+     * The entity being edited
+     * @returns {Entity5e}
+     */
+    get entity(){return this.item;}
+    get system(){return this.entity.system;}
+    get config(){return CONFIG.DND5E;}
+    get isArmor(){return ["light", "medium", "heavy"].includes(this.system.type?.value);}
+    get isCostlessAction(){return this.system?.activation?.type in DND5E.staticAbilityActivationTypes;}
+    get isCrewed(){return this.system.activation?.type === "crew";}
+    get isFormulaRecharge(){ !!DND5E.limitedUsePeriods[this.system.uses?.per]?.formula;}
+    get isPhysical(){return this.system.quantity != null;}
+    get hasScalarRange(){return this.system.range?.units in CONFIG.DND5E.movementUnits;}
+    get hasScalarDuration(){return this.system.duration?.units in CONFIG.DND5E.scalarTimePeriods;}
+    get hasScalarTarget(){return this.system.target?.template?.type || ![null, "", "self"].includes(this.system.target?.affects?.type);}
+    get labels(){return this.entity.labels;} //Lazy shortcut before we move all labels rendering code to this class
+
+    //#region Editing
+    /**
+     * Opens an edit window for the specified entity (must be in the actor's inventory)
+     * @param {Actor5e} actor
+     * @param {Entity5e} entity=null
+     * @param {string} uid uid of the entity. Found in entity.uid
+     * @param {string} type Entity type. Found in entity.entityType
+     * @param {string} collectionId unique item collection id for this specific entity, given when added to the inventory of the actor. Found in entity.collectionId
+     */
+    static openEditWindow(actor, entity=null, uid, type, collectionId){
+        //Make sure no open windows are currently manipulating an item with the same collectionId
+        for(let [appId, app] of Object.entries(ui.windows)){
+            if(app.id === collectionId){return;}
+        }
+        if(!entity){entity = actor.getItemByCollectionId(collectionId);}
+        let window = new ItemSheet5e(entity, {uid:uid, actor:actor, type:type, id:collectionId});
+        window.render(true);
+    }
+    //#endregion
+
+    /**
+     * @param {Actor5e} actor
+     * @param {string} uid
+     * @param {Entity5e} item
+     * @param {string} type
+     * @param {string} collectionId
+     * @returns {ItemSheet5e}
+     */
+   /*  constructor(actor, uid, item, type, collectionId){
+        super(item);
+        this.actor = actor;
+        this.collectionId = collectionId;
+        this.itemUid = uid;
+        this.type = type;
+        this.activeTab = "details";
+        this._entity = item;
+        if(type == "item"){this.itemType = item.itemType;}
+        this.boundUpdateFunc = this._onItemUpdate.bind(this);
+        this.user = {isGM:true};
+
+        System5e.addHookBase("item_update", this.boundUpdateFunc);
+    } */
+    constructor(...args){
+        console.log("args", ...args);
+        super(...args);
+    }
+
+    static get defaultOptions(){
+        return HelperFunctions.mergeObject(super.defaultOptions, {
+            classes: ["c5e", "sheet", "item"],
+            width: 500,
+            height: 500,
+            resizable: true,
+            tabs: [{navSelector: ".tabs", contentSelector: ".sheet-body", initial: "description"}],
+        });
+    }
+
+    _onItemUpdate(p, collectionId){
+        this._renderUpdate();
+    }
+    get template(){
+        switch (this.entity.entityType){
+            case "item":
+                return `parts/edit/${this.entity.itemType}`;
+            default:
+                return `parts/edit/${this.entity.entityType}`;
+        }
+    }
+    async getData(options){
+        const context = await super.getData(options);
+        const item = context.item;
+        const source = item;//.toObject();
+        context.config = CONFIG.DND5E;
+        HelperFunctions.mergeObject(context, {
+            source: source.system,
+            system: item.system,
+            labels: item.labels,
+            editable: true,
+            baseItems: await this._getItemBaseTypes(),
+            isHealing: item.system.actionType === "heal",
+            isIdentifiable: "identified" in item.system,
+            isIdentified: item.system.identified !== false,
+            hasDexModifier: item.isArmor && (item.system.type.value !== "shield"),
+        });
+
+        const enrichmentOptions = {
+            relativeTo: this.entity, //rollData: this.rollData
+        }
+        context.enriched = {
+            description: TextEditor.enrichHTML(this.entity.system.description?.value ?? "", enrichmentOptions),
+        }
+        if(this.editingDescriptionTarget){
+            context.editingDescriptionTarget = this.editingDescriptionTarget;
+            context.enriched.editing = await TextEditor.enrichHTML(HelperFunctions.getProperty(context, this.editingDescriptionTarget), enrichmentOptions);
+        }
+
+        return context;
+    }
+    /**
+   * Get the base weapons and tools based on the selected type.
+   * @returns {Promise<object>}  Object with base items for this type formatted for selectOptions.
+   * @protected
+   */
+    async _getItemBaseTypes() {
+        const baseIds = this.item.type === "equipment" ? {
+        ...CONFIG.DND5E.armorIds,
+        ...CONFIG.DND5E.shieldIds
+        } : CONFIG.DND5E[`${this.item.type}Ids`];
+        if (baseIds === undefined) return {};
+
+        const baseType = this.item.system.type.value;
+
+        const items = {};
+        for (const [name, id] of Object.entries(baseIds)) {
+            const baseItem = await getBaseItem(id);
+            if (baseType !== baseItem?.system?.type?.value) continue;
+            items[name] = baseItem.name;
+        }
+        return Object.fromEntries(Object.entries(items).sort((lhs, rhs) => lhs[1].localeCompare(rhs[1], game.i18n.lang)));
+    }
+    async _render(force, options) {
+        //if (!this.editingDescriptionTarget) {this._accordions.forEach(accordion => accordion._saveCollapsedState());}
+        return super._render(force, options);
+    }
+    //DEPRECATED
+    _renderUpdate(){
+        let contentTemplate = new LoadTemplate(this.contentElement, "parts/edit/" + this.templateName, this); //Important to set this sheet, not entity, as the context
+
+        const enrichmentOptions = {
+            relativeTo: this.entity, //rollData: this.rollData
+        }
+        /* TextEditor.enrichHTML(item.system.description?.value ?? "", enrichmentOptions).then(result => {
+            this.enriched = {description: result};
+        }) */
+        this.enriched = {
+            description: TextEditor.enrichHTML(this.entity.system.description?.value ?? "", enrichmentOptions),
+        }
+
+        contentTemplate.createAndCompile((innerHTML)=>{
+            let innerElement = $$`${innerHTML}`;
+            this._replaceHTML(this.contentElement, innerElement);
+            this.contentElement = innerElement;
+            this.navigation_switchTab(this.activeTab);
+            this.setupListeners(this.contentElement);
+        });
+    }
+    navigation_switchTab(activeTabName=null){
+
+        //Choose an open tab name if none was specified
+        if(activeTabName==null){
+            const nav_tabs = this.element.find(".sheet-navigation.tabs > [data-tab]");
+            activeTabName = nav_tabs.eq(0).attr("data-tab");
+        }
+
+        //Disable all tabs
+        let nav_tabs = this.element.find(".sheet-navigation.tabs > [data-tab]");
+        let tabDivs = this.element.find(".sheet-body > .tab");
+        nav_tabs.toggleClass("active", false);
+        tabDivs.toggleClass("active", false);
+        //Enable the specific tab we want open
+        nav_tabs = this.element.find(`.sheet-navigation.tabs > [data-tab="${activeTabName}"]`);
+        tabDivs = this.element.find(`.sheet-body > .tab[data-tab="${activeTabName}"]`);
+        nav_tabs.toggleClass("active", true);
+        tabDivs.toggleClass("active", true);
+
+        this.activeTab = activeTabName;
+    }
+    
+    activateListeners(html){
+        super.activateListeners(html);
+        //if ( !this.isEditable ) return;
+        //html.on("change", "input,select,textarea", this._onChangeInput.bind(this));
+
+        //Inside .editor-content, find child objects (of which only get created once the edit button has been clicked)
+       /*  html.find(".editor-content[data-edit]").each((i, div) => this._activateEditor(div)); */
+
+        //Make navigation respond to being clicked
+        html.find(".sheet-navigation.tabs").click(evt=>{
+            const targetTab = evt.target.getAttribute("data-tab");
+            this.navigation_switchTab(targetTab);
+        });
+
+        html.find(".damage-control").click(this._onDamageControl.bind(this));
+
+        //Input
+        for(let el of html.find("input")){
+            //Make sure the element has a "name" attribute. This is needed to know what prop to send the value to
+            if(!el.name){continue;}
+            $(el).on("change", (e) => {
+                console.log("setprop", el.name, e.target.value);
+                this.setProp(el.name, e.target.value);
+            });
+            //Setting the name manually seems neccesary due to some strange bug
+            if(el.name == "name"){el.value = this.entity.name;}
+        }
+        //Select
+        for(let el of html.find("select")){
+            //Make sure it has a "name" attribute
+            if(!el.name){continue;}
+            $(el).on("change", (e) => {
+                console.log("setprop", el.name, e.target.value);
+                this.setProp(el.name, e.target.value);
+            });
+        }
+
+        html.find(".description-edit").click(event => {
+            this.editingDescriptionTarget = event.currentTarget.dataset.target;
+            console.log("Editing", this.editingDescriptionTarget);
+            this.render();
+        });
+    }
+
+    /**
+     * Sets the prop of the entity, then fires item update, then fires render update
+     * @param {string} prop example: "system.activation.type"
+     * @param {string} value If "none", set value to null
+     */
+    setProp(prop, value){
+        //Set the value to the item's override
+        let entity = this.entity;
+        if(typeof(value) == "string" && (value).toLowerCase() === "none"){value = null;}
+        entity.setProp(prop, value);
+        //Fire a hook to alert other UI that this item has changed
+        System5e.hkItemUpdated(this.collectionId);
+        //Update this UI and re-render things
+        this._renderUpdate();
+    }
+
+    /** @inheritDoc */
+    async _onSubmit(...args) {
+        //if (this._tabs[0].active === "details") this.position.height = "auto";
+        //await super._onSubmit(...args);
+    }
+    /** @inheritDoc */
+    _getSubmitData(updateData={}) {
+        const formData = HelperFunctions.expandObject(super._getSubmitData(updateData));
+
+        // Handle Damage array
+        const damage = formData.system?.damage;
+        if (damage && !HelperFunctions.getProperty(this.entity.overrides, "system.damage.parts")) {
+        damage.parts = Object.values(damage?.parts || {}).map(d => [d[0] || "", d[1] || ""]);
+        }
+
+        // Handle properties
+        if (HelperFunctions.hasProperty(formData, "system.properties")) {
+        const keys = new Set(Object.keys(formData.system.properties));
+        const preserve = new Set(this.entity._source.system.properties ?? []).difference(keys);
+        formData.system.properties = [...filteredKeys(formData.system.properties), ...preserve];
+        }
+
+        // Check max uses formula
+        const uses = formData.system?.uses;
+        if ( uses?.max ) {
+        const maxRoll = new Roll(uses.max);
+        if ( !maxRoll.isDeterministic ) {
+            uses.max = this.entity._source.system.uses.max;
+            this.form.querySelector("input[name='system.uses.max']").value = uses.max;
+            ui.notifications.error(game.i18n.format("DND5E.FormulaCannotContainDiceError", {
+            name: game.i18n.localize("DND5E.LimitedUses")
+            }));
+            return null;
+        }
+        }
+
+        // Check duration value formula
+        const duration = formData.system?.duration;
+        if ( duration?.value ) {
+        const durationRoll = new Roll(duration.value);
+        if ( !durationRoll.isDeterministic ) {
+            duration.value = this.entity._source.system.duration.value;
+            this.form.querySelector("input[name='system.duration.value']").value = duration.value;
+            ui.notifications.error(game.i18n.format("DND5E.FormulaCannotContainDiceError", {
+            name: game.i18n.localize("DND5E.Duration")
+            }));
+            return null;
+        }
+        }
+
+        // Check class identifier
+        if ( formData.system?.identifier && !dnd5e.utils.validators.isValidIdentifier(formData.system.identifier) ) {
+        formData.system.identifier = this.entity._source.system.identifier;
+        this.form.querySelector("input[name='system.identifier']").value = formData.system.identifier;
+        ui.notifications.error("DND5E.IdentifierError", {localize: true});
+        return null;
+        }
+
+        // Return the flattened submission data
+        return foundry.utils.flattenObject(formData);
+    }
+
+    /**
+   * Add or remove a damage part from the damage formula.
+   * @param {Event} event             The original click event.
+   * @returns {Promise<Item5e>|null}  Item with updates applied.
+   * @private
+   */
+    async _onDamageControl(event) {
+    event.preventDefault();
+    const a = event.currentTarget;
+
+    // Add new damage component
+    if (a.classList.contains("add-damage")) {
+      await this._onSubmit(event);  // Submit any unsaved changes
+      const damage = this.entity.system.damage ?? {parts:[]}; //Create parts if they don't exist yet
+      return this.entity.update({"system.damage.parts": damage.parts.concat([["", ""]])});
+    }
+
+    // Remove a damage component
+    if (a.classList.contains("delete-damage")) {
+      await this._onSubmit(event);  // Submit any unsaved changes
+      const li = a.closest(".damage-part");
+      const damage = HelperFunctions.deepClone(this.entity.system.damage);
+      damage.parts.splice(Number(li.dataset.damagePart), 1);
+      return this.entity.update({"system.damage.parts": damage.parts});
+    }
+    }
+
+    setPosition(position={}) {
+        if (!(this._minimized || position.height)) {
+          position.height = (this._tabs[0].active === "details") ? "auto" : Math.max(this.height, this.options.height);
+        }
+        return super.setPosition(position);
+    }
+
+  //#region Text Editor
+  /**
+   * Activate an editor instance present within the form
+   * @param {HTMLElement} div  The element which contains the editor
+   * @protected
+   */
+  _activateEditor(div) {
+    console.log("Activate editor", div);
+
+    // Get the editor content div
+    const name = div.dataset.edit;
+    const engine = "pell"; //div.dataset.engine || "tinymce";
+    const collaborate = div.dataset.collaborate === "true";
+    const button = div.previousElementSibling;
+    const hasButton = button && button.classList.contains("editor-edit");
+    const wrap = div.parentElement.parentElement;
+    const wc = div.closest(".window-content");
+
+    // Determine the preferred editor height
+    const heights = [wrap.offsetHeight, wc ? wc.offsetHeight : null];
+    if ( div.offsetHeight > 0 ) heights.push(div.offsetHeight);
+    const height = Math.min(...heights.filter(h => Number.isFinite(h)));
+
+    // Get initial content
+    const options = {
+      target: div,
+      fieldName: name,
+      save_onsavecallback: () => this.saveEditor(name),
+      height, engine, collaborate
+    };
+
+    //if ( engine === "prosemirror" ) options.plugins = this._configureProseMirrorPlugins(name, {remove: hasButton});
+
+    const data = this.object;
+
+    this.editors = this.editors ?? {};
+    // Define the editor configuration
+    const editor = this.editors[name] = {
+      options,
+      target: name,
+      button: button,
+      hasButton: hasButton,
+      mce: null,
+      instance: null,
+      active: !hasButton,
+      changed: false,
+      initial: HelperFunctions.getProperty(data, name)
+    };
+
+    // Activate the editor immediately, or upon button click
+    const activate = () => {
+      editor.initial = HelperFunctions.getProperty(data, name);
+      this.activateEditor(name, {}, editor.initial);
+    };
+
+    if (hasButton){button.onclick = activate;}
+    else {activate();}
+  }
+  /**
+   * Creates a text editor instance, specified by a string name
+   * @param {string} name
+   * @param {object} options={}
+   * @param {string} initialContent=""
+   * @returns {EditorInstance}
+   */
+  async activateEditor(name, options={}, initialContent="") {
+    console.log("activate editor async");
+    const editor = this.editors[name];
+    if ( !editor ) throw new Error(`${name} is not a registered editor name!`);
+    options = HelperFunctions.mergeObject(editor.options, options);
+    if ( !options.fitToSize ) options.height = options.target.offsetHeight;
+    if ( editor.hasButton ) editor.button.style.display = "none";
+    //Create the editor
+    const instance = editor.instance = editor.mce = await TextEditor.create(options, initialContent || editor.initial);
+    options.target.closest(".editor")?.classList.add(options.engine ?? "tinymce");
+    editor.changed = false;
+    editor.active = true;
+
+    //Configure extensions to the editor
+    if(options.engine === "pell"){
+        instance.onSave = (html) => {
+            console.log("EDITOR.INSTANCE.ONSAVE");
+            this.editingDescriptionTarget = null;
+            let update = {}; update[name] = html; //Usually "system.description.value"
+            this.entity.update(update);
+            //If description was changed, make item also create a rendered version of the text (with hotlinks)
+            if(name == "system.description.value"){this.entity.prepareRenderedDescription();}
+            this.saveEditor(name, {remove: true});
+        }
+    }
+
+    return instance;
+  }
+  /**
+   * Handle saving the content of a specific editor by name
+   * @param {string} name           The named editor to save
+   * @param {boolean} [remove]      Remove the editor after saving its content
+   * @returns {Promise<void>}
+   */
+  async saveEditor(name, {remove=true}={}) {
+    console.log("SAVE EDITOR");
+    const editor = this.editors[name];
+    if (!editor || !editor.instance) throw new Error(`${name} is not an active editor name!`);
+    editor.active = false;
+    const instance = editor.instance;
+    await this._onSubmit(new Event("submit"));
+
+    // Remove the editor
+    if (remove) {
+        this.destroyEditor(editor);
+        this.render();
+    }
+    editor.changed = false;
+  }
+  destroyEditor(editor){
+    //const instance = editor.instance;
+     //instance.destroy();
+     editor.instance = editor.mce = null;
+     if (editor.hasButton) editor.button.style.display = "block";
+     //this._renderUpdate(); //Disabling this for now, to avoid double updates
+  }
+  //#endregion
 }
