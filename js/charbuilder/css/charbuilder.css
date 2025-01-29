@@ -9,6 +9,7 @@ body {
     color: #333;
     line-height: normal !important;
 }
+a {cursor: pointer;}
 p {line-height: 1.6; cursor: pointer;}
 /* 5ETOOLS OVERRIDES*/
 /* Make the "Menu" button above the Home/Rules/Player/Dungeon Master/References/Utilities/Setting nav buttons invisible even at lower screen width*/

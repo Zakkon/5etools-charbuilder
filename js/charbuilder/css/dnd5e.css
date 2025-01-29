@@ -1253,6 +1253,7 @@ h5 {
   padding: 4px;
   right: 0;
   top: 0;
+  font-size: 10px;
   display: none;
 }
 .c5e.sheet.actor .sheet-header .attributes .attribute:hover .config-button {
@@ -1354,6 +1355,7 @@ h5 {
   right: 2px;
   top: 3px;
   position: absolute;
+  font-size: 10px;
   display: none;
 }
 .c5e.sheet.actor .ability-scores .ability:hover .config-button {
