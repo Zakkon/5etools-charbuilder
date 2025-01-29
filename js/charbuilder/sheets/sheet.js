@@ -57,8 +57,6 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent {
         
         if(!this.$sheet){this.preRender();}
         let parentElement = this.$sheet; //Should be a jquery object
-
-        this.actor.prepareDerivedData();
         const data = this.actor;
         let template = new LoadTemplate(parentElement, "character-sheet", data);
         template.createAndCompile((innerHTML)=>{
@@ -190,6 +188,12 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent {
             CharacterBuilder.instance.e_switchTab("spells");
         });
 
+        //Checkbox toggle ability proficiency
+        this.$sheet.find(".ability-proficiency").click(this._onToggleAbilityProficiency.bind(this));
+
+        //Checkbox toggle skill proficiency
+        this.$sheet.find(".skill-proficiency").on("click contextmenu", event => this._onCycleProficiency(event, "skill"));
+
         //Make currency input fields respond to input value chaning
         this.$sheet.find(".inventory-header .currency input").on("change", evt => {
             let val = evt.target.value;
@@ -290,7 +294,37 @@ class ActorCharactermancerSheet extends ActorCharactermancerBaseComponent {
         }
         app.render(true);
     }
+    _onToggleAbilityProficiency(event) {
+        if (event.currentTarget.classList.contains("disabled")) return;
+        event.preventDefault();
+        const field = event.currentTarget.previousElementSibling;
+        return this.actor.update({[field.name]: 1 - parseInt(field.value)});
+    }
+    /**
+     * Handle cycling proficiency in a skill or tool.
+     * @param {Event} event     A click or contextmenu event which triggered this action.
+     * @returns {Promise|void}  Updated data for this actor after changes are applied.
+     * @protected
+     */
+    _onCycleProficiency(event) {
+        if (event.currentTarget.classList.contains("disabled")) return;
+        event.preventDefault();
+        const parent = event.currentTarget.closest(".proficiency-row");
+        const field = parent.querySelector('[name$=".value"]');
+        const {property, key} = parent.dataset;
+        //const value = this.actor/* ._source */.system[property]?.[key]?.value ?? 0;
+        const value = Number.parseFloat(HelperFunctions.getProperty(this.actor, field.name));
 
+        // Cycle to the next or previous skill level.
+        const levels = [0, 1, .5, 2];
+        const idx = levels.indexOf(value);
+        const next = idx + (event.type === "contextmenu" ? 3 : 1);
+        field.value = levels[next % levels.length];
+
+        // Update the field value and save the form.
+        /* return this._onSubmit(event); */
+        this.actor.update({[field.name]: field.value});
+    }
     //#region Profile Image
   _onEditProfile(){
     //Open up image browser

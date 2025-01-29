@@ -278,6 +278,9 @@ class System5e{
             default: return 6;
         }
     }
+    static _getProficiencyIcon(prof){
+        return ["far fa-circle", "fas fa-check", "fas fa-check-double", "fas fa-adjust"][[0,1,2,.5].indexOf(prof)];
+    }
     static proficiencyMult(baseProf){
         return baseProf == 0? 0 : baseProf == 1? 1 : baseProf == 2? 2 : 0.5;
     }
@@ -304,7 +307,7 @@ class System5e{
      * @returns {object}
      */
     static calcSkillEmbed(data, abilities, proficiencyModifier) {
-        data.icon = data.baseProf == 0? "far fa-circle" : data.baseProf == 1? "fas fa-check" : data.baseProf == 2? "fas fa-check-double" : "fas fa-adjust";
+        data.icon = System5e._getProficiencyIcon(System5e.proficiencyMult(data.baseProf)); //data.baseProf == 0? "far fa-circle" : data.baseProf == 1? "fas fa-check" : data.baseProf == 2? "fas fa-check-double" : "fas fa-adjust";
         data.hover = data.baseProf == 0? "Not Proficient" : data.baseProf == 1? "Proficient" : data.baseProf == 2? "Expertise" : "Half Proficient";
         data.baseValue = System5e.proficiencyMult(data.baseProf); //Proficiency multiplier (normal, none, double, half)
         data.value = data.baseProf;
@@ -481,7 +484,6 @@ class Entity5e {
             //Evaluate
             let val = Roll.replaceFormulaData(this.system.uses.max.toString(), CharacterBuilder.instance._actor.system, {});
             val = Roll.evaluateExpression(val);
-            console.log("Max uses:", val);
             labels.uses = {max: val}; //Remember, just a label
         }
         this.labels = labels;
@@ -1723,29 +1725,34 @@ class Actor5e {
      * @param {object} [options.originalSaves]  Original ability data for transformed actors.
      */
     _prepareAbilities({ rollData={}, originalSaves }={}) {
+
         //const flags = this.parent.flags.dnd5e ?? {};
-        const prof = this.system.attributes?.prof ?? 0;
+        const proficiencyModifier = this.system.attributes?.prof ?? 0;
         const checkBonus = Roll.simplifyBonus(this.system.bonuses?.abilities?.check, rollData);
         const saveBonus = Roll.simplifyBonus(this.system.bonuses?.abilities?.save, rollData);
         const dcBonus = Roll.simplifyBonus(this.system.bonuses?.spell?.dc, rollData);
         for ( const [id, abl] of Object.entries(this.system.abilities) ) {
+            abl.proficient = abl.proficient ?? 0;
             if ( this.getFlag("dnd5e", "diamondSoul") ) abl.proficient = 1;  // Diamond Soul is proficient in all saves
             abl.mod = Math.floor((abl.value - 10) / 2);
 
             const isRA = this._isRemarkableAthlete(id);
-            abl.checkProf = new Proficiency(prof, (isRA || this.getFlag("dnd5e", "jackOfAllTrades")) ? 0.5 : 0, !isRA);
-            const saveBonusAbl = Roll.simplifyBonus(abl.bonuses?.save, rollData);
-            abl.saveBonus = saveBonusAbl + saveBonus;
-
-            abl.saveProf = new Proficiency(prof, abl.proficient);
+            abl.checkProf = new Proficiency(proficiencyModifier, (isRA || this.getFlag("dnd5e", "jackOfAllTrades")) ? 0.5 : 0, !isRA);
             const checkBonusAbl = Roll.simplifyBonus(abl.bonuses?.check, rollData);
             abl.checkBonus = checkBonusAbl + checkBonus;
-
+            
+            const saveBonusAbl = Roll.simplifyBonus(abl.bonuses?.save, rollData);
+            abl.saveBonus = saveBonusAbl + saveBonus;
+            abl.saveProf = new Proficiency(proficiencyModifier, abl.proficient);
             abl.save = abl.mod + abl.saveBonus;
-            if ( Number.isNumeric(abl.saveProf.term) ) abl.save += abl.saveProf.flat;
-            abl.dc = 8 + abl.mod + prof + dcBonus;
+            if (Number.isNumeric(abl.saveProf.term)) {abl.save += abl.saveProf.flat;}
+            abl.dc = 8 + abl.mod + proficiencyModifier + dcBonus;
 
             if ( !Number.isFinite(abl.max) ) abl.max = CONFIG.DND5E.maxAbilityScore;
+            abl.icon = System5e._getProficiencyIcon(abl.proficient);
+            //abl.hover = abl.proficient == 0? "Not Proficient" : abl.proficient == 1? "Proficient" : abl.proficient == 2? "Expertise" : "Half Proficient";
+            abl.hover = CONFIG.DND5E.proficiencyLevels[abl.proficient];
+            abl.baseProf = abl.proficient ?? 0;
 
             // If we merged saves when transforming, take the highest bonus here.
             /* if ( originalSaves && abl.proficient ) abl.save = Math.max(abl.save, originalSaves[id].save); */
@@ -1770,7 +1777,6 @@ class Actor5e {
         const armorTypes = new Set(Object.keys(CONFIG.DND5E.armorTypes));
         const {armors, shields} = this.itemTypes.equipment.reduce((obj, equip) => {
             if (!equip.system.equipped || !armorTypes.has(equip.system.type.value)) {return obj;}
-            console.log(obj, equip);
             if (equip.system.type.value === "shield") {obj.shields.push(equip);}
             else {obj.armors.push(equip);}
             return obj;
@@ -2050,7 +2056,6 @@ class Actor5e {
         if(spellcastingClass == null){return 0;}
         spellcastingClass = CharacterBuilder.getClassByNameSource(spellcastingClass.name, spellcastingClass.source);
         const abilityScoresFromComp = CharacterBuilder.instance.compAbility.getTotals();
-        console.log("abil scores from comp", abilityScoresFromComp);
         return Charactermancer_Spell_Util.getMaxPreparedSpells({
             cls: spellcastingClass,
             sc: null,
@@ -2214,6 +2219,7 @@ class Proficiency {
      */
     get term() {
         //TODO: support for proficiency dice, a variant rule from the DMG
+        return this.flat;
       return /* (game.settings.get("dnd5e", "proficiencyModifier") === "dice") && !this.deterministic
         ? this.dice : */ String(this.flat);
     }
