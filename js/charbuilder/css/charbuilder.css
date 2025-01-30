@@ -899,6 +899,11 @@ select.chooseAlignment{background: #d3d1c5;}
     display: inline-flex;
     min-width: 400px;
 }
+/* CHARACTERMANCER */
+.manc-sp__disp-prepared .lbl-count-spells.over-limit {
+    color: red;
+    font-weight: bold;
+}
 /*FOOTER*/
 .c5e footer{
     padding: 0px;

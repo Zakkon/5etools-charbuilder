@@ -12726,7 +12726,14 @@ class Charactermancer_Spell_SpellMeta {
 }
 
 class Charactermancer_Spell extends BaseComponent {
-    
+    /**Removes limitations on how many spells can be added (i.e. learnt/known/prepared) by the user.*/
+    static UNLIMITED_NUM_SPELLS = true;
+    /**Should there be any UI effects giving warnings if the user is beyond the limit of known/learned/prepared spells? (ignores UNLIMITED_NUM_SPELLS) */
+    static WARN_SPELL_NUM_LIMIT = true;
+    /**Ignore limitations on which amount of spells (per spell level) can be learnt at a specific class level.
+     * For example, a lvl 3 sorcerer should know a maximum of two 2nd spells (or three, if they choose to swap out an existing 1st level spell for a 2nd level spell).
+     * If this setting is true, this limitation is ignored.*/
+    static IGNORE_LEARN_SPELL_LEVEL_PROGRESSION = true;
     /**
      * @param {{spellDatas:{name:string, source:string, level:number}}} opts
      */
@@ -12765,9 +12772,13 @@ class Charactermancer_Spell extends BaseComponent {
 
     render($wrp, $dispSpell) {
         const hkPreparedLearned = ()=>{
-            const parts = [this._state.maxLearnedCantrips ? `Cantrips learned: ${this._state.cntLearnedCantrips}/${this._state.maxLearnedCantrips}` : null,
-                this._state.fixedLearnedProgression ? `Spells learned: ${this._getCntSpellsKnown()}/${this._getTotalSpellsKnown()}` : null,
-                this._state.maxPrepared ? `Prepared: ${this._state.cntPrepared}/${this._state.maxPrepared}` : null, ].filter(Boolean);
+            const clsWarn = Charactermancer_Spell.WARN_SPELL_NUM_LIMIT? " over-limit" : "";
+            const tooManyCantrips = this._state.maxLearnedCantrips && this.isOverLearnCantripsLimit_();
+            const tooManySpells = this._state.fixedLearnedProgression && this._getCntSpellsKnown() > this._getTotalSpellsKnown();
+            const tooManyPrepared = this._state.maxPrepared && this._state.cntPrepared>this._state.maxPrepared;
+            const parts = [this._state.maxLearnedCantrips ? `Cantrips learned: <span class="lbl-count-spells${tooManyCantrips? clsWarn : ""}">${this._state.cntLearnedCantrips}/${this._state.maxLearnedCantrips}</span>` : null,
+                this._state.fixedLearnedProgression ? `Spells learned: <span class="lbl-count-spells${tooManySpells? clsWarn : ""}">${this._getCntSpellsKnown()}/${this._getTotalSpellsKnown()}</span>` : null,
+                this._state.maxPrepared ? `Prepared: <span class="lbl-count-spells${tooManyPrepared? clsWarn : ""}">${this._state.cntPrepared}/${this._state.maxPrepared}</span>` : null, ].filter(Boolean);
 
             (this._$wrpsPreparedLearned || []).forEach($it=>{
                 $it.toggleVe(parts.length).html(parts.join(`<div class="mx-1">\u2014</div>`));
@@ -13056,7 +13067,6 @@ class Charactermancer_Spell extends BaseComponent {
     get isPreparedCaster() {
         return this._state.maxPrepared != null;
     }
-
     
     set spellLevelLow(val) {
         this._state.spellLevelLow = val;
@@ -13205,31 +13215,29 @@ class Charactermancer_Spell extends BaseComponent {
     }
 
     _canLearnMoreFixedSpellsOfLevel({lvl, fixedLearnedProgression, cntSpellsKnown}) {
-        if (!fixedLearnedProgression)
-            return false;
-        if (!fixedLearnedProgression[lvl - 1])
-            return false;
+        if(Charactermancer_Spell.UNLIMITED_NUM_SPELLS){return true;}
+        if (!fixedLearnedProgression){return false;}
+        if (!fixedLearnedProgression[lvl - 1]){return false;}
         return cntSpellsKnown < fixedLearnedProgression[lvl - 1];
     }
 
     isOverLearnFixedSpellsLimitOfLevel_(lvl) {
-        if (!this._state.fixedLearnedProgression)
-            return false;
-        if (!this._state.fixedLearnedProgression[lvl - 1])
-            return false;
+        if (!this._state.fixedLearnedProgression){return false;}
+        if (!this._state.fixedLearnedProgression[lvl - 1]){return false;}
         const spellsKnown = this._compsLevel[lvl].getSpellsKnown();
+        if(Charactermancer_Spell.IGNORE_LEARN_SPELL_LEVEL_PROGRESSION){return false;}
         return spellsKnown.length > this._state.fixedLearnedProgression[lvl - 1];
     }
 
     canLearnMoreCantrips_() {
-        return this._state.cntLearnedCantrips < (this._state.maxLearnedCantrips || 0);
+        return Charactermancer_Spell.UNLIMITED_NUM_SPELLS || this._state.cntLearnedCantrips < (this._state.maxLearnedCantrips || 0);
     }
     isOverLearnCantripsLimit_() {
         return this._state.cntLearnedCantrips > (this._state.maxLearnedCantrips || 0);
     }
 
     canPrepareMore_() {
-        return this._state.cntPrepared < (this._state.maxPrepared || 0);
+        return Charactermancer_Spell.UNLIMITED_NUM_SPELLS || this._state.cntPrepared < (this._state.maxPrepared || 0);
     }
     isOverPrepareLimit_() {
         return this._state.cntPrepared > (this._state.maxPrepared || 0);
@@ -13774,17 +13782,20 @@ class Charactermancer_Spell_Level extends BaseComponent {
 
             let isMaxLearnedSpells = true;
             let isOverMaxLearnedSpells = true;
+            let isOverMaxTotalSpells = false;
 
             if (isLearnCaster) {
                 if (this._parent.canLearnMoreFixedSpellsOfLevel_(this._spellLevel))
                     isMaxLearnedSpells = false;
-                if (!this._parent.isOverLearnFixedSpellsLimitOfLevel_(this._spellLevel))
+                if (!this._parent.isOverLearnFixedSpellsLimitOfLevel_(this._spellLevel)){
                     isOverMaxLearnedSpells = false;
+                }
+                if(Charactermancer_Spell.WARN_SPELL_NUM_LIMIT && this._parent._getCntSpellsKnown() > this._parent._getTotalSpellsKnown()){isOverMaxTotalSpells=true;}
             }
 
             this._$wrpRows.toggleClass("manc-sp__is-learn-caster", isLearnCaster);
             this._$wrpRows.toggleClass("manc-sp__is-max-learned-spells", isLearnCaster && isMaxLearnedSpells);
-            this._$wrpRows.toggleClass("manc-sp__is-max-learned-spells--is-over-limit", isLearnCaster && isOverMaxLearnedSpells);
+            this._$wrpRows.toggleClass("manc-sp__is-max-learned-spells--is-over-limit", isLearnCaster && (isOverMaxLearnedSpells || isOverMaxTotalSpells));
         }
         ;
         this._parent.addHookIsMaxLearnedSpells(hkIsMaxLearnedSpells);
